@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "/generated";
+
+message Context {
+  Request request = 1;
+  Response response = 2;
+}
+
+message Request {
+  map<string, StringList> headers = 1;
+  string method = 2;
+  int64 length = 3;
+  string protocol = 4;
+  string ip = 5;
+  bytes body = 6;
+}
+
+message Response {
+  map<string, StringList> headers = 1;
+  int32 status_code = 2;
+  bytes body = 3;
+}
+
+message StringList {
+  repeated string value = 1;
+}
+
