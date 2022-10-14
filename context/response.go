@@ -6,6 +6,10 @@ type Response struct {
 	value *generated.Response
 }
 
+func (ctx *Context) Response() *Response {
+	return &Response{value: ctx.generated.Response}
+}
+
 func (res *Response) Body() []byte {
 	return res.value.Body
 }
