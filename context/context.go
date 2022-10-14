@@ -13,9 +13,9 @@ type Context struct {
 	buffer    *polyglot.Buffer
 }
 
-func NewContext(ctx *generated.Context) *Context {
+func NewContext() *Context {
 	return &Context{
-		generated: ctx,
+		generated: generated.NewContext(),
 		buffer:    polyglot.NewBuffer(),
 	}
 }
