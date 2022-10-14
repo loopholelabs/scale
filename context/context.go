@@ -3,6 +3,7 @@ package context
 import (
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale-go/runtime/generated"
+	"github.com/loopholelabs/scale-go/utils"
 	"reflect"
 	"unsafe"
 )
@@ -38,6 +39,5 @@ func (ctx *Context) deserialize(ptr uint32, size uint32) {
 }
 
 func (ctx *Context) Next() {
-	next(ctx.serialize())
-	ctx.deserialize(globalOffset, globalLength)
+	ctx.deserialize(utils.UnpackUint32(next(ctx.serialize())))
 }
