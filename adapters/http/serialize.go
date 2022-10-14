@@ -1,12 +1,12 @@
 package http
 
 import (
-	"github.com/loopholelabs/scale-go/runtime/context"
-	"github.com/loopholelabs/scale-go/runtime/context/generated"
+	"github.com/loopholelabs/scale-go/runtime"
+	"github.com/loopholelabs/scale-go/runtime/generated"
 	"net/http"
 )
 
-func Serialize(ctx *context.Context, r *http.Request) {
+func Serialize(ctx *runtime.Context, r *http.Request) {
 	ctx.Context.Request.Headers = generated.NewRequestHeadersMap(uint32(len(r.Header)))
 	for k, v := range r.Header {
 		ctx.Context.Request.Headers[k] = &generated.StringList{

@@ -3,7 +3,6 @@ package http
 
 import (
 	"github.com/loopholelabs/scale-go/runtime"
-	"github.com/loopholelabs/scale-go/runtime/context"
 	"net/http"
 )
 
@@ -27,9 +26,9 @@ func New(next http.Handler, runtime *runtime.Runtime) *HTTP {
 }
 
 func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	//run, err := runtime.New(req.Context(), h.Next, nil)
+	//run, err := runtime.NewContext(req.Context(), h.Next, nil)
 	//
-	//ctx := context.New()
+	//ctx := context.NewContext()
 	//Serialize(ctx, req)
 	//ctx = h.runtime.Run(ctx)
 	//err := Deserialize(ctx, w)
@@ -38,6 +37,6 @@ func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	//}
 }
 
-func (h *HTTP) Next(ctx *context.Context) {
+func (h *HTTP) Next(ctx *runtime.Context) {
 	//h.next.ServeHTTP(ctx, ctx)
 }

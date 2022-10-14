@@ -1,8 +1,8 @@
-package context
+package runtime
 
 import (
 	"github.com/loopholelabs/polyglot-go"
-	"github.com/loopholelabs/scale-go/runtime/context/generated"
+	"github.com/loopholelabs/scale-go/runtime/generated"
 	"io"
 )
 
@@ -13,7 +13,7 @@ type Context struct {
 	StreamBuffer *io.Reader
 }
 
-func New() *Context {
+func NewContext() *Context {
 	return &Context{
 		Context: generated.NewContext(),
 		Buffer:  polyglot.NewBuffer(),

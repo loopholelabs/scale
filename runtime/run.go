@@ -2,14 +2,13 @@ package runtime
 
 import (
 	"errors"
-	"github.com/loopholelabs/scale-go/runtime/context"
 )
 
 var (
 	MemoryWriteError = errors.New("memory write error")
 )
 
-func (r *Runtime) Run(ctx *context.Context) error {
+func (r *Runtime) Run(ctx *Context) error {
 	rootModule := r.functions[0].Module
 	run := rootModule.ExportedFunction("run")
 	malloc := rootModule.ExportedFunction("malloc")
