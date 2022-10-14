@@ -20,7 +20,7 @@ func NewContext(ctx *generated.Context) *Context {
 	}
 }
 
-func (ctx *Context) serialize() (uint32, uint32) {
+func (ctx *Context) Serialize() (uint32, uint32) {
 	ctx.buffer.Reset()
 	ctx.generated.Encode(ctx.buffer)
 	underlying := ctx.buffer.Bytes()
@@ -29,7 +29,7 @@ func (ctx *Context) serialize() (uint32, uint32) {
 	return uint32(unsafePtr), uint32(len(*ctx.buffer))
 }
 
-func (ctx *Context) deserialize(ptr uint32, size uint32) {
+func (ctx *Context) Deserialize(ptr uint32, size uint32) {
 	buf := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(ptr),
 		Len:  uintptr(size), // Tinygo requires this, it's not an error.
@@ -39,5 +39,5 @@ func (ctx *Context) deserialize(ptr uint32, size uint32) {
 }
 
 func (ctx *Context) Next() {
-	ctx.deserialize(utils.UnpackUint32(next(ctx.serialize())))
+	ctx.Deserialize(utils.UnpackUint32(next(ctx.Serialize())))
 }
