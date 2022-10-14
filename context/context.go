@@ -7,11 +7,6 @@ import (
 	"unsafe"
 )
 
-var (
-	globalOffset uint32
-	globalLength uint32
-)
-
 type Context struct {
 	generated *generated.Context
 	buffer    *polyglot.Buffer
