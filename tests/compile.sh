@@ -31,3 +31,4 @@ for module in modules/*/*.go ; do
 done
 
 rm -rf scale-go-compile
+

@@ -49,6 +49,41 @@ var TestCases = []TestCase{
 			assert.Equal(t, "POST", ctx.Context.Request.Method)
 		},
 	},
+	{
+		Name:   "File Read",
+		Module: "fileread",
+		Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+			_, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			require.Error(t, err)
+		},
+	},
+	{
+		Name:   "Network",
+		Module: "network",
+		Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+			_, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			require.Error(t, err)
+		},
+	},
+	{
+		Name:   "Panic",
+		Module: "panic",
+		Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+			r, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			require.NoError(t, err)
+
+			req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+			assert.NoError(t, err)
+
+			ctx := runtime.NewContext()
+			adapter.Serialize(ctx, req)
+
+			assert.Equal(t, "GET", ctx.Context.Request.Method)
+
+			err = r.Run(ctx)
+			assert.Error(t, err)
+		},
+	},
 }
 
 func TestRuntime(t *testing.T) {
@@ -72,4 +107,7 @@ func TestRuntime(t *testing.T) {
 			testCase.Run(scaleFunc, t)
 		})
 	}
+
+	err = exec.Command("sh", "cleanup.sh").Run()
+	assert.NoError(t, err)
 }
