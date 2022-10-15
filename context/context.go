@@ -17,10 +17,14 @@ type Context struct {
 
 // New creates a new empty Context that must be initialized with the Deserialize method
 func New() *Context {
-	return &Context{
+	c := &Context{
 		generated: generated.NewContext(),
 		buffer:    polyglot.NewBuffer(),
 	}
+	c.generated.Request.Headers = generated.NewRequestHeadersMap(0)
+	c.generated.Response.Headers = generated.NewResponseHeadersMap(0)
+
+	return c
 }
 
 // Serialize serializes the Context into a pointer and size
