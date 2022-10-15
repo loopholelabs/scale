@@ -13,7 +13,7 @@ type Context struct {
 	buffer    *polyglot.Buffer
 }
 
-func NewContext() *Context {
+func New() *Context {
 	return &Context{
 		generated: generated.NewContext(),
 		buffer:    polyglot.NewBuffer(),
@@ -38,6 +38,7 @@ func (ctx *Context) Deserialize(ptr uint32, size uint32) {
 	_ = ctx.generated.Decode(buf)
 }
 
-func (ctx *Context) Next() {
+func (ctx *Context) Next() *Context {
 	ctx.Deserialize(utils.UnpackUint32(next(ctx.Serialize())))
+	return ctx
 }
