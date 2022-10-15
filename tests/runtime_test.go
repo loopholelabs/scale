@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	adapter "github.com/loopholelabs/scale-go/adapters/http"
 	"github.com/loopholelabs/scale-go/runtime"
 	"github.com/loopholelabs/scale-go/scalefile"
@@ -10,41 +11,65 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"os"
+	"os/exec"
+	"path"
 	"testing"
 )
 
-func TestRuntime(t *testing.T) {
+type TestCase struct {
+	Name   string
+	Module string
+	Run    func(scalefunc.ScaleFunc, *testing.T)
+}
 
-	wasm, err := os.ReadFile("example.wasm")
-	assert.NoError(t, err)
+var TestCases = []TestCase{
+	{
+		Name:   "Passthrough",
+		Module: "passthrough",
+		Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+			next := func(ctx *runtime.Context) *runtime.Context {
+				ctx.Context.Request.Method = "POST"
+				return ctx
+			}
 
-	scaleFunc := &scalefunc.ScaleFunc{
-		ScaleFile: scalefile.ScaleFile{
-			Name: "example",
-			Build: scalefile.Build{
-				Language: "go",
-			},
+			r, err := runtime.New(context.Background(), next, []scalefunc.ScaleFunc{scaleFunc})
+			require.NoError(t, err)
+
+			req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+			assert.NoError(t, err)
+
+			ctx := runtime.NewContext()
+			adapter.Serialize(ctx, req)
+
+			assert.Equal(t, "GET", ctx.Context.Request.Method)
+
+			err = r.Run(ctx)
+			assert.NoError(t, err)
+
+			assert.Equal(t, "POST", ctx.Context.Request.Method)
 		},
-		Function: wasm,
-	}
-	next := func(ctx *runtime.Context) *runtime.Context {
-		ctx.Context.Request.Method = "POST"
-		return ctx
-	}
+	},
+}
 
-	r, err := runtime.New(context.Background(), next, []scalefunc.ScaleFunc{*scaleFunc})
+func TestRuntime(t *testing.T) {
+	err := exec.Command("sh", "compile.sh").Run()
 	require.NoError(t, err)
 
-	req, err := http.NewRequest("GET", "http://localhost:8080", nil)
-	assert.NoError(t, err)
+	for _, testCase := range TestCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", testCase.Module)))
+			assert.NoError(t, err)
 
-	ctx := runtime.NewContext()
-	adapter.Serialize(ctx, req)
-
-	assert.Equal(t, "GET", ctx.Context.Request.Method)
-
-	err = r.Run(ctx)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "POST", ctx.Context.Request.Method)
+			scaleFunc := scalefunc.ScaleFunc{
+				ScaleFile: scalefile.ScaleFile{
+					Name: testCase.Name,
+					Build: scalefile.Build{
+						Language: "go",
+					},
+				},
+				Function: module,
+			}
+			testCase.Run(scaleFunc, t)
+		})
+	}
 }
