@@ -21,8 +21,8 @@ func New() *Context {
 		generated: generated.NewContext(),
 		buffer:    polyglot.NewBuffer(),
 	}
-	c.generated.Request.Headers = generated.NewRequestHeadersMap(0)
-	c.generated.Response.Headers = generated.NewResponseHeadersMap(0)
+	c.generated.Request.Headers = generated.NewRequestHeadersMap(8)
+	c.generated.Response.Headers = generated.NewResponseHeadersMap(8)
 
 	return c
 }
