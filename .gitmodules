@@ -1,0 +1,3 @@
+[submodule "tests/scale-go-compile"]
+	path = tests/scale-go-compile
+	url = https://github.com/loopholelabs/scale-go-compile

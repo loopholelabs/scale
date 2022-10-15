@@ -3,6 +3,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"github.com/loopholelabs/scale-go/scalefunc"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
@@ -15,7 +16,9 @@ type Runtime struct {
 	compileConfig wazero.CompileConfig
 	moduleConfig  wazero.ModuleConfig
 
+	c         *Context
 	functions []*Function
+	modules   map[api.Module]*Function
 }
 
 func New(ctx context.Context, next Next, functions []scalefunc.ScaleFunc) (*Runtime, error) {
@@ -25,32 +28,41 @@ func New(ctx context.Context, next Next, functions []scalefunc.ScaleFunc) (*Runt
 		runtime:       wazero.NewRuntimeWithConfig(wazero.NewRuntimeConfig().WithWasmCore2()),
 		compileConfig: wazero.NewCompileConfig(),
 		moduleConfig:  wazero.NewModuleConfig(),
+		c:             NewContext(),
+		modules:       make(map[api.Module]*Function),
 	}
 
 	module := r.runtime.NewModuleBuilder("env")
-	//module = module.ExportFunction("hostReceiveRequestForNext", receiveRequestForNext)
-	//module = module.ExportFunction("hostReceiveRequest", receiveRequest)
-	//module = module.ExportFunction("__Next", __Next)
-	//module = module.ExportFunction("debugWasm", debugWasm)
+	module = module.ExportFunction("next", r.next)
 
 	compiled, err := module.Compile(r.ctx, r.compileConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to compile module: %w", err)
 	}
 
 	_, err = r.runtime.InstantiateModule(r.ctx, compiled, r.moduleConfig)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to instantiate module: %w", err)
 	}
 
-	var parent api.Module
-	var function *Function
+	module = r.runtime.NewModuleBuilder("wasi_snapshot_preview1")
+	module = module.ExportFunction("fd_write", r.fd_write)
+
+	compiled, err = module.Compile(r.ctx, r.compileConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile module: %w", err)
+	}
+
+	_, err = r.runtime.InstantiateModule(r.ctx, compiled, r.moduleConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to instantiate module: %w", err)
+	}
+
 	for _, f := range functions {
-		function, err = r.registerFunction(f, parent)
+		err = r.registerFunction(f)
 		if err != nil {
 			return nil, err
 		}
-		parent = function.Parent
 	}
 
 	return r, nil
