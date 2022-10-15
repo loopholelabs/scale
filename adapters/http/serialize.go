@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// Serialize serializes http.Request object into a runtime.Context
 func Serialize(ctx *runtime.Context, r *http.Request) {
 	ctx.Context.Request.Headers = generated.NewRequestHeadersMap(uint32(len(r.Header)))
 	for k, v := range r.Header {
@@ -19,5 +20,5 @@ func Serialize(ctx *runtime.Context, r *http.Request) {
 	ctx.Context.Request.Ip = r.RemoteAddr
 	ctx.Context.Request.Body = []byte("")
 
-	ctx.Encode()
+	ctx.Serialize()
 }

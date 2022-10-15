@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Deserialize deserializes the runtime.Context object into the http.ResponseWriter
 func Deserialize(ctx *runtime.Context, w http.ResponseWriter) error {
 	w.WriteHeader(int(ctx.Context.Response.StatusCode))
 	for k, v := range ctx.Context.Response.Headers {

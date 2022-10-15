@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"fmt"
 	"github.com/loopholelabs/scale-go/utils"
 	"github.com/tetratelabs/wazero/api"
 )
@@ -10,41 +9,51 @@ import (
 type Next func(ctx *Context) *Context
 
 func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) uint64 {
-	malloc := module.ExportedFunction("malloc")
-	free := module.ExportedFunction("free")
+	i := r.instances[module.Name()]
+	if i == nil {
+		// TODO: have an error field in the context
+		return 0
+	}
 
-	buf, ok := module.Memory().Read(ctx, offset, length)
+	m := i.modules[module]
+	if m == nil {
+		// TODO: have an error field in the context
+		return 0
+	}
+
+	buf, ok := m.module.Memory().Read(ctx, offset, length)
 	if !ok {
-		panic("failed to read memory")
+		// TODO: have an error field in the context
+		return 0
 	}
 
-	err := r.c.Deserialize(buf)
+	err := i.Context().Deserialize(buf)
 	if err != nil {
-		panic("failed to deserialize context")
+		// TODO: have an error field in the context
+		return 0
 	}
 
-	f := r.modules[module]
-	if f.Next == nil {
-		r.c = r.Next(r.c)
+	if m.next == nil {
+		i.ctx = r.Next(i.Context())
 	} else {
-		err = f.Next.Run(r)
+		err = m.next.Run(ctx)
 		if err != nil {
-			panic(fmt.Errorf("failed to run next function: %w", err))
+			// TODO: have an error field in the context
+			return 0
 		}
 	}
 
-	r.c.Encode()
-	bufLength := uint64(r.c.Buffer.Len())
-	buffer, err := malloc.Call(r.ctx, bufLength)
+	i.Context().Serialize()
+	bufLength := uint64(i.Context().Buffer.Len())
+	buffer, err := m.malloc.Call(ctx, bufLength)
 	if err != nil {
-		panic(fmt.Errorf("failed to allocate memory: %w", err))
+		// TODO: have an error field in the context
+		return 0
 	}
-	defer func() {
-		_, _ = free.Call(r.ctx, buffer[0])
-	}()
 
-	if !module.Memory().Write(r.ctx, uint32(buffer[0]), r.c.Buffer.Bytes()) {
-		panic("failed to write memory")
+	if !module.Memory().Write(ctx, uint32(buffer[0]), i.Context().Buffer.Bytes()) {
+		// TODO: have an error field in the context
+		return 0
 	}
 
 	return utils.PackUint32(uint32(buffer[0]), uint32(bufLength))

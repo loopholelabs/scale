@@ -6,6 +6,9 @@ import (
 	"io"
 )
 
+// Context is a wrapper around generated.Context
+// and it facilitates the exchange of data between
+// the runtime and the scale functions
 type Context struct {
 	Context      *generated.Context
 	Buffer       *polyglot.Buffer
@@ -13,6 +16,7 @@ type Context struct {
 	StreamBuffer *io.Reader
 }
 
+// NewContext returns a new Context
 func NewContext() *Context {
 	return &Context{
 		Context: generated.NewContext(),
@@ -20,11 +24,14 @@ func NewContext() *Context {
 	}
 }
 
+// Deserialize deserializes the context from the given byte slice
 func (c *Context) Deserialize(b []byte) error {
 	return c.Context.Decode(b)
 }
 
-func (c *Context) Encode() {
+// Serialize serializes the context into a byte slice and returns it
+func (c *Context) Serialize() []byte {
 	c.Buffer.Reset()
 	c.Context.Encode(c.Buffer)
+	return c.Buffer.Bytes()
 }

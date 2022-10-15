@@ -8,11 +8,14 @@ import (
 	"unsafe"
 )
 
+// Context is a context object for an incoming request. It is meant to be used
+// inside the Scale function.
 type Context struct {
 	generated *generated.Context
 	buffer    *polyglot.Buffer
 }
 
+// New creates a new empty Context that must be initialized with the Deserialize method
 func New() *Context {
 	return &Context{
 		generated: generated.NewContext(),
@@ -20,6 +23,7 @@ func New() *Context {
 	}
 }
 
+// Serialize serializes the Context into a pointer and size
 func (ctx *Context) Serialize() (uint32, uint32) {
 	ctx.buffer.Reset()
 	ctx.generated.Encode(ctx.buffer)
@@ -29,6 +33,7 @@ func (ctx *Context) Serialize() (uint32, uint32) {
 	return uint32(unsafePtr), uint32(len(*ctx.buffer))
 }
 
+// Deserialize takes a pointer and size and deserializes the data into the Context
 func (ctx *Context) Deserialize(ptr uint32, size uint32) {
 	buf := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
 		Data: uintptr(ptr),
@@ -38,6 +43,8 @@ func (ctx *Context) Deserialize(ptr uint32, size uint32) {
 	_ = ctx.generated.Decode(buf)
 }
 
+// Next calls the next host function after serializing the Context,
+// then it deserializes the result back into the Context
 func (ctx *Context) Next() *Context {
 	ctx.Deserialize(utils.UnpackUint32(next(ctx.Serialize())))
 	return ctx

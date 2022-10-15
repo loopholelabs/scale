@@ -35,25 +35,29 @@ var TestCases = []TestCase{
 			r, err := runtime.New(context.Background(), next, []scalefunc.ScaleFunc{scaleFunc})
 			require.NoError(t, err)
 
+			i, err := r.Instance(context.Background())
+			require.NoError(t, err)
+
 			req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 			assert.NoError(t, err)
 
-			ctx := runtime.NewContext()
-			adapter.Serialize(ctx, req)
+			adapter.Serialize(i.Context(), req)
+			assert.Equal(t, "GET", i.Context().Context.Request.Method)
 
-			assert.Equal(t, "GET", ctx.Context.Request.Method)
-
-			err = r.Run(ctx)
+			err = i.Run(context.Background())
 			assert.NoError(t, err)
 
-			assert.Equal(t, "POST", ctx.Context.Request.Method)
+			assert.Equal(t, "POST", i.Context().Context.Request.Method)
 		},
 	},
 	{
 		Name:   "File Read",
 		Module: "fileread",
 		Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-			_, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			r, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			require.NoError(t, err)
+
+			_, err = r.Instance(context.Background())
 			require.Error(t, err)
 		},
 	},
@@ -61,7 +65,10 @@ var TestCases = []TestCase{
 		Name:   "Network",
 		Module: "network",
 		Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-			_, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			r, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
+			require.NoError(t, err)
+
+			_, err = r.Instance(context.Background())
 			require.Error(t, err)
 		},
 	},
@@ -72,15 +79,15 @@ var TestCases = []TestCase{
 			r, err := runtime.New(context.Background(), nil, []scalefunc.ScaleFunc{scaleFunc})
 			require.NoError(t, err)
 
+			i, err := r.Instance(context.Background())
+			require.NoError(t, err)
+
 			req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 			assert.NoError(t, err)
+			adapter.Serialize(i.Context(), req)
+			assert.Equal(t, "GET", i.Context().Context.Request.Method)
 
-			ctx := runtime.NewContext()
-			adapter.Serialize(ctx, req)
-
-			assert.Equal(t, "GET", ctx.Context.Request.Method)
-
-			err = r.Run(ctx)
+			err = i.Run(context.Background())
 			assert.Error(t, err)
 		},
 	},
