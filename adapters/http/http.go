@@ -33,6 +33,7 @@ func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	err = i.Run(req.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	adapter "github.com/loopholelabs/scale-go/adapters/http"
@@ -17,7 +18,7 @@ import (
 	"testing"
 )
 
-func TestHTTPAdapter(t *testing.T) {
+func TestHTTPMiddleware(t *testing.T) {
 	module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-middleware")))
 	assert.NoError(t, err)
 
@@ -54,4 +55,41 @@ func TestHTTPAdapter(t *testing.T) {
 	assert.Equal(t, "Hello World", string(body))
 	assert.Equal(t, "test", res.Header.Get("X-Test"))
 	assert.Equal(t, "true", res.Header.Get("NEXT"))
+}
+
+func TestHTTPEndpoint(t *testing.T) {
+	module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-endpoint")))
+	assert.NoError(t, err)
+
+	scaleFunc := scalefunc.ScaleFunc{
+		ScaleFile: scalefile.ScaleFile{
+			Name: "http-endpoint",
+			Build: scalefile.Build{
+				Language: "go",
+			},
+		},
+		Function: module,
+	}
+
+	r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+	require.NoError(t, err)
+
+	httpAdapter := adapter.New(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("NEXT", "true")
+		_, _ = w.Write([]byte("Hello World"))
+	}), r)
+
+	server := httptest.NewServer(httpAdapter)
+	defer server.Close()
+
+	req, err := http.NewRequest("GET", server.URL, bytes.NewBufferString("No Hello World"))
+	assert.NoError(t, err)
+
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+
+	body, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "No Hello World", string(body))
+	assert.Equal(t, "", res.Header.Get("NEXT"))
 }

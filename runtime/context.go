@@ -22,6 +22,7 @@ func NewContext() *Context {
 	}
 	c.Context.Request.Headers = generated.NewRequestHeadersMap(8)
 	c.Context.Response.Headers = generated.NewResponseHeadersMap(8)
+	c.Context.Response.StatusCode = 200
 
 	return c
 }
