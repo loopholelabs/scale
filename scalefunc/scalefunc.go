@@ -23,6 +23,7 @@ import (
 
 type ScaleFunc struct {
 	ScaleFile scalefile.ScaleFile
+	Tag       string
 	Function  []byte
 }
 
@@ -31,6 +32,7 @@ func (s *ScaleFunc) Encode() []byte {
 	defer polyglot.PutBuffer(b)
 	e := polyglot.Encoder(b)
 	e.String(s.ScaleFile.Name)
+	e.String(s.Tag)
 	e.String(s.ScaleFile.Build.Language)
 	e.Uint32(uint32(len(s.ScaleFile.Build.Dependencies)))
 	for _, dep := range s.ScaleFile.Build.Dependencies {
@@ -48,6 +50,11 @@ func (s *ScaleFunc) Decode(data []byte) error {
 
 	var err error
 	s.ScaleFile.Name, err = d.String()
+	if err != nil {
+		return err
+	}
+
+	s.Tag, err = d.String()
 	if err != nil {
 		return err
 	}
