@@ -42,48 +42,48 @@ func (s *ScaleFunc) Encode() []byte {
 	return b.Bytes()
 }
 
-func (s *ScaleFunc) Decode(data []byte) {
+func (s *ScaleFunc) Decode(data []byte) error {
 	d := polyglot.GetDecoder(data)
 	defer d.Return()
 
 	var err error
 	s.ScaleFile.Name, err = d.String()
 	if err != nil {
-		return
+		return err
 	}
 
 	s.ScaleFile.Build.Language, err = d.String()
 	if err != nil {
-		return
+		return err
 	}
 
 	var size uint32
 	size, err = d.Uint32()
 	if err != nil {
-		return
+		return err
 	}
 
 	s.ScaleFile.Build.Dependencies = make([]scalefile.Dependency, size)
 	for i := uint32(0); i < size; i++ {
 		s.ScaleFile.Build.Dependencies[i].Name, err = d.String()
 		if err != nil {
-			return
+			return err
 		}
 		s.ScaleFile.Build.Dependencies[i].Version, err = d.String()
 		if err != nil {
-			return
+			return err
 		}
 	}
 
 	s.ScaleFile.Source, err = d.String()
 	if err != nil {
-		return
+		return err
 	}
 
 	s.Function, err = d.Bytes(nil)
 	if err != nil {
-		return
+		return err
 	}
 
-	return
+	return nil
 }

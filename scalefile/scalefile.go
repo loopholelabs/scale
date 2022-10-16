@@ -33,6 +33,7 @@ type Build struct {
 }
 
 type ScaleFile struct {
+	Version    string `json:"version"`
 	Name       string `json:"name"`
 	Build      Build  `json:"build"`
 	Source     string `json:"source"`
