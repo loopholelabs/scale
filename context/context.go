@@ -17,14 +17,10 @@ type Context struct {
 
 // New creates a new empty Context that must be initialized with the Deserialize method
 func New() *Context {
-	c := &Context{
+	return &Context{
 		generated: generated.NewContext(),
 		buffer:    polyglot.NewBuffer(),
 	}
-	c.generated.Request.Headers = generated.NewRequestHeadersMap(8)
-	c.generated.Response.Headers = generated.NewResponseHeadersMap(8)
-
-	return c
 }
 
 // Serialize serializes the Context into a pointer and size
@@ -34,7 +30,7 @@ func (ctx *Context) Serialize() (uint32, uint32) {
 	underlying := ctx.buffer.Bytes()
 	ptr := &underlying[0]
 	unsafePtr := uintptr(unsafe.Pointer(ptr))
-	return uint32(unsafePtr), uint32(len(*ctx.buffer))
+	return uint32(unsafePtr), uint32(ctx.buffer.Len())
 }
 
 // Deserialize takes a pointer and size and deserializes the data into the Context
@@ -53,3 +49,10 @@ func (ctx *Context) Next() *Context {
 	ctx.Deserialize(utils.UnpackUint32(next(ctx.Serialize())))
 	return ctx
 }
+
+//func Debug(str string) {
+//	data := []byte(str)
+//	ptr := &data[0]
+//	unsafePtr := uintptr(unsafe.Pointer(ptr))
+//	debug(uint32(unsafePtr), uint32(len(data)))
+//}

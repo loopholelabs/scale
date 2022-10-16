@@ -9,34 +9,45 @@ import (
 // This compiler guard ensures that the HTTP adapter implements the net/http.Handler interface.
 var _ http.Handler = (*HTTP)(nil)
 
-type next struct {
-	next http.Handler
-	w    http.ResponseWriter
-	r    *http.Request
-}
-
 type HTTP struct {
-	next http.Handler
+	next    http.Handler
+	runtime *runtime.Runtime
 }
 
 func New(next http.Handler, runtime *runtime.Runtime) *HTTP {
 	return &HTTP{
-		next: next,
+		next:    next,
+		runtime: runtime,
 	}
 }
 
 func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	//run, err := runtime.NewContext(req.Context(), h.Next, nil)
-	//
-	//ctx := context.NewContext()
-	//Serialize(ctx, req)
-	//ctx = h.runtime.Run(ctx)
-	//err := Deserialize(ctx, w)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//}
+	i, err := h.runtime.Instance(req.Context(), h.Next(req))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	SerializeRequest(i.Context(), req)
+	err = i.Run(req.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	err = DeserializeResponse(i.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }
 
-func (h *HTTP) Next(ctx *runtime.Context) {
-	//h.next.ServeHTTP(ctx, ctx)
+func (h *HTTP) Next(req *http.Request) runtime.Next {
+	return func(ctx *runtime.Context) *runtime.Context {
+		DeserializeRequest(ctx, req)
+		w := NewResponseWriter()
+		h.next.ServeHTTP(w, req)
+		SerializeRequest(ctx, req)
+		SerializeResponse(ctx, w)
+		return ctx
+	}
 }

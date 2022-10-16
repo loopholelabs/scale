@@ -3,25 +3,26 @@ package runtime
 import (
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale-go/runtime/generated"
-	"io"
 )
 
 // Context is a wrapper around generated.Context
 // and it facilitates the exchange of data between
 // the runtime and the scale functions
 type Context struct {
-	Context      *generated.Context
-	Buffer       *polyglot.Buffer
-	RawBuffer    []byte
-	StreamBuffer *io.Reader
+	Context *generated.Context
+	Buffer  *polyglot.Buffer
 }
 
 // NewContext returns a new Context
 func NewContext() *Context {
-	return &Context{
+	c := &Context{
 		Context: generated.NewContext(),
 		Buffer:  polyglot.NewBuffer(),
 	}
+	c.Context.Request.Headers = generated.NewRequestHeadersMap(8)
+	c.Context.Response.Headers = generated.NewResponseHeadersMap(8)
+
+	return c
 }
 
 // Deserialize deserializes the context from the given byte slice

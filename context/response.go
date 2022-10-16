@@ -54,10 +54,16 @@ func (res *Response) Headers() *ResponseHeaders {
 
 // Get returns the value of the header at key k
 func (h *ResponseHeaders) Get(k string) []string {
-	return h.value[k].Value
+	v := h.value[k]
+	if v == nil {
+		return nil
+	}
+	return v.Value
 }
 
 // Set sets the value of the header at key k to value v
 func (h *ResponseHeaders) Set(k string, v []string) {
-	h.value[k].Value = v
+	h.value[k] = &generated.StringList{
+		Value: v,
+	}
 }

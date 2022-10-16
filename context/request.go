@@ -42,10 +42,16 @@ func (req *Request) Headers() *RequestHeaders {
 
 // Get returns the value of the header
 func (h *RequestHeaders) Get(k string) []string {
-	return h.value[k].Value
+	v := h.value[k]
+	if v == nil {
+		return nil
+	}
+	return v.Value
 }
 
 // Set sets the value of the header
 func (h *RequestHeaders) Set(k string, v []string) {
-	h.value[k].Value = v
+	h.value[k] = &generated.StringList{
+		Value: v,
+	}
 }

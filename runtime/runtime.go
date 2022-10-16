@@ -10,10 +10,13 @@ import (
 	"github.com/tetratelabs/wazero/api"
 )
 
+// Next is the next function in the middleware chain. It's meant to be implemented
+// by whatever adapter is being used.
+type Next func(ctx *Context) *Context
+
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
 type Runtime struct {
-	Next          Next
 	runtime       wazero.Runtime
 	compileConfig wazero.CompileConfig
 	moduleConfig  wazero.ModuleConfig
@@ -22,9 +25,8 @@ type Runtime struct {
 	instances map[string]*Instance
 }
 
-func New(ctx context.Context, next Next, functions []scalefunc.ScaleFunc) (*Runtime, error) {
+func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error) {
 	r := &Runtime{
-		Next:          next,
 		runtime:       wazero.NewRuntimeWithConfig(wazero.NewRuntimeConfig().WithWasmCore2()),
 		compileConfig: wazero.NewCompileConfig(),
 		moduleConfig:  wazero.NewModuleConfig(),
@@ -33,6 +35,7 @@ func New(ctx context.Context, next Next, functions []scalefunc.ScaleFunc) (*Runt
 
 	module := r.runtime.NewModuleBuilder("env")
 	module = module.ExportFunction("next", r.next)
+	//module = module.ExportFunction("debug", r.debug)
 
 	compiled, err := module.Compile(ctx, r.compileConfig)
 	if err != nil {
@@ -67,9 +70,10 @@ func New(ctx context.Context, next Next, functions []scalefunc.ScaleFunc) (*Runt
 	return r, nil
 }
 
-func (r *Runtime) Instance(ctx context.Context) (*Instance, error) {
+func (r *Runtime) Instance(ctx context.Context, next Next) (*Instance, error) {
 	i := &Instance{
 		id:      uuid.New().String(),
+		next:    next,
 		runtime: r,
 		modules: make(map[api.Module]*Module),
 		ctx:     NewContext(),

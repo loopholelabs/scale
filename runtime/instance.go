@@ -39,11 +39,17 @@ func (m *Module) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to read memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
 	}
 
-	return m.instance.ctx.Deserialize(buf)
+	err = m.instance.ctx.Deserialize(buf)
+	if err != nil {
+		return fmt.Errorf("failed to deserialize context for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
+	}
+
+	return nil
 }
 
 type Instance struct {
 	id      string
+	next    Next
 	runtime *Runtime
 	ctx     *Context
 	head    *Module
