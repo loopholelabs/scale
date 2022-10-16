@@ -35,7 +35,7 @@ type Build struct {
 type ScaleFile struct {
 	Name       string `json:"name"`
 	Build      Build  `json:"build"`
-	File       string `json:"file"`
+	Source     string `json:"source"`
 	Middleware bool   `json:"middleware"`
 }
 

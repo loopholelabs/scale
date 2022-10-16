@@ -16,9 +16,74 @@
 
 package scalefunc
 
-import "github.com/loopholelabs/scale-go/scalefile"
+import (
+	"github.com/loopholelabs/polyglot-go"
+	"github.com/loopholelabs/scale-go/scalefile"
+)
 
 type ScaleFunc struct {
 	ScaleFile scalefile.ScaleFile
 	Function  []byte
+}
+
+func (s *ScaleFunc) Encode() []byte {
+	b := polyglot.GetBuffer()
+	defer polyglot.PutBuffer(b)
+	e := polyglot.Encoder(b)
+	e.String(s.ScaleFile.Name)
+	e.String(s.ScaleFile.Build.Language)
+	e.Uint32(uint32(len(s.ScaleFile.Build.Dependencies)))
+	for _, dep := range s.ScaleFile.Build.Dependencies {
+		e.String(dep.Name).String(dep.Version)
+	}
+	e.String(s.ScaleFile.Source)
+	e.Bytes(s.Function)
+
+	return b.Bytes()
+}
+
+func (s *ScaleFunc) Decode(data []byte) {
+	d := polyglot.GetDecoder(data)
+	defer d.Return()
+
+	var err error
+	s.ScaleFile.Name, err = d.String()
+	if err != nil {
+		return
+	}
+
+	s.ScaleFile.Build.Language, err = d.String()
+	if err != nil {
+		return
+	}
+
+	var size uint32
+	size, err = d.Uint32()
+	if err != nil {
+		return
+	}
+
+	s.ScaleFile.Build.Dependencies = make([]scalefile.Dependency, size)
+	for i := uint32(0); i < size; i++ {
+		s.ScaleFile.Build.Dependencies[i].Name, err = d.String()
+		if err != nil {
+			return
+		}
+		s.ScaleFile.Build.Dependencies[i].Version, err = d.String()
+		if err != nil {
+			return
+		}
+	}
+
+	s.ScaleFile.Source, err = d.String()
+	if err != nil {
+		return
+	}
+
+	s.Function, err = d.Bytes(nil)
+	if err != nil {
+		return
+	}
+
+	return
 }
