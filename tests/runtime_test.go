@@ -98,7 +98,9 @@ func TestRuntime(t *testing.T) {
 				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
-				_, err = r.Instance(context.Background(), nil)
+				_, err = r.Instance(context.Background(), func(ctx *runtime.Context) *runtime.Context {
+					return ctx
+				})
 				require.Error(t, err)
 			},
 		},
@@ -109,7 +111,9 @@ func TestRuntime(t *testing.T) {
 				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
-				_, err = r.Instance(context.Background(), nil)
+				_, err = r.Instance(context.Background(), func(ctx *runtime.Context) *runtime.Context {
+					return ctx
+				})
 				require.Error(t, err)
 			},
 		},
@@ -120,7 +124,9 @@ func TestRuntime(t *testing.T) {
 				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
-				i, err := r.Instance(context.Background(), nil)
+				i, err := r.Instance(context.Background(), func(ctx *runtime.Context) *runtime.Context {
+					return ctx
+				})
 				require.NoError(t, err)
 
 				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
@@ -131,6 +137,17 @@ func TestRuntime(t *testing.T) {
 
 				err = i.Run(context.Background())
 				assert.Error(t, err)
+			},
+		},
+		{
+			Name:   "Next Function Required",
+			Module: "passthrough",
+			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				_, err = r.Instance(context.Background(), nil)
+				require.ErrorIs(t, err, runtime.NextFunctionRequiredError)
 			},
 		},
 	}
@@ -146,6 +163,7 @@ func TestRuntime(t *testing.T) {
 					Build: scalefile.Build{
 						Language: "go",
 					},
+					Middleware: true,
 				},
 				Function: module,
 			}

@@ -34,3 +34,5 @@ func (ctx *Context) Deserialize(uint32, uint32) {}
 func (ctx *Context) Next() *Context {
 	return ctx
 }
+
+//func Debug(string) {}

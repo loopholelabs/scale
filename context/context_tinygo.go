@@ -71,3 +71,10 @@ func (ctx *Context) Next() *Context {
 	ctx.Deserialize(utils.UnpackUint32(next(ctx.Serialize())))
 	return ctx
 }
+
+//func Debug(str string) {
+//	data := []byte(str)
+//	ptr := &data[0]
+//	unsafePtr := uintptr(unsafe.Pointer(ptr))
+//	debug(uint32(unsafePtr), uint32(len(data)))
+//}

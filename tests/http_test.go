@@ -107,3 +107,51 @@ func TestHTTPEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello World", string(body))
 }
+
+func TestHTTPChain(t *testing.T) {
+	middlewareModule, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-middleware")))
+	assert.NoError(t, err)
+
+	endpointModule, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-endpoint")))
+	assert.NoError(t, err)
+
+	middlewareScaleFunc := scalefunc.ScaleFunc{
+		ScaleFile: scalefile.ScaleFile{
+			Name: "http-middleware",
+			Build: scalefile.Build{
+				Language: "go",
+			},
+			Middleware: true,
+		},
+		Function: middlewareModule,
+	}
+
+	endpointScaleFunc := scalefunc.ScaleFunc{
+		ScaleFile: scalefile.ScaleFile{
+			Name: "http-endpoint",
+			Build: scalefile.Build{
+				Language: "go",
+			},
+		},
+		Function: endpointModule,
+	}
+
+	r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{middlewareScaleFunc, endpointScaleFunc})
+	require.NoError(t, err)
+
+	httpAdapter := adapter.New(nil, r)
+
+	server := httptest.NewServer(httpAdapter)
+	defer server.Close()
+
+	req, err := http.NewRequest("GET", server.URL, bytes.NewBufferString("Hello World"))
+	assert.NoError(t, err)
+
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "test", res.Header.Get("X-Test"))
+	body, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello World", string(body))
+}

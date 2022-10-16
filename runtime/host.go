@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/loopholelabs/scale-go/utils"
 	"github.com/tetratelabs/wazero/api"
+	"strings"
 )
 
 func (r *Runtime) fd_write(int32, int32, int32, int32) int32 {
@@ -27,7 +28,7 @@ func (r *Runtime) fd_write(int32, int32, int32, int32) int32 {
 }
 
 func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) uint64 {
-	i := r.instances[module.Name()]
+	i := r.instances[strings.Split(module.Name(), ".")[0]]
 	if i == nil {
 		return 0
 	}
@@ -72,7 +73,7 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 }
 
 //func (r *Runtime) debug(ctx context.Context, module api.Module, offset uint32, length uint32) {
-//	buf, ok := module.Memory().Deserialize(ctx, offset, length)
+//	buf, ok := module.Memory().Read(ctx, offset, length)
 //	if !ok {
 //		panic("failed to read memory")
 //	}

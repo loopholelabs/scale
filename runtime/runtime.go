@@ -19,11 +19,17 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/loopholelabs/scale-go/scalefunc"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
+	"sync"
+)
+
+var (
+	NextFunctionRequiredError = errors.New("next function required when the scale function chain only contains middleware")
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
@@ -37,8 +43,9 @@ type Runtime struct {
 	compileConfig wazero.CompileConfig
 	moduleConfig  wazero.ModuleConfig
 
-	functions []*Function
-	instances map[string]*Instance
+	functions  []*Function
+	instanceMu sync.RWMutex
+	instances  map[string]*Instance
 }
 
 func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error) {
@@ -95,7 +102,22 @@ func (r *Runtime) Instance(ctx context.Context, next Next) (*Instance, error) {
 		ctx:     NewContext(),
 	}
 
+	if next == nil {
+		endpoint := false
+		for _, f := range r.functions {
+			if !f.ScaleFunc.ScaleFile.Middleware {
+				endpoint = true
+				break
+			}
+		}
+		if !endpoint {
+			return nil, NextFunctionRequiredError
+		}
+	}
+
+	r.instanceMu.Lock()
 	r.instances[i.id] = i
+	r.instanceMu.Unlock()
 
 	return i, i.initialize(ctx)
 }

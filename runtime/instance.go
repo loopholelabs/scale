@@ -78,6 +78,11 @@ func (i *Instance) Context() *Context {
 }
 
 func (i *Instance) Run(ctx context.Context) error {
+	defer func() {
+		i.runtime.instanceMu.Lock()
+		delete(i.runtime.instances, i.id)
+		i.runtime.instanceMu.Unlock()
+	}()
 	if i.head == nil {
 		return fmt.Errorf("no functions registered for instance %s", i.id)
 	}
@@ -87,7 +92,7 @@ func (i *Instance) Run(ctx context.Context) error {
 
 func (i *Instance) initialize(ctx context.Context) error {
 	for _, f := range i.runtime.functions {
-		module, err := i.runtime.runtime.InstantiateModule(ctx, f.Compiled, i.runtime.moduleConfig.WithName(i.id))
+		module, err := i.runtime.runtime.InstantiateModule(ctx, f.Compiled, i.runtime.moduleConfig.WithName(fmt.Sprintf("%s.%s", i.id, f.ScaleFunc.ScaleFile.Name)))
 		if err != nil {
 			return fmt.Errorf("failed to instantiate function '%s' for instance %s: %w", f.ScaleFunc.ScaleFile.Name, i.id, err)
 		}
