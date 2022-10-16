@@ -28,7 +28,11 @@ func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	SerializeRequest(i.Context(), req)
+	err = SerializeRequest(i.Context(), req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	err = i.Run(req.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -46,7 +50,11 @@ func (h *HTTP) Next(req *http.Request) runtime.Next {
 		DeserializeRequest(ctx, req)
 		w := NewResponseWriter()
 		h.next.ServeHTTP(w, req)
-		SerializeRequest(ctx, req)
+		err := SerializeRequest(ctx, req)
+		if err != nil {
+			ctx.Error(err)
+			return ctx
+		}
 		SerializeResponse(ctx, w)
 		return ctx
 	}

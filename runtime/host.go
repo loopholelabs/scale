@@ -13,23 +13,20 @@ func (r *Runtime) fd_write(int32, int32, int32, int32) int32 {
 func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) uint64 {
 	i := r.instances[module.Name()]
 	if i == nil {
-		// TODO: have an error field in the context
 		return 0
 	}
 
 	m := i.modules[module]
 	if m == nil {
-		// TODO: have an error field in the context
 		return 0
 	}
 
 	buf, ok := m.module.Memory().Read(ctx, offset, length)
 	if !ok {
-		// TODO: have an error field in the context
 		return 0
 	}
 
-	err := i.Context().Deserialize(buf)
+	err := i.Context().Read(buf)
 	if err != nil {
 		// TODO: have an error field in the context
 		return 0
@@ -40,21 +37,18 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 	} else {
 		err = m.next.Run(ctx)
 		if err != nil {
-			// TODO: have an error field in the context
-			return 0
+			i.Context().Error(err)
 		}
 	}
 
-	i.Context().Serialize()
+	i.Context().Write()
 	bufLength := uint64(i.Context().Buffer.Len())
 	buffer, err := m.malloc.Call(ctx, bufLength)
 	if err != nil {
-		// TODO: have an error field in the context
 		return 0
 	}
 
 	if !module.Memory().Write(ctx, uint32(buffer[0]), i.Context().Buffer.Bytes()) {
-		// TODO: have an error field in the context
 		return 0
 	}
 

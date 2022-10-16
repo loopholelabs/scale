@@ -1,6 +1,8 @@
 package context
 
-import "github.com/loopholelabs/scale-go/runtime/generated"
+import (
+	"github.com/loopholelabs/scale-go/runtime/generated"
+)
 
 // Request is the HTTP Request object
 type Request struct {
@@ -26,6 +28,18 @@ func (req *Request) SetMethod(method string) string {
 // RemoteIP returns the remote IP of the request
 func (req *Request) RemoteIP() string {
 	return req.value.Ip
+}
+
+func (req *Request) Body() []byte {
+	return req.value.Body
+}
+
+func (req *Request) SetBody(body string) {
+	req.value.Body = []byte(body)
+}
+
+func (req *Request) SetBodyBytes(body []byte) {
+	req.value.Body = body
 }
 
 // RequestHeaders is are the headers in the request

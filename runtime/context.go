@@ -11,6 +11,7 @@ import (
 type Context struct {
 	Context *generated.Context
 	Buffer  *polyglot.Buffer
+	Err     error
 }
 
 // NewContext returns a new Context
@@ -25,14 +26,18 @@ func NewContext() *Context {
 	return c
 }
 
-// Deserialize deserializes the context from the given byte slice
-func (c *Context) Deserialize(b []byte) error {
+// Read reads the context from the given byte slice
+func (c *Context) Read(b []byte) error {
 	return c.Context.Decode(b)
 }
 
-// Serialize serializes the context into a byte slice and returns it
-func (c *Context) Serialize() []byte {
+// Write writes the context into a byte slice and returns it
+func (c *Context) Write() []byte {
 	c.Buffer.Reset()
 	c.Context.Encode(c.Buffer)
 	return c.Buffer.Bytes()
+}
+
+func (c *Context) Error(err error) {
+	c.Err = err
 }

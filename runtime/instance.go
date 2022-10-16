@@ -14,17 +14,17 @@ type Module struct {
 	next     *Module
 	run      api.Function
 	malloc   api.Function
-	free     api.Function
 }
 
 func (m *Module) Run(ctx context.Context) error {
-	bufLength := uint64(m.instance.ctx.Buffer.Len())
+	m.instance.Context().Write()
+	bufLength := uint64(m.instance.Context().Buffer.Len())
 	buffer, err := m.malloc.Call(ctx, bufLength)
 	if err != nil {
 		return fmt.Errorf("failed to allocate memory for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
 	}
 
-	if !m.module.Memory().Write(ctx, uint32(buffer[0]), m.instance.ctx.Buffer.Bytes()) {
+	if !m.module.Memory().Write(ctx, uint32(buffer[0]), m.instance.Context().Buffer.Bytes()) {
 		return fmt.Errorf("failed to write memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
 	}
 
@@ -39,7 +39,7 @@ func (m *Module) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to read memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
 	}
 
-	err = m.instance.ctx.Deserialize(buf)
+	err = m.instance.Context().Read(buf)
 	if err != nil {
 		return fmt.Errorf("failed to deserialize context for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
 	}
@@ -78,7 +78,6 @@ func (i *Instance) initialize(ctx context.Context) error {
 
 		run := module.ExportedFunction("run")
 		malloc := module.ExportedFunction("malloc")
-		free := module.ExportedFunction("free")
 
 		m := &Module{
 			module:   module,
@@ -86,7 +85,6 @@ func (i *Instance) initialize(ctx context.Context) error {
 			instance: i,
 			run:      run,
 			malloc:   malloc,
-			free:     free,
 		}
 		i.modules[module] = m
 		if i.head == nil {
