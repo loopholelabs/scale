@@ -1,71 +1,57 @@
+//go:build !tinygo
+
+/*
+	Copyright 2022 Loophole Labs
+
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+
+		   http://www.apache.org/licenses/LICENSE-2.0
+
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+*/
+
 package context
 
-import (
-	"github.com/loopholelabs/scale-go/runtime/generated"
-)
+type Request struct{}
 
-// Request is the HTTP Request object
-type Request struct {
-	value *generated.Request
-}
-
-// Request returns the Request object for the Context
 func (ctx *Context) Request() *Request {
-	return &Request{value: ctx.generated.Request}
+	return &Request{}
 }
 
-// Method returns the method of the request
 func (req *Request) Method() string {
-	return req.value.Method
+	return ""
 }
 
-// SetMethod sets the method of the request
-func (req *Request) SetMethod(method string) string {
-	req.value.Method = method
-	return req.value.Method
+func (req *Request) SetMethod(string) string {
+	return ""
 }
 
-// RemoteIP returns the remote IP of the request
 func (req *Request) RemoteIP() string {
-	return req.value.IP
+	return ""
 }
 
 func (req *Request) Body() []byte {
-	return req.value.Body
+	return nil
 }
 
-func (req *Request) SetBody(body string) {
-	req.value.Body = []byte(body)
-}
+func (req *Request) SetBody(string) {}
 
-func (req *Request) SetBodyBytes(body []byte) {
-	req.value.Body = body
-}
+func (req *Request) SetBodyBytes([]byte) {}
 
-// RequestHeaders is are the headers in the request
-type RequestHeaders struct {
-	value generated.RequestHeadersMap
-}
+type RequestHeaders struct{}
 
-// Headers returns the headers of the request
 func (req *Request) Headers() *RequestHeaders {
-	return &RequestHeaders{
-		value: req.value.Headers,
-	}
+	return &RequestHeaders{}
 }
 
-// Get returns the value of the header
-func (h *RequestHeaders) Get(k string) []string {
-	v := h.value[k]
-	if v == nil {
-		return nil
-	}
-	return v.Value
+func (h *RequestHeaders) Get(string) []string {
+	return nil
 }
 
-// Set sets the value of the header
-func (h *RequestHeaders) Set(k string, v []string) {
-	h.value[k] = &generated.StringList{
-		Value: v,
-	}
-}
+func (h *RequestHeaders) Set(string, []string) {}

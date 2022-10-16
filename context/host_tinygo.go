@@ -1,3 +1,6 @@
+//go:build tinygo
+// +build tinygo
+
 /*
 	Copyright 2022 Loophole Labs
 
@@ -14,15 +17,11 @@
 	limitations under the License.
 */
 
-package scale
+package context
 
-import (
-	"github.com/loopholelabs/scale-go/context"
-)
-
-func Scale(ctx *context.Context) *context.Context {
-	req := ctx.Request()
-	res := ctx.Response()
-	res.SetBodyBytes(req.Body())
-	return ctx
-}
+// next is the host function that is called by the runtime to execute the next
+// function in the chain.
+//
+//export next
+//go:linkname next
+func next(offset uint32, length uint32) (packed uint64)
