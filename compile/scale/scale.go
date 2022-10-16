@@ -5,5 +5,6 @@ import (
 )
 
 func Scale(ctx *context.Context) *context.Context {
-	return ctx.Next()
+	ctx.Response().SetBody("Hello, World!")
+	return ctx
 }

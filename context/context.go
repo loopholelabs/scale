@@ -15,7 +15,7 @@ type Context struct {
 	buffer    *polyglot.Buffer
 }
 
-// New creates a new empty Context that must be initialized with the Read method
+// New creates a new empty Context that must be initialized with the Deserialize method
 func New() *Context {
 	return &Context{
 		generated: generated.NewContext(),
@@ -23,8 +23,8 @@ func New() *Context {
 	}
 }
 
-// Write writes the Context into a pointer and returns the pointer and its size
-func (ctx *Context) Write() (uint32, uint32) {
+// Serialize serializes the Context into a pointer and returns the pointer and its size
+func (ctx *Context) Serialize() (uint32, uint32) {
 	ctx.buffer.Reset()
 	ctx.generated.Encode(ctx.buffer)
 	underlying := ctx.buffer.Bytes()
@@ -33,8 +33,8 @@ func (ctx *Context) Write() (uint32, uint32) {
 	return uint32(unsafePtr), uint32(ctx.buffer.Len())
 }
 
-// Read takes a pointer and size and reads the data into the Context
-func (ctx *Context) Read(ptr uint32, size uint32) {
+// Deserialize takes a pointer and size and deserializes the data into the Context
+func (ctx *Context) Deserialize(ptr uint32, size uint32) {
 	if ptr == 0 || size == 0 {
 		panic("context: invalid pointer or size")
 	}
@@ -49,6 +49,6 @@ func (ctx *Context) Read(ptr uint32, size uint32) {
 // Next calls the next host function after writing the Context,
 // then it reads the result back into the Context
 func (ctx *Context) Next() *Context {
-	ctx.Read(utils.UnpackUint32(next(ctx.Write())))
+	ctx.Deserialize(utils.UnpackUint32(next(ctx.Serialize())))
 	return ctx
 }

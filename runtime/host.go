@@ -56,7 +56,7 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 }
 
 //func (r *Runtime) debug(ctx context.Context, module api.Module, offset uint32, length uint32) {
-//	buf, ok := module.Memory().Read(ctx, offset, length)
+//	buf, ok := module.Memory().Deserialize(ctx, offset, length)
 //	if !ok {
 //		panic("failed to read memory")
 //	}
