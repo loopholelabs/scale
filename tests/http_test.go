@@ -75,14 +75,13 @@ func TestHTTPEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	httpAdapter := adapter.New(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("NEXT", "true")
-		_, _ = w.Write([]byte("Hello World"))
+		t.Fatal("HTTP handler next should not be called")
 	}), r)
 
 	server := httptest.NewServer(httpAdapter)
 	defer server.Close()
 
-	req, err := http.NewRequest("GET", server.URL, bytes.NewBufferString("No Hello World"))
+	req, err := http.NewRequest("GET", server.URL, bytes.NewBufferString("Hello World"))
 	assert.NoError(t, err)
 
 	res, err := http.DefaultClient.Do(req)
@@ -90,6 +89,5 @@ func TestHTTPEndpoint(t *testing.T) {
 
 	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
-	assert.Equal(t, "No Hello World", string(body))
-	assert.Equal(t, "", res.Header.Get("NEXT"))
+	assert.Equal(t, "Hello World", string(body))
 }

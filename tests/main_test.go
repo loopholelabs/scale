@@ -18,6 +18,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
+
 	code := m.Run()
 
 	err = exec.Command("sh", "cleanup.sh").Run()

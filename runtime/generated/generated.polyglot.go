@@ -230,7 +230,6 @@ func (x ResponseHeadersMap) decode(d *polyglot.Decoder, size uint32) error {
 
 type Response struct {
 	Headers    ResponseHeadersMap
-	Status     string
 	StatusCode int32
 	Body       []byte
 }
@@ -248,7 +247,7 @@ func (x *Response) Encode(b *polyglot.Buffer) {
 		polyglot.Encoder(b).Nil()
 	} else {
 
-		polyglot.Encoder(b).String(x.Status).Int32(x.StatusCode).Bytes(x.Body)
+		polyglot.Encoder(b).Int32(x.StatusCode).Bytes(x.Body)
 		x.Headers.Encode(b)
 	}
 }
@@ -269,10 +268,6 @@ func (x *Response) decode(d *polyglot.Decoder) error {
 
 	var err error
 
-	x.Status, err = d.String()
-	if err != nil {
-		return err
-	}
 	x.StatusCode, err = d.Int32()
 	if err != nil {
 		return err

@@ -1,20 +1,14 @@
 #!/bin/bash
 set -eo pipefail
 
+COMPILE="../compile"
+TESTS=$(pwd)
+
 # This script is used to compile the wasm modules in the tests directory
 # and then run the tests.
 
 # The wasm modules are compiled with the following command:
 # tinygo build -o <module name>.wasm -scheduler=none --no-debug -wasm-abi=c -target wasm ./
-
-if [ -d "scale-go-compile" ]
-then
-    echo "Repo already cloned, deleting and cloning again"
-    rm -rf scale-go-compile
-fi
-
-# scale-go-compile is the template directory to compile scale functions in go
-git clone https://github.com/loopholelabs/scale-go-compile
 
 for compiled in modules/*.wasm ; do
   rm -rf "$compiled"
@@ -23,12 +17,11 @@ done
 for module in modules/*/*.go ; do
     directory=$(dirname "$module")
     test=$(basename "$directory")
-    echo "Compiling $test"
-    cp "$module" scale-go-compile/scale/scale.go
-    cd scale-go-compile
-    tinygo build -o "../modules/$test.wasm" -scheduler=none --no-debug -wasm-abi=c -target wasm ./
-    cd ..
+    echo "Compiling $test from $module"
+    mv "$COMPILE/scale/scale.go" "$COMPILE/scale/scale.bak"
+    cp "$module" $COMPILE/scale/scale.go
+    cd $COMPILE
+    tinygo build -o "$TESTS/modules/$test.wasm" -scheduler=none --no-debug -wasm-abi=c -target wasm ./
+    mv "$COMPILE/scale/scale.bak" "$COMPILE/scale/scale.go"
+    cd $TESTS
 done
-
-rm -rf scale-go-compile
-

@@ -18,9 +18,8 @@ message Request {
 
 message Response {
   map<string, StringList> Headers = 1;
-  string Status = 2;
-  int32 StatusCode = 3;
-  bytes Body = 5;
+  int32 StatusCode = 2;
+  bytes Body = 3;
 }
 
 message StringList {

@@ -27,7 +27,7 @@ func (req *Request) SetMethod(method string) string {
 
 // RemoteIP returns the remote IP of the request
 func (req *Request) RemoteIP() string {
-	return req.value.Ip
+	return req.value.IP
 }
 
 func (req *Request) Body() []byte {

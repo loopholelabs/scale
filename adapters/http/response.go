@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/loopholelabs/scale-go/runtime"
 	"github.com/loopholelabs/scale-go/runtime/generated"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -22,13 +21,14 @@ func SerializeResponse(ctx *runtime.Context, w *ResponseWriter) {
 
 // DeserializeResponse deserializes the runtime.Context object into the http.ResponseWriter
 func DeserializeResponse(ctx *runtime.Context, w http.ResponseWriter) error {
-	log.Printf("here0")
 	for k, v := range ctx.Context.Response.Headers {
 		w.Header().Set(k, strings.Join(v.Value, ","))
 	}
-	log.Printf("here1")
-	w.WriteHeader(int(ctx.Context.Response.StatusCode))
-	log.Printf("here2")
+	if ctx.Context.Response.StatusCode != 0 {
+		w.WriteHeader(int(ctx.Context.Response.StatusCode))
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
 	_, err := w.Write(ctx.Context.Response.Body)
 	if err != nil {
 		return fmt.Errorf("error writing response body: %w", err)
