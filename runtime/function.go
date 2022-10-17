@@ -30,7 +30,7 @@ type Function struct {
 }
 
 func (r *Runtime) registerFunction(ctx context.Context, scaleFunc scalefunc.ScaleFunc) error {
-	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function, r.compileConfig)
+	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return fmt.Errorf("failed to compile function '%s': %w", scaleFunc.ScaleFile.Name, err)
 	}

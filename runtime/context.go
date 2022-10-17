@@ -19,6 +19,7 @@ package runtime
 import (
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale-go/runtime/generated"
+	"net/http"
 )
 
 // Context is a wrapper around generated.Context
@@ -37,7 +38,8 @@ func NewContext() *Context {
 	}
 	c.Context.Request.Headers = generated.NewRequestHeadersMap(8)
 	c.Context.Response.Headers = generated.NewResponseHeadersMap(8)
-	c.Context.Response.StatusCode = 200
+
+	c.Context.Response.StatusCode = http.StatusOK
 
 	return c
 }

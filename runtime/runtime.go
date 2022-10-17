@@ -37,9 +37,8 @@ type Next func(ctx *Context) *Context
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
 type Runtime struct {
-	runtime       wazero.Runtime
-	compileConfig wazero.CompileConfig
-	moduleConfig  wazero.ModuleConfig
+	runtime      wazero.Runtime
+	moduleConfig wazero.ModuleConfig
 
 	functions  []*Function
 	instanceMu sync.RWMutex
@@ -48,17 +47,16 @@ type Runtime struct {
 
 func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error) {
 	r := &Runtime{
-		runtime:       wazero.NewRuntimeWithConfig(wazero.NewRuntimeConfig().WithWasmCore2()),
-		compileConfig: wazero.NewCompileConfig(),
-		moduleConfig:  wazero.NewModuleConfig(),
-		instances:     make(map[string]*Instance),
+		runtime:      wazero.NewRuntime(ctx),
+		moduleConfig: wazero.NewModuleConfig(),
+		instances:    make(map[string]*Instance),
 	}
 
-	module := r.runtime.NewModuleBuilder("env")
+	module := r.runtime.NewHostModuleBuilder("env")
 	module = module.ExportFunction("next", r.next)
 	//module = module.ExportFunction("debug", r.debug)
 
-	compiled, err := module.Compile(ctx, r.compileConfig)
+	compiled, err := module.Compile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile module: %w", err)
 	}
@@ -68,10 +66,10 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 		return nil, fmt.Errorf("failed to instantiate module: %w", err)
 	}
 
-	module = r.runtime.NewModuleBuilder("wasi_snapshot_preview1")
+	module = r.runtime.NewHostModuleBuilder("wasi_snapshot_preview1")
 	module = module.ExportFunction("fd_write", r.fd_write)
 
-	compiled, err = module.Compile(ctx, r.compileConfig)
+	compiled, err = module.Compile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile module: %w", err)
 	}
