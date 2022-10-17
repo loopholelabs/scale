@@ -28,7 +28,9 @@ func main() {}
 //export run
 func run(ptr uint32, size uint32) uint64 {
 	ctx := context.New()
-	ctx.Deserialize(ptr, size)
+	if ctx.FromPointer(ptr, size) != nil {
+		return 0
+	}
 	ctx = scale.Scale(ctx)
-	return utils.PackUint32(ctx.Serialize())
+	return utils.PackUint32(ctx.ToPointer())
 }

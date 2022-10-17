@@ -19,49 +19,9 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/loopholelabs/scale-go/utils"
+	"github.com/google/uuid"
 	"github.com/tetratelabs/wazero/api"
 )
-
-type Module struct {
-	module   api.Module
-	instance *Instance
-	function *Function
-	next     *Module
-	run      api.Function
-	malloc   api.Function
-}
-
-func (m *Module) Run(ctx context.Context) error {
-	m.instance.Context().Write()
-	bufLength := uint64(m.instance.Context().Buffer.Len())
-	buffer, err := m.malloc.Call(ctx, bufLength)
-	if err != nil {
-		return fmt.Errorf("failed to allocate memory for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
-	}
-
-	if !m.module.Memory().Write(ctx, uint32(buffer[0]), m.instance.Context().Buffer.Bytes()) {
-		return fmt.Errorf("failed to write memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
-	}
-
-	packed, err := m.run.Call(ctx, buffer[0], bufLength)
-	if err != nil {
-		return fmt.Errorf("failed to run function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
-	}
-
-	offset, length := utils.UnpackUint32(packed[0])
-	buf, ok := m.module.Memory().Read(ctx, offset, length)
-	if !ok {
-		return fmt.Errorf("failed to read memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
-	}
-
-	err = m.instance.Context().Read(buf)
-	if err != nil {
-		return fmt.Errorf("failed to deserialize context for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
-	}
-
-	return nil
-}
 
 type Instance struct {
 	id      string
@@ -71,6 +31,38 @@ type Instance struct {
 	head    *Module
 	tail    *Module
 	modules map[api.Module]*Module
+}
+
+func (r *Runtime) Instance(ctx context.Context, next Next) (*Instance, error) {
+	i := &Instance{
+		id:      uuid.New().String(),
+		next:    next,
+		runtime: r,
+		modules: make(map[api.Module]*Module),
+		ctx:     NewContext(),
+	}
+
+	if i.next == nil {
+		endpoint := false
+		for _, f := range r.functions {
+			if !f.ScaleFunc.ScaleFile.Middleware {
+				endpoint = true
+				break
+			}
+		}
+		if !endpoint {
+			return nil, NextFunctionRequiredError
+		}
+		i.next = func(ctx *Context) *Context {
+			return ctx
+		}
+	}
+
+	r.instanceMu.Lock()
+	r.instances[i.id] = i
+	r.instanceMu.Unlock()
+
+	return i, i.initialize(ctx)
 }
 
 func (i *Instance) Context() *Context {

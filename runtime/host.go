@@ -45,7 +45,6 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 
 	err := i.Context().Read(buf)
 	if err != nil {
-		// TODO: have an error field in the context
 		return 0
 	}
 
@@ -54,22 +53,22 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 	} else {
 		err = m.next.Run(ctx)
 		if err != nil {
-			i.Context().Error(err)
+			return 0
 		}
 	}
 
-	i.Context().Write()
-	bufLength := uint64(i.Context().Buffer.Len())
-	buffer, err := m.malloc.Call(ctx, bufLength)
+	ctxBuffer := i.Context().Write()
+	ctxBufferLength := uint64(len(ctxBuffer))
+	writeBuffer, err := m.malloc.Call(ctx, ctxBufferLength)
 	if err != nil {
 		return 0
 	}
 
-	if !module.Memory().Write(ctx, uint32(buffer[0]), i.Context().Buffer.Bytes()) {
+	if !module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer) {
 		return 0
 	}
 
-	return utils.PackUint32(uint32(buffer[0]), uint32(bufLength))
+	return utils.PackUint32(uint32(writeBuffer[0]), uint32(ctxBufferLength))
 }
 
 //func (r *Runtime) debug(ctx context.Context, module api.Module, offset uint32, length uint32) {

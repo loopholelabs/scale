@@ -44,6 +44,7 @@ func TestHTTPMiddleware(t *testing.T) {
 			Build: scalefile.Build{
 				Language: "go",
 			},
+			Middleware: true,
 		},
 		Function: module,
 	}

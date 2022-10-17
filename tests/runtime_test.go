@@ -52,7 +52,7 @@ func TestRuntime(t *testing.T) {
 				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 				assert.NoError(t, err)
 
-				err = adapter.SerializeRequest(i.Context(), req)
+				err = adapter.FromRequest(i.Context(), req)
 				assert.NoError(t, err)
 				assert.Equal(t, "GET", i.Context().Context.Request.Method)
 
@@ -80,7 +80,7 @@ func TestRuntime(t *testing.T) {
 				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 				assert.NoError(t, err)
 
-				err = adapter.SerializeRequest(i.Context(), req)
+				err = adapter.FromRequest(i.Context(), req)
 				assert.NoError(t, err)
 				assert.Equal(t, "GET", i.Context().Context.Request.Method)
 
@@ -131,7 +131,7 @@ func TestRuntime(t *testing.T) {
 
 				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 				assert.NoError(t, err)
-				err = adapter.SerializeRequest(i.Context(), req)
+				err = adapter.FromRequest(i.Context(), req)
 				assert.NoError(t, err)
 				assert.Equal(t, "GET", i.Context().Context.Request.Method)
 

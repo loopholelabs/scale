@@ -27,7 +27,6 @@ import (
 type Context struct {
 	Context *generated.Context
 	Buffer  *polyglot.Buffer
-	Err     error
 }
 
 // NewContext returns a new Context
@@ -53,8 +52,4 @@ func (c *Context) Write() []byte {
 	c.Buffer.Reset()
 	c.Context.Encode(c.Buffer)
 	return c.Buffer.Bytes()
-}
-
-func (c *Context) Error(err error) {
-	c.Err = err
 }

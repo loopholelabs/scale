@@ -28,8 +28,8 @@ const (
 	BodyLimit = 1024 * 1024 * 10
 )
 
-// SerializeRequest serializes http.Request object into a runtime.Context
-func SerializeRequest(ctx *runtime.Context, req *http.Request) error {
+// FromRequest serializes http.Request object into a runtime.Context
+func FromRequest(ctx *runtime.Context, req *http.Request) error {
 	for k, v := range req.Header {
 		ctx.Context.Request.Headers[k] = &generated.StringList{
 			Value: v,
@@ -41,24 +41,20 @@ func SerializeRequest(ctx *runtime.Context, req *http.Request) error {
 	ctx.Context.Request.IP = req.RemoteAddr
 
 	if req.ContentLength != 0 {
-		if req.ContentLength > 0 {
-			ctx.Context.Request.Body = make([]byte, req.ContentLength)
-		} else {
-			ctx.Context.Request.Body = make([]byte, BodyLimit)
-		}
-		_, err := io.ReadFull(req.Body, ctx.Context.Request.Body)
+		var err error
+		ctx.Context.Request.Body, err = io.ReadAll(io.LimitReader(req.Body, BodyLimit))
 		if err != nil {
 			return err
 		}
 	} else {
-		ctx.Context.Request.Body = []byte("")
+		ctx.Context.Request.Body = nil
 	}
 
 	return nil
 }
 
-// DeserializeRequest deserializes the runtime.Context object into an existing http.Request
-func DeserializeRequest(ctx *runtime.Context, req *http.Request) {
+// ToRequest deserializes the runtime.Context object into an existing http.Request
+func ToRequest(ctx *runtime.Context, req *http.Request) {
 	req.Method = ctx.Context.Request.Method
 	req.ContentLength = ctx.Context.Request.ContentLength
 	req.Proto = ctx.Context.Request.Protocol
@@ -71,6 +67,6 @@ func DeserializeRequest(ctx *runtime.Context, req *http.Request) {
 	if ctx.Context.Request.ContentLength != 0 {
 		req.Body = io.NopCloser(bytes.NewReader(ctx.Context.Request.Body))
 	} else {
-		req.Body = io.NopCloser(bytes.NewReader([]byte("")))
+		req.Body = io.NopCloser(bytes.NewReader(nil))
 	}
 }

@@ -46,7 +46,7 @@ func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = SerializeRequest(i.Context(), req)
+	err = FromRequest(i.Context(), req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -57,7 +57,8 @@ func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	err = DeserializeResponse(i.Context(), w)
+
+	err = ToResponse(i.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -69,15 +70,11 @@ func (h *HTTP) Next(req *http.Request) runtime.Next {
 		return nil
 	}
 	return func(ctx *runtime.Context) *runtime.Context {
-		DeserializeRequest(ctx, req)
+		ToRequest(ctx, req)
 		w := NewResponseWriter()
 		h.next.ServeHTTP(w, req)
-		err := SerializeRequest(ctx, req)
-		if err != nil {
-			ctx.Error(err)
-			return ctx
-		}
-		SerializeResponse(ctx, w)
+		_ = FromRequest(ctx, req)
+		FromResponse(ctx, w)
 		return ctx
 	}
 }

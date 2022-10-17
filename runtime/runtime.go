@@ -21,10 +21,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/loopholelabs/scale-go/scalefunc"
 	"github.com/tetratelabs/wazero"
-	"github.com/tetratelabs/wazero/api"
 	"sync"
 )
 
@@ -86,38 +84,9 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 	for _, f := range functions {
 		err = r.registerFunction(ctx, f)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to register function '%s': %w", f.ScaleFile.Name, err)
 		}
 	}
 
 	return r, nil
-}
-
-func (r *Runtime) Instance(ctx context.Context, next Next) (*Instance, error) {
-	i := &Instance{
-		id:      uuid.New().String(),
-		next:    next,
-		runtime: r,
-		modules: make(map[api.Module]*Module),
-		ctx:     NewContext(),
-	}
-
-	if next == nil {
-		endpoint := false
-		for _, f := range r.functions {
-			if !f.ScaleFunc.ScaleFile.Middleware {
-				endpoint = true
-				break
-			}
-		}
-		if !endpoint {
-			return nil, NextFunctionRequiredError
-		}
-	}
-
-	r.instanceMu.Lock()
-	r.instances[i.id] = i
-	r.instanceMu.Unlock()
-
-	return i, i.initialize(ctx)
 }
