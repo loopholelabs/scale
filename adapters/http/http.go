@@ -72,6 +72,7 @@ func (h *HTTP) Next(req *http.Request) runtime.Next {
 	return func(ctx *runtime.Context) *runtime.Context {
 		ToRequest(ctx, req)
 		w := NewResponseWriter()
+		_ = ToResponse(ctx, w)
 		h.next.ServeHTTP(w, req)
 		_ = FromRequest(ctx, req)
 		FromResponse(ctx, w)

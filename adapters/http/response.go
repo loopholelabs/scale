@@ -41,9 +41,12 @@ func ToResponse(ctx *runtime.Context, w http.ResponseWriter) error {
 		w.Header().Set(k, strings.Join(v.Value, ","))
 	}
 	w.WriteHeader(int(ctx.Context.Response.StatusCode))
-	_, err := w.Write(ctx.Context.Response.Body)
-	if err != nil {
-		return fmt.Errorf("error writing response body: %w", err)
+	if ctx.Context.Response.Body != nil {
+		_, err := w.Write(ctx.Context.Response.Body)
+		if err != nil {
+			return fmt.Errorf("error writing response body: %w", err)
+		}
 	}
+
 	return nil
 }

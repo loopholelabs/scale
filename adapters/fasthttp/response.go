@@ -18,6 +18,7 @@ package fasthttp
 
 import (
 	"github.com/loopholelabs/scale-go/runtime"
+	"github.com/loopholelabs/scale-go/runtime/generated"
 	"github.com/valyala/fasthttp"
 	"strings"
 )
@@ -29,4 +30,15 @@ func ToResponseContext(ctx *runtime.Context, fastCTX *fasthttp.RequestCtx) {
 	for k, v := range ctx.Context.Response.Headers {
 		fastCTX.Response.Header.Set(k, strings.Join(v.Value, ","))
 	}
+}
+
+func FromResponseContext(ctx *runtime.Context, fastCTX *fasthttp.RequestCtx) {
+	ctx.Context.Response.StatusCode = int32(fastCTX.Response.StatusCode())
+	ctx.Context.Response.Body = fastCTX.Response.Body()
+
+	fastCTX.Response.Header.VisitAll(func(key []byte, value []byte) {
+		ctx.Context.Response.Headers[string(key)] = &generated.StringList{
+			Value: strings.Split(string(value), ","),
+		}
+	})
 }

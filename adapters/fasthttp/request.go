@@ -36,3 +36,13 @@ func FromRequestContext(ctx *runtime.Context, fastCTX *fasthttp.RequestCtx) {
 		}
 	})
 }
+
+func ToRequestContext(ctx *runtime.Context, fastCTX *fasthttp.RequestCtx) {
+	fastCTX.Request.Header.SetMethod(ctx.Context.Request.Method)
+	fastCTX.Request.Header.SetContentLength(int(ctx.Context.Request.ContentLength))
+	fastCTX.Request.SetBody(ctx.Context.Request.Body)
+
+	for k, v := range ctx.Context.Request.Headers {
+		fastCTX.Request.Header.Set(k, strings.Join(v.Value, ","))
+	}
+}
