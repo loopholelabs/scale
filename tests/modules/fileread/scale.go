@@ -22,6 +22,12 @@ import (
 )
 
 func Scale(ctx *context.Context) *context.Context {
-	os.ReadFile("tests/modules/fileread/scale.go")
-	return ctx.Next()
+	_, err := os.ReadFile("tests/modules/fileread/scale.go")
+	if err != nil {
+		ctx.Response().SetBody("error reading file")
+	} else {
+		ctx.Response().SetBody("success")
+	}
+
+	return ctx
 }

@@ -36,5 +36,3 @@ func (ctx *Context) FromPointer(uint32, uint32) error {
 func (ctx *Context) Next() *Context {
 	return ctx
 }
-
-//func Debug(string) {}

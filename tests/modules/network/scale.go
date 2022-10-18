@@ -22,6 +22,11 @@ import (
 )
 
 func Scale(ctx *context.Context) *context.Context {
-	net.Dial("tcp", "0.0.0.0:80")
-	return ctx.Next()
+	_, err := net.Dial("tcp", "google.com:80")
+	if err != nil {
+		ctx.Response().SetBody("error opening connection")
+	} else {
+		ctx.Response().SetBody("success")
+	}
+	return ctx
 }

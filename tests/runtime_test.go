@@ -95,26 +95,54 @@ func TestRuntime(t *testing.T) {
 			Name:   "File Read",
 			Module: "fileread",
 			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *runtime.Context) *runtime.Context {
+					t.Fatal("next should not be called")
+					return ctx
+				}
+
 				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
-				_, err = r.Instance(context.Background(), func(ctx *runtime.Context) *runtime.Context {
-					return ctx
-				})
-				require.Error(t, err)
+				i, err := r.Instance(context.Background(), next)
+				require.NoError(t, err)
+
+				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+				assert.NoError(t, err)
+
+				err = adapter.FromRequest(i.Context(), req)
+				assert.NoError(t, err)
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "error reading file", string(i.Context().Context.Response.Body))
 			},
 		},
 		{
 			Name:   "Network",
 			Module: "network",
 			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *runtime.Context) *runtime.Context {
+					t.Fatal("next should not be called")
+					return ctx
+				}
+
 				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
-				_, err = r.Instance(context.Background(), func(ctx *runtime.Context) *runtime.Context {
-					return ctx
-				})
-				require.Error(t, err)
+				i, err := r.Instance(context.Background(), next)
+				require.NoError(t, err)
+
+				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+				assert.NoError(t, err)
+
+				err = adapter.FromRequest(i.Context(), req)
+				assert.NoError(t, err)
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "error opening connection", string(i.Context().Context.Response.Body))
 			},
 		},
 		{

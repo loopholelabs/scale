@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/loopholelabs/scale-go/scalefunc"
 	"github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
 )
 
@@ -54,29 +55,20 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 
 	module := r.runtime.NewHostModuleBuilder("env")
 	module = module.ExportFunction("next", r.next)
-	//module = module.ExportFunction("debug", r.debug)
 
 	compiled, err := module.Compile(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile module: %w", err)
+		return nil, fmt.Errorf("failed to compile env: %w", err)
 	}
 
 	_, err = r.runtime.InstantiateModule(ctx, compiled, r.moduleConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate module: %w", err)
+		return nil, fmt.Errorf("failed to instantiate env: %w", err)
 	}
 
-	module = r.runtime.NewHostModuleBuilder("wasi_snapshot_preview1")
-	module = module.ExportFunction("fd_write", r.fd_write)
-
-	compiled, err = module.Compile(ctx)
+	_, err = wasi_snapshot_preview1.Instantiate(ctx, r.runtime)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile module: %w", err)
-	}
-
-	_, err = r.runtime.InstantiateModule(ctx, compiled, r.moduleConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate module: %w", err)
+		return nil, fmt.Errorf("failed to instantiate wasi: %w", err)
 	}
 
 	for _, f := range functions {

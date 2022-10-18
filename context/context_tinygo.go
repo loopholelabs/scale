@@ -76,10 +76,3 @@ func (ctx *Context) Next() *Context {
 	ctx.FromPointer(utils.UnpackUint32(next(ctx.ToPointer())))
 	return ctx
 }
-
-//func Debug(str string) {
-//	data := []byte(str)
-//	ptr := &data[0]
-//	unsafePtr := uintptr(unsafe.Pointer(ptr))
-//	debug(uint32(unsafePtr), uint32(len(data)))
-//}

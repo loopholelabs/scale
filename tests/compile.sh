@@ -34,7 +34,7 @@ for module in modules/*/*.go ; do
     mv "$COMPILE/scale/scale.go" "$COMPILE/scale/scale.bak"
     cp "$module" $COMPILE/scale/scale.go
     cd $COMPILE
-    tinygo build -o "$TESTS/modules/$test.wasm" -scheduler=none --no-debug -wasm-abi=c -target wasm ./
+    tinygo build -o "$TESTS/modules/$test.wasm" -scheduler=none --no-debug -target=wasi ./
     mv "$COMPILE/scale/scale.bak" "$COMPILE/scale/scale.go"
     cd $TESTS
 done
