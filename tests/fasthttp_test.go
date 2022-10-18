@@ -19,6 +19,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	adapter "github.com/loopholelabs/scale-go/adapters/fasthttp"
 	"github.com/loopholelabs/scale-go/runtime"
 	"github.com/loopholelabs/scale-go/scalefile"
@@ -32,6 +33,61 @@ import (
 	"path"
 	"testing"
 )
+
+func TestFastHTTPMiddleware(t *testing.T) {
+	module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-middleware")))
+	assert.NoError(t, err)
+
+	scaleFunc := scalefunc.ScaleFunc{
+		ScaleFile: scalefile.ScaleFile{
+			Name: "http-endpoint",
+			Build: scalefile.Build{
+				Language: "go",
+			},
+			Middleware: true,
+		},
+		Function: module,
+	}
+
+	r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+	require.NoError(t, err)
+
+	fasthttpAdapter := adapter.New(func(ctx *fasthttp.RequestCtx) {
+		ctx.Response.Header.Set("NEXT", "TRUE")
+		ctx.SetStatusCode(fiber.StatusOK)
+		ctx.SetBodyString("Hello World")
+	}, r)
+
+	listener := fasthttputil.NewInmemoryListener()
+	defer func() {
+		err := listener.Close()
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		err := fasthttp.Serve(listener, fasthttpAdapter.Handle)
+		assert.NoError(t, err)
+	}()
+
+	client := &fasthttp.Client{
+		Name: "test-client",
+		Dial: func(_ string) (net.Conn, error) {
+			return listener.Dial()
+		},
+	}
+
+	req := fasthttp.AcquireRequest()
+	req.SetRequestURI("http://test.com")
+	req.Header.SetMethod("GET")
+	req.SetBodyString("Hello World")
+
+	res := fasthttp.AcquireResponse()
+
+	err = client.Do(req, res)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "Hello World", string(res.Body()))
+}
 
 func TestFastHTTPEndpoint(t *testing.T) {
 	module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-endpoint")))
@@ -50,7 +106,7 @@ func TestFastHTTPEndpoint(t *testing.T) {
 	r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
 	require.NoError(t, err)
 
-	fasthttpAdapter := adapter.New(r)
+	fasthttpAdapter := adapter.New(nil, r)
 
 	listener := fasthttputil.NewInmemoryListener()
 	defer func() {
@@ -114,7 +170,7 @@ func TestFastHTTPChain(t *testing.T) {
 	r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{middlewareScaleFunc, endpointScaleFunc})
 	require.NoError(t, err)
 
-	fasthttpAdapter := adapter.New(r)
+	fasthttpAdapter := adapter.New(nil, r)
 
 	listener := fasthttputil.NewInmemoryListener()
 	defer func() {

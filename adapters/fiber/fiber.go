@@ -47,16 +47,16 @@ func (f *Fiber) Handle(ctx *fiber.Ctx) error {
 	return nil
 }
 
-func (f *Fiber) Next(fCtx *fiber.Ctx) runtime.Next {
+func (f *Fiber) Next(fiberCTX *fiber.Ctx) runtime.Next {
 	return func(ctx *runtime.Context) *runtime.Context {
-		fasthttp.ToRequestContext(ctx, fCtx.Context())
-		fasthttp.ToResponseContext(ctx, fCtx.Context())
-		err := fCtx.Next()
+		fasthttp.ToRequestContext(ctx, fiberCTX.Context())
+		fasthttp.ToResponseContext(ctx, fiberCTX.Context())
+		err := fiberCTX.Next()
 		if err != nil {
-			_ = fiber.DefaultErrorHandler(fCtx, err)
+			_ = fiber.DefaultErrorHandler(fiberCTX, err)
 		}
-		fasthttp.FromRequestContext(ctx, fCtx.Context())
-		fasthttp.FromResponseContext(ctx, fCtx.Context())
+		fasthttp.FromRequestContext(ctx, fiberCTX.Context())
+		fasthttp.FromResponseContext(ctx, fiberCTX.Context())
 		return ctx
 	}
 }

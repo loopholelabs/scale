@@ -24,16 +24,18 @@ import (
 
 type FastHTTP struct {
 	runtime *runtime.Runtime
+	next    fasthttp.RequestHandler
 }
 
-func New(runtime *runtime.Runtime) *FastHTTP {
+func New(next fasthttp.RequestHandler, runtime *runtime.Runtime) *FastHTTP {
 	return &FastHTTP{
 		runtime: runtime,
+		next:    next,
 	}
 }
 
 func (f *FastHTTP) Handle(ctx *fasthttp.RequestCtx) {
-	i, err := f.runtime.Instance(ctx, nil)
+	i, err := f.runtime.Instance(ctx, f.Next(ctx))
 	if err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return
@@ -45,4 +47,18 @@ func (f *FastHTTP) Handle(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	ToResponseContext(i.Context(), ctx)
+}
+
+func (f *FastHTTP) Next(fastCTX *fasthttp.RequestCtx) runtime.Next {
+	if f.next == nil {
+		return nil
+	}
+	return func(ctx *runtime.Context) *runtime.Context {
+		ToRequestContext(ctx, fastCTX)
+		ToResponseContext(ctx, fastCTX)
+		f.next(fastCTX)
+		FromRequestContext(ctx, fastCTX)
+		FromResponseContext(ctx, fastCTX)
+		return ctx
+	}
 }

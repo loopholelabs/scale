@@ -64,7 +64,8 @@ func TestFiberMiddleware(t *testing.T) {
 		f := fiber.New(fiber.Config{
 			DisableStartupMessage: true,
 		})
-		f.All("/", fiberAdapter.Handle, func(ctx *fiber.Ctx) error {
+		f.Use(fiberAdapter.Handle)
+		f.All("/", func(ctx *fiber.Ctx) error {
 			ctx.Response().Header.Set("NEXT", "TRUE")
 			return ctx.Status(fiber.StatusOK).SendString("Hello World")
 		})
