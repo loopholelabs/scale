@@ -88,7 +88,7 @@ func TestRuntime(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, "POST", i.Context().Context.Request.Method)
-				assert.Equal(t, &generated.StringList{Value: []string{"test"}}, i.Context().Context.Response.Headers["X-Test"])
+				assert.Equal(t, &generated.StringList{Value: []string{"TRUE"}}, i.Context().Context.Response.Headers["MIDDLEWARE"])
 			},
 		},
 		{

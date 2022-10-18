@@ -53,7 +53,7 @@ func TestHTTPMiddleware(t *testing.T) {
 	require.NoError(t, err)
 
 	httpAdapter := adapter.New(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("NEXT", "true")
+		w.Header().Set("NEXT", "TRUE")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("Hello World"))
 	}), r)
@@ -70,8 +70,8 @@ func TestHTTPMiddleware(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello World", string(body))
-	assert.Equal(t, "test", res.Header.Get("X-Test"))
-	assert.Equal(t, "true", res.Header.Get("NEXT"))
+	assert.Equal(t, "TRUE", res.Header.Get("MIDDLEWARE"))
+	assert.Equal(t, "TRUE", res.Header.Get("NEXT"))
 }
 
 func TestHTTPEndpoint(t *testing.T) {
@@ -151,7 +151,7 @@ func TestHTTPChain(t *testing.T) {
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "test", res.Header.Get("X-Test"))
+	assert.Equal(t, "TRUE", res.Header.Get("MIDDLEWARE"))
 	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello World", string(body))

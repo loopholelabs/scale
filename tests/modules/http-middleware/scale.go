@@ -22,6 +22,6 @@ import (
 
 func Scale(ctx *context.Context) *context.Context {
 	res := ctx.Response()
-	res.Headers().Set("X-Test", []string{"test"})
+	res.Headers().Set("MIDDLEWARE", []string{"TRUE"})
 	return ctx.Next()
 }

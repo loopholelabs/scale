@@ -34,7 +34,7 @@ func New(runtime *runtime.Runtime) *Fiber {
 }
 
 func (f *Fiber) Handle(ctx *fiber.Ctx) error {
-	i, err := f.runtime.Instance(ctx.Context(), nil)
+	i, err := f.runtime.Instance(ctx.Context(), f.Next(ctx))
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -48,9 +48,6 @@ func (f *Fiber) Handle(ctx *fiber.Ctx) error {
 }
 
 func (f *Fiber) Next(fCtx *fiber.Ctx) runtime.Next {
-	if fCtx.Next() == nil {
-		return nil
-	}
 	return func(ctx *runtime.Context) *runtime.Context {
 		fasthttp.ToRequestContext(ctx, fCtx.Context())
 		fasthttp.ToResponseContext(ctx, fCtx.Context())

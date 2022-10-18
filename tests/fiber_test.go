@@ -34,6 +34,65 @@ import (
 	"testing"
 )
 
+func TestFiberMiddleware(t *testing.T) {
+	module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-middleware")))
+	assert.NoError(t, err)
+
+	scaleFunc := scalefunc.ScaleFunc{
+		ScaleFile: scalefile.ScaleFile{
+			Name: "http-middleware",
+			Build: scalefile.Build{
+				Language: "go",
+			},
+			Middleware: true,
+		},
+		Function: module,
+	}
+
+	r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+	require.NoError(t, err)
+
+	fiberAdapter := adapter.New(r)
+
+	listener := fasthttputil.NewInmemoryListener()
+	defer func() {
+		err := listener.Close()
+		assert.NoError(t, err)
+	}()
+
+	go func() {
+		f := fiber.New(fiber.Config{
+			DisableStartupMessage: true,
+		})
+		f.All("/", fiberAdapter.Handle, func(ctx *fiber.Ctx) error {
+			ctx.Response().Header.Set("NEXT", "TRUE")
+			return ctx.Status(fiber.StatusOK).SendString("Hello World")
+		})
+		err := f.Listener(listener)
+		assert.NoError(t, err)
+	}()
+
+	client := &fasthttp.Client{
+		Name: "test-client",
+		Dial: func(_ string) (net.Conn, error) {
+			return listener.Dial()
+		},
+	}
+
+	req := fasthttp.AcquireRequest()
+	req.SetRequestURI("http://test.com")
+	req.Header.SetMethod("GET")
+
+	res := fasthttp.AcquireResponse()
+
+	err = client.Do(req, res)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "Hello World", string(res.Body()))
+	assert.Equal(t, "TRUE", string(res.Header.Peek("NEXT")))
+	assert.Equal(t, "TRUE", string(res.Header.Peek("MIDDLEWARE")))
+}
+
 func TestFiberEndpoint(t *testing.T) {
 	module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", "http-endpoint")))
 	assert.NoError(t, err)
@@ -154,5 +213,5 @@ func TestFiberChain(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello World", string(res.Body()))
-	assert.Equal(t, "test", string(res.Header.Peek("X-Test")))
+	assert.Equal(t, "TRUE", string(res.Header.Peek("MIDDLEWARE")))
 }

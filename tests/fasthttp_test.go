@@ -145,5 +145,5 @@ func TestFastHTTPChain(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello World", string(res.Body()))
-	assert.Equal(t, "test", string(res.Header.Peek("X-Test")))
+	assert.Equal(t, "TRUE", string(res.Header.Peek("MIDDLEWARE")))
 }
