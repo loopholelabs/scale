@@ -25,11 +25,7 @@ import (
 var DefaultDependencies = []Dependency{
 	{
 		Name:    "github.com/loopholelabs/scale-go",
-		Version: "v0.0.7",
-	},
-	{
-		Name:    "github.com/loopholelabs/polyglot-go",
-		Version: "v0.5.0",
+		Version: "v0.0.8",
 	},
 }
 
