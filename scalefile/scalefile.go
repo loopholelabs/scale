@@ -22,6 +22,17 @@ import (
 	"os"
 )
 
+var DefaultDependencies = []Dependency{
+	{
+		Name:    "github.com/loopholelabs/scale-go",
+		Version: "v0.0.7",
+	},
+	{
+		Name:    "github.com/loopholelabs/polyglot-go",
+		Version: "v0.5.0",
+	},
+}
+
 type Dependency struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
