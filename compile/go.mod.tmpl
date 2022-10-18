@@ -1,0 +1,6 @@
+module github.com/loopholelabs/scale-go/compile
+
+go 1.18
+{{range .}}
+require {{.Name}} {{.Version}}
+{{end}}
