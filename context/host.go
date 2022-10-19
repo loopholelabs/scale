@@ -18,6 +18,6 @@
 
 package context
 
-func next(uint32, uint32) uint64 {
+func next(uint32, uint32) uint32 {
 	return 0
 }

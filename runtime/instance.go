@@ -90,14 +90,17 @@ func (i *Instance) initialize(ctx context.Context) error {
 		}
 
 		run := module.ExportedFunction("run")
-		malloc := module.ExportedFunction("malloc")
+		allocate := module.ExportedFunction("allocate")
+		if run == nil || allocate == nil {
+			return fmt.Errorf("function '%s' for instance %s is missing required exports", f.ScaleFunc.ScaleFile.Name, i.id)
+		}
 
 		m := &Module{
 			module:   module,
 			function: f,
 			instance: i,
 			run:      run,
-			malloc:   malloc,
+			allocate: allocate,
 		}
 		i.modules[module] = m
 		if i.head == nil {

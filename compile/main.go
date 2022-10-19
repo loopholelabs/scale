@@ -26,11 +26,18 @@ import (
 func main() {}
 
 //export run
-func run(ptr uint32, size uint32) uint64 {
+func run(length uint32) uint64 {
 	ctx := context.New()
-	if ctx.FromPointer(ptr, size) != nil {
+	if ctx.FromBuffer(length) != nil {
 		return 0
 	}
 	ctx = scale.Scale(ctx)
-	return utils.PackUint32(ctx.ToPointer())
+	return utils.PackUint32(ctx.ToBuffer())
+}
+
+//export allocate
+func allocate(length uint32) *byte {
+	buf := make([]byte, length)
+	context.Buffer = &buf[0]
+	return &buf[0]
 }

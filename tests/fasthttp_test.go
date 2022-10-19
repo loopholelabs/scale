@@ -137,6 +137,11 @@ func TestFastHTTPEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello World", string(res.Body()))
+
+	t.Logf("Allocs: %f", testing.AllocsPerRun(10000, func() {
+		err = client.Do(req, res)
+		assert.NoError(t, err)
+	}))
 }
 
 func TestFastHTTPChain(t *testing.T) {

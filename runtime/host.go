@@ -18,12 +18,11 @@ package runtime
 
 import (
 	"context"
-	"github.com/loopholelabs/scale-go/utils"
 	"github.com/tetratelabs/wazero/api"
 	"strings"
 )
 
-func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) uint64 {
+func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) uint32 {
 	i := r.instances[strings.Split(module.Name(), ".")[0]]
 	if i == nil {
 		return 0
@@ -55,7 +54,7 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 
 	ctxBuffer := i.Context().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
-	writeBuffer, err := m.malloc.Call(ctx, ctxBufferLength)
+	writeBuffer, err := m.allocate.Call(ctx, ctxBufferLength)
 	if err != nil {
 		return 0
 	}
@@ -64,5 +63,5 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 		return 0
 	}
 
-	return utils.PackUint32(uint32(writeBuffer[0]), uint32(ctxBufferLength))
+	return uint32(ctxBufferLength)
 }

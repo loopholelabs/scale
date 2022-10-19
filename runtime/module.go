@@ -29,13 +29,13 @@ type Module struct {
 	function *Function
 	next     *Module
 	run      api.Function
-	malloc   api.Function
+	allocate api.Function
 }
 
 func (m *Module) Run(ctx context.Context) error {
 	ctxBuffer := m.instance.Context().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
-	writeBuffer, err := m.malloc.Call(ctx, ctxBufferLength)
+	writeBuffer, err := m.allocate.Call(ctx, ctxBufferLength)
 	if err != nil {
 		return fmt.Errorf("failed to allocate memory for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
 	}
@@ -44,7 +44,7 @@ func (m *Module) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to write memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
 	}
 
-	packed, err := m.run.Call(ctx, writeBuffer[0], ctxBufferLength)
+	packed, err := m.run.Call(ctx, ctxBufferLength)
 	if err != nil {
 		return fmt.Errorf("failed to run function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
 	}

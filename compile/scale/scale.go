@@ -21,6 +21,8 @@ import (
 )
 
 func Scale(ctx *context.Context) *context.Context {
-	ctx.Response().SetBody("Hello, World!")
+	req := ctx.Request()
+	res := ctx.Response()
+	res.SetBodyBytes(req.Body())
 	return ctx
 }

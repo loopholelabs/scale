@@ -23,14 +23,15 @@ import (
 	"errors"
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale-go/runtime/generated"
-	"github.com/loopholelabs/scale-go/utils"
-	"reflect"
 	"unsafe"
 )
 
 var (
 	InvalidPointerError = errors.New("invalid pointer")
 )
+
+// global buffer to copy data into
+var Buffer *byte
 
 // Context is a context object for an incoming request. It is meant to be used
 // inside the Scale function.
@@ -48,31 +49,32 @@ func New() *Context {
 }
 
 // ToPointer serializes the Context into a pointer and returns the pointer and its size
-func (ctx *Context) ToPointer() (uint32, uint32) {
+func (ctx *Context) ToBuffer() (uint32, uint32) {
 	ctx.buffer.Reset()
 	ctx.generated.Encode(ctx.buffer)
-	underlying := ctx.buffer.Bytes()
-	ptr := &underlying[0]
-	unsafePtr := uintptr(unsafe.Pointer(ptr))
+	Buffer = &ctx.buffer.Bytes()[0]
+	//ptr := &underlying[0]
+	unsafePtr := uintptr(unsafe.Pointer(Buffer))
 	return uint32(unsafePtr), uint32(ctx.buffer.Len())
 }
 
 // FromPointer takes a pointer and size and deserializes the data into the Context
-func (ctx *Context) FromPointer(ptr uint32, size uint32) error {
-	if ptr == 0 || size == 0 {
+func (ctx *Context) FromBuffer(length uint32) error {
+	if length == 0 {
 		return InvalidPointerError
 	}
-	buf := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: uintptr(ptr),
-		Len:  uintptr(size), // Tinygo requires this, it's not an error.
-		Cap:  uintptr(size), // ^^ See https://github.com/tinygo-org/tinygo/issues/1284
-	}))
+	buf := unsafe.Slice(Buffer, length)
+	//buf := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
+	//	Data: uintptr(buffer),
+	//	Len:  uintptr(size), // Tinygo requires this, it's not an error.
+	//	Cap:  uintptr(size), // ^^ See https://github.com/tinygo-org/tinygo/issues/1284
+	//}))
 	return ctx.generated.Decode(buf)
 }
 
 // Next calls the next host function after writing the Context,
 // then it reads the result back into the Context
 func (ctx *Context) Next() *Context {
-	ctx.FromPointer(utils.UnpackUint32(next(ctx.ToPointer())))
+	ctx.FromBuffer(next(ctx.ToBuffer()))
 	return ctx
 }
