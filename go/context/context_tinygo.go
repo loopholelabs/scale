@@ -23,8 +23,6 @@ import (
 	"errors"
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale/go/runtime/generated"
-	"github.com/loopholelabs/scale/go/utils"
-	"reflect"
 	"unsafe"
 )
 
@@ -32,47 +30,58 @@ var (
 	InvalidPointerError = errors.New("invalid pointer")
 )
 
+var (
+	writeBuffer = polyglot.NewBuffer()
+	readBuffer  []byte
+)
+
 // Context is a context object for an incoming request. It is meant to be used
 // inside the Scale function.
 type Context struct {
 	generated *generated.Context
-	buffer    *polyglot.Buffer
 }
 
 // New creates a new empty Context that must be initialized with the FromPointer method
 func New() *Context {
 	return &Context{
 		generated: generated.NewContext(),
-		buffer:    polyglot.NewBuffer(),
 	}
 }
 
-// ToPointer serializes the Context into a pointer and returns the pointer and its size
-func (ctx *Context) ToPointer() (uint32, uint32) {
-	ctx.buffer.Reset()
-	ctx.generated.Encode(ctx.buffer)
-	underlying := ctx.buffer.Bytes()
+// ToWriteBuffer serializes the Context into the global writeBuffer and returns the pointer to the buffer and its size
+//
+// This method should only be used to read the Context from the Scale Runtime.
+// Users should not use this method.
+func (ctx *Context) ToWriteBuffer() (uint32, uint32) {
+	writeBuffer.Reset()
+	ctx.generated.Encode(writeBuffer)
+	underlying := writeBuffer.Bytes()
 	ptr := &underlying[0]
 	unsafePtr := uintptr(unsafe.Pointer(ptr))
-	return uint32(unsafePtr), uint32(ctx.buffer.Len())
+	return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
 
-// FromPointer takes a pointer and size and deserializes the data into the Context
-func (ctx *Context) FromPointer(ptr uint32, size uint32) error {
-	if ptr == 0 || size == 0 {
-		return InvalidPointerError
-	}
-	buf := *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: uintptr(ptr),
-		Len:  uintptr(size), // Tinygo requires this, it's not an error.
-		Cap:  uintptr(size), // ^^ See https://github.com/tinygo-org/tinygo/issues/1284
-	}))
-	return ctx.generated.Decode(buf)
+// FromReadBuffer deserializes the data into the Context from the global readBuffer
+//
+// It assumes that the readBuffer has been filled with the data from the Scale Runtime after
+// a call to the Resize method
+func (ctx *Context) FromReadBuffer() error {
+	return ctx.generated.Decode(readBuffer)
 }
 
-// Next calls the next host function after writing the Context,
-// then it reads the result back into the Context
+// Next calls the next host function after writing the Context into the global writeBuffer,
+// then it reads the result from the global readBuffer back into the Context
 func (ctx *Context) Next() *Context {
-	ctx.FromPointer(utils.UnpackUint32(next(ctx.ToPointer())))
+	next(ctx.ToWriteBuffer())
+	_ = ctx.FromReadBuffer()
 	return ctx
+}
+
+// Resize grows or shrinks the readBuffer to the given size and returns a pointer it
+func Resize(size uint32) uint32 {
+	if uint32(cap(readBuffer)) < size {
+		readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
+	}
+	readBuffer = readBuffer[:size]
+	return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
 }

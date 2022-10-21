@@ -90,14 +90,17 @@ func (i *Instance) initialize(ctx context.Context) error {
 		}
 
 		run := module.ExportedFunction("run")
-		malloc := module.ExportedFunction("malloc")
+		resize := module.ExportedFunction("resize")
+		if run == nil || resize == nil {
+			return fmt.Errorf("failed to find run or resize functions for instance %s", i.id)
+		}
 
 		m := &Module{
 			module:   module,
 			function: f,
 			instance: i,
 			run:      run,
-			malloc:   malloc,
+			resize:   resize,
 		}
 		i.modules[module] = m
 		if i.head == nil {

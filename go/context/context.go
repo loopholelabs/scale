@@ -20,19 +20,22 @@ package context
 
 type Context struct{}
 
-// New creates a new empty Context that must be initialized with the FromPointer method
 func New() *Context {
 	return &Context{}
 }
 
-func (ctx *Context) ToPointer() (uint32, uint32) {
+func (ctx *Context) ToWriteBuffer() (uint32, uint32) {
 	return 0, 0
 }
 
-func (ctx *Context) FromPointer(uint32, uint32) error {
+func (ctx *Context) FromReadBuffer() error {
 	return nil
 }
 
 func (ctx *Context) Next() *Context {
 	return ctx
+}
+
+func Resize(uint32) uint32 {
+	return 0
 }
