@@ -18,30 +18,29 @@ package runtime
 
 import (
 	"context"
-	"github.com/loopholelabs/scale/go/utils"
 	"github.com/tetratelabs/wazero/api"
 	"strings"
 )
 
-func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) uint64 {
+func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) {
 	i := r.instances[strings.Split(module.Name(), ".")[0]]
 	if i == nil {
-		return 0
+		return
 	}
 
 	m := i.modules[module]
 	if m == nil {
-		return 0
+		return
 	}
 
 	buf, ok := m.module.Memory().Read(ctx, offset, length)
 	if !ok {
-		return 0
+		return
 	}
 
 	err := i.Context().Read(buf)
 	if err != nil {
-		return 0
+		return
 	}
 
 	if m.next == nil {
@@ -49,20 +48,15 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 	} else {
 		err = m.next.Run(ctx)
 		if err != nil {
-			return 0
+			return
 		}
 	}
 
 	ctxBuffer := i.Context().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
-	writeBuffer, err := m.malloc.Call(ctx, ctxBufferLength)
+	writeBuffer, err := m.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
-		return 0
+		return
 	}
-
-	if !module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer) {
-		return 0
-	}
-
-	return utils.PackUint32(uint32(writeBuffer[0]), uint32(ctxBufferLength))
+	module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer)
 }
