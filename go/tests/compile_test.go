@@ -36,7 +36,7 @@ func TestCompileDefaultTemplate(t *testing.T) {
 	err = tmpl.Execute(buf, scalefile.DefaultDependencies)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "module github.com/loopholelabs/scale/go/compile\n\ngo 1.18\n\nrequire github.com/loopholelabs/scale/go v0.0.8\n\n", buf.String())
+	assert.Equal(t, "module github.com/loopholelabs/scale/go/compile\n\ngo 1.18\n\nrequire github.com/loopholelabs/scale/go v0.0.10\n\n", buf.String())
 }
 
 func TestCompileCustomTemplate(t *testing.T) {
