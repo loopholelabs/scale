@@ -1,4 +1,4 @@
-module github.com/loopholelabs/scale/go
+module github.com/loopholelabs/scale
 
 go 1.18
 
