@@ -18,9 +18,16 @@ package scale
 
 import (
 	"github.com/loopholelabs/scale/go/context"
+	"os"
 )
 
 func Scale(ctx *context.Context) *context.Context {
-	ctx.Response().SetBody("Hello, World!")
+	_, err := os.ReadFile("tests/modules/fileread/scale.go")
+	if err != nil {
+		ctx.Response().SetBody("error reading file")
+	} else {
+		ctx.Response().SetBody("success")
+	}
+
 	return ctx
 }
