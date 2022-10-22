@@ -28,12 +28,12 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 		return
 	}
 
-	m := i.modules[module]
-	if m == nil {
+	im := i.instantiated[module.Name()]
+	if im == nil {
 		return
 	}
 
-	buf, ok := m.module.Memory().Read(ctx, offset, length)
+	buf, ok := module.Memory().Read(ctx, offset, length)
 	if !ok {
 		return
 	}
@@ -43,10 +43,10 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 		return
 	}
 
-	if m.next == nil {
+	if im.m.next == nil {
 		i.ctx = i.next(i.Context())
 	} else {
-		err = m.next.Run(ctx)
+		err = im.m.next.Run(ctx)
 		if err != nil {
 			return
 		}
@@ -54,7 +54,7 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 
 	ctxBuffer := i.Context().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
-	writeBuffer, err := m.resize.Call(ctx, ctxBufferLength)
+	writeBuffer, err := im.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
 		return
 	}

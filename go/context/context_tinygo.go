@@ -77,7 +77,7 @@ func (ctx *Context) Next() *Context {
 	return ctx
 }
 
-// Resize grows or shrinks the readBuffer to the given size and returns a pointer it
+// Resize grows or shrinks the readBuffer to the given size and returns a pointer to it
 func Resize(size uint32) uint32 {
 	if uint32(cap(readBuffer)) < size {
 		readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
