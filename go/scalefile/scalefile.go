@@ -24,7 +24,7 @@ import (
 
 var DefaultDependencies = []Dependency{
 	{
-		Name:    "github.com/loopholelabs/scale/go",
+		Name:    "github.com/loopholelabs/scale",
 		Version: "v0.0.10",
 	},
 }
