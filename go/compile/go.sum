@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/loopholelabs/polyglot-go v0.5.0 h1:F65/d+65qgAu2F0GcWzP6UVIwd9897bNEgylNMr8FGk=
 github.com/loopholelabs/polyglot-go v0.5.0/go.mod h1:Z0QiNv4KRuWjQWpUerMhmkvRh6ks1pYmEH4SGpG0EHQ=
-github.com/loopholelabs/scale v0.0.10-dev3 h1:u9DNYTEAZRyBdDYelwr0SPLpuWxrsHEIEowpJQCrQxo=
-github.com/loopholelabs/scale v0.0.10-dev3/go.mod h1:1je3PWIDpuCRk2YEEUZgrodysLmhWpQGZ0Vn+0qGKbs=
+github.com/loopholelabs/scale v0.0.10-dev4 h1:KX27wG6NQY7YLPeIOHjhX25uVvx0osd+hz+kM2gIJTI=
+github.com/loopholelabs/scale v0.0.10-dev4/go.mod h1:tuyy0LRtS2/Y95eaDOg/2XnfEtwFvK1K13NAWZ73shs=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
-github.com/stretchr/testify v1.7.5 h1:s5PTfem8p8EbKQOctVV53k6jCJt3UX4IEJzwh+C324Q=
+github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
