@@ -55,7 +55,7 @@ func (f *Function) Run(ctx context.Context, i *Instance) error {
 		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.ScaleFile.Name)
 	}
 
-	packed, err := module.run.Call(ctx, writeBuffer[0], ctxBufferLength)
+	packed, err := module.run.Call(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to run function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
 	}
