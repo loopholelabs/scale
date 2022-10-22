@@ -40,7 +40,7 @@ func New(next http.Handler, runtime *runtime.Runtime) *HTTP {
 }
 
 func (h *HTTP) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	i, err := h.runtime.Instance(req.Context(), h.Next(req))
+	i, err := h.runtime.Instance(h.Next(req))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

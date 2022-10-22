@@ -19,16 +19,13 @@ package runtime
 import (
 	"context"
 	"github.com/tetratelabs/wazero/api"
-	"strings"
 )
 
 func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) {
-	i := r.instances[strings.Split(module.Name(), ".")[0]]
-	if i == nil {
-		return
-	}
+	r.modulesMu.RLock()
+	m := r.modules[module.Name()]
+	r.modulesMu.RUnlock()
 
-	m := i.modules[module]
 	if m == nil {
 		return
 	}
@@ -38,21 +35,21 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 		return
 	}
 
-	err := i.Context().Read(buf)
+	err := m.instance.Context().Read(buf)
 	if err != nil {
 		return
 	}
 
-	if m.next == nil {
-		i.ctx = i.next(i.Context())
+	if m.function.next == nil {
+		m.instance.ctx = m.instance.next(m.instance.Context())
 	} else {
-		err = m.next.Run(ctx)
+		err = m.function.next.Run(ctx, m.instance)
 		if err != nil {
 			return
 		}
 	}
 
-	ctxBuffer := i.Context().Write()
+	ctxBuffer := m.instance.Context().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
 	writeBuffer, err := m.resize.Call(ctx, ctxBufferLength)
 	if err != nil {

@@ -19,49 +19,80 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/loopholelabs/scale/go/utils"
+	"github.com/google/uuid"
 	"github.com/tetratelabs/wazero/api"
+	"sync"
 )
 
 type Module struct {
 	module   api.Module
-	instance *Instance
 	function *Function
-	next     *Module
+	runtime  *Runtime
 	run      api.Function
 	resize   api.Function
+
+	instance *Instance
 }
 
-func (m *Module) Run(ctx context.Context) error {
-	ctxBuffer := m.instance.Context().Write()
-	ctxBufferLength := uint64(len(ctxBuffer))
-	writeBuffer, err := m.resize.Call(ctx, ctxBufferLength)
+func NewModule(ctx context.Context, f *Function, r *Runtime) (*Module, error) {
+	module, err := r.runtime.InstantiateModule(ctx, f.compiled, r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.scaleFunc.ScaleFile.Name, uuid.New().String())))
 	if err != nil {
-		return fmt.Errorf("failed to allocate memory for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
+		return nil, fmt.Errorf("failed to instantiate function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
 	}
 
-	if !m.module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer) {
-		return fmt.Errorf("failed to write memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
+	run := module.ExportedFunction("run")
+	resize := module.ExportedFunction("resize")
+	if run == nil || resize == nil {
+		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.scaleFunc.ScaleFile.Name)
 	}
 
-	packed, err := m.run.Call(ctx, writeBuffer[0], ctxBufferLength)
-	if err != nil {
-		return fmt.Errorf("failed to run function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
+	return &Module{
+		module:   module,
+		function: f,
+		runtime:  r,
+		run:      run,
+		resize:   resize,
+	}, nil
+}
+
+func (m *Module) init(i *Instance) {
+	m.instance = i
+	m.runtime.modulesMu.Lock()
+	m.runtime.modules[m.module.Name()] = m
+	m.runtime.modulesMu.Unlock()
+}
+
+func (m *Module) reset() {
+	m.instance = nil
+	m.runtime.modulesMu.Lock()
+	delete(m.runtime.modules, m.module.Name())
+	m.runtime.modulesMu.Unlock()
+}
+
+type ModulePool struct {
+	pool sync.Pool
+	new  func() (*Module, error)
+}
+
+func NewModulePool(ctx context.Context, f *Function, r *Runtime) *ModulePool {
+	return &ModulePool{
+		new: func() (*Module, error) {
+			return NewModule(ctx, f, r)
+		},
 	}
-	if packed[0] == 0 {
-		return fmt.Errorf("failed to run function '%s'", m.function.ScaleFunc.ScaleFile.Name)
+}
+
+func (p *ModulePool) Put(module *Module) {
+	if module != nil {
+		p.pool.Put(module)
+	}
+}
+
+func (p *ModulePool) Get() (*Module, error) {
+	rv, ok := p.pool.Get().(*Module)
+	if ok && rv != nil {
+		return rv, nil
 	}
 
-	offset, length := utils.UnpackUint32(packed[0])
-	readBuffer, ok := m.module.Memory().Read(ctx, offset, length)
-	if !ok {
-		return fmt.Errorf("failed to read memory for function '%s'", m.function.ScaleFunc.ScaleFile.Name)
-	}
-
-	err = m.instance.Context().Read(readBuffer)
-	if err != nil {
-		return fmt.Errorf("failed to deserialize context for function '%s': %w", m.function.ScaleFunc.ScaleFile.Name, err)
-	}
-
-	return nil
+	return p.new()
 }

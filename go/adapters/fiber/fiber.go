@@ -34,7 +34,7 @@ func New(runtime *runtime.Runtime) *Fiber {
 }
 
 func (f *Fiber) Handle(ctx *fiber.Ctx) error {
-	i, err := f.runtime.Instance(ctx.Context(), f.Next(ctx))
+	i, err := f.runtime.Instance(f.Next(ctx))
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}

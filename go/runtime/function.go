@@ -20,26 +20,59 @@ import (
 	"context"
 	"fmt"
 	"github.com/loopholelabs/scale/go/scalefunc"
+	"github.com/loopholelabs/scale/go/utils"
 	"github.com/tetratelabs/wazero"
 )
 
 // Function is the runtime representation of a scale function.
 type Function struct {
-	ScaleFunc scalefunc.ScaleFunc
-	Compiled  wazero.CompiledModule
+	scaleFunc  scalefunc.ScaleFunc
+	compiled   wazero.CompiledModule
+	next       *Function
+	modulePool *ModulePool
 }
 
-func (r *Runtime) registerFunction(ctx context.Context, scaleFunc scalefunc.ScaleFunc) error {
-	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
+func (f *Function) Run(ctx context.Context, i *Instance) error {
+	module, err := f.modulePool.Get()
 	if err != nil {
-		return fmt.Errorf("failed to compile function '%s': %w", scaleFunc.ScaleFile.Name, err)
+		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.ScaleFile.Name, err)
 	}
 
-	f := &Function{
-		ScaleFunc: scaleFunc,
-		Compiled:  compiled,
+	module.init(i)
+	defer func() {
+		module.reset()
+		f.modulePool.Put(module)
+	}()
+
+	ctxBuffer := i.Context().Write()
+	ctxBufferLength := uint64(len(ctxBuffer))
+	writeBuffer, err := module.resize.Call(ctx, ctxBufferLength)
+	if err != nil {
+		return fmt.Errorf("failed to allocate memory for function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
 	}
 
-	r.functions = append(r.functions, f)
+	if !module.module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer) {
+		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.ScaleFile.Name)
+	}
+
+	packed, err := module.run.Call(ctx, writeBuffer[0], ctxBufferLength)
+	if err != nil {
+		return fmt.Errorf("failed to run function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
+	}
+	if packed[0] == 0 {
+		return fmt.Errorf("failed to run function '%s'", f.scaleFunc.ScaleFile.Name)
+	}
+
+	offset, length := utils.UnpackUint32(packed[0])
+	readBuffer, ok := module.module.Memory().Read(ctx, offset, length)
+	if !ok {
+		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.ScaleFile.Name)
+	}
+
+	err = i.Context().Read(readBuffer)
+	if err != nil {
+		return fmt.Errorf("failed to deserialize context for function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
+	}
+
 	return nil
 }

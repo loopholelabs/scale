@@ -35,7 +35,7 @@ func New(next fasthttp.RequestHandler, runtime *runtime.Runtime) *FastHTTP {
 }
 
 func (f *FastHTTP) Handle(ctx *fasthttp.RequestCtx) {
-	i, err := f.runtime.Instance(ctx, f.Next(ctx))
+	i, err := f.runtime.Instance(f.Next(ctx))
 	if err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return

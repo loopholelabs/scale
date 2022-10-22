@@ -41,16 +41,19 @@ type Runtime struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
 
-	functions  []*Function
-	instanceMu sync.RWMutex
-	instances  map[string]*Instance
+	functions []*Function
+	head      *Function
+	tail      *Function
+
+	modulesMu sync.RWMutex
+	modules   map[string]*Module
 }
 
 func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error) {
 	r := &Runtime{
 		runtime:      wazero.NewRuntime(ctx),
 		moduleConfig: wazero.NewModuleConfig(),
-		instances:    make(map[string]*Instance),
+		modules:      make(map[string]*Module),
 	}
 
 	module := r.runtime.NewHostModuleBuilder("env")
@@ -72,11 +75,35 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 	}
 
 	for _, f := range functions {
-		err = r.registerFunction(ctx, f)
+		sf, err := r.compileFunction(ctx, f)
 		if err != nil {
-			return nil, fmt.Errorf("failed to register function '%s': %w", f.ScaleFile.Name, err)
+			return nil, fmt.Errorf("failed to compile function '%s': %w", f.ScaleFile.Name, err)
 		}
+		if r.head == nil {
+			r.head = sf
+		}
+		if r.tail != nil {
+			r.tail.next = sf
+		}
+		r.tail = sf
 	}
 
 	return r, nil
+}
+
+func (r *Runtime) compileFunction(ctx context.Context, scaleFunc scalefunc.ScaleFunc) (*Function, error) {
+	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile function '%s': %w", scaleFunc.ScaleFile.Name, err)
+	}
+
+	f := &Function{
+		scaleFunc: scaleFunc,
+		compiled:  compiled,
+	}
+
+	f.modulePool = NewModulePool(ctx, f, r)
+
+	r.functions = append(r.functions, f)
+	return f, nil
 }
