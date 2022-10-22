@@ -102,7 +102,7 @@ func (r *Runtime) compileFunction(ctx context.Context, scaleFunc scalefunc.Scale
 		compiled:  compiled,
 	}
 
-	f.modulePool = NewModulePool(ctx, f, r)
+	f.modulePool = NewPool(ctx, f, r)
 
 	r.functions = append(r.functions, f)
 	return f, nil

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/tetratelabs/wazero/api"
-	"sync"
 )
 
 type Module struct {
@@ -67,32 +66,4 @@ func (m *Module) reset() {
 	m.runtime.modulesMu.Lock()
 	delete(m.runtime.modules, m.module.Name())
 	m.runtime.modulesMu.Unlock()
-}
-
-type ModulePool struct {
-	pool sync.Pool
-	new  func() (*Module, error)
-}
-
-func NewModulePool(ctx context.Context, f *Function, r *Runtime) *ModulePool {
-	return &ModulePool{
-		new: func() (*Module, error) {
-			return NewModule(ctx, f, r)
-		},
-	}
-}
-
-func (p *ModulePool) Put(module *Module) {
-	if module != nil {
-		p.pool.Put(module)
-	}
-}
-
-func (p *ModulePool) Get() (*Module, error) {
-	rv, ok := p.pool.Get().(*Module)
-	if ok && rv != nil {
-		return rv, nil
-	}
-
-	return p.new()
 }

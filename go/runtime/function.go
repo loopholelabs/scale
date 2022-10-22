@@ -29,7 +29,7 @@ type Function struct {
 	scaleFunc  scalefunc.ScaleFunc
 	compiled   wazero.CompiledModule
 	next       *Function
-	modulePool *ModulePool
+	modulePool *Pool
 }
 
 func (f *Function) Run(ctx context.Context, i *Instance) error {
