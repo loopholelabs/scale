@@ -20,14 +20,9 @@
 package context
 
 import (
-	"errors"
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale/go/runtime/generated"
 	"unsafe"
-)
-
-var (
-	InvalidPointerError = errors.New("invalid pointer")
 )
 
 var (

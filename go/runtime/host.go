@@ -21,7 +21,7 @@ import (
 	"github.com/tetratelabs/wazero/api"
 )
 
-func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, length uint32) {
+func (r *Runtime) next(ctx context.Context, module api.Module, pointer uint32, length uint32) {
 	r.modulesMu.RLock()
 	m := r.modules[module.Name()]
 	r.modulesMu.RUnlock()
@@ -30,7 +30,7 @@ func (r *Runtime) next(ctx context.Context, module api.Module, offset uint32, le
 		return
 	}
 
-	buf, ok := m.module.Memory().Read(ctx, offset, length)
+	buf, ok := m.module.Memory().Read(ctx, pointer, length)
 	if !ok {
 		return
 	}
