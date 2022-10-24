@@ -19,7 +19,9 @@
 
 package context
 
-import "github.com/loopholelabs/scale/go/runtime/generated"
+import (
+	"github.com/loopholelabs/scale/generated"
+)
 
 // Response is the HTTP Response object
 type Response struct {

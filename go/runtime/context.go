@@ -18,7 +18,7 @@ package runtime
 
 import (
 	"github.com/loopholelabs/polyglot-go"
-	"github.com/loopholelabs/scale/go/runtime/generated"
+	"github.com/loopholelabs/scale/generated"
 	"net/http"
 )
 

@@ -18,8 +18,8 @@ package http
 
 import (
 	"bytes"
+	"github.com/loopholelabs/scale/generated"
 	"github.com/loopholelabs/scale/go/runtime"
-	"github.com/loopholelabs/scale/go/runtime/generated"
 	"io"
 	"net/http"
 )

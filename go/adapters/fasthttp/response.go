@@ -17,8 +17,8 @@
 package fasthttp
 
 import (
+	"github.com/loopholelabs/scale/generated"
 	"github.com/loopholelabs/scale/go/runtime"
-	"github.com/loopholelabs/scale/go/runtime/generated"
 	"github.com/valyala/fasthttp"
 	"strings"
 )

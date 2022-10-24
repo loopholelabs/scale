@@ -20,7 +20,7 @@
 package context
 
 import (
-	"github.com/loopholelabs/scale/go/runtime/generated"
+	"github.com/loopholelabs/scale/generated"
 )
 
 // Request is the HTTP Request object

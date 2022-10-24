@@ -18,8 +18,8 @@ package http
 
 import (
 	"fmt"
+	"github.com/loopholelabs/scale/generated"
 	"github.com/loopholelabs/scale/go/runtime"
-	"github.com/loopholelabs/scale/go/runtime/generated"
 	"net/http"
 	"strings"
 )

@@ -19,9 +19,9 @@ package tests
 import (
 	"context"
 	"fmt"
+	"github.com/loopholelabs/scale/generated"
 	adapter "github.com/loopholelabs/scale/go/adapters/http"
 	"github.com/loopholelabs/scale/go/runtime"
-	"github.com/loopholelabs/scale/go/runtime/generated"
 	"github.com/loopholelabs/scale/go/scalefile"
 	"github.com/loopholelabs/scale/go/scalefunc"
 	"github.com/stretchr/testify/assert"
