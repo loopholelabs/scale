@@ -15,7 +15,6 @@
 */
 import express from 'express';
 import { Context } from '../runtime/context';
-import { Host } from '../runtime/host';
 import { Module } from '../runtime/module';
 import { Context as pgContext, Request as pgRequest, Response as pgResponse, StringList as pgStringList } from "../runtime/generated/generated";
 
@@ -33,7 +32,7 @@ export class ExpressAdapter {
         // Now write it back out...
         ExpressAdapter.fromContext(newc, res);
 
-        next();
+//        next();
     }
 
     static fromContext(ctx: Context, resp: express.Response) {
@@ -43,7 +42,6 @@ export class ExpressAdapter {
             if (vals!==undefined) {
                 let s = vals.Value;
                 for(let v of s.values()) {
-                    console.log("HEAD " + k + " = " + v);
                     resp.setHeader(k, v);
                 }
             }
@@ -73,12 +71,15 @@ export class ExpressAdapter {
         let bodylen = 0;
         let body = new Uint8Array();
         if (req.body) {
-            bodylen = req.body.length;
+            if (req.body.length!==undefined) {
+                bodylen = req.body.length;
+            }
             body = req.body;
         }
 
         let preq = new pgRequest(req.method, BigInt(bodylen), req.protocol, req.ip, body, reqheaders);
 
+/*
         let respheaders = new Map<string, pgStringList>();
 //
         for(let k in resp.getHeaders()) {
@@ -98,8 +99,8 @@ export class ExpressAdapter {
 
         var enc = new TextEncoder();
         let respBody = enc.encode("TODO: Response body");
-
-        let presp = new pgResponse(resp.statusCode, respBody, respheaders);
+*/
+        let presp = new pgResponse(resp.statusCode, new Uint8Array(), new Map<string, pgStringList>()); //respBody, respheaders);
         return new Context(new pgContext(preq, presp));
     }
 
