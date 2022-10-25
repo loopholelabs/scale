@@ -11,6 +11,6 @@
     "paths": {
       "scale-js": ["."]
     },
-    "types": ["node"]
+    "types": ["node", "jest"]
   }
 }
