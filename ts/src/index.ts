@@ -18,4 +18,4 @@ export * from "./runtime/context";
 export * from "./runtime/host";
 export * from "./runtime/module";
 
-export * from "./adapters/express";
+export * from "./adapters/expressAdapter";
