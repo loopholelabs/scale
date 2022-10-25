@@ -13,7 +13,7 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import express = require('express');
+import express from 'express';
 import { Context } from '../runtime/context';
 import { Host } from '../runtime/host';
 import { Module } from '../runtime/module';
