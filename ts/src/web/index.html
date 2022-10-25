@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>My First Parcel App</title>
+    <script type="module" src="app.ts"></script>
+    <style>
+        body {
+            font-family: Arial;
+        }
+        table {
+            width: 100%;
+            border: 1px solid #66e;
+            background: #ddd;
+        }
+        h2 {
+            color: #080;
+        }
+        li {color: blue}
+
+        #status {
+            background: #ccc;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Scale function tester</h1>
+
+    <form onsubmit="return false;">
+    <table>
+        <tr>
+            <td valign="top" width="40%">
+                <h2>Request:</h2>
+                <table>
+                    <tr><td>Method:</td><td><input type="text" id="cmethod" value="GET"></td></tr>
+                    <tr><td>Protocol:</td><td><input type="text" id="cprotocol" value="http"></td></tr>
+                    <tr><td>IP:</td><td><input type="text" id="cip" value="10.10.10.10"></td></tr>
+                    <tr><td>Body:</td><td><input type="text" id="cbody" value="Scale Functions Awesome"></td></tr>
+                    <tr><td>Headers:</td><td>
+                        <table id="cheaders"></table>
+                        <button id="cheadersadd">Add</button>
+                    </td></tr>
+                </table>                
+            </td>
+            <td valign="top">
+                <ol>
+                    <li>./http-middleware.wasm</li>
+                    <li>./http-endpoint.wasm</li>
+                </ol>
+                <input type="submit" value="Run example" id="crun" />
+                <div id="status" />
+            </td>
+            <td valign="top" width="40%">
+                <h2>Response:</h2>
+                <table>
+                    <tr><td>Status:</td><td><input type="text" id="rstatus"></td></tr>
+                    <tr><td>Body:</td><td><input type="text" id="rbody"></td></tr>
+                    <tr><td>Headers:</td><td>
+                        <table id="rheaders"></table>
+                    </td></tr>
+                </table>                
+            </td>
+        </tr>
+    </table>
+    </form>
+  </body>
+</html>
