@@ -2,12 +2,19 @@
   "name": "@loopholelabs/scale-ts",
   "version": "0.1.0",
   "description": "TypeScript version of the scale functions.",
-  "source": "src/index.ts",
-  "main": "dist/main.js",
-  "module": "dist/module.js",
-  "types": "dist/types.d.ts",
+  "source": "src/web/index.html",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "targets": {
+    "browser": {
+      "context": "browser",
+      "isLibrary": false,
+      "includeNodeModules": true
+    }
+  },
+  
   "scripts": {
     "build": "parcel build",
+    "start": "parcel",
     "test": "jest"
   },
   "dependencies": {
@@ -24,8 +31,16 @@
     "wasi": "^0.0.6"
   },
   "devDependencies": {
+    "@parcel/transformer-typescript-types": "^2.7.0",
     "@types/express": "^4.17.14",
     "@types/node": "^18.11.5",
-    "@types/supertest": "^2.0.12"
+    "@types/supertest": "^2.0.12",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "events": "^3.3.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "tty-browserify": "^0.0.1",
+    "typescript": "^4.7.0"
   }
 }
