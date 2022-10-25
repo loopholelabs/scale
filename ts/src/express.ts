@@ -8,11 +8,7 @@ import { Module } from './runtime/module';
 import { Context, Request, Response, StringList } from "./runtime/generated/generated";
 import { Host } from './runtime/host';
 import { Context as ourContext} from './runtime/context';
-<<<<<<< HEAD
 import { ExpressAdapter } from './adapters/expressAdapter';
-=======
-import { ExpressAdapter } from './adapters/express';
->>>>>>> 8b302d1 (First version with express adapter working)
 
 var app = express();
 
