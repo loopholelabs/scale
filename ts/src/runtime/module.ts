@@ -41,6 +41,7 @@ export class Module {
         });
 
         let wasmModule: WebAssembly.Instance;
+        let allocFn: Function;
 
         let nextModule = this._next;
 
@@ -57,7 +58,7 @@ export class Module {
                             console.log("Next module didn't seem to run correctly.");
                             return Host.packMemoryRef(ptr, len);
                         }
-                        let v = rc.writeTo(mem, wasmModule.exports.malloc as Function);
+                        let v = rc.writeTo(mem, allocFn);
                         return Host.packMemoryRef(v.ptr, v.len);
                     } else {
                         return Host.packMemoryRef(ptr, len);
@@ -69,7 +70,14 @@ export class Module {
         wasmModule = new WebAssembly.Instance(this._wasmMod, importObject);
 
         const mem = wasmModule.exports.memory as WebAssembly.Memory;
-        let v = context.writeTo(mem, wasmModule.exports.malloc as Function);
+        allocFn = wasmModule.exports.malloc as Function;
+
+        // If the module has a 'resize', use that instead of 'malloc'.
+        if ("resize" in wasmModule.exports) {
+            allocFn = wasmModule.exports.resize as Function;
+        }
+
+        let v = context.writeTo(mem, allocFn);
 
         const runfn = wasmModule.exports.run as Function;
         let packed = runfn(v.ptr, v.len);
