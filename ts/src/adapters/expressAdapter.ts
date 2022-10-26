@@ -29,9 +29,10 @@ export class ExpressAdapter {
         let c = ExpressAdapter.toContext(req, res);
         let newc = this._module.run(c);
 
-        // Now write it back out...
-        ExpressAdapter.fromContext(newc, res);
-
+        if (newc != null) {
+            // Now write it back out...
+            ExpressAdapter.fromContext(newc, res);
+        }
 //        next();
     }
 
