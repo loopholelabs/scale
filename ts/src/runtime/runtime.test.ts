@@ -50,21 +50,25 @@ describe("runtime", () => {
 
         let retContext = moduleHttpMiddleware.run(ctx);
 
-        // check the returns...
+        expect(retContext).not.toBeNull();
 
-        let dec = new TextDecoder();
-        let bodyText = dec.decode(retContext.context().Response.Body);
+        if (retContext!=null) {
+            // check the returns...
 
-        // The http-endpoint.wasm module copies the request body to the response body.
-        expect(bodyText).toBe("Hello world this is a request body");        
+            let dec = new TextDecoder();
+            let bodyText = dec.decode(retContext.context().Response.Body);
 
-        // The http-middleware.wasm adds a header
-        let middle = retContext.context().Response.Headers.get("MIDDLEWARE");
-        expect(middle).toBeDefined();
-        let vals = middle?.Value;
-        if (vals!==undefined) {
-            expect(vals.length).toBe(1);
-            expect(vals[0]).toBe("TRUE");
+            // The http-endpoint.wasm module copies the request body to the response body.
+            expect(bodyText).toBe("Hello world this is a request body");        
+
+            // The http-middleware.wasm adds a header
+            let middle = retContext.context().Response.Headers.get("MIDDLEWARE");
+            expect(middle).toBeDefined();
+            let vals = middle?.Value;
+            if (vals!==undefined) {
+                expect(vals.length).toBe(1);
+                expect(vals[0]).toBe("TRUE");
+            }
         }
     })
 });

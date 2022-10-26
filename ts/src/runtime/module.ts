@@ -31,7 +31,7 @@ export class Module {
     }
 
     // Run this module, with an optional next module
-    run(context: Context): Context {
+    run(context: Context): Context | null{
         const wasi = new WASI({
             args: argv,
             env,
@@ -53,6 +53,10 @@ export class Module {
 
                     if (nextModule != null) {
                         let rc = nextModule.run(c);
+                        if (rc==null) {
+                            console.log("Next module didn't seem to run correctly.");
+                            return Host.packMemoryRef(ptr, len);
+                        }
                         let v = rc.writeTo(mem, wasmModule.exports.malloc as Function);
                         return Host.packMemoryRef(v.ptr, v.len);
                     } else {
@@ -69,6 +73,11 @@ export class Module {
 
         const runfn = wasmModule.exports.run as Function;
         let packed = runfn(v.ptr, v.len);
+
+        if (packed ==0) {
+            return null;
+        }
+
         let [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
         return Context.readFrom(mem, outContextPtr, outContextLen);
     }
