@@ -21,17 +21,18 @@ const WASI = require("wasi");
 
 export class Module {
     private _code: Buffer;
-    private _wasmMod: WebAssembly.Module;
     private _next: Module | null;
+
+    private _wasmInstance: WebAssembly.Instance;
+    private _mem: WebAssembly.Memory;
+    private _allocFn: Function;
+    private _runFn: Function;
 
     constructor(code: Buffer, next: Module | null) {
         this._code = code;
         this._next = next;
-        this._wasmMod = new WebAssembly.Module(this._code);
-    }
+        let wasmMod = new WebAssembly.Module(this._code);
 
-    // Run this module, with an optional next module
-    run(context: Context): Context | null{
         const wasi = new WASI({
             args: argv,
             env,
@@ -67,26 +68,28 @@ export class Module {
             }
         };
 
-        wasmModule = new WebAssembly.Instance(this._wasmMod, importObject);
+        wasmModule = new WebAssembly.Instance(wasmMod, importObject);
 
-        const mem = wasmModule.exports.memory as WebAssembly.Memory;
         allocFn = wasmModule.exports.malloc as Function;
-
         // If the module has a 'resize', use that instead of 'malloc'.
         if ("resize" in wasmModule.exports) {
             allocFn = wasmModule.exports.resize as Function;
         }
 
-        let v = context.writeTo(mem, allocFn);
+        this._wasmInstance = wasmModule;
+        this._mem = wasmModule.exports.memory as WebAssembly.Memory;
+        this._runFn = wasmModule.exports.run as Function;
+        this._allocFn = allocFn;
+    }
 
-        const runfn = wasmModule.exports.run as Function;
-        let packed = runfn(v.ptr, v.len);
-
-        if (packed ==0) {
+    // Run this module, with an optional next module
+    run(context: Context): Context | null {
+        let v = context.writeTo(this._mem, this._allocFn);
+        let packed = this._runFn(v.ptr, v.len);
+        if (packed == 0) {
             return null;
         }
-
         let [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
-        return Context.readFrom(mem, outContextPtr, outContextLen);
+        return Context.readFrom(this._mem, outContextPtr, outContextLen);
     }
 }
