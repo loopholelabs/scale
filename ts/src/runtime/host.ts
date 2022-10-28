@@ -14,6 +14,8 @@
 	limitations under the License.
 */
 
+/* eslint no-bitwise: off */
+
 import { Context, StringList } from "./generated/generated";
 
 export class Host {
@@ -28,7 +30,7 @@ export class Host {
   // Unpack a memory ref from 64bit to 2x32bits
   public static unpackMemoryRef(packed: bigint): [number, number] {
     const ptr = Number((packed >> BigInt(32)) & BigInt(0xffffffff));
-    const len = Number((packed & BigInt(0xffffffff)));
+    const len = Number(packed & BigInt(0xffffffff));
     return [ptr, len];
   }
 
@@ -36,7 +38,7 @@ export class Host {
     let r = "";
     for (let k of h.keys()) {
       let values = h.get(k);
-      if (values!=undefined) {
+      if (values != undefined) {
         for (let i of values.Value.values()) {
           r = r + " " + k + "=" + i;
         }
