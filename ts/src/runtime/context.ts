@@ -14,37 +14,44 @@
 	limitations under the License.
 */
 
-import { Context as pgContext, Request as pgRequest, Response as pgResponse, StringList as pgStringList } from "./generated/generated";
+import { Context as pgContext } from "./generated/generated";
 
 // Wrapper for context
 export class Context {
-    private _context: pgContext;
+  private _context: pgContext;
 
-    constructor(ctx: pgContext) {
-        // TODO: Abstract out...
-        this._context = ctx;
-    }
+  constructor(ctx: pgContext) {
+    // TODO: Abstract out...
+    this._context = ctx;
+  }
 
-    context(): pgContext {
-        return this._context;
-    }
+  context(): pgContext {
+    return this._context;
+  }
 
-    // Write a context into WebAssembly memory and return a ptr/length
-    writeTo(mem: WebAssembly.Memory, mallocfn: Function): {ptr:number, len:number} {
-        let inContextBuff = new Uint8Array();
-        let encoded = this._context.encode(inContextBuff);
-        let encPtr = mallocfn(encoded.length);
+  // Write a context into WebAssembly memory and return a ptr/length
+  writeTo(
+    mem: WebAssembly.Memory,
+    mallocfn: Function
+  ): { ptr: number; len: number } {
+    const inContextBuff = new Uint8Array();
+    const encoded = this._context.encode(inContextBuff);
+    const encPtr = mallocfn(encoded.length);
 
-        const memData = new Uint8Array(mem.buffer);
-        memData.set(encoded, encPtr);  // Writes the context into memory
-        return {ptr: encPtr, len: encoded.length};
-    }
+    const memData = new Uint8Array(mem.buffer);
+    memData.set(encoded, encPtr); // Writes the context into memory
+    return { ptr: encPtr, len: encoded.length };
+  }
 
-    // Read a context from WebAssembly memory
-    public static readFrom(mem : WebAssembly.Memory, ptr: number, len: number): Context {
-        const memData = new Uint8Array(mem.buffer);
-        let inContextBuff = memData.slice(ptr, ptr + len);
-        let c = pgContext.decode(inContextBuff);
-        return new Context(c.value);
-    }
+  // Read a context from WebAssembly memory
+  public static readFrom(
+    mem: WebAssembly.Memory,
+    ptr: number,
+    len: number
+  ): Context {
+    const memData = new Uint8Array(mem.buffer);
+    const inContextBuff = memData.slice(ptr, ptr + len);
+    const c = pgContext.decode(inContextBuff);
+    return new Context(c.value);
+  }
 }
