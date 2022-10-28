@@ -21,17 +21,21 @@ const WASI = require("wasi");
 
 export class Module {
   private _code: Buffer;
+
   private _next: Module | null;
 
   private _wasmInstance: WebAssembly.Instance;
+
   private _mem: WebAssembly.Memory;
+
   private _allocFn: Function;
+
   private _runFn: Function;
 
   constructor(code: Buffer, next: Module | null) {
     this._code = code;
     this._next = next;
-    let wasmMod = new WebAssembly.Module(this._code);
+    const wasmMod = new WebAssembly.Module(this._code);
 
     const wasi = new WASI({
       args: argv,
@@ -49,22 +53,21 @@ export class Module {
     const importObject = {
       wasi_snapshot_preview1: wasi.exports,
       env: {
-        next: function(ptr: number, len: number): BigInt {
+        next: (ptr: number, len: number): BigInt => {
           const mem = wasmModule.exports.memory as WebAssembly.Memory;
-          let c = Context.readFrom(mem, ptr, len);
+          const c = Context.readFrom(mem, ptr, len);
 
           if (nextModule != null) {
-            let rc = nextModule.run(c);
-            if (rc==null) {
-                console.log("Next module didn't seem to run correctly.");
-                return Host.packMemoryRef(ptr, len);
+            const rc = nextModule.run(c);
+            if (rc == null) {
+              console.log("Next module didn't seem to run correctly.");
+              return Host.packMemoryRef(ptr, len);
             }
-            let v = rc.writeTo(mem, allocFn);
+            const v = rc.writeTo(mem, allocFn);
             return Host.packMemoryRef(v.ptr, v.len);
-          } else {
-            return Host.packMemoryRef(ptr, len);
           }
-        }
+          return Host.packMemoryRef(ptr, len);
+        },
       },
     };
 
