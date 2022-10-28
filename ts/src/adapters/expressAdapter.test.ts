@@ -14,42 +14,48 @@
         limitations under the License.
 */
 
-import { TextEncoder, TextDecoder } from 'util';
+import { TextEncoder, TextDecoder } from "util";
+import express from "express";
+import bodyParser from "body-parser";
+import * as fs from "fs";
+import request from "supertest";
 
-import express from 'express';
-import bodyParser from 'body-parser';
-
-import * as fs from 'fs';
-import { Module } from '../runtime/module';
-import { ExpressAdapter } from './expressAdapter';
-
-import request from 'supertest';
+import { Module } from "../runtime/module";
+import { ExpressAdapter } from "./expressAdapter";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
 describe("expressAdapter", () => {
-    let port = 8090;
-    let app = express();
+  const app = express();
 
-    it("Can run a simple e2e", async () => {
-        const modHttpEndpoint = fs.readFileSync('./example_modules/http-endpoint.wasm');
-        const modHttpMiddleware = fs.readFileSync('./example_modules/http-middleware.wasm');
-        let moduleHttpEndpoint = new Module(modHttpEndpoint, null);
-        let moduleHttpMiddleware = new Module(modHttpMiddleware, moduleHttpEndpoint);
-        
-        var adapter = new ExpressAdapter(moduleHttpMiddleware);
-        
-        app.use(bodyParser.raw({
-            type: (t)=>true,
-        }));
-        app.use(adapter.handler.bind(adapter));
-        
-        let res = await request(app).post("/blah").send("HELLO WORLD");
+  it("Can run a simple e2e", async () => {
+    const modHttpEndpoint = fs.readFileSync(
+      "./example_modules/http-endpoint.wasm"
+    );
+    const modHttpMiddleware = fs.readFileSync(
+      "./example_modules/http-middleware.wasm"
+    );
+    const moduleHttpEndpoint = new Module(modHttpEndpoint, null);
+    const moduleHttpMiddleware = new Module(
+      modHttpMiddleware,
+      moduleHttpEndpoint
+    );
 
-        // Make sure everything worked as expected.
-        expect(res.statusCode).toEqual(200);
-        expect(res.text).toBe("HELLO WORLD");
-        expect(res.headers["middleware"]).toBe("TRUE");
-    });
+    const adapter = new ExpressAdapter(moduleHttpMiddleware);
+
+    app.use(
+      bodyParser.raw({
+        type: () => true,
+      })
+    );
+    app.use(adapter.handler.bind(adapter));
+
+    const res = await request(app).post("/blah").send("HELLO WORLD");
+
+    // Make sure everything worked as expected.
+    expect(res.statusCode).toEqual(200);
+    expect(res.text).toBe("HELLO WORLD");
+    expect(res.headers.middleware).toBe("TRUE");
+  });
 });
