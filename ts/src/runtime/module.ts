@@ -13,83 +13,83 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import { argv, env } from 'node:process';
-import { Host } from './host';
-import { Context } from "./context"
+import { argv, env } from "node:process";
+import { Host } from "./host";
+import { Context } from "./context";
 
 const WASI = require("wasi");
 
 export class Module {
-    private _code: Buffer;
-    private _next: Module | null;
+  private _code: Buffer;
+  private _next: Module | null;
 
-    private _wasmInstance: WebAssembly.Instance;
-    private _mem: WebAssembly.Memory;
-    private _allocFn: Function;
-    private _runFn: Function;
+  private _wasmInstance: WebAssembly.Instance;
+  private _mem: WebAssembly.Memory;
+  private _allocFn: Function;
+  private _runFn: Function;
 
-    constructor(code: Buffer, next: Module | null) {
-        this._code = code;
-        this._next = next;
-        let wasmMod = new WebAssembly.Module(this._code);
+  constructor(code: Buffer, next: Module | null) {
+    this._code = code;
+    this._next = next;
+    let wasmMod = new WebAssembly.Module(this._code);
 
-        const wasi = new WASI({
-            args: argv,
-            env,
-            preopens: {
-                '/sandbox': '/some/real/path/that/wasm/can/access'
+    const wasi = new WASI({
+      args: argv,
+      env,
+      preopens: {
+        "/sandbox": "/some/real/path/that/wasm/can/access",
+      },
+    });
+
+    let wasmModule: WebAssembly.Instance;
+    let allocFn: Function;
+
+    const nextModule = this._next;
+
+    const importObject = {
+      wasi_snapshot_preview1: wasi.exports,
+      env: {
+        next: function(ptr: number, len: number): BigInt {
+          const mem = wasmModule.exports.memory as WebAssembly.Memory;
+          let c = Context.readFrom(mem, ptr, len);
+
+          if (nextModule != null) {
+            let rc = nextModule.run(c);
+            if (rc==null) {
+                console.log("Next module didn't seem to run correctly.");
+                return Host.packMemoryRef(ptr, len);
             }
-        });
-
-        let wasmModule: WebAssembly.Instance;
-        let allocFn: Function;
-
-        let nextModule = this._next;
-
-        const importObject = {
-            wasi_snapshot_preview1: wasi.exports,
-            env: {
-                next: function(ptr: number, len: number): BigInt {
-                    const mem = wasmModule.exports.memory as WebAssembly.Memory;
-                    let c = Context.readFrom(mem, ptr, len);
-
-                    if (nextModule != null) {
-                        let rc = nextModule.run(c);
-                        if (rc==null) {
-                            console.log("Next module didn't seem to run correctly.");
-                            return Host.packMemoryRef(ptr, len);
-                        }
-                        let v = rc.writeTo(mem, allocFn);
-                        return Host.packMemoryRef(v.ptr, v.len);
-                    } else {
-                        return Host.packMemoryRef(ptr, len);
-                    }
-                }
-            }
-        };
-
-        wasmModule = new WebAssembly.Instance(wasmMod, importObject);
-
-        allocFn = wasmModule.exports.malloc as Function;
-        // If the module has a 'resize', use that instead of 'malloc'.
-        if ("resize" in wasmModule.exports) {
-            allocFn = wasmModule.exports.resize as Function;
+            let v = rc.writeTo(mem, allocFn);
+            return Host.packMemoryRef(v.ptr, v.len);
+          } else {
+            return Host.packMemoryRef(ptr, len);
+          }
         }
+      },
+    };
 
-        this._wasmInstance = wasmModule;
-        this._mem = wasmModule.exports.memory as WebAssembly.Memory;
-        this._runFn = wasmModule.exports.run as Function;
-        this._allocFn = allocFn;
+    wasmModule = new WebAssembly.Instance(wasmMod, importObject);
+
+    allocFn = wasmModule.exports.malloc as Function;
+    // If the module has a 'resize', use that instead of 'malloc'.
+    if ("resize" in wasmModule.exports) {
+      allocFn = wasmModule.exports.resize as Function;
     }
 
-    // Run this module, with an optional next module
-    run(context: Context): Context | null {
-        let v = context.writeTo(this._mem, this._allocFn);
-        let packed = this._runFn(v.ptr, v.len);
-        if (packed == 0) {
-            return null;
-        }
-        let [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
-        return Context.readFrom(this._mem, outContextPtr, outContextLen);
+    this._wasmInstance = wasmModule;
+    this._mem = wasmModule.exports.memory as WebAssembly.Memory;
+    this._runFn = wasmModule.exports.run as Function;
+    this._allocFn = allocFn;
+  }
+
+  // Run this module, with an optional next module
+  run(context: Context): Context | null {
+    const v = context.writeTo(this._mem, this._allocFn);
+    const packed = this._runFn(v.ptr, v.len);
+    if (packed === 0) {
+      return null;
     }
+    const [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
+    return Context.readFrom(this._mem, outContextPtr, outContextLen);
+  }
 }
