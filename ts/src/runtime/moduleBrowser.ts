@@ -13,54 +13,55 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import { Host } from './host';
-import { Context } from "./context"
+import { Host } from "./host";
+import { Context } from "./context";
 
 export class ModuleBrowser {
-    private _code: Buffer;
-    private _wasmMod: WebAssembly.Module;
-    private _next: ModuleBrowser | null;
+  private _code: Buffer;
 
-    constructor(code: Buffer, next: ModuleBrowser | null) {
-        this._code = code;
-        this._next = next;
-        this._wasmMod = new WebAssembly.Module(this._code);
-    }
+  private _wasmMod: WebAssembly.Module;
 
-    // Run this module, with an optional next module
-    run(context: Context): Context {
-        let wasmModule: WebAssembly.Instance;
+  private _next: ModuleBrowser | null;
 
-        let nextModule = this._next;
+  constructor(code: Buffer, next: ModuleBrowser | null) {
+    this._code = code;
+    this._next = next;
+    this._wasmMod = new WebAssembly.Module(this._code);
+  }
 
-        const importObject = {
-            wasi_snapshot_preview1: {
-                fd_write: function() {}
-            },
-            env: {
-                next: function(ptr: number, len: number): BigInt {
-                    const mem = wasmModule.exports.memory as WebAssembly.Memory;
-                    let c = Context.readFrom(mem, ptr, len);
+  // Run this module, with an optional next module
+  run(context: Context): Context {
+    let wasmModule: WebAssembly.Instance;
 
-                    if (nextModule != null) {
-                        let rc = nextModule.run(c);
-                        let v = rc.writeTo(mem, wasmModule.exports.malloc as Function);
-                        return Host.packMemoryRef(v.ptr, v.len);
-                    } else {
-                        return Host.packMemoryRef(ptr, len);
-                    }
-                }
-            }
-        };
+    const nextModule = this._next;
 
-        wasmModule = new WebAssembly.Instance(this._wasmMod, importObject);
+    const importObject = {
+      wasi_snapshot_preview1: {
+        fd_write: () => {},
+      },
+      env: {
+        next: (ptr: number, len: number): BigInt => {
+          const mem = wasmModule.exports.memory as WebAssembly.Memory;
+          const c = Context.readFrom(mem, ptr, len);
 
-        const mem = wasmModule.exports.memory as WebAssembly.Memory;
-        let v = context.writeTo(mem, wasmModule.exports.malloc as Function);
+          if (nextModule != null) {
+            const rc = nextModule.run(c);
+            const v = rc.writeTo(mem, wasmModule.exports.malloc as Function);
+            return Host.packMemoryRef(v.ptr, v.len);
+          }
+          return Host.packMemoryRef(ptr, len);
+        },
+      },
+    };
 
-        const runfn = wasmModule.exports.run as Function;
-        let packed = runfn(v.ptr, v.len);
-        let [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
-        return Context.readFrom(mem, outContextPtr, outContextLen);
-    }
+    wasmModule = new WebAssembly.Instance(this._wasmMod, importObject);
+
+    const mem = wasmModule.exports.memory as WebAssembly.Memory;
+    const v = context.writeTo(mem, wasmModule.exports.malloc as Function);
+
+    const runfn = wasmModule.exports.run as Function;
+    const packed = runfn(v.ptr, v.len);
+    const [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
+    return Context.readFrom(mem, outContextPtr, outContextLen);
+  }
 }
