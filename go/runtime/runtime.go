@@ -23,9 +23,12 @@ import (
 	"fmt"
 	"github.com/loopholelabs/scale/go/scalefunc"
 	"github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
 )
+
+const i32 = api.ValueTypeI32
 
 var (
 	NextFunctionRequiredError = errors.New("next function required when the scale function chain only contains middleware")
@@ -56,8 +59,10 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 		modules:      make(map[string]*Module),
 	}
 
-	module := r.runtime.NewHostModuleBuilder("env")
-	module = module.ExportFunction("next", r.next)
+	module := r.runtime.NewHostModuleBuilder("env").
+		NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.next), []api.ValueType{i32, i32}, []api.ValueType{}).
+		WithParameterNames("pointer", "length").Export("next")
 
 	compiled, err := module.Compile(ctx)
 	if err != nil {
