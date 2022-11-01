@@ -5,22 +5,22 @@ import org.teavm.interop.Export;
 
 public class Client {
 
-	public static int counter = 0;
+	@Import(name = "next", module = "env")
+	public static native int nextModule(int ptr, int size);
 
-	@Import(name = "inc_by", module = "teavm_unchained")
-	public static native int incBy();
-
-	@Export(name = "inc")
-	public static int inc() {
-		counter += incBy();
-		System.out.println("Current counter (VM): " + counter);
-		return counter;
-	}
+  @Export(name = "malloc")
+  public static int malloc(int size) {
+    return 1;
+  }
 
   @Export(name = "run")
   public static int run(int ptr, int size) {
-    System.out.println("Run was called with " + ptr + ", " + size);
-    return ptr * 2;
+    // TODO: Read the context from memory, and decode... Do something to it, encode, store it in memory.
+
+    //    System.out.println("Run was called with " + ptr + ", " + size);
+
+    // nextModule()
+    return 1234;
   }
 
 	// Compile without, and this class won't be included. Hm.
