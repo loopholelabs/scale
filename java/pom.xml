@@ -5,56 +5,25 @@
   <groupId>io.loopholelabs.scale</groupId>
   <artifactId>scale</artifactId>
   <version>0.1</version>
-  <packaging>jar</packaging>
 
   <properties>
-    <java.version>1.8</java.version>
-    <teavm.version>0.7.0-dev-1197</teavm.version>
+    <java.version>9</java.version>
+    <teavm.version>0.2.4</teavm.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-
-  <repositories>
-    <repository>
-      <id>teavm-dev</id>
-      <url>https://teavm.org/maven/repository</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>teavm-dev</id>
-      <url>https://teavm.org/maven/repository</url>
-    </pluginRepository>
-  </pluginRepositories>
 
   <dependencies>
     <!-- Emulator of Java class library for TeaVM -->
     <dependency>
-      <groupId>org.teavm</groupId>
+      <groupId>com.fermyon</groupId>
       <artifactId>teavm-classlib</artifactId>
       <version>${teavm.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- JavaScriptObjects (JSO) - a JavaScript binding for TeaVM -->
-    <dependency>
-      <groupId>org.teavm</groupId>
-      <artifactId>teavm-jso-apis</artifactId>
-      <version>${teavm.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Servlet 3.1 specification -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <!-- Configure Java compiler to use Java 8 syntax  -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
@@ -66,7 +35,7 @@
 
       <!-- Configure TeaVM -->
       <plugin>
-        <groupId>org.teavm</groupId>
+        <groupId>com.fermyon</groupId>
         <artifactId>teavm-maven-plugin</artifactId>
         <version>${teavm.version}</version>
         <executions>
@@ -76,41 +45,21 @@
               <goal>compile</goal>
             </goals>
             <configuration>
-              <!-- Directory where TeaVM should put generated files. This configuration conforms to the settings
-                   of the WAR plugin -->
-              <targetDirectory>${project.build.directory}/generated/teavm</targetDirectory>
-
-              <!-- Main class, containing static void main(String[]) -->
-	      <mainClass>io.loopholelabs.scale.Client</mainClass>
-
-              <!-- Whether TeaVM should produce minified JavaScript. Can reduce JavaScript file size more than
-                   two times -->
-              <minifying>true</minifying>
-
-              <!-- Whether TeaVM should produce debug information for its built-in debugger -->
+              <targetDirectory>${project.build.directory}/generated/wasm/teavm-wasm</targetDirectory>
+              <targetType>WEBASSEMBLY</targetType>
+              <mainClass>Main</mainClass>
+              <classesToPreserve>
+                io.loopholelabs.scale.Client
+              </classesToPreserve>
               <debugInformationGenerated>true</debugInformationGenerated>
-
-              <!-- Whether TeaVM should produce source maps file -->
-              <sourceMapsGenerated>true</sourceMapsGenerated>
-
-              <!-- Whether TeaVM should also put source files into output directory,
-                   for compatibility with source maps -->
-              <sourceFilesCopied>true</sourceFilesCopied>
-
-              <!-- Optimization level. Valid values are: SIMPLE, ADVANCED, FULL -->
-	      <optimizationLevel>FULL</optimizationLevel>
-
-	      <targetType>WEBASSEMBLY</targetType>
-
-	      <!-- Not that this really changes anything -->
-	      <runtime>NONE</runtime>
-
-	      <!-- -->
-	      <targetFileName>javamod.wasm</targetFileName>
+              <minifying>false</minifying>
+              <!-- Anything beyond SIMPLE appears to break non-trivial code: -->
+              <optimizationLevel>SIMPLE</optimizationLevel>
             </configuration>
           </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
+
 </project>
