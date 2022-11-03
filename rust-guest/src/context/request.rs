@@ -20,7 +20,7 @@ use std::string::String;
 use std::collections::HashMap;
 
 pub trait MutableRequest {
-    fn method(self) -> String;
+    fn method(&mut self) -> &String;
     fn set_method(self, method: String) -> Self;
     fn remote_ip(self) -> String;
     fn body(self) -> Vec<u8>;
@@ -32,7 +32,7 @@ pub trait MutableRequest {
 }
 
 impl MutableRequest for Request {
-    fn method(self) -> String { self.method }
+    fn method(&mut self) -> &String { &self.method }
 
     fn set_method(mut self, method: String) -> Self {
         self.method = method;
