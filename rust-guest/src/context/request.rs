@@ -21,20 +21,20 @@ use std::collections::HashMap;
 
 pub trait MutableRequest {
     fn method(&mut self) -> &String;
-    fn set_method(self, method: String) -> Self;
-    fn remote_ip(&self) -> &String; //R
-    fn body(&self) -> &Vec<u8>; //R
+    fn set_method(&mut self, method: String) -> &mut Self;
+    fn remote_ip(&self) -> &String;
+    fn body(&self) -> &Vec<u8>;
     fn set_body(&mut self, body: String) -> &mut Self;
-    fn set_body_bytes(self, bytes: Vec<u8>) -> Self;
-    fn headers(&self) -> &HashMap<String, StringList>; //R
-    fn get_headers(&self, key: &String) -> Option<&StringList>; //R
-    fn set_headers(self, key: String, value: Vec<String>) -> HashMap<String, StringList>;
+    fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self;
+    fn headers(&self) -> &HashMap<String, StringList>;
+    fn get_headers(&self, key: &String) -> Option<&StringList>;
+    fn set_headers(&mut self, key: String, value: Vec<String>);
 }
 
 impl MutableRequest for Request {
     fn method(&mut self) -> &String { &self.method }
 
-    fn set_method(mut self, method: String) -> Self {
+    fn set_method(&mut self, method: String) -> &mut Self {
         self.method = method;
         self
     }
@@ -52,7 +52,7 @@ impl MutableRequest for Request {
         self
     }
 
-    fn set_body_bytes(mut self, bytes: Vec<u8>) -> Self {
+    fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self {
         self.body = bytes;
         self
     }
@@ -65,9 +65,7 @@ impl MutableRequest for Request {
         self.headers.get(key)
     }
 
-    fn set_headers(mut self, key: String, value: Vec<String>) -> HashMap<String, StringList> {
-        let new = StringList{ value: value };
-        self.headers.insert(key, new);
-        self.headers
+    fn set_headers(&mut self, key: String, value: Vec<String>) {
+        self.headers.insert(key,  StringList{ value: value });
     }
 }

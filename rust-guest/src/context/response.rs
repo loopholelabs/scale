@@ -19,22 +19,22 @@ use super::generated::{Response, StringList};
 use std::collections::HashMap;
 
 pub trait MutableResponse {
-    fn status_code(self) -> i32;
-    fn body(self) -> Vec<u8>;
+    fn status_code(&self) -> &i32;//R
+    fn body(&self) -> &Vec<u8>;//R
     fn set_body(&mut self, body: String) -> &mut Self;
-    fn set_body_bytes(self, bytes: Vec<u8>) -> Self;
-    fn headers(self) -> HashMap<String, StringList>;
+    fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self;
+    fn headers(&self) -> &HashMap<String, StringList>;//R
     fn get_headers(&self, key: &String) -> Option<&StringList>;
-    fn set_headers(self, key: String, value: Vec<String>) -> HashMap<String, StringList>;
+    fn set_headers(&mut self, key: String, value: Vec<String>);
 }
 
 impl MutableResponse for Response {
-    fn status_code(self) -> i32 {
-        self.status_code
+    fn status_code(&self) -> &i32 {
+        &self.status_code
     }
 
-    fn body(self) -> Vec<u8> {
-        self.body
+    fn body(&self) -> &Vec<u8> {
+        &self.body
     }
 
     fn set_body(&mut self, body: String) -> &mut Self {
@@ -42,21 +42,20 @@ impl MutableResponse for Response {
         self
     }
 
-    fn set_body_bytes(mut self, bytes: Vec<u8>) -> Self {
+    fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self {
         self.body = bytes;
         self
     }
 
-    fn headers(self) -> HashMap<String, StringList> {
-        self.headers
+    fn headers(&self) -> &HashMap<String, StringList> {
+        &self.headers
     }
 
     fn get_headers(&self, key: &String) -> Option<&StringList>{
         self.headers.get(key)
     }
 
-    fn set_headers(mut self, key: String, value: Vec<String>) -> HashMap<String, StringList> {
+    fn set_headers(&mut self, key: String, value: Vec<String>) {
         self.headers.insert(key,  StringList{ value: value });
-        self.headers
     }
 }
