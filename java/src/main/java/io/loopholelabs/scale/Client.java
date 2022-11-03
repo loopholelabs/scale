@@ -1,7 +1,7 @@
 package io.loopholelabs.scale;
 
-import polyglot.*;
-import polyglot.generated.Context;
+import io.loopholelabs.polyglot.*;
+import io.loopholelabs.scale.generated.Context;
 
 import org.teavm.interop.Import;
 import org.teavm.interop.Export;

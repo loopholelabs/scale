@@ -1,6 +1,6 @@
-package polyglot.generated;
+package io.loopholelabs.scale.generated;
 
-import polyglot.*;
+import io.loopholelabs.polyglot.*;
 
 public class Context {
 

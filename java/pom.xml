@@ -13,6 +13,13 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.loopholelabs</groupId>
+      <artifactId>polyglot</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+  
     <!-- Emulator of Java class library for TeaVM -->
     <dependency>
       <groupId>com.fermyon</groupId>

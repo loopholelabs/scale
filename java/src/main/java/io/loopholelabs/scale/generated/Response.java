@@ -1,23 +1,17 @@
-package polyglot.generated;
+package io.loopholelabs.scale.generated;
 
-import polyglot.*;
+import io.loopholelabs.polyglot.*;
 
 import java.util.*;
 
-public class Request {
-  public String method;
-  public long contentLength;
-  public String protocol;
-  public String ip;
+public class Response {
+  public int statusCode;
   public byte[] body;
   public HashMap<String, String[]> headers;
 
   public byte[] encode() {
     Buffer b = new Buffer();
-    Encode.encodeString(b, method);
-    Encode.encodeInt64(b, contentLength);
-    Encode.encodeString(b, protocol);
-    Encode.encodeString(b, ip);
+    Encode.encodeInt32(b, statusCode);
     Encode.encodeBytes(b, body);
     Encode.encodeMap(b, headers.size(), Encode.StringKind, Encode.AnyKind);
     Iterator<String> i = headers.keySet().iterator();
@@ -35,16 +29,10 @@ public class Request {
   }
 
   public byte[] decodeFrom(byte[] data) throws DecodeException {
-    this.method = Decode.decodeString(data);
-    data = Decode.skipString(data);
-    this.contentLength = Decode.decodeInt64(data);
-    data = Decode.skipInt64(data);
-    this.protocol = Decode.decodeString(data);
-    data = Decode.skipString(data);
-    this.ip = Decode.decodeString(data);
-    data = Decode.skipString(data);
-    this.body = Decode.decodeUint8Array(data);
-    data = Decode.skipUint8Array(data);
+    this.statusCode = Decode.decodeInt32(data);
+    data = Decode.skipInt32(data);
+    this.body = Decode.decodeBytes(data);
+    data = Decode.skipBytes(data);
 
     headers = new HashMap<String, String[]>();
 
@@ -67,11 +55,11 @@ public class Request {
       headers.put(k, vals);
     }
 
-    return data;
+    return data;    
   }
 
   public String toString() {
-    String s = "Request[Method=" + method + ", contentLength=" + contentLength + ", protocol=" + protocol + ", IP=" + ip + "]\n" +
+    String s = "Response[Status=" + statusCode + "\n" +
            " Body=" + new String(body) + "\n";
     Iterator<String> i = headers.keySet().iterator();
     while(i.hasNext()) {
@@ -83,4 +71,5 @@ public class Request {
     }
     return s;
   }
+
 }
