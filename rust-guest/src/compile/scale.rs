@@ -1,6 +1,7 @@
 #![allow(unused_mut)]
 
 use crate::context::RunContext;
+use std::string::String;
 use super::generated::{Context, Request, Response};
 use super::request::{MutableRequest};
 use super::response::{MutableResponse};
