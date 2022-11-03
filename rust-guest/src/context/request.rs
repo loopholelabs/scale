@@ -22,12 +22,12 @@ use std::collections::HashMap;
 pub trait MutableRequest {
     fn method(&mut self) -> &String;
     fn set_method(self, method: String) -> Self;
-    fn remote_ip(self) -> String;
-    fn body(self) -> Vec<u8>;
+    fn remote_ip(&self) -> &String; //R
+    fn body(&self) -> &Vec<u8>; //R
     fn set_body(&mut self, body: String) -> &mut Self;
     fn set_body_bytes(self, bytes: Vec<u8>) -> Self;
-    fn headers(self) -> HashMap<String, StringList>;
-    fn get_headers(&self, key: &String) -> Option<&StringList>;
+    fn headers(&self) -> &HashMap<String, StringList>; //R
+    fn get_headers(&self, key: &String) -> Option<&StringList>; //R
     fn set_headers(self, key: String, value: Vec<String>) -> HashMap<String, StringList>;
 }
 
@@ -39,12 +39,12 @@ impl MutableRequest for Request {
         self
     }
 
-    fn remote_ip(self) -> String {
-        self.i_p
+    fn remote_ip(&self) -> &String {
+        &self.i_p
     }
 
-    fn body(self) -> Vec<u8> {
-        self.body
+    fn body(&self) -> &Vec<u8> {
+        &self.body
     }
 
     fn set_body(&mut self, body: String) -> &mut Self {
@@ -57,8 +57,8 @@ impl MutableRequest for Request {
         self
     }
 
-    fn headers(self) -> HashMap<String, StringList> {
-        self.headers
+    fn headers(&self) -> &HashMap<String, StringList> {
+        &self.headers
     }
 
     fn get_headers(&self, key: &String) -> Option<&StringList>{
