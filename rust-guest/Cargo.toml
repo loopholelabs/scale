@@ -1,0 +1,11 @@
+[package]
+name = "scale_guest_rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+polyglot = { git = "https://github.com/loopholelabs/polyglot-rs" }
+lazy_static = "1.4.0"
+
+[lib]
+crate-type = ["cdylib"]

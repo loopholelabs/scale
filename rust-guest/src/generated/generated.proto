@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+// generator is go package
+option go_package = ".";
+
+message Context {
+  Request Request = 1;
+  Response Response = 2;
+}
+
+message Request {
+  map<string, StringList> Headers = 1;
+  string Method = 2;
+  int64 ContentLength = 3;
+  string Protocol = 4;
+  string IP = 5;
+  bytes Body = 6;
+}
+
+message Response {
+  map<string, StringList> Headers = 1;
+  int32 StatusCode = 2;
+  bytes Body = 3;
+}
+
+message StringList {
+  repeated string Value = 1;
+}
