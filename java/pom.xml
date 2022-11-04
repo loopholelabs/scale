@@ -56,7 +56,7 @@
               <targetType>WEBASSEMBLY</targetType>
               <mainClass>Main</mainClass>
               <classesToPreserve>
-                io.loopholelabs.scale.Client
+                io.loopholelabs.scale.ScaleRunner
               </classesToPreserve>
               <debugInformationGenerated>true</debugInformationGenerated>
               <minifying>false</minifying>
