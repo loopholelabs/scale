@@ -23,7 +23,7 @@ pub trait MutableRequest {
     fn method(&mut self) -> &String;
     fn set_method(&mut self, method: String) -> &mut Self;
     fn remote_ip(&self) -> &String;
-    fn body(&mut self) -> &mut Vec<u8>;
+    fn body(&mut self) -> Vec<u8>;
     fn set_body(&mut self, body: String) -> &mut Self;
     fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self;
     fn headers(&self) -> &HashMap<String, StringList>;
@@ -45,8 +45,8 @@ impl MutableRequest for Request {
         &self.i_p
     }
 
-    fn body(&mut self) -> &mut Vec<u8> {
-        &mut self.body
+    fn body(&mut self) -> Vec<u8> {
+        self.body.clone()
     }
 
     fn set_body(&mut self, body: String) -> &mut Self {
