@@ -13,7 +13,10 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import express from "express";
+
+import next from "next";
+import { createServer } from "http";
+
 import { Context } from "../runtime/context";
 import { Module } from "../runtime/module";
 import {
@@ -23,7 +26,25 @@ import {
   StringList as PgStringList,
 } from "../runtime/generated/generated";
 
-export class ExpressAdapter {
+
+const dev = process.env.NODE_ENV !== 'production'
+const hostname = 'localhost'
+const port = 3000
+// when using middleware `hostname` and `port` must be provided below
+const app = next({ dev, hostname, port })
+const handle = app.getRequestHandler()
+
+console.log("Starting nextAdapter example");
+
+app.prepare().then(() => {
+  createServer(async (req, res) => {
+    console.log(req);
+
+  }).listen(port, () => {
+    console.log(`> Ready on http://${hostname}:${port}`)
+  })
+/*
+export class NextAdapter {
   private _module: Module;
 
   constructor(mod: Module) {
@@ -31,7 +52,7 @@ export class ExpressAdapter {
   }
 
   handler(
-    req: express.Request,
+    req: next.Request,
     res: express.Response,
     next: express.NextFunction
   ) {
@@ -94,27 +115,6 @@ export class ExpressAdapter {
       body,
       reqheaders
     );
-    /*
-        let respheaders = new Map<string, pgStringList>();
-//
-        for(let k in resp.getHeaders()) {
-            let vals = resp.getHeaders()[k];
-            let sl: string[] = [];
-            if (typeof vals === 'string') {
-                sl.push(vals);  // Single value
-            } else if (typeof vals === 'number' ) {
-                sl.push('' + vals);
-            } else if (vals===undefined) {
-                // Just empty values
-            } else {
-                sl = vals;  // Multiple values
-            }
-            respheaders.set(k, new pgStringList(sl));
-        }
-
-        var enc = new TextEncoder();
-        let respBody = enc.encode("TODO: Response body");
-    */
 
     const presp = new PgResponse(
       resp.statusCode,
@@ -124,3 +124,4 @@ export class ExpressAdapter {
     return new Context(new PgContext(preq, presp));
   }
 }
+*/

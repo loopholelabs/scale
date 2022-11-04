@@ -51,6 +51,13 @@ describe("runtime", () => {
     const modHttpMiddleware = fs.readFileSync(
       "./example_modules/http-middleware.wasm"
     );
+
+
+    //
+    // TODO: Encapsulate the module chain into a runtime with single entry point.
+    // Runtime r = new Runtime([]Module);
+    // r.run();
+
     const moduleHttpEndpoint = new Module(modHttpEndpoint, null);
     const moduleHttpMiddleware = new Module(
       modHttpMiddleware,
