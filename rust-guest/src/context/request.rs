@@ -20,9 +20,9 @@ use std::string::String;
 use std::collections::HashMap;
 
 pub trait MutableRequest {
-    fn method(&mut self) -> &String;
+    fn method(&mut self) -> String;
     fn set_method(&mut self, method: String) -> &mut Self;
-    fn remote_ip(&self) -> &String;
+    fn remote_ip(&mut self) -> String;
     fn body(&mut self) -> Vec<u8>;
     fn set_body(&mut self, body: String) -> &mut Self;
     fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self;
@@ -32,8 +32,8 @@ pub trait MutableRequest {
 }
 
 impl MutableRequest for Request {
-    fn method(&mut self) -> &String {
-        &self.method
+    fn method(&mut self) -> String {
+        self.method.clone()
     }
 
     fn set_method(&mut self, method: String) -> &mut Self {
@@ -41,8 +41,8 @@ impl MutableRequest for Request {
         self
     }
 
-    fn remote_ip(&self) -> &String {
-        &self.i_p
+    fn remote_ip(&mut self) -> String {
+        self.i_p.clone()
     }
 
     fn body(&mut self) -> Vec<u8> {
