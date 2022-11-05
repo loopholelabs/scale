@@ -19,22 +19,22 @@ use super::generated::{Response, StringList};
 use std::collections::HashMap;
 
 pub trait MutableResponse {
-    fn status_code(&self) -> &i32;//R
-    fn body(&self) -> &Vec<u8>;//R
+    fn status_code(&mut self) -> i32;
+    fn body(&mut self) -> Vec<u8>;
     fn set_body(&mut self, body: String) -> &mut Self;
     fn set_body_bytes(&mut self, bytes: Vec<u8>) -> &mut Self;
-    fn headers(&self) -> &HashMap<String, StringList>;//R
+    fn headers(&self) -> &HashMap<String, StringList>;
     fn get_headers(&self, key: &String) -> Option<&StringList>;
     fn set_headers(&mut self, key: String, value: Vec<String>);
 }
 
 impl MutableResponse for Response {
-    fn status_code(&self) -> &i32 {
-        &self.status_code
+    fn status_code(&mut self) -> i32 {
+        self.status_code.clone()
     }
 
-    fn body(&self) -> &Vec<u8> {
-        &self.body
+    fn body(&mut self) -> Vec<u8> {
+        self.body.clone()
     }
 
     fn set_body(&mut self, body: String) -> &mut Self {
