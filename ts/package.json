@@ -28,8 +28,7 @@
     "parcel": "^2.6.2",
     "supertest": "^6.3.1",
     "ts-jest": "^29.0.3",
-    "util": "^0.12.5",
-    "wasi": "^0.0.6"
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@parcel/transformer-typescript-types": "^2.7.0",
