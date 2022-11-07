@@ -43,26 +43,29 @@ export class Module {
     let wasmModule: WebAssembly.Instance;
     let allocFn: Function;
 
-    const nextModule = this._next;
+    const nextFn = (
+      (thisModule: Module) =>
+      (ptr: number, len: number): BigInt => {
+        const mem = wasmModule.exports.memory as WebAssembly.Memory;
+        const c = Context.readFrom(mem, ptr, len);
+
+        if (thisModule._next != null) {
+          const rc = thisModule._next.run(c);
+          if (rc == null) {
+            console.log("Next module didn't seem to run correctly.");
+            return Host.packMemoryRef(ptr, len);
+          }
+          const v = rc.writeTo(mem, allocFn);
+          return Host.packMemoryRef(v.ptr, v.len);
+        }
+        return Host.packMemoryRef(ptr, len);
+      }
+    )(this);
 
     const importObject = {
       wasi_snapshot_preview1: wasi.wasiImport,
       env: {
-        next: (ptr: number, len: number): BigInt => {
-          const mem = wasmModule.exports.memory as WebAssembly.Memory;
-          const c = Context.readFrom(mem, ptr, len);
-
-          if (nextModule != null) {
-            const rc = nextModule.run(c);
-            if (rc == null) {
-              console.log("Next module didn't seem to run correctly.");
-              return Host.packMemoryRef(ptr, len);
-            }
-            const v = rc.writeTo(mem, allocFn);
-            return Host.packMemoryRef(v.ptr, v.len);
-          }
-          return Host.packMemoryRef(ptr, len);
-        },
+        next: nextFn,
       },
     };
 
@@ -80,6 +83,11 @@ export class Module {
     this._allocFn = allocFn;
 
     wasi.start(wasmModule);
+  }
+
+  // Set the next module to run
+  setNext(mod: Module | null) {
+    this._next = mod;
   }
 
   // Run this module, with an optional next module
