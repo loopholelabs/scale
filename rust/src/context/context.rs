@@ -41,9 +41,11 @@ impl RunContext for Context {
         vec.shrink_to_fit();
         let ptr = vec.as_ptr() as u32;
         let len = vec.len() as u32;
+
         mem::forget(vec);  // prevents deallocation in Rust
                            // vec still exists in mem, but
                            // rust doesn't have any concept of it
+
 
         return (ptr, len)
     }
