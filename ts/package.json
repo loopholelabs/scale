@@ -7,8 +7,8 @@
   "module": "dist/module.js",
   "types": "dist/types.d.ts",
   "scripts": {
-    "build": "parcel build",
-    "test": "jest"
+    "build": "node --experimental-wasi-unstable-preview1 node_modules/.bin/parcel build",
+    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache"
   },
   "dependencies": {
     "@loopholelabs/polyglot-ts": "^0.3.0",
@@ -21,8 +21,7 @@
     "parcel": "^2.6.2",
     "supertest": "^6.3.1",
     "ts-jest": "^29.0.3",
-    "util": "^0.12.5",
-    "wasi": "^0.0.6"
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@parcel/packager-ts": "^2.7.0",

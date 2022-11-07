@@ -13,11 +13,9 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import { argv, env } from "node:process";
+import { WASI } from "wasi";
 import { Host } from "./host";
 import { Context } from "./context";
-
-const WASI = require("wasi");
 
 export class Module {
   private _code: Buffer;
@@ -38,11 +36,8 @@ export class Module {
     const wasmMod = new WebAssembly.Module(this._code);
 
     const wasi = new WASI({
-      args: argv,
-      env,
-      preopens: {
-        "/sandbox": "/some/real/path/that/wasm/can/access",
-      },
+      args: [],
+      env: {},
     });
 
     let wasmModule: WebAssembly.Instance;
@@ -51,7 +46,7 @@ export class Module {
     const nextModule = this._next;
 
     const importObject = {
-      wasi_snapshot_preview1: wasi.exports,
+      wasi_snapshot_preview1: wasi.wasiImport,
       env: {
         next: (ptr: number, len: number): BigInt => {
           const mem = wasmModule.exports.memory as WebAssembly.Memory;
@@ -83,6 +78,8 @@ export class Module {
     this._mem = wasmModule.exports.memory as WebAssembly.Memory;
     this._runFn = wasmModule.exports.run as Function;
     this._allocFn = allocFn;
+
+    wasi.start(wasmModule);
   }
 
   // Run this module, with an optional next module
