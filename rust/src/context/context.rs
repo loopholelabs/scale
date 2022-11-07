@@ -21,12 +21,25 @@ pub trait RunContext {
     fn next(self) -> Self;
     fn request(&mut self) -> &mut Request;
     fn response(&mut self) -> &mut Response;
-    fn default() -> Self;
 }
 
 impl RunContext for Context {
     fn new()  -> Context {
-          Self::default()
+            Context {
+                    request: Request {
+                        headers: HashMap::new(),
+                        method: "".to_string(),
+                        content_length: 0,
+                        protocol: "".to_string(),
+                        i_p: "".to_string(),
+                        body: Vec::new()
+                    },
+                    response: Response {
+                        headers: HashMap::new(),
+                        status_code: 0,
+                        body: Vec::new()
+                    },
+           }
     }
 
     fn from_read_buffer(self, read_buff_global: &mut Cursor<&mut Vec<u8>>) -> Self {
@@ -59,9 +72,9 @@ impl RunContext for Context {
     }
 
     fn next(self) -> Self {
-         unsafe {
            let ptr_len = self.to_write_buffer();
 
+           unsafe {
            //  calls resize from host side, which sets PTR_LEN
            _next(ptr_len.0, ptr_len.1);
 
@@ -71,28 +84,10 @@ impl RunContext for Context {
            let mut vec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
            let mut constructed = Cursor::new(&mut vec);
 
-           let empty_context: Context = Self::default();
+           let empty_context: Context = Self::new();
 
            let from_buf = empty_context.from_read_buffer(&mut constructed);
            return from_buf;
-         }
-    }
-
-    fn default() -> Self {
-            Context {
-                    request: Request {
-                        headers: HashMap::new(),
-                        method: "".to_string(),
-                        content_length: 0,
-                        protocol: "".to_string(),
-                        i_p: "".to_string(),
-                        body: Vec::new()
-                    },
-                    response: Response {
-                        headers: HashMap::new(),
-                        status_code: 0,
-                        body: Vec::new()
-                    },
            }
     }
 }
