@@ -34,15 +34,15 @@ type Module struct {
 }
 
 func NewModule(ctx context.Context, f *Function, r *Runtime) (*Module, error) {
-	module, err := r.runtime.InstantiateModule(ctx, f.compiled, r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.scaleFunc.ScaleFile.Name, uuid.New().String())))
+	module, err := r.runtime.InstantiateModule(ctx, f.compiled, r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.scaleFunc.Name, uuid.New().String())))
 	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
+		return nil, fmt.Errorf("failed to instantiate function '%s': %w", f.scaleFunc.Name, err)
 	}
 
 	run := module.ExportedFunction("run")
 	resize := module.ExportedFunction("resize")
 	if run == nil || resize == nil {
-		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.scaleFunc.ScaleFile.Name)
+		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.scaleFunc.Name)
 	}
 
 	return &Module{

@@ -35,16 +35,6 @@ func (r *Runtime) Instance(next Next) (*Instance, error) {
 	}
 
 	if i.next == nil {
-		endpoint := false
-		for _, f := range r.functions {
-			if !f.scaleFunc.ScaleFile.Middleware {
-				endpoint = true
-				break
-			}
-		}
-		if !endpoint {
-			return nil, NextFunctionRequiredError
-		}
 		i.next = func(ctx *Context) *Context {
 			return ctx
 		}

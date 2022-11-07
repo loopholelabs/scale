@@ -19,8 +19,8 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"github.com/loopholelabs/scale/go/scalefunc"
 	"github.com/loopholelabs/scale/go/utils"
+	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/tetratelabs/wazero"
 )
 
@@ -35,7 +35,7 @@ type Function struct {
 func (f *Function) Run(ctx context.Context, i *Instance) error {
 	module, err := f.modulePool.Get()
 	if err != nil {
-		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.ScaleFile.Name, err)
+		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
 	}
 
 	module.init(i)
@@ -48,30 +48,30 @@ func (f *Function) Run(ctx context.Context, i *Instance) error {
 	ctxBufferLength := uint64(len(ctxBuffer))
 	writeBuffer, err := module.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
-		return fmt.Errorf("failed to allocate memory for function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
+		return fmt.Errorf("failed to allocate memory for function '%s': %w", f.scaleFunc.Name, err)
 	}
 
 	if !module.module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer) {
-		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.ScaleFile.Name)
+		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.Name)
 	}
 
 	packed, err := module.run.Call(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to run function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
+		return fmt.Errorf("failed to run function '%s': %w", f.scaleFunc.Name, err)
 	}
 	if packed[0] == 0 {
-		return fmt.Errorf("failed to run function '%s'", f.scaleFunc.ScaleFile.Name)
+		return fmt.Errorf("failed to run function '%s'", f.scaleFunc.Name)
 	}
 
 	offset, length := utils.UnpackUint32(packed[0])
 	readBuffer, ok := module.module.Memory().Read(ctx, offset, length)
 	if !ok {
-		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.ScaleFile.Name)
+		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
 	}
 
 	err = i.Context().Read(readBuffer)
 	if err != nil {
-		return fmt.Errorf("failed to deserialize context for function '%s': %w", f.scaleFunc.ScaleFile.Name, err)
+		return fmt.Errorf("failed to deserialize context for function '%s': %w", f.scaleFunc.Name, err)
 	}
 
 	return nil

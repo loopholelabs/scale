@@ -21,7 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/scale/go/scalefunc"
+	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
@@ -77,7 +77,7 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 	for _, f := range functions {
 		sf, err := r.compileFunction(ctx, f)
 		if err != nil {
-			return nil, fmt.Errorf("failed to compile function '%s': %w", f.ScaleFile.Name, err)
+			return nil, fmt.Errorf("failed to compile function '%s': %w", f.Name, err)
 		}
 		if r.head == nil {
 			r.head = sf
@@ -94,7 +94,7 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 func (r *Runtime) compileFunction(ctx context.Context, scaleFunc scalefunc.ScaleFunc) (*Function, error) {
 	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile function '%s': %w", scaleFunc.ScaleFile.Name, err)
+		return nil, fmt.Errorf("failed to compile function '%s': %w", scaleFunc.Name, err)
 	}
 
 	f := &Function{
