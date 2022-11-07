@@ -2,12 +2,24 @@
   "name": "@loopholelabs/scale-ts",
   "version": "0.1.0",
   "description": "TypeScript version of the scale functions.",
-  "source": "src/index.ts",
-  "main": "dist/main.js",
-  "module": "dist/module.js",
-  "types": "dist/types.d.ts",
+
+  "targets": {
+    "module": {
+      "source": "src/index.ts",
+      "distDir": "dist/module"
+    },
+    "types": {
+      "source": "src/index.ts",
+      "distDir": "dist/types"
+    },
+    "browser": {
+      "source": "src/web/index.html",
+      "distDir": "dist/web"
+    }
+  },
   "scripts": {
-    "build": "node --experimental-wasi-unstable-preview1 node_modules/.bin/parcel build",
+    "start": "parcel --target browser --log-level verbose",
+    "build": "node --experimental-wasi-unstable-preview1 node_modules/.bin/parcel build --log-level verbose",
     "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache"
   },
   "dependencies": {
