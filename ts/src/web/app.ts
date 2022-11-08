@@ -21,8 +21,6 @@ import { Host } from '../runtime/host';
 import { Context, Request, Response, StringList } from "../runtime/generated/generated";
 import { Context as ourContext} from '../runtime/context';
 import { Runtime } from '../runtime/runtime';
-import { inherits } from 'util';
-
 
 const addHeaderButton = (document.getElementById('cheadersadd') as HTMLInputElement);
 addHeaderButton.onclick = function() {
@@ -110,17 +108,21 @@ const runButton = (document.getElementById('crun') as HTMLInputElement);
 let modules: Module[] = [];
 
 async function init() {
-  // Start with 2 simple wasm modules for demo...
-  const modHttpEndpoint = await fetch('./java-endpoint.wasm');
-  const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
-  let moduleHttpEndpoint = new Module(Buffer.from(arrayHttpEndpoint), getNewWasi());
+  const examples = [
+    "./go-middleware.wasm",
+    "./java-headers.wasm",
+    "./java-appendBody.wasm",
+    "./java-appendBody.wasm",
+    "./go-endpoint.wasm",
+    "./java-endpoint.wasm"
+  ];
 
-  const modHttpMiddleware = await fetch('./http-middleware.wasm');
-  const arrayHttpMiddleware = await modHttpMiddleware.arrayBuffer();
-  let moduleHttpMiddleware = new Module(Buffer.from(arrayHttpMiddleware), getNewWasi());
-
-  addModule(moduleHttpMiddleware, "./http-middleware.wasm");
-  addModule(moduleHttpEndpoint, "./java-endpoint.wasm");
+  for(let i=0;i<examples.length;i++) {
+    const modHttpEndpoint = await fetch(examples[i]);
+    const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
+    let module = new Module(Buffer.from(arrayHttpEndpoint), getNewWasi());
+    addModule(module, examples[i]);
+  }
 }
 
 init();
@@ -128,15 +130,20 @@ init();
 function addModule(m: Module, name: string) {
   const tab = (document.getElementById("cmodules") as HTMLTableElement);
 
-  const newRow = tab.insertRow(0);
+  const newRow = tab.insertRow(-1);
   const cell1 = newRow.insertCell(0);
   cell1.appendChild(document.createTextNode(name));
-  const cell2 = newRow.insertCell(1);
 
+  const cell2 = newRow.insertCell(1);
   const delbutton = document.createElement("button");
-  delbutton.appendChild(document.createTextNode("Delete"));
+  delbutton.appendChild(document.createTextNode("Del"));
   cell2.appendChild(delbutton);
 
+  const cell3 = newRow.insertCell(2);
+  const upbutton = document.createElement("button");
+  upbutton.appendChild(document.createTextNode("Up"));
+  cell3.appendChild(upbutton);
+  
   delbutton.onclick = function(mod, row) {
     return function() {
       row.remove();
@@ -147,7 +154,22 @@ function addModule(m: Module, name: string) {
         console.log("Removed module from array ", index);
       }
     }
-  }(m, newRow)
+  }(m, newRow);
+
+  upbutton.onclick = function(mod, row) {
+    return function() {
+      const index = modules.indexOf(mod);
+      if (index==0) return;   // Already at the top!
+
+      // Adjust the modules array, and also the UI...
+        modules[index] = modules[index - 1];
+        modules[index - 1] = m;
+
+      // Now the UI...
+//      row.remove();
+      tab.tBodies[0].insertBefore(row, tab.rows[index - 1]);
+    }
+  }(m, newRow);
 
   modules.push(m);
 }
