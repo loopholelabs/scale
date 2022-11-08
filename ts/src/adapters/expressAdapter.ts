@@ -94,6 +94,7 @@ export class ExpressAdapter {
       body,
       reqheaders
     );
+
     /*
         let respheaders = new Map<string, pgStringList>();
 //
@@ -115,6 +116,8 @@ export class ExpressAdapter {
         var enc = new TextEncoder();
         let respBody = enc.encode("TODO: Response body");
     */
+
+    // TODO: Response body and headers if required...
 
     const presp = new PgResponse(
       resp.statusCode,

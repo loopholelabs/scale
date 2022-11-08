@@ -43,7 +43,7 @@ function getNewWasi(): WasiContext {
 }
 
 
-describe("expressAdapter", () => {
+describe("expressAdapter", async () => {
   const app = express();
 
   it("Can run a simple e2e", async () => {
@@ -54,7 +54,9 @@ describe("expressAdapter", () => {
       "./example_modules/http-middleware.wasm"
     );
     const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
+    await moduleHttpEndpoint.init();
     const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
+    await moduleHttpMiddleware.init();
     const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
     
 

@@ -129,66 +129,66 @@ async function init() {
 init();
 
 function addModule(m: Module, name: string) {
-  const tab = (document.getElementById("cmodules") as HTMLTableElement);
+  m.init().then(() => {
+    const tab = (document.getElementById("cmodules") as HTMLTableElement);
 
-  const newRow = tab.insertRow(-1);
-  const cell1 = newRow.insertCell(0);
-  cell1.appendChild(document.createTextNode(name));
+    const newRow = tab.insertRow(-1);
+    const cell1 = newRow.insertCell(0);
+    cell1.appendChild(document.createTextNode(name));
 
-  const cell2 = newRow.insertCell(1);
-  const delbutton = document.createElement("button");
-  delbutton.appendChild(document.createTextNode("Del"));
-  cell2.appendChild(delbutton);
+    const cell2 = newRow.insertCell(1);
+    const delbutton = document.createElement("button");
+    delbutton.appendChild(document.createTextNode("Del"));
+    cell2.appendChild(delbutton);
 
-  const cell3 = newRow.insertCell(2);
-  const upbutton = document.createElement("button");
-  upbutton.appendChild(document.createTextNode("Up"));
-  cell3.appendChild(upbutton);
-  
-  const cell4 = newRow.insertCell(3);
+    const cell3 = newRow.insertCell(2);
+    const upbutton = document.createElement("button");
+    upbutton.appendChild(document.createTextNode("Up"));
+    cell3.appendChild(upbutton);
+    
+    const cell4 = newRow.insertCell(3);
 
-  (m as any).orgRun = m.run;
-  m.run = function(c: RunContext): (RunContext | null) {
-    const ctime = performance.now();  //(new Date()).getTime();
-    const nc = (this as any).orgRun(c);
-    const etime = performance.now();   //(new Date()).getTime();
+    (m as any).orgRun = m.run;
+    m.run = function(c: RunContext): (RunContext | null) {
+      const ctime = performance.now();  //(new Date()).getTime();
+      const nc = (this as any).orgRun(c);
+      const etime = performance.now();   //(new Date()).getTime();
 
-    cell4.innerHTML = (etime - ctime).toFixed(1);
-    return nc;
-  }
+      console.log("TIMING " + ctime + " - " + etime + " = " + (etime - ctime).toFixed(1));
 
-  delbutton.onclick = function(mod, row) {
-    return function() {
-      row.remove();
-      // Delete this module from the array, and from the UI...
-      const index = modules.indexOf(mod);
-      if (index > -1) {
-        modules.splice(index, 1);
-        console.log("Removed module from array ", modules);
+      cell4.innerHTML = (etime - ctime).toFixed(1);
+      return nc;
+    }
+
+    delbutton.onclick = function(mod, row) {
+      return function() {
+        row.remove();
+        // Delete this module from the array, and from the UI...
+        const index = modules.indexOf(mod);
+        if (index > -1) {
+          modules.splice(index, 1);
+          console.log("Removed module from array ", modules);
+        }
       }
-    }
-  }(m, newRow);
+    }(m, newRow);
 
-  upbutton.onclick = function(mod, row) {
-    return function() {
-      const index = modules.indexOf(mod);
-      if (index==0) return;   // Already at the top!
+    upbutton.onclick = function(mod, row) {
+      return function() {
+        const index = modules.indexOf(mod);
+        if (index==0) return;   // Already at the top!
 
-      console.log("BEFORE:", modules);
+        // Adjust the modules array, and also the UI...
+        modules[index] = modules[index - 1];
+        modules[index - 1] = m;
 
-      // Adjust the modules array, and also the UI...
-      modules[index] = modules[index - 1];
-      modules[index - 1] = m;
+        // Now the UI...
+  //      row.remove();
+        tab.tBodies[0].insertBefore(row, tab.rows[index - 1]);
+      }
+    }(m, newRow);
 
-      console.log("AFTER:", modules);
-
-      // Now the UI...
-//      row.remove();
-      tab.tBodies[0].insertBefore(row, tab.rows[index - 1]);
-    }
-  }(m, newRow);
-
-  modules.push(m);
+    modules.push(m);
+  });
 }
 
 
