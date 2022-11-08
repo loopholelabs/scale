@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>My First Parcel App</title>
+    <title>Scale Function Playground</title>
     <script type="module" src="app.ts"></script>
     <style>
         body {
@@ -11,12 +11,12 @@
         table {
             width: 100%;
             border: 1px solid #66e;
-            background: #ddd;
+            background: #ddf;
+            border-radius: 6px;
         }
         h2 {
             color: #080;
         }
-        li {color: blue}
 
         #status {
             background: #ccc;
@@ -24,10 +24,10 @@
     </style>
   </head>
   <body>
-    <h1>Scale function tester</h1>
+    <h1>Scale Function Playground</h1>
 
     <form onsubmit="return false;">
-      <input type="submit" value="Run" id="crun" />
+      <input type="submit" value="Run" id="crun" /> <span id="status"></span>
       <br><br>
       <table>
         <tr>
@@ -36,10 +36,8 @@
             <table id="cmodules"></table>
             <br>
             <input type="file" id="inputfile" /> <input type="submit" value="Add scale fn" id="cadd" />
-            <br>
-            <div id="status" />
           </td>
-          <td valign="top" width="40%">
+          <td valign="top" width="30%">
             <h2>Request:</h2>
             <table>
               <tr><td>Method:</td><td><input type="text" id="cmethod" value="GET"></td></tr>
@@ -52,11 +50,11 @@
               </td></tr>
             </table>                
           </td>
-          <td valign="top" width="40%">
+          <td valign="top" width="50%">
             <h2>Response:</h2>
             <table>
-              <tr><td>Status:</td><td><input type="text" id="rstatus"></td></tr>
-              <tr><td>Body:</td><td><input type="text" id="rbody"></td></tr>
+              <tr><td>Status:</td><td><span id="rstatus"></span></td></tr>
+              <tr><td>Body:</td><td><div id="rbody"></div></tr>
               <tr><td>Headers:</td><td>
                   <table id="rheaders"></table>
               </td></tr>

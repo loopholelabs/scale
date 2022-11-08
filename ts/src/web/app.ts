@@ -258,9 +258,11 @@ runButton.onclick = async function() {
 
       let resp = retContext.context().Response;
 
-      (document.getElementById('rstatus') as HTMLInputElement).value = "" + resp.StatusCode;
+      (document.getElementById('rstatus') as HTMLElement).innerHTML = "" + resp.StatusCode;
       let dec = new TextDecoder();
-      (document.getElementById('rbody') as HTMLInputElement).value = dec.decode(resp.Body);
+      let rbody = (document.getElementById('rbody') as HTMLElement);
+      while(rbody.childNodes.length>0) rbody.removeChild(rbody.childNodes[0]);
+      rbody.appendChild(document.createTextNode(dec.decode(resp.Body)));
 
       const rheaders = (document.getElementById('rheaders') as HTMLTableElement);
 
