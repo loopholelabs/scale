@@ -55,15 +55,23 @@ var (
 	AcceptedLanguages = []Language{Go}
 )
 
+// Extension outlines the Extension dependency of a Scale Function
+type Extension struct {
+	Name    string `json:"name" yaml:"name"`
+	Version string `json:"version" yaml:"version"`
+}
+
 // ScaleFunc is the type used to define the requirements of a
 // scale function for a Scale Runtime
 type ScaleFunc struct {
-	Version  Version  `json:"version" yaml:"version"`
-	Name     string   `json:"name" yaml:"name"`
-	Language Language `json:"language" yaml:"language"`
-	Function []byte   `json:"function" yaml:"function"`
-	Size     uint32   `json:"size" yaml:"size"`
-	Checksum string   `json:"checksum" yaml:"checksum"`
+	Version    Version     `json:"version" yaml:"version"`
+	Name       string      `json:"name" yaml:"name"`
+	Signature  string      `json:"signature" yaml:"signature"`
+	Language   Language    `json:"language" yaml:"language"`
+	Extensions []Extension `json:"extensions" yaml:"extensions"`
+	Function   []byte      `json:"function" yaml:"function"`
+	Size       uint32      `json:"size" yaml:"size"`
+	Checksum   string      `json:"checksum" yaml:"checksum"`
 }
 
 func (s *ScaleFunc) Encode() []byte {
@@ -72,7 +80,15 @@ func (s *ScaleFunc) Encode() []byte {
 	e := polyglot.Encoder(b)
 	e.String(string(s.Version))
 	e.String(s.Name)
+	e.String(s.Signature)
 	e.String(string(s.Language))
+
+	e.Uint32(uint32(len(s.Extensions)))
+	for _, ext := range s.Extensions {
+		e.String(ext.Name)
+		e.String(ext.Version)
+	}
+
 	e.Bytes(s.Function)
 
 	size := uint32(len(b.Bytes()))
@@ -112,6 +128,11 @@ func (s *ScaleFunc) Decode(data []byte) error {
 		return err
 	}
 
+	s.Signature, err = d.String()
+	if err != nil {
+		return err
+	}
+
 	language, err := d.String()
 	if err != nil {
 		return err
@@ -127,6 +148,24 @@ func (s *ScaleFunc) Decode(data []byte) error {
 	}
 	if invalid {
 		return LanguageErr
+	}
+
+	extensions, err := d.Uint32()
+	if err != nil {
+		return err
+	}
+
+	for i := uint32(0); i < extensions; i++ {
+		var e Extension
+		e.Name, err = d.String()
+		if err != nil {
+			return err
+		}
+		e.Version, err = d.String()
+		if err != nil {
+			return err
+		}
+		s.Extensions = append(s.Extensions, e)
 	}
 
 	s.Function, err = d.Bytes(nil)

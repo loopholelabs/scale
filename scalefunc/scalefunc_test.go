@@ -40,9 +40,16 @@ func TestEncodeDecode(t *testing.T) {
 	assert.ErrorIs(t, err, LanguageErr)
 
 	s = &ScaleFunc{
-		Version:  V1Alpha,
-		Name:     "Test Name",
-		Language: Go,
+		Version:   V1Alpha,
+		Name:      "Test Name",
+		Signature: "Test Signature",
+		Language:  Go,
+		Extensions: []Extension{
+			{
+				Name:    "Test Extension",
+				Version: "1.0.0",
+			},
+		},
 		Function: []byte("Test Function Contents"),
 	}
 
@@ -53,6 +60,7 @@ func TestEncodeDecode(t *testing.T) {
 	assert.Equal(t, s.Version, decoded.Version)
 	assert.Equal(t, s.Name, decoded.Name)
 	assert.Equal(t, s.Language, decoded.Language)
+	assert.Equal(t, s.Extensions, decoded.Extensions)
 	assert.Equal(t, s.Function, decoded.Function)
 
 	encoded[decoded.Size+uint32(len(s.Checksum))-1] = 0

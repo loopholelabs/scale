@@ -60,12 +60,20 @@ type Dependency struct {
 	Version string `json:"version" yaml:"version"`
 }
 
+// Extension outlines the Extension dependency of a Scale Function
+type Extension struct {
+	Name    string `json:"name" yaml:"name"`
+	Version string `json:"version" yaml:"version"`
+}
+
 // ScaleFile describes the Scale Function and its dependencies
 type ScaleFile struct {
 	Version      Version      `json:"version" yaml:"version"`
 	Name         string       `json:"name" yaml:"name"`
+	Signature    string       `json:"signature" yaml:"signature"`
 	Language     Language     `json:"language" yaml:"language"`
 	Dependencies []Dependency `json:"dependencies" yaml:"dependencies"`
+	Extensions   []Extension  `json:"extensions" yaml:"extensions"`
 	Source       string       `json:"source" yaml:"source"`
 }
 
