@@ -40,7 +40,7 @@ function getNewWasi(): WasiContext {
 }
 
 describe("runtime", () => {
-  it("Can run a simple e2e one module", () => {    
+  it("Can run a simple e2e one module", async () => {    
     // Create a context to send in...
     const enc = new TextEncoder();
     const body = enc.encode("Hello world this is a request body");
@@ -64,9 +64,6 @@ describe("runtime", () => {
     const modHttpEndpoint = fs.readFileSync(
       "./example_modules/http-endpoint.wasm"
     );
-    const modHttpMiddleware = fs.readFileSync(
-      "./example_modules/http-middleware.wasm"
-    );
 
     //
     // TODO: Encapsulate the module chain into a runtime with single entry point.
@@ -74,6 +71,7 @@ describe("runtime", () => {
     // r.run();
 
     const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
+    await moduleHttpEndpoint.init();
 
     // Run the modules...
 
@@ -94,7 +92,7 @@ describe("runtime", () => {
     }
   });
 
-  it("Can run a simple e2e using runtime", () => {
+  it("Can run a simple e2e using runtime", async () => {
 
     // Create a context to send in...
     const enc = new TextEncoder();
@@ -124,7 +122,9 @@ describe("runtime", () => {
     );
 
     const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
+    await moduleHttpEndpoint.init();
     const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
+    await moduleHttpMiddleware.init();
     const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
 
     // Run the modules...

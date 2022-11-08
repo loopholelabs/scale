@@ -40,65 +40,71 @@ const w = {
 export class Module {
   private _code: Buffer;
 
+  private _wasi: WasiContext;
+
   private _next: Module | null = null;
 
-  private _wasmInstance: WebAssembly.Instance;
+  private _wasmInstance: WebAssembly.Instance | null = null;
 
-  private _mem: WebAssembly.Memory;
+  private _mem: WebAssembly.Memory | null = null;
 
-  private _allocFn: Function;
+  private _allocFn: Function | null = null;
 
-  private _runFn: Function;
+  private _runFn: Function | null = null;
+
+  private _importObject: any;
 
   constructor(code: Buffer, w: WasiContext) {
     this._code = code;
-    const wasmMod = new WebAssembly.Module(this._code);
-
-    let wasmModule: WebAssembly.Instance;
-    let allocFn: Function;
+    this._wasi = w;
 
     const nextFn = (
       (thisModule: Module) =>
       (ptr: number, len: number): BigInt => {
-        const mem = wasmModule.exports.memory as WebAssembly.Memory;
-        const c = Context.readFrom(mem, ptr, len);
+        if (thisModule._wasmInstance != null && thisModule._allocFn != null) {        
+          const mem = thisModule._wasmInstance.exports.memory as WebAssembly.Memory;
+          const c = Context.readFrom(mem, ptr, len);
 
-        if (thisModule._next != null) {
-          const rc = thisModule._next.run(c);
-          if (rc == null) {
-            console.log("Next module didn't seem to run correctly.");
-            return Host.packMemoryRef(ptr, len);
+          if (thisModule._next != null) {
+            const rc = thisModule._next.run(c);
+            if (rc == null) {
+              console.log("Next module didn't seem to run correctly.");
+              return Host.packMemoryRef(ptr, len);
+            }
+            const v = rc.writeTo(mem, thisModule._allocFn);
+            return Host.packMemoryRef(v.ptr, v.len);
           }
-          const v = rc.writeTo(mem, allocFn);
-          return Host.packMemoryRef(v.ptr, v.len);
         }
         return Host.packMemoryRef(ptr, len);
       }
     )(this);
 
-    const importObject = {
+    this._importObject = {
       wasi_snapshot_preview1: w.getImportObject(),
       env: {
         next: nextFn,
       },
     };
+  }
 
-    console.log("Using import object", importObject);
+  async init() { 
+    // This is done possibly in the background...
+    const i = await WebAssembly.instantiate(this._code, this._importObject);
+    this._wasmInstance = i.instance;
 
-    wasmModule = new WebAssembly.Instance(wasmMod, importObject);
+    //const wasmMod = new WebAssembly.Module(this._code);
+    //this._wasmInstance = new WebAssembly.Instance(wasmMod, this._importObject);
 
-    allocFn = wasmModule.exports.malloc as Function;
+    this._allocFn = this._wasmInstance.exports.malloc as Function;
     // If the module has a 'resize', use that instead of 'malloc'.
-    if ("resize" in wasmModule.exports) {
-      allocFn = wasmModule.exports.resize as Function;
+    if ("resize" in this._wasmInstance.exports) {
+      this._allocFn = this._wasmInstance.exports.resize as Function;
     }
 
-    this._wasmInstance = wasmModule;
-    this._mem = wasmModule.exports.memory as WebAssembly.Memory;
-    this._runFn = wasmModule.exports.run as Function;
-    this._allocFn = allocFn;
+    this._mem = this._wasmInstance.exports.memory as WebAssembly.Memory;
+    this._runFn = this._wasmInstance.exports.run as Function;
 
-    w.start(wasmModule);
+    this._wasi.start(this._wasmInstance);
   }
 
   // Set the next module to run
@@ -108,12 +114,15 @@ export class Module {
 
   // Run this module, with an optional next module
   run(context: Context): Context | null {
-    const v = context.writeTo(this._mem, this._allocFn);
-    const packed = this._runFn(v.ptr, v.len);
-    if (packed === 0) {
-      return null;
+    if (this._mem != null && this._allocFn != null && this._runFn != null) {
+      const v = context.writeTo(this._mem, this._allocFn);
+      const packed = this._runFn(v.ptr, v.len);
+      if (packed === 0) {
+        return null;
+      }
+      const [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
+      return Context.readFrom(this._mem, outContextPtr, outContextLen);
     }
-    const [outContextPtr, outContextLen] = Host.unpackMemoryRef(packed);
-    return Context.readFrom(this._mem, outContextPtr, outContextLen);
+    return null;
   }
 }
