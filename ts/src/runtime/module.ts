@@ -83,6 +83,8 @@ export class Module {
       },
     };
 
+    console.log("Using import object", importObject);
+
     wasmModule = new WebAssembly.Instance(wasmMod, importObject);
 
     allocFn = wasmModule.exports.malloc as Function;

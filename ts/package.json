@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@loopholelabs/polyglot-ts": "^0.3.0",
+    "@swc/helpers": "^0.4.12",
     "@types/jest": "^29.2.0",
     "body-parser": "^1.20.1",
     "express": "^4.18.2",
