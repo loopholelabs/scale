@@ -21,6 +21,7 @@ import { Host } from '../runtime/host';
 import { Context, Request, Response, StringList } from "../runtime/generated/generated";
 import { Context as ourContext} from '../runtime/context';
 import { Runtime } from '../runtime/runtime';
+import { inherits } from 'util';
 
 
 const addHeaderButton = (document.getElementById('cheadersadd') as HTMLInputElement);
@@ -54,13 +55,42 @@ addHeaderButton.onclick = function() {
     cell3.appendChild(deleteButton);
 }
 
-const runButton = (document.getElementById('crun') as HTMLInputElement);
+
+const addButton = (document.getElementById('cadd') as HTMLInputElement);
+
+addButton.onclick = async function() {
+  let inputfile = (document.getElementById('inputfile') as HTMLInputElement);
+  if (inputfile.files!=null) {
+    let file = inputfile.files[0];
+    console.log(file);
+
+    let reader = new FileReader();
+
+    reader.readAsArrayBuffer(file);
+  
+    reader.onload = function() {
+      console.log(reader.result);
+      // This is an ArrayBuffer, use it to add a new module...
+      let module = new Module(Buffer.from(reader.result as ArrayBuffer), getNewWasi());
+      // Now add it to the runtime somehow...
+
+      addModule(module, file.name);
+    };
+  
+    reader.onerror = function() {
+      console.log(reader.error);
+    };
+  }
+}
 
 function getNewWasi() {
   const w: WasiContext = {
     getImportObject: () => {  /* Minimal import object */
       return {
-        fd_write: () => {}
+        fd_write: () => {},
+        args_sizes_get: () => 0,
+        args_get: () => {},
+        clock_time_get: () => {},
       };
     },
     start: (instance: WebAssembly.Instance) => {
@@ -74,6 +104,54 @@ function getNewWasi() {
   return w;
 
 }
+
+const runButton = (document.getElementById('crun') as HTMLInputElement);
+
+let modules: Module[] = [];
+
+async function init() {
+  // Start with 2 simple wasm modules for demo...
+  const modHttpEndpoint = await fetch('./java-endpoint.wasm');
+  const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
+  let moduleHttpEndpoint = new Module(Buffer.from(arrayHttpEndpoint), getNewWasi());
+
+  const modHttpMiddleware = await fetch('./http-middleware.wasm');
+  const arrayHttpMiddleware = await modHttpMiddleware.arrayBuffer();
+  let moduleHttpMiddleware = new Module(Buffer.from(arrayHttpMiddleware), getNewWasi());
+
+  addModule(moduleHttpMiddleware, "./http-middleware.wasm");
+  addModule(moduleHttpEndpoint, "./java-endpoint.wasm");
+}
+
+init();
+
+function addModule(m: Module, name: string) {
+  const tab = (document.getElementById("cmodules") as HTMLTableElement);
+
+  const newRow = tab.insertRow(0);
+  const cell1 = newRow.insertCell(0);
+  cell1.appendChild(document.createTextNode(name));
+  const cell2 = newRow.insertCell(1);
+
+  const delbutton = document.createElement("button");
+  delbutton.appendChild(document.createTextNode("Delete"));
+  cell2.appendChild(delbutton);
+
+  delbutton.onclick = function(mod, row) {
+    return function() {
+      row.remove();
+      // Delete this module from the array, and from the UI...
+      const index = modules.indexOf(mod);
+      if (index > -1) {
+        modules.splice(index, 1);
+        console.log("Removed module from array ", index);
+      }
+    }
+  }(m, newRow)
+
+  modules.push(m);
+}
+
 
 runButton.onclick = async function() {
 
@@ -125,20 +203,7 @@ runButton.onclick = async function() {
 
     // TODO: Read from form...
 
-    const ww = getNewWasi();
-
-    console.log("getNewWasi", ww);
-    console.log("ImportObj", ww.getImportObject());
-
-    const modHttpEndpoint = await fetch('./http-endpoint.wasm');
-    const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
-    let moduleHttpEndpoint = new Module(Buffer.from(arrayHttpEndpoint), getNewWasi());
-
-    const modHttpMiddleware = await fetch('./http-middleware.wasm');
-    const arrayHttpMiddleware = await modHttpMiddleware.arrayBuffer();
-    let moduleHttpMiddleware = new Module(Buffer.from(arrayHttpMiddleware), getNewWasi());
-
-    let runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
+    let runtime = new Runtime(modules);
 
     let ctx = new ourContext(context);
 
