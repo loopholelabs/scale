@@ -1,6 +1,7 @@
 package io.loopholelabs.scale.generated;
 
 import io.loopholelabs.polyglot.*;
+import io.loopholelabs.scale.*;
 
 public class Context {
 
@@ -11,6 +12,11 @@ public class Context {
 
   }
   
+  // Runs the next module in the chain...
+  public Context next() {
+    return ScaleRunner.next(this);
+  }
+
   public byte[] decodeFrom(byte[] data) throws DecodeException {
     this.request = new Request();
     data = this.request.decodeFrom(data);
