@@ -23,6 +23,7 @@ export class Runtime {
   constructor(mods: Module[]) {
     let prevModule: Module | null = null;
     mods.forEach((m: Module) => {
+      m.setNext(null);  // Clear our own next.
       this._modules.push(m);
       if (prevModule != null) {
         prevModule.setNext(m);
