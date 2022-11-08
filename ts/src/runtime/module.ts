@@ -13,14 +13,34 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import { WASI } from "wasi";
 import { Host } from "./host";
 import { Context } from "./context";
+
+export interface WasiContext {
+  start(instance: WebAssembly.Instance): void;
+  getImportObject(): any;
+}
+
+/*
+import { WASI } from "wasi";
+const wasi = new WASI({
+  args: [],
+  env: {},
+});
+
+const w = {
+  getImportObject: () => wasi.wasiImport;
+  start: (instance: WebAssembly.Instance) => {
+    wasi.start(instance);
+  }
+}
+
+*/
 
 export class Module {
   private _code: Buffer;
 
-  private _next: Module | null;
+  private _next: Module | null = null;
 
   private _wasmInstance: WebAssembly.Instance;
 
@@ -30,15 +50,9 @@ export class Module {
 
   private _runFn: Function;
 
-  constructor(code: Buffer, next: Module | null) {
+  constructor(code: Buffer, w: WasiContext) {
     this._code = code;
-    this._next = next;
     const wasmMod = new WebAssembly.Module(this._code);
-
-    const wasi = new WASI({
-      args: [],
-      env: {},
-    });
 
     let wasmModule: WebAssembly.Instance;
     let allocFn: Function;
@@ -63,7 +77,7 @@ export class Module {
     )(this);
 
     const importObject = {
-      wasi_snapshot_preview1: wasi.wasiImport,
+      wasi_snapshot_preview1: w.getImportObject(),
       env: {
         next: nextFn,
       },
@@ -82,7 +96,7 @@ export class Module {
     this._runFn = wasmModule.exports.run as Function;
     this._allocFn = allocFn;
 
-    wasi.start(wasmModule);
+    w.start(wasmModule);
   }
 
   // Set the next module to run
