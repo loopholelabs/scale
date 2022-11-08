@@ -18,6 +18,7 @@
 //import * as fs from 'fs';
 import { Module, WasiContext } from '../runtime/module';
 import { Host } from '../runtime/host';
+import { Context as RunContext } from '../runtime/context';
 import { Context, Request, Response, StringList } from "../runtime/generated/generated";
 import { Context as ourContext} from '../runtime/context';
 import { Runtime } from '../runtime/runtime';
@@ -144,6 +145,18 @@ function addModule(m: Module, name: string) {
   upbutton.appendChild(document.createTextNode("Up"));
   cell3.appendChild(upbutton);
   
+  const cell4 = newRow.insertCell(3);
+
+  (m as any).orgRun = m.run;
+  m.run = function(c: RunContext): (RunContext | null) {
+    const ctime = performance.now();  //(new Date()).getTime();
+    const nc = (this as any).orgRun(c);
+    const etime = performance.now();   //(new Date()).getTime();
+
+    cell4.innerHTML = (etime - ctime).toFixed(1);
+    return nc;
+  }
+
   delbutton.onclick = function(mod, row) {
     return function() {
       row.remove();
@@ -227,8 +240,6 @@ runButton.onclick = async function() {
     Host.showContext(context);
 
     // TODO: Read from form...
-
-    console.log("Using modules", modules);
 
     let runtime = new Runtime(modules);
 
