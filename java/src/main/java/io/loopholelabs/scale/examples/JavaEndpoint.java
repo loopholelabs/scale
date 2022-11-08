@@ -16,7 +16,7 @@ public class JavaEndpoint {
     String[] vals = new String[1];
     vals[0] = "Hello world";
     c.response.headers.put("JAVA", vals);
-    return c;
+    return c.next();
   }
 
 }
