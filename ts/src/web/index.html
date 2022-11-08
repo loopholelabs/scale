@@ -27,39 +27,41 @@
     <h1>Scale function tester</h1>
 
     <form onsubmit="return false;">
-    <table>
+      <input type="submit" value="Run" id="crun" />
+      <br><br>
+      <table>
         <tr>
-            <td valign="top" width="40%">
-                <h2>Request:</h2>
-                <table>
-                    <tr><td>Method:</td><td><input type="text" id="cmethod" value="GET"></td></tr>
-                    <tr><td>Protocol:</td><td><input type="text" id="cprotocol" value="http"></td></tr>
-                    <tr><td>IP:</td><td><input type="text" id="cip" value="10.10.10.10"></td></tr>
-                    <tr><td>Body:</td><td><input type="text" id="cbody" value="Scale Functions Awesome"></td></tr>
-                    <tr><td>Headers:</td><td>
-                        <table id="cheaders"></table>
-                        <button id="cheadersadd">Add</button>
-                    </td></tr>
-                </table>                
-            </td>
-            <td valign="top">
-                <ol>
-                    <li>./http-middleware.wasm</li>
-                    <li>./http-endpoint.wasm</li>
-                </ol>
-                <input type="submit" value="Run example" id="crun" />
-                <div id="status" />
-            </td>
-            <td valign="top" width="40%">
-                <h2>Response:</h2>
-                <table>
-                    <tr><td>Status:</td><td><input type="text" id="rstatus"></td></tr>
-                    <tr><td>Body:</td><td><input type="text" id="rbody"></td></tr>
-                    <tr><td>Headers:</td><td>
-                        <table id="rheaders"></table>
-                    </td></tr>
-                </table>                
-            </td>
+          <td valign="top">
+            <h2>Scale functions</h2>
+            <table id="cmodules"></table>
+            <br>
+            <input type="file" id="inputfile" /> <input type="submit" value="Add scale fn" id="cadd" />
+            <br>
+            <div id="status" />
+          </td>
+          <td valign="top" width="40%">
+            <h2>Request:</h2>
+            <table>
+              <tr><td>Method:</td><td><input type="text" id="cmethod" value="GET"></td></tr>
+              <tr><td>Protocol:</td><td><input type="text" id="cprotocol" value="http"></td></tr>
+              <tr><td>IP:</td><td><input type="text" id="cip" value="10.10.10.10"></td></tr>
+              <tr><td>Body:</td><td><input type="text" id="cbody" value="Scale Functions Awesome"></td></tr>
+              <tr><td>Headers:</td><td>
+                  <table id="cheaders"></table>
+                  <button id="cheadersadd">Add</button>
+              </td></tr>
+            </table>                
+          </td>
+          <td valign="top" width="40%">
+            <h2>Response:</h2>
+            <table>
+              <tr><td>Status:</td><td><input type="text" id="rstatus"></td></tr>
+              <tr><td>Body:</td><td><input type="text" id="rbody"></td></tr>
+              <tr><td>Headers:</td><td>
+                  <table id="rheaders"></table>
+              </td></tr>
+            </table>                
+          </td>
         </tr>
     </table>
     </form>
