@@ -151,7 +151,7 @@ function addModule(m: Module, name: string) {
       const index = modules.indexOf(mod);
       if (index > -1) {
         modules.splice(index, 1);
-        console.log("Removed module from array ", index);
+        console.log("Removed module from array ", modules);
       }
     }
   }(m, newRow);
@@ -161,9 +161,13 @@ function addModule(m: Module, name: string) {
       const index = modules.indexOf(mod);
       if (index==0) return;   // Already at the top!
 
+      console.log("BEFORE:", modules);
+
       // Adjust the modules array, and also the UI...
-        modules[index] = modules[index - 1];
-        modules[index - 1] = m;
+      modules[index] = modules[index - 1];
+      modules[index - 1] = m;
+
+      console.log("AFTER:", modules);
 
       // Now the UI...
 //      row.remove();
@@ -180,7 +184,6 @@ runButton.onclick = async function() {
     console.log("Creating a context");
 
     // Create a context to send in...
-    // TODO: Read from form
 
     const method = (document.getElementById('cmethod') as HTMLInputElement).value;
     const protocol = (document.getElementById('cprotocol') as HTMLInputElement).value;
@@ -224,6 +227,8 @@ runButton.onclick = async function() {
     Host.showContext(context);
 
     // TODO: Read from form...
+
+    console.log("Using modules", modules);
 
     let runtime = new Runtime(modules);
 
