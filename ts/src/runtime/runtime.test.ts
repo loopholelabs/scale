@@ -16,16 +16,31 @@
 
 import { TextEncoder, TextDecoder } from "util";
 import * as fs from "fs";
-import { Module } from "./module";
+import { Module, WasiContext } from "./module";
 import { Context, Request, Response, StringList } from "./generated/generated";
 import { Context as OurContext } from "./context";
 import { Runtime } from "./runtime";
+import { WASI } from "wasi";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
+function getNewWasi(): WasiContext {
+  const wasi = new WASI({
+    args: [],
+    env: {},
+  });
+  const w: WasiContext = {
+    getImportObject: () => wasi.wasiImport,
+    start: (instance: WebAssembly.Instance) => {
+      wasi.start(instance);
+    }
+  }
+  return w;
+}
+
 describe("runtime", () => {
-  it("Can run a simple e2e", () => {
+  it("Can run a simple e2e one module", () => {    
     // Create a context to send in...
     const enc = new TextEncoder();
     const body = enc.encode("Hello world this is a request body");
@@ -58,17 +73,13 @@ describe("runtime", () => {
     // Runtime r = new Runtime([]Module);
     // r.run();
 
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, null);
-    const moduleHttpMiddleware = new Module(
-      modHttpMiddleware,
-      moduleHttpEndpoint
-    );
+    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
 
     // Run the modules...
 
     const ctx = new OurContext(context);
 
-    const retContext = moduleHttpMiddleware.run(ctx);
+    const retContext = moduleHttpEndpoint.run(ctx);
 
     expect(retContext).not.toBeNull();
 
@@ -80,19 +91,11 @@ describe("runtime", () => {
 
       // The http-endpoint.wasm module copies the request body to the response body.
       expect(bodyText).toBe("Hello world this is a request body");
-
-      // The http-middleware.wasm adds a header
-      const middle = retContext.context().Response.Headers.get("MIDDLEWARE");
-      expect(middle).toBeDefined();
-      const vals = middle?.Value;
-      if (vals !== undefined) {
-        expect(vals.length).toBe(1);
-        expect(vals[0]).toBe("TRUE");
-      }
     }
   });
 
   it("Can run a simple e2e using runtime", () => {
+
     // Create a context to send in...
     const enc = new TextEncoder();
     const body = enc.encode("Hello world this is a request body");
@@ -120,8 +123,8 @@ describe("runtime", () => {
       "./example_modules/http-middleware.wasm"
     );
 
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, null);
-    const moduleHttpMiddleware = new Module(modHttpMiddleware, null);
+    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
+    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
     const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
 
     // Run the modules...

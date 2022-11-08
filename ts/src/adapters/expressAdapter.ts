@@ -15,7 +15,7 @@
 */
 import express from "express";
 import { Context } from "../runtime/context";
-import { Module } from "../runtime/module";
+import { Runtime } from "../runtime/runtime";
 import {
   Context as PgContext,
   Request as PgRequest,
@@ -24,10 +24,10 @@ import {
 } from "../runtime/generated/generated";
 
 export class ExpressAdapter {
-  private _module: Module;
+  private _runtime: Runtime;
 
-  constructor(mod: Module) {
-    this._module = mod;
+  constructor(runt: Runtime) {
+    this._runtime = runt;
   }
 
   handler(
@@ -36,7 +36,7 @@ export class ExpressAdapter {
     next: express.NextFunction
   ) {
     const c = ExpressAdapter.toContext(req, res);
-    const newc = this._module.run(c);
+    const newc = this._runtime.run(c);
 
     if (newc != null) {
       // Now write it back out...

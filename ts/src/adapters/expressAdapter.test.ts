@@ -19,12 +19,29 @@ import express from "express";
 import bodyParser from "body-parser";
 import * as fs from "fs";
 import request from "supertest";
+import { WASI } from "wasi";
 
-import { Module } from "../runtime/module";
+import { Module, WasiContext } from "../runtime/module";
+import { Runtime } from "../runtime/runtime";
 import { ExpressAdapter } from "./expressAdapter";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+
+function getNewWasi(): WasiContext {
+  const wasi = new WASI({
+    args: [],
+    env: {},
+  });
+  const w: WasiContext = {
+    getImportObject: () => wasi.wasiImport,
+    start: (instance: WebAssembly.Instance) => {
+      wasi.start(instance);
+    }
+  }
+  return w;
+}
+
 
 describe("expressAdapter", () => {
   const app = express();
@@ -36,13 +53,12 @@ describe("expressAdapter", () => {
     const modHttpMiddleware = fs.readFileSync(
       "./example_modules/http-middleware.wasm"
     );
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, null);
-    const moduleHttpMiddleware = new Module(
-      modHttpMiddleware,
-      moduleHttpEndpoint
-    );
+    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
+    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
+    const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
+    
 
-    const adapter = new ExpressAdapter(moduleHttpMiddleware);
+    const adapter = new ExpressAdapter(runtime);
 
     app.use(
       bodyParser.raw({
