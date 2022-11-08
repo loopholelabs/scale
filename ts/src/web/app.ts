@@ -16,10 +16,11 @@
 
 //import { TextEncoder, TextDecoder } from 'util';
 //import * as fs from 'fs';
-import { ModuleBrowser } from '../runtime/moduleBrowser';
+import { Module, WasiContext } from '../runtime/module';
 import { Host } from '../runtime/host';
 import { Context, Request, Response, StringList } from "../runtime/generated/generated";
 import { Context as ourContext} from '../runtime/context';
+import { Runtime } from '../runtime/runtime';
 
 
 const addHeaderButton = (document.getElementById('cheadersadd') as HTMLInputElement);
@@ -54,6 +55,25 @@ addHeaderButton.onclick = function() {
 }
 
 const runButton = (document.getElementById('crun') as HTMLInputElement);
+
+function getNewWasi() {
+  const w: WasiContext = {
+    getImportObject: () => {  /* Minimal import object */
+      return {
+        fd_write: () => {}
+      };
+    },
+    start: (instance: WebAssembly.Instance) => {
+      const startFn = (instance.exports._start as Function | undefined);
+      if (startFn) {
+        console.log("Call _start on wasm module...");
+        startFn();
+      }
+    }
+  }
+  return w;
+
+}
 
 runButton.onclick = async function() {
 
@@ -105,51 +125,60 @@ runButton.onclick = async function() {
 
     // TODO: Read from form...
 
+    const ww = getNewWasi();
+
+    console.log("getNewWasi", ww);
+    console.log("ImportObj", ww.getImportObject());
+
     const modHttpEndpoint = await fetch('./http-endpoint.wasm');
     const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
-    let moduleHttpEndpoint = new ModuleBrowser(Buffer.from(arrayHttpEndpoint), null);
+    let moduleHttpEndpoint = new Module(Buffer.from(arrayHttpEndpoint), getNewWasi());
 
     const modHttpMiddleware = await fetch('./http-middleware.wasm');
     const arrayHttpMiddleware = await modHttpMiddleware.arrayBuffer();
-    let moduleHttpMiddleware = new ModuleBrowser(Buffer.from(arrayHttpMiddleware), moduleHttpEndpoint);
+    let moduleHttpMiddleware = new Module(Buffer.from(arrayHttpMiddleware), getNewWasi());
+
+    let runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
 
     let ctx = new ourContext(context);
 
     let ctime = (new Date()).getTime();
-    let retContext = moduleHttpMiddleware.run(ctx);
+    let retContext = runtime.run(ctx);
     let etime = (new Date()).getTime();
     
-    Host.showContext(retContext.context());
-    // TODO: Show in the fields etc...
+    if (retContext!=null) {
 
-    (document.getElementById('status') as HTMLInputElement).innerHTML = "Executed in " + (etime - ctime).toFixed(3) + "ms"
+      Host.showContext(retContext.context());
+      // TODO: Show in the fields etc...
 
-    let resp = retContext.context().Response;
+      (document.getElementById('status') as HTMLInputElement).innerHTML = "Executed in " + (etime - ctime).toFixed(3) + "ms"
 
-    (document.getElementById('rstatus') as HTMLInputElement).value = "" + resp.StatusCode;
-    let dec = new TextDecoder();
-    (document.getElementById('rbody') as HTMLInputElement).value = dec.decode(resp.Body);
+      let resp = retContext.context().Response;
 
-    const rheaders = (document.getElementById('rheaders') as HTMLTableElement);
+      (document.getElementById('rstatus') as HTMLInputElement).value = "" + resp.StatusCode;
+      let dec = new TextDecoder();
+      (document.getElementById('rbody') as HTMLInputElement).value = dec.decode(resp.Body);
 
-    while(rheaders.rows.length>0) {
-        rheaders.deleteRow(0);
+      const rheaders = (document.getElementById('rheaders') as HTMLTableElement);
+
+      while(rheaders.rows.length>0) {
+          rheaders.deleteRow(0);
+      }
+
+      for (let k of resp.Headers.keys()) {
+          const newRow = rheaders.insertRow(0);
+          const cell1 = newRow.insertCell(0);
+          cell1.appendChild(document.createTextNode(k));
+          const cell2 = newRow.insertCell(1);
+
+          let values = resp.Headers.get(k);
+          if (values!=undefined) {
+              for (let i of values.Value.values()) {
+                  cell2.appendChild(document.createTextNode(i));
+                  cell2.appendChild(document.createElement("br"));
+              }
+          }
+      }
     }
-
-    for (let k of resp.Headers.keys()) {
-        const newRow = rheaders.insertRow(0);
-        const cell1 = newRow.insertCell(0);
-        cell1.appendChild(document.createTextNode(k));
-        const cell2 = newRow.insertCell(1);
-
-        let values = resp.Headers.get(k);
-        if (values!=undefined) {
-            for (let i of values.Value.values()) {
-                cell2.appendChild(document.createTextNode(i));
-                cell2.appendChild(document.createElement("br"));
-            }
-        }
-    }
-
 }
 
