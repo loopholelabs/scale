@@ -12,6 +12,7 @@ use super::generated::{Encode, Decode, Context, Request, Response};
 
 lazy_static! {
     pub static ref PTR_LEN: Mutex<(u32, u32)> = Mutex::new((0, 0));
+    pub static ref READ_BUFFER: Mutex<Vec<u8>> = Mutex::new(Vec::with_capacity(0));
 }
 
 pub trait RunContext {
@@ -49,17 +50,14 @@ impl RunContext for Context {
     fn to_write_buffer(self) -> (u32, u32) {
         let mut cursor = Cursor::new(Vec::new());
         let _ = Encode::encode(self, &mut cursor);
-
         let mut vec = cursor.into_inner();
         vec.shrink_to_fit();
+
         let ptr = vec.as_ptr() as u32;
         let len = vec.len() as u32;
 
-        mem::forget(vec);  // prevents deallocation in Rust
-                           // vec still exists in mem, but
-                           // rust doesn't have any concept of it
-
-
+        //allows us to re-use allocations between invocations
+        *READ_BUFFER.lock().unwrap() = vec;
         return (ptr, len)
     }
 
@@ -75,7 +73,7 @@ impl RunContext for Context {
            let ptr_len = self.to_write_buffer();
 
            unsafe {
-           //  calls resize from host side, which sets PTR_LEN
+           //  calls resize from host side, which sets PTR and LEN
            _next(ptr_len.0, ptr_len.1);
 
            let ptr = PTR_LEN.lock().unwrap().0;

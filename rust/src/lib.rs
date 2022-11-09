@@ -24,6 +24,7 @@ use std::sync::Mutex;
 
 use std::io::Cursor;
 use context::{RunContext, PTR_LEN};
+use context::{READ_BUFFER};
 use generated::{Context};
 use scale::scale;
 use utils::pack_uint32;
@@ -33,7 +34,9 @@ use std::mem::{MaybeUninit};
 #[cfg_attr(all(target_arch = "wasm32"), export_name = "run")]
 #[no_mangle]
 pub unsafe extern "C" fn run() -> u64 {
-    //  host calls resize first, which sets PTR_LEN
+    //  Host calls resize first, which sets PTR and LEN.
+    //  This unsafe pointer/len reconstruction gets around the os-level mutex restrictions from
+    //  rust's Mutex, which are required for the read buffer global with static_mut
     let ptr = PTR_LEN.lock().unwrap().0;
     let len = PTR_LEN.lock().unwrap().1;
     let mut vec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
@@ -47,15 +50,13 @@ pub unsafe extern "C" fn run() -> u64 {
 
 #[cfg_attr(all(target_arch = "wasm32"), export_name = "resize")]
 #[no_mangle]
-pub unsafe extern "C" fn resize(size: u32) -> *const MaybeUninit<u8> {
-    let vec: Vec<MaybeUninit<u8>> = Vec::with_capacity(size as usize);
+pub unsafe extern "C" fn resize(size: u32) -> *const u8 {
+   let existing_cap = READ_BUFFER.lock().unwrap().capacity() as u32;
+   READ_BUFFER.lock().unwrap().reserve_exact((size - existing_cap) as usize);
+   let ptr = READ_BUFFER.lock().unwrap().as_ptr();
 
-    let ptr = vec.as_ptr();
-    PTR_LEN.lock().unwrap().0 = ptr as u32;
-    PTR_LEN.lock().unwrap().1 = size;
-    mem::forget(vec);  // prevents deallocation in Rust
-                       // vec still exists in mem, but
-                       // rust doesn't have any concept of it
+   PTR_LEN.lock().unwrap().0 = ptr as u32;
+   PTR_LEN.lock().unwrap().1 = size;
 
    return ptr
 }
