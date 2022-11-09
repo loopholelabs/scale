@@ -23,8 +23,7 @@ use lazy_static::lazy_static;
 use std::sync::Mutex;
 
 use std::io::Cursor;
-use context::{RunContext, PTR_LEN};
-use context::{READ_BUFFER};
+use context::{RunContext, PTR, LEN, READ_BUFFER};
 use generated::{Context};
 use scale::scale;
 use utils::pack_uint32;
@@ -37,11 +36,11 @@ pub unsafe extern "C" fn run() -> u64 {
     //  Host calls resize first, which sets PTR and LEN.
     //  This unsafe pointer/len reconstruction gets around the os-level mutex restrictions from
     //  rust's Mutex, which are required for the read buffer global with static_mut
-    let ptr = PTR_LEN.lock().unwrap().0;
-    let len = PTR_LEN.lock().unwrap().1;
+    let ptr = PTR.lock().unwrap().clone();
+    let len = LEN.lock().unwrap().clone();
     let mut vec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
-    let mut constructed = Cursor::new(&mut vec);
 
+    let mut constructed = Cursor::new(&mut vec);
     let context: Context = RunContext::new();
     let cont = scale(context.from_read_buffer(&mut constructed));
     let ptr_len = cont.to_write_buffer();
@@ -55,8 +54,8 @@ pub unsafe extern "C" fn resize(size: u32) -> *const u8 {
    READ_BUFFER.lock().unwrap().reserve_exact((size - existing_cap) as usize);
    let ptr = READ_BUFFER.lock().unwrap().as_ptr();
 
-   PTR_LEN.lock().unwrap().0 = ptr as u32;
-   PTR_LEN.lock().unwrap().1 = size;
+   *PTR.lock().unwrap() = ptr as u32;
+   *LEN.lock().unwrap() = size;
 
    return ptr
 }

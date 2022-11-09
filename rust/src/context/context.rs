@@ -11,7 +11,8 @@ use std::collections::HashMap;
 use super::generated::{Encode, Decode, Context, Request, Response};
 
 lazy_static! {
-    pub static ref PTR_LEN: Mutex<(u32, u32)> = Mutex::new((0, 0));
+    pub static ref PTR: Mutex<u32> = Mutex::new(0);
+    pub static ref LEN: Mutex<u32> = Mutex::new(0);
     pub static ref READ_BUFFER: Mutex<Vec<u8>> = Mutex::new(Vec::with_capacity(0));
 }
 
@@ -76,9 +77,8 @@ impl RunContext for Context {
            //  calls resize from host side, which sets PTR and LEN
            _next(ptr_len.0, ptr_len.1);
 
-           let ptr = PTR_LEN.lock().unwrap().0;
-           let len = PTR_LEN.lock().unwrap().1;
-
+           let ptr = PTR.lock().unwrap().clone();
+           let len = LEN.lock().unwrap().clone();
            let mut vec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
            let mut constructed = Cursor::new(&mut vec);
 
