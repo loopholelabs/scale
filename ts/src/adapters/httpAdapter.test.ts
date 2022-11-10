@@ -15,15 +15,14 @@
 */
 
 import { TextEncoder, TextDecoder } from "util";
-import express from "express";
-import bodyParser from "body-parser";
-import * as fs from "fs";
+import http from "http";
 import request from "supertest";
+import { HttpAdapter } from "./httpAdapter";
+import * as fs from "fs";
+import { Runtime } from "../runtime/runtime";
 import { WASI } from "wasi";
 
 import { Module, WasiContext } from "../runtime/module";
-import { Runtime } from "../runtime/runtime";
-import { ExpressAdapter } from "./expressAdapter";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
@@ -42,9 +41,7 @@ function getNewWasi(): WasiContext {
   return w;
 }
 
-
-describe("expressAdapter", () => {
-  const app = express();
+describe("httpAdapter", () => {
 
   it("Can run a simple e2e", async () => {
     const modHttpEndpoint = fs.readFileSync(
@@ -58,22 +55,20 @@ describe("expressAdapter", () => {
     const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
     await moduleHttpMiddleware.init();
     const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
-    
 
-    const adapter = new ExpressAdapter(runtime);
+    var adapter = new HttpAdapter(runtime);
 
-    app.use(
-      bodyParser.raw({
-        type: () => true,
-      })
-    );
-    app.use(adapter.handler.bind(adapter));
+    var server = http.createServer(adapter.handler.bind(adapter));
+  
 
-    const res = await request(app).post("/blah").send("HELLO WORLD");
+    const res = await request(server).post("/blah").send("HELLO WORLD");
+
+    console.log("Done POST");
 
     // Make sure everything worked as expected.
     expect(res.statusCode).toEqual(200);
     expect(res.text).toBe("HELLO WORLD");
     expect(res.headers.middleware).toBe("TRUE");
+
   });
 });
