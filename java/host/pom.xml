@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.loopholelabs.scale</groupId>
-  <artifactId>scale</artifactId>
+  <artifactId>scaleHost</artifactId>
   <version>0.1</version>
 
   <properties>
@@ -24,14 +24,6 @@
       <groupId>io.loopholelabs</groupId>
       <artifactId>polyglot</artifactId>
       <version>0.1.0</version>
-    </dependency>
-  
-    <!-- Emulator of Java class library for TeaVM -->
-    <dependency>
-      <groupId>com.fermyon</groupId>
-      <artifactId>teavm-classlib</artifactId>
-      <version>${teavm.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -60,32 +52,6 @@
         </configuration>
       </plugin>
 
-      <!-- Configure TeaVM -->
-      <plugin>
-        <groupId>com.fermyon</groupId>
-        <artifactId>teavm-maven-plugin</artifactId>
-        <version>${teavm.version}</version>
-        <executions>
-          <execution>
-            <id>web-client</id>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-            <configuration>
-              <targetDirectory>${project.build.directory}/generated/wasm/teavm-wasm</targetDirectory>
-              <targetType>WEBASSEMBLY</targetType>
-              <mainClass>Main</mainClass>
-              <classesToPreserve>
-                io.loopholelabs.scale.ScaleRunner
-              </classesToPreserve>
-              <debugInformationGenerated>true</debugInformationGenerated>
-              <minifying>false</minifying>
-              <!-- Anything beyond SIMPLE appears to break non-trivial code: -->
-              <optimizationLevel>SIMPLE</optimizationLevel>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
