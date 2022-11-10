@@ -29,6 +29,10 @@ use scale::scale;
 use utils::pack_uint32;
 use std::mem;
 use std::mem::{MaybeUninit};
+extern crate wee_alloc;
+
+#[global_allocator]
+pub static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[cfg_attr(all(target_arch = "wasm32"), export_name = "run")]
 #[no_mangle]

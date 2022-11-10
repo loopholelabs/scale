@@ -6,6 +6,15 @@ edition = "2021"
 [dependencies]
 polyglot = { git = "https://github.com/loopholelabs/polyglot-rs" }
 lazy_static = "1.4.0"
+wee_alloc = "0.4.5"
 
 [lib]
 crate-type = ["cdylib"]
+
+# Below settings dramatically reduce wasm output size
+# See https://rustwasm.github.io/book/reference/code-size.html#optimizing-builds-for-code-sizewasm-opt -Oz -o
+# See https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
