@@ -13,6 +13,12 @@
   </properties>
 
   <dependencies>
+    
+    <dependency>
+      <groupId>org.wasmer</groupId>
+      <artifactId>wasmer</artifactId>
+      <version>0.3.0</version>
+    </dependency>
 
     <dependency>
       <groupId>io.loopholelabs</groupId>
