@@ -39,7 +39,7 @@ pub static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 pub unsafe extern "C" fn run() -> u64 {
     //  Host calls resize first, which sets PTR and LEN.
     //  This unsafe pointer/len reconstruction gets around the os-level mutex restrictions from
-    //  rust's Mutex, which are required for the read buffer global with static_mut
+    //  rust's Mutex, which are required for the read buffer global with lazy_static
     let ptr = PTR.lock().unwrap().clone();
     let len = LEN.lock().unwrap().clone();
 
