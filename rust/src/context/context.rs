@@ -18,7 +18,7 @@ lazy_static! {
 
 pub trait RunContext {
     fn new() -> Self;
-    fn from_read_buffer(self, read_buff_global: &mut Cursor<&mut Vec<u8>>) -> Self;
+    fn from_read_buffer(self, read_buff: &mut Cursor<&mut Vec<u8>>) -> Self;
     fn to_write_buffer(self) -> (u32, u32);
     fn next(self) -> Self;
     fn request(&mut self) -> &mut Request;
@@ -44,8 +44,8 @@ impl RunContext for Context {
            }
     }
 
-    fn from_read_buffer(self, read_buff_global: &mut Cursor<&mut Vec<u8>>) -> Self {
-          Decode::decode(read_buff_global).unwrap().unwrap()
+    fn from_read_buffer(self, read_buff: &mut Cursor<&mut Vec<u8>>) -> Self {
+          Decode::decode(read_buff).unwrap().unwrap()
     }
 
     fn to_write_buffer(self) -> (u32, u32) {

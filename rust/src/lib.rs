@@ -42,8 +42,8 @@ pub unsafe extern "C" fn run() -> u64 {
     //  rust's Mutex, which are required for the read buffer global with static_mut
     let ptr = PTR.lock().unwrap().clone();
     let len = LEN.lock().unwrap().clone();
-    let mut vec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
 
+    let mut vec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
     let mut constructed = Cursor::new(&mut vec);
     let context: Context = RunContext::new();
     let cont = scale(context.from_read_buffer(&mut constructed));
