@@ -18,12 +18,21 @@
 package signature
 
 type Signature interface {
-	Version() string           // Version of the Signature
-	Context() Context          // Context of the Signature
-	Resize(size uint32) uint32 // Resize resizes the global buffers to the given size and returns the offset
+	Version() string                // Version of the Signature
+	RuntimeContext() RuntimeContext // RuntimeContext of the Signature
+	Resize(size uint32) uint32      // Resize resizes the global buffers to the given size and returns the offset
 }
 
-type Context interface {
+// RuntimeContext is the interface that must be implemented by the Context of a Signature
+// in order for it to be used by the runtime.
+type RuntimeContext interface {
+	Read(b []byte) error // Read updates the Context by decoding the given bytes
+	Write() []byte       // Write encodes the Context and returns the encoded bytes
+}
+
+// GuestContext is the interface that must be implemented by the Context of a Signature
+// in order for it to be used by the guest.
+type GuestContext interface {
 	ToWriteBuffer() (uint32, uint32) // ToWriteBuffer serializes the Context to a global buffer and returns the offset and length
 	FromReadBuffer() error           // FromReadBuffer deserializes the Context from the global buffer
 }

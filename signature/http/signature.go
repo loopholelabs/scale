@@ -29,8 +29,8 @@ func (s *Signature) Version() string {
 	return http.VERSION
 }
 
-func (s *Signature) Context() signature.Context {
-	return http.New()
+func (s *Signature) RuntimeContext() signature.RuntimeContext {
+	return http.New().RuntimeContext()
 }
 
 func (s *Signature) Resize(size uint32) uint32 {
