@@ -30,6 +30,10 @@ export class ExpressAdapter {
     this._runtime = runt;
   }
 
+  getHandler() {
+    return this.handler.bind(this);
+  }
+
   handler(
     req: express.Request,
     res: express.Response,

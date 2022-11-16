@@ -14,16 +14,34 @@
         limitations under the License.
 */
 
+import { TextEncoder, TextDecoder } from "util";
 import { Host } from "../runtime/host";
 import { NextAdapter } from "./nextAdapter";
+
+import {
+  Headers,
+  Request,
+  Response,
+} from 'node-fetch';
+
+if (!global.fetch) {
+//  (global as any).fetch = fetch;
+  (global as any).Headers = Headers;
+  (global as any).Request = Request;
+  (global as any).Response = Response;
+}
+
+window.TextEncoder = TextEncoder;
+window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+
+import { NextRequest, NextResponse } from 'next/server';
 
 describe("nextAdapter", () => {
 
   it("Can convert Request to Context", async () => {
-    const request = new Request('https://example.com', {method: 'POST', body: '{"foo": "bar"}'});
-    const response = new Response();
+    const request = new NextRequest('https://example.com', {method: 'POST', body: '{"foo": "bar"}'});
 
-    const ctx = await NextAdapter.toContext(request, response);
+    const ctx = await NextAdapter.toContext(request, null);
 
     Host.showContext(ctx.context());
 
