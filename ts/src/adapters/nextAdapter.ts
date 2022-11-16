@@ -64,9 +64,9 @@ export class NextAdapter {
       method = req.method;
     }
 
-    // TODO: Find protocol
+    const protocol = (new URL(req.url)).protocol;
+
     // TODO: Find IP
-    const protocol = "http";
     const ip = "1.2.3.4";
 
     for(let k in req.headers) {
