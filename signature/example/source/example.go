@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package http
+package example
 
 import (
 	"github.com/loopholelabs/polyglot-go"
@@ -35,7 +35,7 @@ var (
 // Context is a context object for an incoming request. It is meant to be used
 // inside the Scale function.
 type Context struct {
-	*HttpContext
+	*ExampleContext
 	buffer *polyglot.Buffer
 }
 
@@ -45,8 +45,8 @@ type RuntimeContext Context
 // New creates a new empty Context that must be initialized with the FromPointer method
 func New() *Context {
 	return &Context{
-		HttpContext: NewHttpContext(),
-		buffer:      polyglot.NewBuffer(),
+		ExampleContext: NewExampleContext(),
+		buffer:         polyglot.NewBuffer(),
 	}
 }
 

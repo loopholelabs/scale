@@ -24,21 +24,21 @@ func NewHttpContext() *HttpContext {
 	}
 }
 
-func (x *HttpContext) Error(b *polyglot.Buffer, err error) {
+func (x *HttpContext) error(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
 }
 
-func (x *HttpContext) Encode(b *polyglot.Buffer) {
+func (x *HttpContext) internalEncode(b *polyglot.Buffer) {
 	if x == nil {
 		polyglot.Encoder(b).Nil()
 	} else {
 
-		x.Request.Encode(b)
-		x.Response.Encode(b)
+		x.Request.internalEncode(b)
+		x.Response.internalEncode(b)
 	}
 }
 
-func (x *HttpContext) Decode(b []byte) error {
+func (x *HttpContext) internalDecode(b []byte) error {
 	if x == nil {
 		return NilDecode
 	}
@@ -77,14 +77,14 @@ func NewHttpRequestHeadersMap(size uint32) map[string]*HttpStringList {
 	return make(map[string]*HttpStringList, size)
 }
 
-func (x HttpRequestHeadersMap) Encode(b *polyglot.Buffer) {
+func (x HttpRequestHeadersMap) internalEncode(b *polyglot.Buffer) {
 	if x == nil {
 		polyglot.Encoder(b).Nil()
 	} else {
 		polyglot.Encoder(b).Map(uint32(len(x)), polyglot.StringKind, polyglot.AnyKind)
 		for k, v := range x {
 			polyglot.Encoder(b).String(k)
-			v.Encode(b)
+			v.internalEncode(b)
 		}
 	}
 }
@@ -125,21 +125,21 @@ func NewHttpRequest() *HttpRequest {
 	return &HttpRequest{}
 }
 
-func (x *HttpRequest) Error(b *polyglot.Buffer, err error) {
+func (x *HttpRequest) error(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
 }
 
-func (x *HttpRequest) Encode(b *polyglot.Buffer) {
+func (x *HttpRequest) internalEncode(b *polyglot.Buffer) {
 	if x == nil {
 		polyglot.Encoder(b).Nil()
 	} else {
 
 		polyglot.Encoder(b).String(x.URI).String(x.Method).Int64(x.ContentLength).String(x.Protocol).String(x.IP).Bytes(x.Body)
-		x.Headers.Encode(b)
+		x.Headers.internalEncode(b)
 	}
 }
 
-func (x *HttpRequest) Decode(b []byte) error {
+func (x *HttpRequest) internalDecode(b []byte) error {
 	if x == nil {
 		return NilDecode
 	}
@@ -199,14 +199,14 @@ func NewHttpResponseHeadersMap(size uint32) map[string]*HttpStringList {
 	return make(map[string]*HttpStringList, size)
 }
 
-func (x HttpResponseHeadersMap) Encode(b *polyglot.Buffer) {
+func (x HttpResponseHeadersMap) internalEncode(b *polyglot.Buffer) {
 	if x == nil {
 		polyglot.Encoder(b).Nil()
 	} else {
 		polyglot.Encoder(b).Map(uint32(len(x)), polyglot.StringKind, polyglot.AnyKind)
 		for k, v := range x {
 			polyglot.Encoder(b).String(k)
-			v.Encode(b)
+			v.internalEncode(b)
 		}
 	}
 }
@@ -243,21 +243,21 @@ func NewHttpResponse() *HttpResponse {
 	return &HttpResponse{}
 }
 
-func (x *HttpResponse) Error(b *polyglot.Buffer, err error) {
+func (x *HttpResponse) error(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
 }
 
-func (x *HttpResponse) Encode(b *polyglot.Buffer) {
+func (x *HttpResponse) internalEncode(b *polyglot.Buffer) {
 	if x == nil {
 		polyglot.Encoder(b).Nil()
 	} else {
 
 		polyglot.Encoder(b).Int32(x.StatusCode).Bytes(x.Body)
-		x.Headers.Encode(b)
+		x.Headers.internalEncode(b)
 	}
 }
 
-func (x *HttpResponse) Decode(b []byte) error {
+func (x *HttpResponse) internalDecode(b []byte) error {
 	if x == nil {
 		return NilDecode
 	}
@@ -303,11 +303,11 @@ func NewHttpStringList() *HttpStringList {
 	return &HttpStringList{}
 }
 
-func (x *HttpStringList) Error(b *polyglot.Buffer, err error) {
+func (x *HttpStringList) error(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
 }
 
-func (x *HttpStringList) Encode(b *polyglot.Buffer) {
+func (x *HttpStringList) internalEncode(b *polyglot.Buffer) {
 	if x == nil {
 		polyglot.Encoder(b).Nil()
 	} else {
@@ -319,7 +319,7 @@ func (x *HttpStringList) Encode(b *polyglot.Buffer) {
 	}
 }
 
-func (x *HttpStringList) Decode(b []byte) error {
+func (x *HttpStringList) internalDecode(b []byte) error {
 	if x == nil {
 		return NilDecode
 	}
