@@ -39,13 +39,19 @@ import { NextRequest, NextResponse } from 'next/server';
 describe("nextAdapter", () => {
 
   it("Can convert Request to Context", async () => {
-    const request = new NextRequest('https://example.com', {method: 'POST', body: '{"foo": "bar"}'});
+    const bodyData = '{"foo": "bar"}';
+    const request = new NextRequest('https://example.com', {method: 'POST', body: bodyData});
 
     const ctx = await NextAdapter.toContext(request, null);
 
     Host.showContext(ctx.context());
 
-//    expect(res.headers.middleware).toBe("TRUE");
-
+    if (request.body != null ) {
+      expect(ctx.context().Request.Method).toBe(request.method);
+      expect(ctx.context().Request.Protocol).toBe((new URL(request.url)).protocol);
+      expect(Number(ctx.context().Request.ContentLength)).toBe(bodyData.length);
+      const reqBody = new TextDecoder().decode(ctx.context().Request.Body);
+      expect(reqBody).toBe(bodyData);
+    }
   });
 });
