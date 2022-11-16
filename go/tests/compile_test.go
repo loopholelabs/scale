@@ -18,7 +18,7 @@ package tests
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/go/scalefile"
+	"github.com/loopholelabs/scale/scalefile"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"

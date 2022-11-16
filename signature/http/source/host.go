@@ -14,33 +14,21 @@
 	limitations under the License.
 */
 
-package tests
+package http
 
-import (
-	"github.com/loopholelabs/scale/scalefunc"
-	"os"
-	"os/exec"
-	"testing"
-)
+import "unsafe"
 
-type TestCase struct {
-	Name   string
-	Module string
-	Run    func(scalefunc.ScaleFunc, *testing.T)
-}
+// next is the host function that is called by the runtime to execute the next
+// function in the chain.
+//
+//export next
+//go:linkname next
+func next(offset uint32, length uint32)
 
-func TestMain(m *testing.M) {
-	err := exec.Command("sh", "compile.sh").Run()
-	if err != nil {
-		panic(err)
+func Resize(size uint32) uint32 {
+	if uint32(cap(readBuffer)) < size {
+		readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
 	}
-
-	code := m.Run()
-
-	err = exec.Command("sh", "cleanup.sh").Run()
-	if err != nil {
-		panic(err)
-	}
-
-	os.Exit(code)
+	readBuffer = readBuffer[:size]
+	return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
 }

@@ -14,33 +14,14 @@
 	limitations under the License.
 */
 
-package tests
+// Package extension implements the Extension type, that must be exported by Extension
+package extension
 
-import (
-	"github.com/loopholelabs/scale/scalefunc"
-	"os"
-	"os/exec"
-	"testing"
-)
+import "github.com/loopholelabs/scale/go/context"
 
-type TestCase struct {
-	Name   string
-	Module string
-	Run    func(scalefunc.ScaleFunc, *testing.T)
+type Extension struct {
 }
 
-func TestMain(m *testing.M) {
-	err := exec.Command("sh", "compile.sh").Run()
-	if err != nil {
-		panic(err)
-	}
-
-	code := m.Run()
-
-	err = exec.Command("sh", "cleanup.sh").Run()
-	if err != nil {
-		panic(err)
-	}
-
-	os.Exit(code)
+type Instance interface {
+	Run(ctx context.Context)
 }

@@ -14,33 +14,25 @@
 	limitations under the License.
 */
 
-package tests
+package http
 
 import (
-	"github.com/loopholelabs/scale/scalefunc"
-	"os"
-	"os/exec"
-	"testing"
+	"github.com/loopholelabs/scale/signature"
+	http "github.com/loopholelabs/scale/signature/http/source"
 )
 
-type TestCase struct {
-	Name   string
-	Module string
-	Run    func(scalefunc.ScaleFunc, *testing.T)
+var _ signature.Signature = (*Signature)(nil)
+
+type Signature struct{}
+
+func (s *Signature) Version() string {
+	return http.VERSION
 }
 
-func TestMain(m *testing.M) {
-	err := exec.Command("sh", "compile.sh").Run()
-	if err != nil {
-		panic(err)
-	}
+func (s *Signature) Context() signature.Context {
+	return http.New()
+}
 
-	code := m.Run()
-
-	err = exec.Command("sh", "cleanup.sh").Run()
-	if err != nil {
-		panic(err)
-	}
-
-	os.Exit(code)
+func (s *Signature) Resize(size uint32) uint32 {
+	return http.Resize(size)
 }
