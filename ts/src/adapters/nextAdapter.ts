@@ -24,6 +24,10 @@ import {
 } from "../runtime/generated/generated";
 import { Host } from "../runtime/host";
 
+import { NextRequest, NextResponse } from 'next/server';
+
+// https://vercel.com/docs/concepts/functions/edge-functions#creating-edge-functions
+
 export class NextAdapter {
   private _runtime: Runtime;
 
@@ -50,7 +54,9 @@ export class NextAdapter {
     res.end();
   }
 
-  static async toContext(req: Request, resp: Response) {
+// NextRequest NextResponse
+
+  static async toContext(req: NextRequest, resp: NextResponse | null) {
     const reqheaders = new Map<string, PgStringList>();
 
     let method = "unknown";
@@ -60,6 +66,8 @@ export class NextAdapter {
 
     // TODO: Find protocol
     // TODO: Find IP
+    const protocol = "http";
+    const ip = "1.2.3.4";
 
     for(let k in req.headers) {
       let vals = req.headers.get(k);
@@ -83,13 +91,19 @@ export class NextAdapter {
     const preq = new PgRequest(
       method,
       BigInt(body.length),
-      "http",
-      "1.2.3.4",
+      protocol,
+      ip,
       body,
       reqheaders
     );
+
+    let status = 200;
+    if (resp!=null) {
+      status = resp.status;
+    }
+
     const presp = new PgResponse(
-      resp.status,
+      status,
       new Uint8Array(),
       new Map<string, PgStringList>()
     )

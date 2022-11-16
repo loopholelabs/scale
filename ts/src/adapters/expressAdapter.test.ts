@@ -67,7 +67,8 @@ describe("expressAdapter", () => {
         type: () => true,
       })
     );
-    app.use(adapter.handler.bind(adapter));
+
+    app.use(adapter.getHandler());
 
     const res = await request(app).post("/blah").send("HELLO WORLD");
 

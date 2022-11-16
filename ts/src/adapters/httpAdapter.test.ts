@@ -50,6 +50,12 @@ describe("httpAdapter", () => {
     const modHttpMiddleware = fs.readFileSync(
       "./example_modules/http-middleware.wasm"
     );
+    
+    // Create factory to return initted module
+    // module.new(moduleCode)
+
+    // const runtime = new Runtime([module.new(modCode), module.new(modCode2)]);
+
     const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
     await moduleHttpEndpoint.init();
     const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
@@ -57,6 +63,8 @@ describe("httpAdapter", () => {
     const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
 
     var adapter = new HttpAdapter(runtime);
+
+    // TODO: adapter.getHandler()
 
     var server = http.createServer(adapter.handler.bind(adapter));
   

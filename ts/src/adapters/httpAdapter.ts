@@ -35,11 +35,12 @@ export class HttpAdapter {
     req: http.IncomingMessage,
     res: http.ServerResponse
   ) {
-    console.log("Request received...");
     let chunks:Uint8Array[] = [];
+
     req.on('data', (chunk) => {
         chunks.push(chunk);
     });
+
     req.on('end', () => {
       let length = 0;
       chunks.forEach(item => {
@@ -96,6 +97,8 @@ export class HttpAdapter {
 
     // TODO: Find protocol
     // TODO: Find IP
+    const protocol = "http";
+    const ip = "1.2.3.4";
 
     for(let k in req.headers) {
       let vals = req.headers[k];
@@ -113,8 +116,8 @@ export class HttpAdapter {
     const preq = new PgRequest(
       method,
       BigInt(body.length),
-      "http",
-      "1.2.3.4",
+      protocol,
+      ip,
       body,
       reqheaders
     );
