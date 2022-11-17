@@ -42,7 +42,6 @@ export class NextAdapter {
 
       const outContext = this._runtime.run(context);
       if (outContext!=null) {
-        Host.showContext(outContext.context());
         return NextAdapter.fromContext(outContext);
       }
 
