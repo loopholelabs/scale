@@ -69,8 +69,6 @@ describe("httpAdapter", () => {
 
     const res = await request(server).post("/blah").send("HELLO WORLD");
 
-    console.log("Done POST");
-
     // Make sure everything worked as expected.
     expect(res.statusCode).toEqual(200);
     expect(res.text).toBe("HELLO WORLD");

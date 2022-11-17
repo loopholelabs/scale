@@ -32,12 +32,32 @@ import { TextEncoder, TextDecoder } from "util";
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
+import * as fs from "fs";
+import { WASI } from "wasi";
+
+import { Module, WasiContext } from "../runtime/module";
+
 import { Host } from "../runtime/host";
+import { Runtime } from "../runtime/runtime";
 import { NextAdapter } from "./nextAdapter";
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Context } from "../runtime/context";
 import { Context as PgContext, Request as PgRequest, Response as PgResponse, StringList as PgStringList } from "../runtime/generated/generated";
+
+function getNewWasi(): WasiContext {
+  const wasi = new WASI({
+    args: [],
+    env: {},
+  });
+  const w: WasiContext = {
+    getImportObject: () => wasi.wasiImport,
+    start: (instance: WebAssembly.Instance) => {
+      wasi.start(instance);
+    }
+  }
+  return w;
+}
 
 describe("nextAdapter", () => {
 
@@ -46,8 +66,6 @@ describe("nextAdapter", () => {
     const request = new NextRequest('https://example.com', {method: 'POST', body: bodyData});
 
     const ctx = await NextAdapter.toContext(request);
-
-    Host.showContext(ctx.context());
 
     if (request.body != null ) {
       expect(ctx.context().Request.Method).toBe(request.method);
@@ -83,6 +101,38 @@ describe("nextAdapter", () => {
     // Check for the header
     const hkey = response.headers.get("MIDDLEWARE");
     expect(hkey).toBe("Hello");
+  });
+
+  it("Can run a simple e2e", async () => {
+    const modHttpEndpoint = fs.readFileSync(
+      "./example_modules/http-endpoint.wasm"
+    );
+    const modHttpMiddleware = fs.readFileSync(
+      "./example_modules/http-middleware.wasm"
+    );
+    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
+    await moduleHttpEndpoint.init();
+    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
+    await moduleHttpMiddleware.init();
+    const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
+
+    const adapter = new NextAdapter(runtime);
+
+    const handler = adapter.getHandler();
+
+    const bodyData = '{"foo": "bar"}';
+    const request = new NextRequest('https://example.com', {method: 'POST', body: bodyData});
+
+    const res = await handler(request);
+
+    // Make sure everything worked as expected.
+    let b = await (await res.blob()).arrayBuffer();
+    const outbodybytes = new Uint8Array(b);
+    const outbody = new TextDecoder().decode(outbodybytes);
+
+    expect(res.status).toEqual(200);
+    expect(outbody).toBe(bodyData);
+    expect(res.headers.get("MIDDLEWARE")).toBe("TRUE");
   });
 
 });
