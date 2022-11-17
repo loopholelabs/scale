@@ -5,10 +5,12 @@ go 1.18
 require (
 	github.com/gofiber/fiber/v2 v2.38.1
 	github.com/google/uuid v1.3.0
-	github.com/loopholelabs/polyglot-go v0.5.0
+	github.com/loopholelabs/polyglot-go v0.5.1
 	github.com/stretchr/testify v1.7.5
 	github.com/tetratelabs/wazero v1.0.0-pre.2
 	github.com/valyala/fasthttp v1.40.0
+	github.com/yalue/merged_fs v1.2.2
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

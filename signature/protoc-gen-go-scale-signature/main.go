@@ -14,30 +14,39 @@
 	limitations under the License.
 */
 
-package example
+package main
 
 import (
-	"github.com/loopholelabs/scale/signature"
-	context "github.com/loopholelabs/scale/signature/example/source"
+	"github.com/loopholelabs/scale/signature/generator"
+	"io"
+	"os"
 )
 
-var _ signature.Signature = (*Signature)(nil)
-var _ signature.Context = (*Context)(nil)
+func main() {
+	gen := generator.New()
 
-type Signature struct{}
+	data, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		panic(err)
+	}
 
-func (s *Signature) Version() string {
-	return context.VERSION
-}
+	req, err := gen.UnmarshalRequest(data)
+	if err != nil {
+		panic(err)
+	}
 
-func (s *Signature) RuntimeContext() signature.RuntimeContext {
-	return context.New().RuntimeContext()
-}
+	res, err := gen.Generate(req)
+	if err != nil {
+		panic(err)
+	}
 
-func (s *Signature) Resize(size uint32) uint32 {
-	return context.Resize(size)
-}
+	data, err = gen.MarshalResponse(res)
+	if err != nil {
+		panic(err)
+	}
 
-type Context struct {
-	*context.Context
+	_, err = os.Stdout.Write(data)
+	if err != nil {
+		panic(err)
+	}
 }

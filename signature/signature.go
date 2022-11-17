@@ -23,6 +23,10 @@ type Signature interface {
 	Resize(size uint32) uint32      // Resize resizes the global buffers to the given size and returns the offset
 }
 
+type Context interface {
+	GuestContext() GuestContext // GuestContext of the Context
+}
+
 // RuntimeContext is the interface that must be implemented by the Context of a Signature
 // in order for it to be used by the runtime.
 type RuntimeContext interface {

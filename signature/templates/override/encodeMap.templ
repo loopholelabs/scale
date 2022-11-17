@@ -1,0 +1,33 @@
+{{define "encodeMap"}}
+    func (x {{ CamelCase .FullName }}Map) internalEncode (b *polyglot.Buffer) {
+        if x == nil {
+            polyglot.Encoder(b).Nil()
+        } else {
+            {{ $keyKind := GetKind .MapKey.Kind -}}
+            {{ $valKind := GetKind .MapValue.Kind -}}
+            polyglot.Encoder(b).Map(uint32(len(x)), {{$keyKind}}, {{$valKind}})
+            for k, v := range x {
+                {{ $keyEncoder := GetLUTEncoder .MapKey.Kind -}}
+                {{ if and (eq $keyEncoder "") (eq .MapKey.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+                    k.internalEncode(b)
+                {{else -}}
+                    {{ if eq .MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                        polyglot.Encoder(b) {{$keyEncoder}} (uint32(k))
+                    {{else -}}
+                        polyglot.Encoder(b) {{$keyEncoder}} (k)
+                    {{end -}}
+                {{end -}}
+                {{ $valEncoder := GetLUTEncoder .MapValue.Kind -}}
+                {{ if and (eq $valEncoder "") (eq .MapValue.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+                    v.internalEncode(b)
+                {{else -}}
+                    {{ if eq .MapValue.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                        polyglot.Encoder(b) {{$valEncoder}} (uint32(v))
+                    {{else -}}
+                        polyglot.Encoder(b) {{$valEncoder}} (v)
+                    {{end -}}
+                {{end -}}
+            }
+        }
+    }
+{{end}}

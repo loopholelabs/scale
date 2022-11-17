@@ -1,0 +1,93 @@
+{{define "decode"}}
+func (x *{{ CamelCase .FullName }}) internalDecode (b []byte) error {
+    if x == nil {
+        return NilDecode
+    }
+    d := polyglot.GetDecoder(b)
+    defer d.Return()
+    return x.decode(d)
+}
+{{end}}
+
+{{define "internalDecode"}}
+func (x *{{CamelCase .FullName}}) decode(d *polyglot.Decoder) error {
+    if d.Nil() {
+        return nil
+    }
+
+{{ $decoding := GetDecodingFields .Fields -}}
+{{ if or $decoding.Other $decoding.SliceFields $decoding.MessageFields -}}
+var err error
+{{ end -}}
+{{ range $field := $decoding.Other -}}
+    {{ $decoder := GetLUTDecoder $field.Kind -}}
+    {{ if eq $field.Kind 12 -}} {{/* protoreflect.BytesKind */ -}}
+    x.{{ CamelCaseName $field.Name }}, err = d{{ $decoder }}(nil)
+    {{ else if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+    var {{ CamelCaseName $field.Name }}Temp uint32
+    {{ CamelCaseName $field.Name }}Temp, err = d{{ $decoder }}()
+    x.{{ CamelCaseName $field.Name }} = {{ FindValue $field }}({{ CamelCaseName $field.Name }}Temp)
+    {{ else -}}
+        x.{{ CamelCaseName $field.Name }}, err = d{{ $decoder }}()
+    {{end -}}
+    if err != nil {
+    return err
+    }
+{{end -}}
+
+{{ if $decoding.SliceFields -}}
+    var sliceSize uint32
+{{end -}}
+{{ range $field := $decoding.SliceFields -}}
+    {{ $kind := GetKind $field.Kind -}}
+    sliceSize, err = d.Slice({{ $kind }})
+    if err != nil {
+    return err
+    }
+    if uint32(len(x.{{ CamelCaseName $field.Name }})) != sliceSize {
+    x.{{ CamelCaseName $field.Name }} = make({{ FindValue $field }}, sliceSize)
+    }
+    for i := uint32(0); i < sliceSize; i++ {
+    {{ $decoder := GetLUTDecoder $field.Kind -}}
+    {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+    if x.{{ CamelCaseName $field.Name }}[i] == nil {
+    x.{{ CamelCaseName $field.Name }}[i] = New{{ CamelCase $field.Message.FullName }}()
+    }
+    err = x.{{ CamelCaseName $field.Name }}[i].decode(d)
+    {{ else -}}
+        x.{{ CamelCaseName $field.Name }}[i], err = d{{ $decoder }}()
+    {{end -}}
+    if err != nil {
+    return err
+    }
+    }
+{{end -}}
+{{ range $field := $decoding.MessageFields -}}
+    {{ if $field.IsMap -}}
+        if !d.Nil() {
+        {{ $keyKind := GetKind $field.MapKey.Kind -}}
+        {{ $valKind := GetKind $field.MapValue.Kind -}}
+
+        {{ CamelCaseName $field.Name }}Size, err := d.Map({{ $keyKind }}, {{ $valKind }})
+        if err != nil {
+        return err
+        }
+        x.{{ CamelCaseName $field.Name }} = New{{ CamelCase $field.FullName }}Map({{ CamelCaseName $field.Name }}Size)
+        err = x.{{ CamelCaseName $field.Name }}.decode(d, {{ CamelCaseName $field.Name }}Size)
+        if err != nil {
+        return err
+        }
+        }
+    {{ else -}}
+        if x.{{ CamelCaseName $field.Name }} == nil {
+        x.{{ CamelCaseName $field.Name }} = New{{ CamelCase $field.Message.FullName }}()
+        }
+        err = x.{{ CamelCaseName $field.Name }}.decode(d)
+        if err != nil {
+        return err
+        }
+    {{end -}}
+{{end -}}
+    return nil
+}
+{{end}}

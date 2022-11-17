@@ -14,30 +14,9 @@
 	limitations under the License.
 */
 
-package example
+package override
 
-import (
-	"github.com/loopholelabs/scale/signature"
-	context "github.com/loopholelabs/scale/signature/example/source"
-)
+import "embed"
 
-var _ signature.Signature = (*Signature)(nil)
-var _ signature.Context = (*Context)(nil)
-
-type Signature struct{}
-
-func (s *Signature) Version() string {
-	return context.VERSION
-}
-
-func (s *Signature) RuntimeContext() signature.RuntimeContext {
-	return context.New().RuntimeContext()
-}
-
-func (s *Signature) Resize(size uint32) uint32 {
-	return context.Resize(size)
-}
-
-type Context struct {
-	*context.Context
-}
+//go:embed *
+var FS embed.FS

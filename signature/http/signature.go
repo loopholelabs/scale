@@ -22,6 +22,7 @@ import (
 )
 
 var _ signature.Signature = (*Signature)(nil)
+var _ signature.Context = (*Context)(nil)
 
 type Signature struct{}
 
@@ -35,4 +36,8 @@ func (s *Signature) RuntimeContext() signature.RuntimeContext {
 
 func (s *Signature) Resize(size uint32) uint32 {
 	return http.Resize(size)
+}
+
+type Context struct {
+	*http.Context
 }

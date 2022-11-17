@@ -23,7 +23,7 @@ type Response struct {
 
 // Response returns the Response object for the Context
 func (x *Context) Response() *Response {
-	return &Response{value: x.HttpContext.Response}
+	return &Response{value: x.generated.Response}
 }
 
 // Body returns the body of the response

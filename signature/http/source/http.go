@@ -35,8 +35,8 @@ var (
 // Context is a context object for an incoming request. It is meant to be used
 // inside the Scale function.
 type Context struct {
-	*HttpContext
-	buffer *polyglot.Buffer
+	generated *HttpContext
+	buffer    *polyglot.Buffer
 }
 
 type GuestContext Context
@@ -45,16 +45,16 @@ type RuntimeContext Context
 // New creates a new empty Context that must be initialized with the FromPointer method
 func New() *Context {
 	return &Context{
-		HttpContext: NewHttpContext(),
-		buffer:      polyglot.NewBuffer(),
+		generated: NewHttpContext(),
+		buffer:    polyglot.NewBuffer(),
 	}
 }
 
-func (x *Context) GuestContext() *GuestContext {
+func (x *Context) GuestContext() signature.GuestContext {
 	return (*GuestContext)(x)
 }
 
-func (x *Context) RuntimeContext() *RuntimeContext {
+func (x *Context) RuntimeContext() signature.RuntimeContext {
 	return (*RuntimeContext)(x)
 }
 
@@ -64,7 +64,7 @@ func (x *Context) RuntimeContext() *RuntimeContext {
 // Users should not use this method.
 func (x *GuestContext) ToWriteBuffer() (uint32, uint32) {
 	writeBuffer.Reset()
-	x.internalEncode(writeBuffer)
+	x.generated.internalEncode(writeBuffer)
 	underlying := writeBuffer.Bytes()
 	ptr := &underlying[0]
 	unsafePtr := uintptr(unsafe.Pointer(ptr))
@@ -76,20 +76,20 @@ func (x *GuestContext) ToWriteBuffer() (uint32, uint32) {
 // It assumes that the readBuffer has been filled with the data from the Scale Runtime after
 // a call to the Resize method
 func (x *GuestContext) FromReadBuffer() error {
-	return x.internalDecode(readBuffer)
+	return x.generated.internalDecode(readBuffer)
 }
 
 // Read reads the context from the given byte slice and returns an error if one occurred
 //
 // This method is meant to be used by the Scale Runtime to deserialize the Context
 func (x *RuntimeContext) Read(b []byte) error {
-	return x.internalDecode(b)
+	return x.generated.internalDecode(b)
 }
 
 // Write writes the context into a byte slice and returns it
 func (x *RuntimeContext) Write() []byte {
 	x.buffer.Reset()
-	x.internalEncode(x.buffer)
+	x.generated.internalEncode(x.buffer)
 	return x.buffer.Bytes()
 }
 
