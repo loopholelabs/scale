@@ -44,14 +44,15 @@ export class NextAdapter {
       if (outContext!=null) {
         Host.showContext(outContext.context());
       }
-
+/*
       return NextResponse.json({
         name: `Hello, from ${req.url} I'm now an Edge Function!`,
       });
+*/
     };
   }
 
-  static fromContext(ctx: Context): NextResponse {
+  static fromContext(ctx: Context) {
     /*
     // Copy stuff over here...
     const ctxresp = ctx.context().Response;
@@ -70,7 +71,9 @@ export class NextAdapter {
     res.write(ctxresp.Body);
     res.end();
     */
+   /*
    return NextResponse.json({todo: 'todo'});
+   */
   }
 
   static async toContext(req: NextRequest): Promise<Context> {

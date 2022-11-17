@@ -64,8 +64,6 @@ describe("httpAdapter", () => {
 
     var adapter = new HttpAdapter(runtime);
 
-    // TODO: adapter.getHandler()
-
     var server = http.createServer(adapter.getHandler());
   
 
