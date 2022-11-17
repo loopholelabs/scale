@@ -42,7 +42,7 @@ describe("nextAdapter", () => {
     const bodyData = '{"foo": "bar"}';
     const request = new NextRequest('https://example.com', {method: 'POST', body: bodyData});
 
-    const ctx = await NextAdapter.toContext(request, null);
+    const ctx = await NextAdapter.toContext(request);
 
     Host.showContext(ctx.context());
 
@@ -54,4 +54,8 @@ describe("nextAdapter", () => {
       expect(reqBody).toBe(bodyData);
     }
   });
+
+  it("Can convert Context to Response", async () => {
+  });
+
 });

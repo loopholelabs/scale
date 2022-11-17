@@ -35,7 +35,24 @@ export class NextAdapter {
     this._runtime = runt;
   }
 
-  static fromContext(ctx: Context, res: http.ServerResponse) {
+  getHandler() {
+    return async (req: NextRequest) => {
+
+      const context = await NextAdapter.toContext(req);
+
+      const outContext = this._runtime.run(context);
+      if (outContext!=null) {
+        Host.showContext(outContext.context());
+      }
+
+      return NextResponse.json({
+        name: `Hello, from ${req.url} I'm now an Edge Function!`,
+      });
+    };
+  }
+
+  static fromContext(ctx: Context): NextResponse {
+    /*
     // Copy stuff over here...
     const ctxresp = ctx.context().Response;
 
@@ -52,11 +69,11 @@ export class NextAdapter {
 
     res.write(ctxresp.Body);
     res.end();
+    */
+   return NextResponse.json({todo: 'todo'});
   }
 
-// NextRequest NextResponse
-
-  static async toContext(req: NextRequest, resp: NextResponse | null) {
+  static async toContext(req: NextRequest): Promise<Context> {
     const reqheaders = new Map<string, PgStringList>();
 
     let method = "unknown";
@@ -97,11 +114,8 @@ export class NextAdapter {
       reqheaders
     );
 
+    // Dummy response filled in here...
     let status = 200;
-    if (resp!=null) {
-      status = resp.status;
-    }
-
     const presp = new PgResponse(
       status,
       new Uint8Array(),

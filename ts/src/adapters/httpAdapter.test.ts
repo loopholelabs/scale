@@ -66,7 +66,7 @@ describe("httpAdapter", () => {
 
     // TODO: adapter.getHandler()
 
-    var server = http.createServer(adapter.handler.bind(adapter));
+    var server = http.createServer(adapter.getHandler());
   
 
     const res = await request(server).post("/blah").send("HELLO WORLD");
