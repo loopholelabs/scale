@@ -14,10 +14,6 @@
         limitations under the License.
 */
 
-import { TextEncoder, TextDecoder } from "util";
-import { Host } from "../runtime/host";
-import { NextAdapter } from "./nextAdapter";
-
 import {
   Headers,
   Request,
@@ -31,10 +27,17 @@ if (!global.fetch) {
   (global as any).Response = Response;
 }
 
+import { TextEncoder, TextDecoder } from "util";
+
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
+import { Host } from "../runtime/host";
+import { NextAdapter } from "./nextAdapter";
+
 import { NextRequest, NextResponse } from 'next/server';
+import { Context } from "../runtime/context";
+import { Context as PgContext, Request as PgRequest, Response as PgResponse, StringList as PgStringList } from "../runtime/generated/generated";
 
 describe("nextAdapter", () => {
 
@@ -56,6 +59,18 @@ describe("nextAdapter", () => {
   });
 
   it("Can convert Context to Response", async () => {
+    const req = new PgRequest("GET", BigInt(0), "http", "1.2.3.4", new Uint8Array(), new Map<string, PgStringList>);
+    
+    const body = new TextEncoder().encode("Hello world");
+    const headers = new Map<string, PgStringList>;
+
+    headers.set("MIDDLEWARE", new PgStringList(["Hello"]));    
+
+    const resp = new PgResponse(200, body, headers);
+    const c = new PgContext(req, resp);
+    const ctx = new Context(c);
+
+    const response = NextAdapter.fromContext(ctx);
   });
 
 });
