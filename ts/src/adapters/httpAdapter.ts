@@ -31,6 +31,10 @@ export class HttpAdapter {
     this._runtime = runt;
   }
 
+  getHandler() {
+    return this.handler.bind(this);
+  }
+
   handler(
     req: http.IncomingMessage,
     res: http.ServerResponse
