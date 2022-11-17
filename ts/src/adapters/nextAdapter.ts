@@ -43,37 +43,35 @@ export class NextAdapter {
       const outContext = this._runtime.run(context);
       if (outContext!=null) {
         Host.showContext(outContext.context());
+        return NextAdapter.fromContext(outContext);
       }
-/*
-      return NextResponse.json({
-        name: `Hello, from ${req.url} I'm now an Edge Function!`,
-      });
-*/
+
+      // Return server error
+      return new NextResponse("Internal Server Error", {status: 500});
     };
   }
 
   static fromContext(ctx: Context) {
-    /*
-    // Copy stuff over here...
     const ctxresp = ctx.context().Response;
 
-    res.statusCode = ctxresp.StatusCode;
+    const headers = new Headers();
+
     for(let k of ctxresp.Headers.keys()) {
       let vals = ctxresp.Headers.get(k);
       if (vals!==undefined) {
         let s = vals.Value;
         for(let v of s.values()) {
-            res.setHeader(k, v);
+            headers.set(k, v);
         }
       }
     }
 
-    res.write(ctxresp.Body);
-    res.end();
-    */
-   /*
-   return NextResponse.json({todo: 'todo'});
-   */
+    const resp = new NextResponse(ctxresp.Body, {
+      status: ctxresp.StatusCode,
+      headers: headers
+    });
+    
+    return resp;
   }
 
   static async toContext(req: NextRequest): Promise<Context> {

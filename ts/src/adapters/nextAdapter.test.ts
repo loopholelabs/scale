@@ -71,6 +71,18 @@ describe("nextAdapter", () => {
     const ctx = new Context(c);
 
     const response = NextAdapter.fromContext(ctx);
+
+    // Read response.body
+    let b = await (await response.blob()).arrayBuffer();
+    const outbodybytes = new Uint8Array(b);
+    const outbody = new TextDecoder().decode(outbodybytes);
+
+    expect(outbody).toBe("Hello world");
+    expect(response.status).toBe(200);
+
+    // Check for the header
+    const hkey = response.headers.get("MIDDLEWARE");
+    expect(hkey).toBe("Hello");
   });
 
 });
