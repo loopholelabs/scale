@@ -14,6 +14,7 @@ const VERSION = "v0.1.0"
 var _ signature.RuntimeContext = (*RuntimeContext)(nil)
 var _ signature.GuestContext = (*GuestContext)(nil)
 var _ signature.Signature = (*Context)(nil)
+var _ signature.Context = (*Context)(nil)
 
 var (
 	writeBuffer = polyglot.NewBuffer()

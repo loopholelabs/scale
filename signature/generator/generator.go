@@ -106,14 +106,15 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		if !f.Generate {
 			continue
 		}
-		genFile := plugin.NewGeneratedFile(fmt.Sprintf("%s.signature.go", f.GeneratedFilenamePrefix), f.GoImportPath)
-		hostFile := plugin.NewGeneratedFile("host.go", f.GoImportPath)
-		packageFile := plugin.NewGeneratedFile(fmt.Sprintf("%s.go", f.GeneratedFilenamePrefix), f.GoImportPath)
 
 		packageName := string(f.Desc.Package().Name())
 		if packageName == "" {
 			packageName = string(f.GoPackageName)
 		}
+
+		genFile := plugin.NewGeneratedFile(fmt.Sprintf("%s.signature.go", packageName), f.GoImportPath)
+		hostFile := plugin.NewGeneratedFile("host.go", f.GoImportPath)
+		packageFile := plugin.NewGeneratedFile(fmt.Sprintf("%s.go", f.GeneratedFilenamePrefix), f.GoImportPath)
 
 		err = g.ExecuteHostGeneratorTemplate(hostFile, packageName, f.Desc.Path())
 		if err != nil {
