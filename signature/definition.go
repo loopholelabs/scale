@@ -55,7 +55,7 @@ type PublishedVersions struct {
 type Definition struct {
 	Version           Version           `json:"version" yaml:"version"`
 	Name              string            `json:"name" yaml:"name"`
-	PublishedVersions PublishedVersions `json:"published_versions" yaml:"published-versions"`
+	PublishedVersions PublishedVersions `json:"published" yaml:"published"`
 }
 
 // Read opens a file at the given path and returns a *Definition
