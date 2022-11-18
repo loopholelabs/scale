@@ -8,26 +8,8 @@ import (
 	context {{ .path }}
 )
 
-{{ if .client -}}
 var _ signature.Context = (*Context)(nil)
 
 type Context struct {
 	*context.Context
 }
-{{ else -}}
-var _ signature.Signature = (*Signature)(nil)
-
-type Signature struct{}
-
-func (s *Signature) Version() string {
-	return context.VERSION
-}
-
-func (s *Signature) RuntimeContext() signature.RuntimeContext {
-	return context.New().RuntimeContext()
-}
-
-func (s *Signature) Resize(size uint32) uint32 {
-	return context.Resize(size)
-}
-{{ end -}}

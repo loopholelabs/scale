@@ -13,6 +13,7 @@ const VERSION = "v0.1.0"
 
 var _ signature.RuntimeContext = (*RuntimeContext)(nil)
 var _ signature.GuestContext = (*GuestContext)(nil)
+var _ signature.Signature = (*Context)(nil)
 
 var (
 	writeBuffer = polyglot.NewBuffer()
@@ -43,6 +44,14 @@ func (x *Context) GuestContext() signature.GuestContext {
 
 func (x *Context) RuntimeContext() signature.RuntimeContext {
 	return (*RuntimeContext)(x)
+}
+
+func (x *Context) Version() string {
+	return VERSION
+}
+
+func (x *Context) Resize(size uint32) uint32 {
+	return Resize(size)
 }
 
 // ToWriteBuffer serializes the Context into the global writeBuffer and returns the pointer to the buffer and its size

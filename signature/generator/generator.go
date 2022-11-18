@@ -168,11 +168,10 @@ func (g *Generator) ExecutePackageGeneratorTemplate(writer io.Writer, packageNam
 	})
 }
 
-func (g *Generator) ExecuteSignatureGeneratorTemplate(writer io.Writer, packageName string, packagePath string, client bool) error {
+func (g *Generator) ExecuteSignatureGeneratorTemplate(writer io.Writer, packageName string, packagePath string) error {
 	return g.generatorTemplate.ExecuteTemplate(writer, "signature.go.templ", map[string]interface{}{
 		"package":       packageName,
 		"path":          packagePath,
-		"client":        client,
 		"pluginVersion": version,
 	})
 }
