@@ -176,3 +176,9 @@ func (g *Generator) ExecuteSignatureGeneratorTemplate(writer io.Writer, packageN
 		"pluginVersion": version,
 	})
 }
+
+func (g *Generator) ExecuteModfileGeneratorTemplate(writer io.Writer, packagePath string) error {
+	return g.generatorTemplate.ExecuteTemplate(writer, "go.mod.templ", map[string]interface{}{
+		"path": packagePath,
+	})
+}
