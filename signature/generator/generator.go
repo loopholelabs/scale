@@ -31,6 +31,8 @@ import (
 	"text/template"
 )
 
+const version = "v0.0.1"
+
 type Generator struct {
 	options           *protogen.Options
 	polyglotTemplate  *template.Template
@@ -113,12 +115,12 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 			packageName = string(f.GoPackageName)
 		}
 
-		err = g.ExecuteHostGeneratorTemplate(hostFile, packageName)
+		err = g.ExecuteHostGeneratorTemplate(hostFile, packageName, f.Desc.Path())
 		if err != nil {
 			return nil, err
 		}
 
-		err = g.ExecutePackageGeneratorTemplate(packageFile, packageName)
+		err = g.ExecutePackageGeneratorTemplate(packageFile, packageName, f.Desc.Path())
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +136,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 
 func (g *Generator) ExecutePolyglotTemplate(writer io.Writer, protoFile *protogen.File, packageName string, header bool) error {
 	return g.polyglotTemplate.ExecuteTemplate(writer, "base.templ", map[string]interface{}{
-		"pluginVersion":   "v0.0.1",
+		"pluginVersion":   version,
 		"sourcePath":      protoFile.Desc.Path(),
 		"package":         packageName,
 		"requiredImports": generator.RequiredImports,
@@ -144,28 +146,33 @@ func (g *Generator) ExecutePolyglotTemplate(writer io.Writer, protoFile *protoge
 	})
 }
 
-func (g *Generator) ExecuteHostGeneratorTemplate(writer io.Writer, packageName string) error {
-	return g.generatorTemplate.ExecuteTemplate(writer, "host.go.templ", map[string]interface{}{
-		"package": packageName,
-	})
-}
-
-func (g *Generator) ExecutePackageGeneratorTemplate(writer io.Writer, packageName string) error {
-	return g.generatorTemplate.ExecuteTemplate(writer, "package.go.templ", map[string]interface{}{
-		"package": packageName,
-	})
-}
-
 func (g *Generator) ExecuteProtoGeneratorTemplate(writer io.Writer, packageName string) error {
 	return g.generatorTemplate.ExecuteTemplate(writer, "package.proto.templ", map[string]interface{}{
 		"package": packageName,
 	})
 }
 
+func (g *Generator) ExecuteHostGeneratorTemplate(writer io.Writer, packageName string, source string) error {
+	return g.generatorTemplate.ExecuteTemplate(writer, "host.go.templ", map[string]interface{}{
+		"package":       packageName,
+		"pluginVersion": version,
+		"sourcePath":    source,
+	})
+}
+
+func (g *Generator) ExecutePackageGeneratorTemplate(writer io.Writer, packageName string, source string) error {
+	return g.generatorTemplate.ExecuteTemplate(writer, "package.go.templ", map[string]interface{}{
+		"package":       packageName,
+		"pluginVersion": version,
+		"sourcePath":    source,
+	})
+}
+
 func (g *Generator) ExecuteSignatureGeneratorTemplate(writer io.Writer, packageName string, packagePath string, client bool) error {
 	return g.generatorTemplate.ExecuteTemplate(writer, "signature.go.templ", map[string]interface{}{
-		"package": packageName,
-		"path":    packagePath,
-		"client":  client,
+		"package":       packageName,
+		"path":          packagePath,
+		"client":        client,
+		"pluginVersion": version,
 	})
 }
