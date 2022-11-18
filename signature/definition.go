@@ -53,8 +53,9 @@ type PublishedVersions struct {
 
 // Definition is the definition of a signature as well as the published versions
 type Definition struct {
-	Version           Version           `json:"version" yaml:"version"`
+	DefinitionVersion Version           `json:"definition" yaml:"definition"`
 	Name              string            `json:"name" yaml:"name"`
+	Version           string            `json:"version" yaml:"version"`
 	PublishedVersions PublishedVersions `json:"published" yaml:"published"`
 }
 
@@ -95,7 +96,7 @@ func Decode(reader io.Reader) (*Definition, error) {
 
 	invalid := true
 	for _, v := range AcceptedVersions {
-		if definition.Version == v {
+		if definition.DefinitionVersion == v {
 			invalid = false
 			break
 		}
@@ -111,7 +112,7 @@ func Decode(reader io.Reader) (*Definition, error) {
 func Encode(writer io.Writer, definition *Definition) error {
 	invalid := true
 	for _, v := range AcceptedVersions {
-		if definition.Version == v {
+		if definition.DefinitionVersion == v {
 			invalid = false
 			break
 		}
