@@ -5,7 +5,7 @@ package signature
 
 import (
 	"github.com/loopholelabs/scale/signature"
-	context {{ .path }}
+	context "{{ .path }}"
 )
 
 var _ signature.Context = (*Context)(nil)
