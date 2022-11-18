@@ -13,3 +13,8 @@ var _ signature.Context = (*Context)(nil)
 type Context struct {
 	*context.Context
 }
+
+func (ctx *Context) Next() *Context {
+    ctx.Context = ctx.Context.Next()
+    return ctx
+}
