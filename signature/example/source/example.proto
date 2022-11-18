@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package example;
-
-option go_package = "/source";
-
-message Context {
-  string Input = 1;
-}
