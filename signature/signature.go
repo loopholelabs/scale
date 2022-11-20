@@ -17,6 +17,8 @@
 // Package signature implements the Signature type, that must be exported by Signatures
 package signature
 
+import "strings"
+
 type Signature interface {
 	Version() string                // Version of the Signature
 	RuntimeContext() RuntimeContext // RuntimeContext of the Signature
@@ -39,4 +41,17 @@ type RuntimeContext interface {
 type GuestContext interface {
 	ToWriteBuffer() (uint32, uint32) // ToWriteBuffer serializes the Context to a global buffer and returns the offset and length
 	FromReadBuffer() error           // FromReadBuffer deserializes the Context from the global buffer
+}
+
+// ParseSignature parses and returns the Namespace, Name, and Version of a signature string
+func ParseSignature(signature string) (string, string, string) {
+	signatureNamespaceSplit := strings.Split(signature, "/")
+	if len(signatureNamespaceSplit) == 1 {
+		signatureNamespaceSplit = []string{"", signature}
+	}
+	signatureVersionSplit := strings.Split(signatureNamespaceSplit[1], "@")
+	if len(signatureVersionSplit) == 1 {
+		signatureVersionSplit = []string{signatureVersionSplit[0], "latest"}
+	}
+	return signatureNamespaceSplit[0], signatureVersionSplit[0], signatureVersionSplit[1]
 }
