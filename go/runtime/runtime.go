@@ -22,7 +22,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
@@ -34,15 +33,13 @@ var (
 
 // Next is the next function in the middleware chain. It's meant to be implemented
 // by whatever adapter is being used.
-type Next func(ctx signature.RuntimeContext) signature.RuntimeContext
+type Next func(ctx *Context) *Context
 
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
 type Runtime struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
-
-	signature signature.Signature
 
 	functions []*Function
 	head      *Function
