@@ -21,6 +21,7 @@ import (
 	"github.com/loopholelabs/polyglot-go/pkg/generator"
 	"github.com/loopholelabs/polyglot-go/pkg/utils"
 	polyglotTemplates "github.com/loopholelabs/polyglot-go/templates"
+	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/signature/templates"
 	"github.com/loopholelabs/scale/signature/templates/override"
 	"github.com/yalue/merged_fs"
@@ -177,8 +178,9 @@ func (g *Generator) ExecuteGoSignatureGeneratorTemplate(writer io.Writer, packag
 	})
 }
 
-func (g *Generator) ExecuteModfileGeneratorTemplate(writer io.Writer, packagePath string) error {
+func (g *Generator) ExecuteModfileGeneratorTemplate(writer io.Writer, packagePath string, dependencies []*scalefile.Dependency) error {
 	return g.generatorTemplate.ExecuteTemplate(writer, "go.mod.templ", map[string]interface{}{
-		"path": packagePath,
+		"path":         packagePath,
+		"dependencies": dependencies,
 	})
 }
