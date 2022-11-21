@@ -19,12 +19,17 @@ package signature
 
 import "strings"
 
+// Signature is an interface that must be implemented by all Signatures
+// that will be used by the runtime. The guest does not use any of these methods.
 type Signature interface {
 	Version() string                // Version of the Signature
+	Name() string                   // Name of the Signature
 	RuntimeContext() RuntimeContext // RuntimeContext of the Signature
 	Resize(size uint32) uint32      // Resize resizes the global buffers to the given size and returns the offset
 }
 
+// Context is the interface that must be implemented by all Contexts
+// that will be used by the Guest. The runtime does not use any of these methods.
 type Context interface {
 	GuestContext() GuestContext // GuestContext of the Context
 }
@@ -43,7 +48,9 @@ type GuestContext interface {
 	FromReadBuffer() error           // FromReadBuffer deserializes the Context from the global buffer
 }
 
-// ParseSignature parses and returns the Namespace, Name, and Version of a signature string
+// ParseSignature parses and returns the Namespace, Name, and Version of a signature string.
+// If there is no namespace, the namespace will be an empty string.
+// If there is no version, the version will be "latest".
 func ParseSignature(signature string) (string, string, string) {
 	signatureNamespaceSplit := strings.Split(signature, "/")
 	if len(signatureNamespaceSplit) == 1 {
