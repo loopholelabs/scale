@@ -19,23 +19,24 @@ package runtime
 import (
 	"context"
 	"errors"
+	"github.com/loopholelabs/scale/signature"
 )
 
 type Instance struct {
 	next    Next
 	runtime *Runtime
-	ctx     *Context
+	ctx     signature.RuntimeContext
 }
 
 func (r *Runtime) Instance(next Next) (*Instance, error) {
 	i := &Instance{
 		next:    next,
 		runtime: r,
-		ctx:     NewContext(),
+		ctx:     r.signature.RuntimeContext(),
 	}
 
 	if i.next == nil {
-		i.next = func(ctx *Context) *Context {
+		i.next = func(ctx signature.RuntimeContext) signature.RuntimeContext {
 			return ctx
 		}
 	}
@@ -43,7 +44,7 @@ func (r *Runtime) Instance(next Next) (*Instance, error) {
 	return i, nil
 }
 
-func (i *Instance) Context() *Context {
+func (i *Instance) Context() signature.RuntimeContext {
 	return i.ctx
 }
 

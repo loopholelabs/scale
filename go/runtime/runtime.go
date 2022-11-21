@@ -19,27 +19,35 @@ package runtime
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/scale/scalefunc"
+	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
 )
 
 var (
-	NextFunctionRequiredError = errors.New("next function required when the scale function chain only contains middleware")
+	NextFunctionRequiredError  = errors.New("next function required when the scale function chain only contains middleware")
+	NoFunctionsError           = errors.New("no functions found in runtime")
+	InvalidScaleFunctionError  = errors.New("invalid scale function")
+	IncompatibleSignatureError = errors.New("incompatible signature")
+	InvalidSignatureError      = errors.New("invalid signature")
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
 // by whatever adapter is being used.
-type Next func(ctx *Context) *Context
+type Next func(ctx signature.RuntimeContext) signature.RuntimeContext
 
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
 type Runtime struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
+
+	signature signature.Signature
 
 	functions []*Function
 	head      *Function
@@ -49,11 +57,41 @@ type Runtime struct {
 	modules   map[string]*Module
 }
 
-func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error) {
+func New(ctx context.Context, sig signature.Signature, functions []*scalefunc.ScaleFunc) (*Runtime, error) {
+	if len(functions) == 0 {
+		return nil, NoFunctionsError
+	}
+
+	sigName := sig.Name()
+	if sigName == "" {
+		return nil, InvalidSignatureError
+	}
+	sigVersion := sig.Version()
+	if sigVersion == "" {
+		return nil, InvalidSignatureError
+	}
+	for _, f := range functions {
+		if f.Name == "" {
+			return nil, InvalidScaleFunctionError
+		}
+		if f.Signature == "" {
+			return nil, InvalidScaleFunctionError
+		}
+		if f.Function == nil {
+			return nil, InvalidScaleFunctionError
+		}
+
+		_, name, version := signature.ParseSignature(f.Signature)
+		if sigName != name || sigVersion != version {
+			return nil, IncompatibleSignatureError
+		}
+	}
+
 	r := &Runtime{
 		runtime:      wazero.NewRuntime(ctx),
-		moduleConfig: wazero.NewModuleConfig(),
+		moduleConfig: wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
 		modules:      make(map[string]*Module),
+		signature:    sig,
 	}
 
 	module := r.runtime.NewHostModuleBuilder("env")
@@ -91,7 +129,7 @@ func New(ctx context.Context, functions []scalefunc.ScaleFunc) (*Runtime, error)
 	return r, nil
 }
 
-func (r *Runtime) compileFunction(ctx context.Context, scaleFunc scalefunc.ScaleFunc) (*Function, error) {
+func (r *Runtime) compileFunction(ctx context.Context, scaleFunc *scalefunc.ScaleFunc) (*Function, error) {
 	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile function '%s': %w", scaleFunc.Name, err)

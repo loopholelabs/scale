@@ -25,12 +25,12 @@ func TestParseSignature(t *testing.T) {
 	namespace, name, version := ParseSignature("")
 	assert.Equal(t, "", namespace)
 	assert.Equal(t, "", name)
-	assert.Equal(t, "latest", version)
+	assert.Equal(t, "", version)
 
 	namespace, name, version = ParseSignature("test")
 	assert.Equal(t, "", namespace)
 	assert.Equal(t, "test", name)
-	assert.Equal(t, "latest", version)
+	assert.Equal(t, "", version)
 
 	namespace, name, version = ParseSignature("test@1.0.0")
 	assert.Equal(t, "", namespace)
@@ -40,7 +40,7 @@ func TestParseSignature(t *testing.T) {
 	namespace, name, version = ParseSignature("nm/test")
 	assert.Equal(t, "nm", namespace)
 	assert.Equal(t, "test", name)
-	assert.Equal(t, "latest", version)
+	assert.Equal(t, "", version)
 
 	namespace, name, version = ParseSignature("nm/test@v0.0.1")
 	assert.Equal(t, "nm", namespace)

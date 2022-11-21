@@ -50,7 +50,7 @@ type GuestContext interface {
 
 // ParseSignature parses and returns the Namespace, Name, and Version of a signature string.
 // If there is no namespace, the namespace will be an empty string.
-// If there is no version, the version will be "latest".
+// If there is no version, the version will be an empty string.
 func ParseSignature(signature string) (string, string, string) {
 	signatureNamespaceSplit := strings.Split(signature, "/")
 	if len(signatureNamespaceSplit) == 1 {
@@ -58,7 +58,7 @@ func ParseSignature(signature string) (string, string, string) {
 	}
 	signatureVersionSplit := strings.Split(signatureNamespaceSplit[1], "@")
 	if len(signatureVersionSplit) == 1 {
-		signatureVersionSplit = []string{signatureVersionSplit[0], "latest"}
+		signatureVersionSplit = []string{signatureVersionSplit[0], ""}
 	}
 	return signatureNamespaceSplit[0], signatureVersionSplit[0], signatureVersionSplit[1]
 }

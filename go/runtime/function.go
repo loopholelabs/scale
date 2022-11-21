@@ -26,8 +26,8 @@ import (
 
 // Function is the runtime representation of a scale function.
 type Function struct {
-	scaleFunc  scalefunc.ScaleFunc
 	compiled   wazero.CompiledModule
+	scaleFunc  *scalefunc.ScaleFunc
 	next       *Function
 	modulePool *Pool
 }
