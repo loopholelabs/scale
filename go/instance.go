@@ -19,7 +19,7 @@ package runtime
 import (
 	"context"
 	"errors"
-	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale-signature"
 )
 
 type Instance struct {

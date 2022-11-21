@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/loopholelabs/scale/go/utils"
-	"github.com/loopholelabs/scale/scalefunc"
+	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/tetratelabs/wazero"
 )
 
