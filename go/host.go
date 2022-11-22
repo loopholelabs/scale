@@ -41,7 +41,10 @@ func (r *Runtime) next(ctx context.Context, module api.Module, pointer uint32, l
 	}
 
 	if m.function.next == nil {
-		m.instance.ctx = m.instance.next(m.instance.Context())
+		m.instance.ctx, err = m.instance.next(m.instance.Context())
+		if err != nil {
+			return
+		}
 	} else {
 		err = m.function.next.Run(ctx, m.instance)
 		if err != nil {

@@ -36,8 +36,8 @@ func (r *Runtime) Instance(next Next) (*Instance, error) {
 	}
 
 	if i.next == nil {
-		i.next = func(ctx signature.RuntimeContext) signature.RuntimeContext {
-			return ctx
+		i.next = func(ctx signature.RuntimeContext) (signature.RuntimeContext, error) {
+			return ctx, nil
 		}
 	}
 

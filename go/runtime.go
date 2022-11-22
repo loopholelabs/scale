@@ -30,7 +30,6 @@ import (
 )
 
 var (
-	NextFunctionRequiredError  = errors.New("next function required when the scale function chain only contains middleware")
 	NoFunctionsError           = errors.New("no functions found in runtime")
 	InvalidScaleFunctionError  = errors.New("invalid scale function")
 	IncompatibleSignatureError = errors.New("incompatible signature")
@@ -39,7 +38,7 @@ var (
 
 // Next is the next function in the middleware chain. It's meant to be implemented
 // by whatever adapter is being used.
-type Next func(ctx signature.RuntimeContext) signature.RuntimeContext
+type Next func(ctx signature.RuntimeContext) (signature.RuntimeContext, error)
 
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
