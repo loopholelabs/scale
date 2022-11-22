@@ -19,11 +19,10 @@ package tests
 //import (
 //	"context"
 //	"fmt"
-//	"github.com/loopholelabs/scale/generated"
-//	adapter "github.com/loopholelabs/scale/go/adapters/http"
-//	"github.com/loopholelabs/scale/go/runtime"
-//	"github.com/loopholelabs/scale/scalefile"
-//	"github.com/loopholelabs/scale/scalefunc"
+//	signature "github.com/loopholelabs/scale-signature"
+//	"github.com/loopholelabs/scale/go"
+//	"github.com/loopholelabs/scalefile"
+//	"github.com/loopholelabs/scalefile/scalefunc"
 //	"github.com/stretchr/testify/assert"
 //	"github.com/stretchr/testify/require"
 //	"net/http"
@@ -38,7 +37,7 @@ package tests
 //			Name:   "Passthrough",
 //			Module: "passthrough",
 //			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				next := func(ctx *runtime.Context) *runtime.Context {
+//				next := func(ctx signature.Context) (signature.Context, error) {
 //					ctx.Context.Request.Method = "POST"
 //					return ctx
 //				}

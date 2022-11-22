@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/loopholelabs/scale-signature v0.0.2
+	github.com/loopholelabs/scale-signature v0.0.4
 	github.com/loopholelabs/scalefile v0.0.1
 	github.com/tetratelabs/wazero v1.0.0-pre.2
 )
