@@ -44,3 +44,25 @@ func CreateGoSignature(scaleFilePath string, directory string, signaturePath str
 
 	return nil
 }
+
+func CreateRustSignature(scaleFilePath string, directory string, signaturePath string) error {
+	g := generator.New()
+	err := os.MkdirAll(path.Join(path.Dir(scaleFilePath), directory), 0755)
+	if err != nil {
+		if !os.IsExist(err) {
+			return fmt.Errorf("error creating directory: %w", err)
+		}
+	}
+
+	signatureFile, err := os.OpenFile(fmt.Sprintf("%s/signature.rs", path.Join(path.Dir(scaleFilePath), directory)), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return fmt.Errorf("error creating signature rust file: %w", err)
+	}
+
+	err = g.ExecuteRustSignatureGeneratorTemplate(signatureFile, "signature", signaturePath)
+	if err != nil {
+		return fmt.Errorf("error generating signature rust file: %w", err)
+	}
+
+	return nil
+}
