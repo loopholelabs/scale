@@ -25,6 +25,7 @@ import (
 	"github.com/loopholelabs/scale-signature"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 	"sync"
 )
@@ -93,8 +94,10 @@ func New[T signature.Signature](ctx context.Context, sig T, functions []*scalefu
 		signature:    sig,
 	}
 
-	module := r.runtime.NewHostModuleBuilder("env")
-	module = module.ExportFunction("next", r.next)
+	module := r.runtime.NewHostModuleBuilder("env").
+		NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.next), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
+		WithParameterNames("pointer", "length").Export("next")
 
 	compiled, err := module.Compile(ctx)
 	if err != nil {
