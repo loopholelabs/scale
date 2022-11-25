@@ -20,8 +20,13 @@ package scale
 
 import (
 	signature "github.com/loopholelabs/scale/go/tests/signature"
+	"os"
 )
 
 func Scale(ctx *signature.Context) (*signature.Context, error) {
+	_, err := os.ReadFile("tests/modules/file/file.go")
+	if err != nil {
+		return nil, err
+	}
 	return ctx, nil
 }

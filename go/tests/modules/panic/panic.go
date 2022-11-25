@@ -23,5 +23,5 @@ import (
 )
 
 func Scale(ctx *signature.Context) (*signature.Context, error) {
-	return ctx, nil
+	panic("scale panic")
 }

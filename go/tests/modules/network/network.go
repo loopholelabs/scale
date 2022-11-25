@@ -20,8 +20,13 @@ package scale
 
 import (
 	signature "github.com/loopholelabs/scale/go/tests/signature"
+	"net"
 )
 
 func Scale(ctx *signature.Context) (*signature.Context, error) {
+	_, err := net.Dial("tcp", "google.com:80")
+	if err != nil {
+		return nil, err
+	}
 	return ctx, nil
 }

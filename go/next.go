@@ -40,19 +40,23 @@ func (r *Runtime[T]) next(ctx context.Context, module api.Module, pointer uint32
 		return
 	}
 
+	var ctxBuffer []byte
 	if m.function.next == nil {
 		m.instance.ctx, err = m.instance.next(m.instance.Context())
 		if err != nil {
-			return
+			ctxBuffer = m.instance.RuntimeContext().Error(err)
+		} else {
+			ctxBuffer = m.instance.RuntimeContext().Write()
 		}
 	} else {
 		err = m.function.next.Run(ctx, m.instance)
 		if err != nil {
-			return
+			ctxBuffer = m.instance.RuntimeContext().Error(err)
+		} else {
+			ctxBuffer = m.instance.RuntimeContext().Write()
 		}
 	}
 
-	ctxBuffer := m.instance.RuntimeContext().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
 	writeBuffer, err := m.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
