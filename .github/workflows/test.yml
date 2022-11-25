@@ -19,5 +19,10 @@ jobs:
           check-latest: true
           cache: true
 
+      - name: Install Tinygo
+      - uses: acifani/setup-tinygo@v1
+        with:
+          tinygo-version: 0.26.0
+
       - name: Test
         run: go test -v ./...
