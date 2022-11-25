@@ -38,25 +38,25 @@ var (
 
 // Next is the next function in the middleware chain. It's meant to be implemented
 // by whatever adapter is being used.
-type Next func(ctx signature.RuntimeContext) (signature.RuntimeContext, error)
+type Next[T signature.Signature] func(ctx T) (T, error)
 
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
-type Runtime struct {
+type Runtime[T signature.Signature] struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
 
-	signature signature.Signature
+	signature T
 
-	functions []*Function
-	head      *Function
-	tail      *Function
+	functions []*Function[T]
+	head      *Function[T]
+	tail      *Function[T]
 
 	modulesMu sync.RWMutex
-	modules   map[string]*Module
+	modules   map[string]*Module[T]
 }
 
-func New(ctx context.Context, sig signature.Signature, functions []*scalefunc.ScaleFunc) (*Runtime, error) {
+func New[T signature.Signature](ctx context.Context, sig T, functions []*scalefunc.ScaleFunc) (*Runtime[T], error) {
 	if len(functions) == 0 {
 		return nil, NoFunctionsError
 	}
@@ -86,10 +86,10 @@ func New(ctx context.Context, sig signature.Signature, functions []*scalefunc.Sc
 		}
 	}
 
-	r := &Runtime{
+	r := &Runtime[T]{
 		runtime:      wazero.NewRuntime(ctx),
 		moduleConfig: wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
-		modules:      make(map[string]*Module),
+		modules:      make(map[string]*Module[T]),
 		signature:    sig,
 	}
 
@@ -128,18 +128,18 @@ func New(ctx context.Context, sig signature.Signature, functions []*scalefunc.Sc
 	return r, nil
 }
 
-func (r *Runtime) compileFunction(ctx context.Context, scaleFunc *scalefunc.ScaleFunc) (*Function, error) {
+func (r *Runtime[T]) compileFunction(ctx context.Context, scaleFunc *scalefunc.ScaleFunc) (*Function[T], error) {
 	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile function '%s': %w", scaleFunc.Name, err)
 	}
 
-	f := &Function{
+	f := &Function[T]{
 		scaleFunc: scaleFunc,
 		compiled:  compiled,
 	}
 
-	f.modulePool = NewPool(ctx, f, r)
+	f.modulePool = NewPool[T](ctx, f, r)
 
 	r.functions = append(r.functions, f)
 	return f, nil

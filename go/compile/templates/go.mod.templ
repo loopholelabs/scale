@@ -1,0 +1,7 @@
+module compile
+
+go 1.18
+
+{{ range $dependency := .dependencies -}}
+require {{ $dependency.Name }} {{ $dependency.Version }}
+{{end -}}

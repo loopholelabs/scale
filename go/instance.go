@@ -22,21 +22,23 @@ import (
 	"github.com/loopholelabs/scale-signature"
 )
 
-type Instance struct {
-	next    Next
-	runtime *Runtime
-	ctx     signature.RuntimeContext
+type Instance[T signature.Signature] struct {
+	next       Next[T]
+	runtime    *Runtime[T]
+	ctx        T
+	runtimeCtx signature.RuntimeContext
 }
 
-func (r *Runtime) Instance(next Next) (*Instance, error) {
-	i := &Instance{
-		next:    next,
-		runtime: r,
-		ctx:     r.signature.RuntimeContext(),
+func (r *Runtime[T]) Instance(next Next[T]) (*Instance[T], error) {
+	i := &Instance[T]{
+		next:       next,
+		runtime:    r,
+		ctx:        r.signature,
+		runtimeCtx: r.signature.RuntimeContext(),
 	}
 
 	if i.next == nil {
-		i.next = func(ctx signature.RuntimeContext) (signature.RuntimeContext, error) {
+		i.next = func(ctx T) (T, error) {
 			return ctx, nil
 		}
 	}
@@ -44,11 +46,15 @@ func (r *Runtime) Instance(next Next) (*Instance, error) {
 	return i, nil
 }
 
-func (i *Instance) Context() signature.RuntimeContext {
+func (i *Instance[T]) Context() T {
 	return i.ctx
 }
 
-func (i *Instance) Run(ctx context.Context) error {
+func (i *Instance[T]) RuntimeContext() signature.RuntimeContext {
+	return i.runtimeCtx
+}
+
+func (i *Instance[T]) Run(ctx context.Context) error {
 	if i.runtime.head == nil {
 		return errors.New("no compiled functions found in runtime")
 	}

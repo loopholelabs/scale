@@ -1,3 +1,6 @@
+//go:build !tinygo && !js && !wasm
+// +build !tinygo,!js,!wasm
+
 /*
 	Copyright 2022 Loophole Labs
 
@@ -16,185 +19,184 @@
 
 package tests
 
-//import (
-//	"context"
-//	"fmt"
-//	signature "github.com/loopholelabs/scale-signature"
-//	"github.com/loopholelabs/scale/go"
-//	"github.com/loopholelabs/scalefile"
-//	"github.com/loopholelabs/scalefile/scalefunc"
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/require"
-//	"net/http"
-//	"os"
-//	"path"
-//	"testing"
-//)
-//
-//func TestRuntime(t *testing.T) {
-//	var testCases = []TestCase{
-//		{
-//			Name:   "Passthrough",
-//			Module: "passthrough",
-//			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				next := func(ctx signature.Context) (signature.Context, error) {
-//					ctx.Context.Request.Method = "POST"
-//					return ctx
-//				}
-//
-//				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
-//				require.NoError(t, err)
-//
-//				i, err := r.Instance(next)
-//				require.NoError(t, err)
-//
-//				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
-//				assert.NoError(t, err)
-//
-//				err = adapter.FromRequest(i.Context(), req)
-//				assert.NoError(t, err)
-//				assert.Equal(t, "GET", i.Context().Context.Request.Method)
-//
-//				err = i.Run(context.Background())
-//				assert.NoError(t, err)
-//
-//				assert.Equal(t, "POST", i.Context().Context.Request.Method)
-//			},
-//		},
-//		{
-//			Name:   "HTTP Middleware",
-//			Module: "http-middleware",
-//			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				next := func(ctx *runtime.Context) *runtime.Context {
-//					ctx.Context.Request.Method = "POST"
-//					return ctx
-//				}
-//
-//				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
-//				require.NoError(t, err)
-//
-//				i, err := r.Instance(next)
-//				require.NoError(t, err)
-//
-//				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
-//				assert.NoError(t, err)
-//
-//				err = adapter.FromRequest(i.Context(), req)
-//				assert.NoError(t, err)
-//				assert.Equal(t, "GET", i.Context().Context.Request.Method)
-//
-//				err = i.Run(context.Background())
-//				assert.NoError(t, err)
-//
-//				assert.Equal(t, "POST", i.Context().Context.Request.Method)
-//				assert.Equal(t, &generated.StringList{Value: []string{"TRUE"}}, i.Context().Context.Response.Headers["MIDDLEWARE"])
-//			},
-//		},
-//		{
-//			Name:   "File Read",
-//			Module: "fileread",
-//			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				next := func(ctx *runtime.Context) *runtime.Context {
-//					t.Fatal("next should not be called")
-//					return ctx
-//				}
-//
-//				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
-//				require.NoError(t, err)
-//
-//				i, err := r.Instance(next)
-//				require.NoError(t, err)
-//
-//				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
-//				assert.NoError(t, err)
-//
-//				err = adapter.FromRequest(i.Context(), req)
-//				assert.NoError(t, err)
-//
-//				err = i.Run(context.Background())
-//				assert.NoError(t, err)
-//
-//				assert.Equal(t, "error reading file", string(i.Context().Context.Response.Body))
-//			},
-//		},
-//		{
-//			Name:   "Network",
-//			Module: "network",
-//			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				next := func(ctx *runtime.Context) *runtime.Context {
-//					t.Fatal("next should not be called")
-//					return ctx
-//				}
-//
-//				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
-//				require.NoError(t, err)
-//
-//				i, err := r.Instance(next)
-//				require.NoError(t, err)
-//
-//				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
-//				assert.NoError(t, err)
-//
-//				err = adapter.FromRequest(i.Context(), req)
-//				assert.NoError(t, err)
-//
-//				err = i.Run(context.Background())
-//				assert.NoError(t, err)
-//
-//				assert.Equal(t, "error opening connection", string(i.Context().Context.Response.Body))
-//			},
-//		},
-//		{
-//			Name:   "Panic",
-//			Module: "panic",
-//			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
-//				require.NoError(t, err)
-//
-//				i, err := r.Instance(func(ctx *runtime.Context) *runtime.Context {
-//					return ctx
-//				})
-//				require.NoError(t, err)
-//
-//				req, err := http.NewRequest("GET", "http://localhost:8080", nil)
-//				assert.NoError(t, err)
-//				err = adapter.FromRequest(i.Context(), req)
-//				assert.NoError(t, err)
-//				assert.Equal(t, "GET", i.Context().Context.Request.Method)
-//
-//				err = i.Run(context.Background())
-//				assert.Error(t, err)
-//			},
-//		},
-//		{
-//			Name:   "Next Function Required",
-//			Module: "passthrough",
-//			Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
-//				require.NoError(t, err)
-//
-//				_, err = r.Instance(nil)
-//				require.ErrorIs(t, err, runtime.NextFunctionRequiredError)
-//			},
-//		},
-//	}
-//
-//	for _, testCase := range testCases {
-//		t.Run(testCase.Name, func(t *testing.T) {
-//			module, err := os.ReadFile(path.Join("modules", fmt.Sprintf("%s.wasm", testCase.Module)))
-//			assert.NoError(t, err)
-//
-//			scaleFunc := scalefunc.ScaleFunc{
-//				ScaleFile: scalefile.ScaleFile{
-//					Name: testCase.Name,
-//					Build: scalefile.Build{
-//						Language: "go",
-//					},
-//					Middleware: true,
-//				},
-//				Function: module,
-//			}
-//			testCase.Run(scaleFunc, t)
-//		})
-//	}
-//}
+import (
+	"context"
+	"github.com/loopholelabs/scale/go"
+	"github.com/loopholelabs/scale/go/tests/harness"
+	signature "github.com/loopholelabs/scale/go/tests/signature"
+	"github.com/loopholelabs/scalefile/scalefunc"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"os"
+	"testing"
+)
+
+func TestRuntime(t *testing.T) {
+	passthroughModule := &harness.Module{
+		Name:      "passthrough",
+		Path:      "modules/passthrough/passthrough.go",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature",
+	}
+	modules := []*harness.Module{passthroughModule}
+
+	generatedModules := harness.Setup(t, modules)
+
+	var testCases = []TestCase{
+		{
+			Name:   "Passthrough",
+			Module: passthroughModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *signature.Context) (*signature.Context, error) {
+					ctx.Data = "Hello, World!"
+					return ctx, nil
+				}
+
+				r, err := runtime.New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(next)
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data", i.Context().Data)
+			},
+		},
+		//{
+		//	Name:   "HTTP Middleware",
+		//	Module: "http-middleware",
+		//	Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+		//		next := func(ctx *runtime.Context) *runtime.Context {
+		//			ctx.Context.Request.Method = "POST"
+		//			return ctx
+		//		}
+		//
+		//		r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+		//		require.NoError(t, err)
+		//
+		//		i, err := r.Instance(next)
+		//		require.NoError(t, err)
+		//
+		//		req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+		//		assert.NoError(t, err)
+		//
+		//		err = adapter.FromRequest(i.Context(), req)
+		//		assert.NoError(t, err)
+		//		assert.Equal(t, "GET", i.Context().Context.Request.Method)
+		//
+		//		err = i.Run(context.Background())
+		//		assert.NoError(t, err)
+		//
+		//		assert.Equal(t, "POST", i.Context().Context.Request.Method)
+		//		assert.Equal(t, &generated.StringList{Value: []string{"TRUE"}}, i.Context().Context.Response.Headers["MIDDLEWARE"])
+		//	},
+		//},
+		//{
+		//	Name:   "File Read",
+		//	Module: "fileread",
+		//	Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+		//		next := func(ctx *runtime.Context) *runtime.Context {
+		//			t.Fatal("next should not be called")
+		//			return ctx
+		//		}
+		//
+		//		r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+		//		require.NoError(t, err)
+		//
+		//		i, err := r.Instance(next)
+		//		require.NoError(t, err)
+		//
+		//		req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+		//		assert.NoError(t, err)
+		//
+		//		err = adapter.FromRequest(i.Context(), req)
+		//		assert.NoError(t, err)
+		//
+		//		err = i.Run(context.Background())
+		//		assert.NoError(t, err)
+		//
+		//		assert.Equal(t, "error reading file", string(i.Context().Context.Response.Body))
+		//	},
+		//},
+		//{
+		//	Name:   "Network",
+		//	Module: "network",
+		//	Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+		//		next := func(ctx *runtime.Context) *runtime.Context {
+		//			t.Fatal("next should not be called")
+		//			return ctx
+		//		}
+		//
+		//		r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+		//		require.NoError(t, err)
+		//
+		//		i, err := r.Instance(next)
+		//		require.NoError(t, err)
+		//
+		//		req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+		//		assert.NoError(t, err)
+		//
+		//		err = adapter.FromRequest(i.Context(), req)
+		//		assert.NoError(t, err)
+		//
+		//		err = i.Run(context.Background())
+		//		assert.NoError(t, err)
+		//
+		//		assert.Equal(t, "error opening connection", string(i.Context().Context.Response.Body))
+		//	},
+		//},
+		//{
+		//	Name:   "Panic",
+		//	Module: "panic",
+		//	Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+		//		r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+		//		require.NoError(t, err)
+		//
+		//		i, err := r.Instance(func(ctx *runtime.Context) *runtime.Context {
+		//			return ctx
+		//		})
+		//		require.NoError(t, err)
+		//
+		//		req, err := http.NewRequest("GET", "http://localhost:8080", nil)
+		//		assert.NoError(t, err)
+		//		err = adapter.FromRequest(i.Context(), req)
+		//		assert.NoError(t, err)
+		//		assert.Equal(t, "GET", i.Context().Context.Request.Method)
+		//
+		//		err = i.Run(context.Background())
+		//		assert.Error(t, err)
+		//	},
+		//},
+		//{
+		//	Name:   "Next Function Required",
+		//	Module: "passthrough",
+		//	Run: func(scaleFunc scalefunc.ScaleFunc, t *testing.T) {
+		//		r, err := runtime.New(context.Background(), []scalefunc.ScaleFunc{scaleFunc})
+		//		require.NoError(t, err)
+		//
+		//		_, err = r.Instance(nil)
+		//		require.ErrorIs(t, err, runtime.NextFunctionRequiredError)
+		//	},
+		//},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+
+			module, err := os.ReadFile(generatedModules[testCase.Module])
+			require.NoError(t, err)
+
+			scaleFunc := &scalefunc.ScaleFunc{
+				Version:   "TestVersion",
+				Name:      "TestName",
+				Signature: "ExampleName@ExampleVersion",
+				Language:  "go",
+				Function:  module,
+			}
+			testCase.Run(scaleFunc, t)
+		})
+	}
+}

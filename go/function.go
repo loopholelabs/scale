@@ -19,20 +19,21 @@ package runtime
 import (
 	"context"
 	"fmt"
+	signature "github.com/loopholelabs/scale-signature"
 	"github.com/loopholelabs/scale/go/utils"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/tetratelabs/wazero"
 )
 
 // Function is the runtime representation of a scale function.
-type Function struct {
+type Function[T signature.Signature] struct {
 	compiled   wazero.CompiledModule
 	scaleFunc  *scalefunc.ScaleFunc
-	next       *Function
-	modulePool *Pool
+	next       *Function[T]
+	modulePool *Pool[T]
 }
 
-func (f *Function) Run(ctx context.Context, i *Instance) error {
+func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 	module, err := f.modulePool.Get()
 	if err != nil {
 		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
@@ -44,7 +45,7 @@ func (f *Function) Run(ctx context.Context, i *Instance) error {
 		f.modulePool.Put(module)
 	}()
 
-	ctxBuffer := i.Context().Write()
+	ctxBuffer := i.RuntimeContext().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
 	writeBuffer, err := module.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
@@ -69,7 +70,7 @@ func (f *Function) Run(ctx context.Context, i *Instance) error {
 		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
 	}
 
-	err = i.Context().Read(readBuffer)
+	err = i.RuntimeContext().Read(readBuffer)
 	if err != nil {
 		return fmt.Errorf("failed to deserialize context for function '%s': %w", f.scaleFunc.Name, err)
 	}

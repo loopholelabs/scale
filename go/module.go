@@ -20,20 +20,21 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	signature "github.com/loopholelabs/scale-signature"
 	"github.com/tetratelabs/wazero/api"
 )
 
-type Module struct {
+type Module[T signature.Signature] struct {
 	module   api.Module
-	function *Function
-	runtime  *Runtime
+	function *Function[T]
+	runtime  *Runtime[T]
 	run      api.Function
 	resize   api.Function
 
-	instance *Instance
+	instance *Instance[T]
 }
 
-func NewModule(ctx context.Context, f *Function, r *Runtime) (*Module, error) {
+func NewModule[T signature.Signature](ctx context.Context, f *Function[T], r *Runtime[T]) (*Module[T], error) {
 	module, err := r.runtime.InstantiateModule(ctx, f.compiled, r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.scaleFunc.Name, uuid.New().String())))
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate function '%s': %w", f.scaleFunc.Name, err)
@@ -45,7 +46,7 @@ func NewModule(ctx context.Context, f *Function, r *Runtime) (*Module, error) {
 		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.scaleFunc.Name)
 	}
 
-	return &Module{
+	return &Module[T]{
 		module:   module,
 		function: f,
 		runtime:  r,
@@ -54,14 +55,14 @@ func NewModule(ctx context.Context, f *Function, r *Runtime) (*Module, error) {
 	}, nil
 }
 
-func (m *Module) init(i *Instance) {
+func (m *Module[T]) init(i *Instance[T]) {
 	m.instance = i
 	m.runtime.modulesMu.Lock()
 	m.runtime.modules[m.module.Name()] = m
 	m.runtime.modulesMu.Unlock()
 }
 
-func (m *Module) reset() {
+func (m *Module[T]) reset() {
 	m.instance = nil
 	m.runtime.modulesMu.Lock()
 	delete(m.runtime.modules, m.module.Name())

@@ -1,0 +1,31 @@
+package main
+
+import (
+	scale "{{ .path }}"
+	signature "{{ .signature }}"
+	"github.com/loopholelabs/scale/go/utils"
+)
+
+// needed to satisfy compiler
+func main() {}
+
+//export run
+func run() uint64 {
+	ctx := signature.New()
+	guestCtx := ctx.GuestContext()
+	err := guestCtx.FromReadBuffer()
+	if err != nil {
+	    return utils.PackUint32(guestCtx.ErrorWriteBuffer(err))
+	}
+	ctx, err = scale.Scale(ctx)
+	guestCtx = ctx.GuestContext()
+	if err != nil {
+	    return utils.PackUint32(guestCtx.ErrorWriteBuffer(err))
+    }
+	return utils.PackUint32(guestCtx.ToWriteBuffer())
+}
+
+//export resize
+func resize(size uint32) uint32 {
+	return signature.Resize(size)
+}
