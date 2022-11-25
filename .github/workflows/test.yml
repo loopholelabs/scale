@@ -20,7 +20,7 @@ jobs:
           cache: true
 
       - name: Install Tinygo
-      - uses: acifani/setup-tinygo@v1
+        uses: acifani/setup-tinygo@v1
         with:
           tinygo-version: 0.26.0
 
