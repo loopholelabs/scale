@@ -40,31 +40,31 @@ type TestCase struct {
 func TestRuntime(t *testing.T) {
 	passthroughModule := &harness.Module{
 		Name:      "passthrough",
-		Path:      "modules/passthrough/passthrough.go",
+		Path:      "tests/modules/passthrough/passthrough.go",
 		Signature: "github.com/loopholelabs/scale/go/tests/signature",
 	}
 
 	nextModule := &harness.Module{
 		Name:      "next",
-		Path:      "modules/next/next.go",
+		Path:      "tests/modules/next/next.go",
 		Signature: "github.com/loopholelabs/scale/go/tests/signature",
 	}
 
 	fileModule := &harness.Module{
 		Name:      "file",
-		Path:      "modules/file/file.go",
+		Path:      "tests/modules/file/file.go",
 		Signature: "github.com/loopholelabs/scale/go/tests/signature",
 	}
 
 	networkModule := &harness.Module{
 		Name:      "network",
-		Path:      "modules/network/network.go",
+		Path:      "tests/modules/network/network.go",
 		Signature: "github.com/loopholelabs/scale/go/tests/signature",
 	}
 
 	panicModule := &harness.Module{
 		Name:      "panic",
-		Path:      "modules/panic/panic.go",
+		Path:      "tests/modules/panic/panic.go",
 		Signature: "github.com/loopholelabs/scale/go/tests/signature",
 	}
 
