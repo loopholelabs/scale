@@ -7,7 +7,6 @@
 package example
 
 import (
-	_ "embed"
 	"github.com/loopholelabs/polyglot-go"
 	"github.com/loopholelabs/scale-signature"
 )
