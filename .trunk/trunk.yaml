@@ -18,6 +18,7 @@ lint:
   ignore:
     - linters: [ALL]
       paths:
+        - go/tests/signature
         - go/tests/modules
 runtimes:
   enabled:
