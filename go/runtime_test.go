@@ -68,9 +68,15 @@ func TestRuntime(t *testing.T) {
 		Signature: "github.com/loopholelabs/scale/go/tests/signature",
 	}
 
-	modules := []*harness.Module{passthroughModule, nextModule, fileModule, networkModule, panicModule}
+	badSignatureModule := &harness.Module{
+		Name:      "bad-signature",
+		Path:      "tests/modules/bad-signature/bad-signature.go",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/bad-signature",
+	}
 
-	generatedModules := harness.Setup(t, modules)
+	modules := []*harness.Module{passthroughModule, nextModule, fileModule, networkModule, panicModule, badSignatureModule}
+
+	generatedModules := harness.Setup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
 
 	var testCases = []TestCase{
 		{
@@ -128,8 +134,6 @@ func TestRuntime(t *testing.T) {
 				i, err := r.Instance(next)
 				require.NoError(t, err)
 
-				i.Context().Data = "Test Data"
-
 				err = i.Run(context.Background())
 				require.ErrorIs(t, err, errors.New("next error"))
 			},
@@ -143,8 +147,6 @@ func TestRuntime(t *testing.T) {
 
 				i, err := r.Instance(nil)
 				require.NoError(t, err)
-
-				i.Context().Data = "Test Data"
 
 				err = i.Run(context.Background())
 				require.Error(t, err)
@@ -160,8 +162,6 @@ func TestRuntime(t *testing.T) {
 				i, err := r.Instance(nil)
 				require.NoError(t, err)
 
-				i.Context().Data = "Test Data"
-
 				err = i.Run(context.Background())
 				require.Error(t, err)
 			},
@@ -176,17 +176,28 @@ func TestRuntime(t *testing.T) {
 				i, err := r.Instance(nil)
 				require.NoError(t, err)
 
-				i.Context().Data = "Test Data"
-
 				err = i.Run(context.Background())
 				require.Error(t, err)
+			},
+		},
+		{
+			Name:   "BadSignature",
+			Module: badSignatureModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(nil)
+				require.NoError(t, err)
+
+				err = i.Run(context.Background())
+				assert.Error(t, err)
 			},
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-
 			module, err := os.ReadFile(generatedModules[testCase.Module])
 			require.NoError(t, err)
 

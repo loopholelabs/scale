@@ -31,10 +31,7 @@ import (
 )
 
 var (
-	NoFunctionsError           = errors.New("no functions found in runtime")
-	InvalidScaleFunctionError  = errors.New("invalid scale function")
-	IncompatibleSignatureError = errors.New("incompatible signature")
-	InvalidSignatureError      = errors.New("invalid signature")
+	NoFunctionsError = errors.New("no functions found in runtime")
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
@@ -60,31 +57,6 @@ type Runtime[T signature.Signature] struct {
 func New[T signature.Signature](ctx context.Context, sig T, functions []*scalefunc.ScaleFunc) (*Runtime[T], error) {
 	if len(functions) == 0 {
 		return nil, NoFunctionsError
-	}
-
-	sigName := sig.Name()
-	if sigName == "" {
-		return nil, InvalidSignatureError
-	}
-	sigVersion := sig.Version()
-	if sigVersion == "" {
-		return nil, InvalidSignatureError
-	}
-	for _, f := range functions {
-		if f.Name == "" {
-			return nil, InvalidScaleFunctionError
-		}
-		if f.Signature == "" {
-			return nil, InvalidScaleFunctionError
-		}
-		if f.Function == nil {
-			return nil, InvalidScaleFunctionError
-		}
-
-		_, name, version := signature.ParseSignature(f.Signature)
-		if sigName != name || sigVersion != version {
-			return nil, IncompatibleSignatureError
-		}
 	}
 
 	r := &Runtime[T]{

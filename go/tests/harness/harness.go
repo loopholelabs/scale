@@ -19,7 +19,7 @@ type Module struct {
 	Dependencies []*scalefile.Dependency
 }
 
-func Setup(t testing.TB, modules []*Module) map[*Module]string {
+func Setup(t testing.TB, modules []*Module, importPath string) map[*Module]string {
 	tinygo, err := exec.LookPath("tinygo")
 	require.NoError(t, err, "tinygo not found in path")
 
@@ -51,7 +51,7 @@ func Setup(t testing.TB, modules []*Module) map[*Module]string {
 		file, err := os.OpenFile(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "main.go"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		require.NoError(t, err, fmt.Sprintf("failed to create main.go for scale function %s", module.Name))
 
-		err = g.GenerateGoMain(file, module.Signature, fmt.Sprintf("github.com/loopholelabs/scale/go/tests/modules/%s/%s-%s-build/scale", module.Name, module.Name, t.Name()))
+		err = g.GenerateGoMain(file, module.Signature, fmt.Sprintf("%s/%s/%s-%s-build/scale", importPath, module.Name, module.Name, t.Name()))
 		require.NoError(t, err, fmt.Sprintf("failed to generate main.go for scale function %s", module.Name))
 
 		err = file.Close()
