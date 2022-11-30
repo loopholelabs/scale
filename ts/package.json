@@ -4,17 +4,23 @@
   "description": "TypeScript version of the scale functions.",
   "source": "src/web/index.html",
   "browserslist": "> 0.5%, last 2 versions, not dead",
+  "default": "dist/browser.html",
+  "module": "dist/module.js",
   "targets": {
-    "browser": {
+    "default": {
+      "source": "src/web/index.html",
       "context": "browser",
       "isLibrary": false,
       "includeNodeModules": true
+    },
+    "module": {
+      "source": "src/index.ts"
     }
   },
   "scripts": {
-    "build": "parcel build",
+    "build": "parcel build --log-level verbose",
     "start": "parcel",
-    "test": "jest"
+    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache"
   },
   "dependencies": {
     "@loopholelabs/polyglot-ts": "^0.3.0",
