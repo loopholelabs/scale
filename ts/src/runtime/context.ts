@@ -16,7 +16,7 @@
 
 // TODO: This will be abstracted out and made general for signature etc
 import { Context as pgContext } from "./generated/generated";
-
+/*
 // TODO: Sync names etc
 interface SignatureDecodeResult {
   buf: Uint8Array,
@@ -27,7 +27,7 @@ export interface SignatureContext {
   encode: (buff: Uint8Array) => void,
   static decode: (buff: Uint8Array) => SignatureDecodeResult,
 }
-
+*/
 // Wrapper for context
 export class Context {
   private _context: pgContext;
