@@ -1,0 +1,57 @@
+{
+  "name": "fRPC",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#AB1CFC",
+    "light": "#C854FF",
+    "dark": "#9015D9",
+    "ultraLight": "#F8EEFE",
+    "ultraDark": "#6A06A5"
+  },
+  "topbarLinks": [
+    {
+      "name": "Home",
+      "url": "https://loopholelabs.io"
+    },
+    {
+      "name": "Blog",
+      "url": "https://loopholelabs.io/blog"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Discord",
+      "icon": "discord",
+      "url": "https://loopholelabs.io/discord"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/loopholelabs"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Welcome",
+      "pages": ["introduction"]
+    },
+    {
+      "group": "Getting Started",
+      "pages": ["getting-started/overview", "getting-started/quick-start"]
+    }
+  ],
+  "footerSocials": {
+    "discord": "https://loopholelabs.io/discord",
+    "github": "https://github.com/loopholelabs/frpc-go"
+  },
+  "classes": {
+    "anchors": "group-hover:bg-gradient-to-tr from-[#7c34ff] to-[#fe9195]",
+    "activeAnchors": "bg-gradient-to-tr",
+    "navigationItem": "duration-100"
+  },
+  "backgroundImage": "/images/lightbackground.png"
+}
