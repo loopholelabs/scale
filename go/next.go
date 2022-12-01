@@ -21,7 +21,7 @@ import (
 	"github.com/tetratelabs/wazero/api"
 )
 
-func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint64) (_ []uint64) {
+func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint64) {
 	pointer := uint32(params[0])
 	length := uint32(params[1])
 	r.modulesMu.RLock()
