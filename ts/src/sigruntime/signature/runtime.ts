@@ -21,7 +21,7 @@ const NilError = new Error(""); // TODO
 
 export class Context implements RuntimeContext {
   // For now we'll just put the stuff here...
-  private Data: string
+  public Data: string
 
   constructor() {
     this.Data = "";

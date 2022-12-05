@@ -19,11 +19,27 @@ import * as fs from "fs";
 
 import { Signature } from "../signature/signature";
 import { ScaleFunc } from "../signature/scaleFunc";
-import { Context } from "./signature/runtime";
 
+import { Context } from "./signature/runtime";
+import { Runtime, WasiContext } from "./runtime";
+import { WASI } from "wasi";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+
+function getNewWasi(): WasiContext {
+  const wasi = new WASI({
+    args: [],
+    env: {},
+  });
+  const w: WasiContext = {
+    getImportObject: () => wasi.wasiImport,
+    start: (instance: WebAssembly.Instance) => {
+      wasi.start(instance);
+    }
+  }
+  return w;
+}
 
 describe("sigruntime", () => {
   it("Can run a simple signature e2e one module", async () => {    
@@ -40,7 +56,9 @@ describe("sigruntime", () => {
     scalefn.Function = modPassthrough;
 
     const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(signature, [scalefn]);
+    const r = new Runtime(getNewWasi(), signature, [scalefn]);
+    await r.Ready;
+
 
     const i = r.Instance(null);
 
@@ -49,6 +67,8 @@ describe("sigruntime", () => {
     i.Run();
 
     expect(i.Context().Data).toBe("Test Data");
+
+//    expect(12).toBe(34);
   });
 
 });

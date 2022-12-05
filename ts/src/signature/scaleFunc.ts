@@ -18,17 +18,17 @@ type Version = string;
 type Language = string;
 
 export class Extension {
-  Name: string;
-  Version: string;
+  Name: undefined | string;
+  Version: undefined | string;
 }
 
 export class ScaleFunc {
-  Version: Version;
-  Name: string;
-  Signature: string;
-  Language: Language;
-  Extensions: Extension[];
-  Function: Uint8Array;
-  Size: number;
-  Checksum: string;
+  Version: undefined | Version;
+  Name: undefined | string;
+  Signature: undefined | string;
+  Language: undefined | Language;
+  Extensions: undefined | Extension[];
+  Function: undefined | Buffer;
+  Size: undefined | number;
+  Checksum: undefined | string;
 }
