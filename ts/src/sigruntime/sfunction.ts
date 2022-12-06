@@ -18,51 +18,51 @@ import { ScaleFunc } from "../signature/scaleFunc";
 import { Signature } from "../signature/signature";
 
 import { Instance } from "./instance";
+import { Pool } from "./pool";
 
 export class SFunction<T extends Signature> {
   private scalefn: ScaleFunc;
-  private ins: WebAssembly.Instance;
+  public mod: WebAssembly.Module;
   public next: undefined | SFunction<T>;
 
-  constructor(scalefn: ScaleFunc, ins: WebAssembly.Instance) {
-    this.scalefn = scalefn;
-    this.ins = ins;
+  public modulePool: undefined | Pool<T>;
 
-    console.log("SFunction setup for ", scalefn);
-    console.log("SFunction setup for WebAssembly.Instance ", ins);
+  constructor(scalefn: ScaleFunc, mod: WebAssembly.Module) {
+    this.scalefn = scalefn;
+    this.mod = mod;
   }
 
   Run(i: Instance<T>) {
+    if (this.modulePool === undefined) {
+      throw new Error("modulePool not set");
+    }
+    const module = this.modulePool.Get();
+
+    module.init(i);
+
     const encoded = i.RuntimeContext().Write();
-    // TODO: Call resize...
-    console.log("RuntimeContext is ", encoded);
 
-    const resizeFn = this.ins.exports.resize as Function;
-    const mem = this.ins.exports.memory as WebAssembly.Memory;
+    if (module.resize === undefined || module.run === undefined || module.memory === undefined) {
+      throw new Error("Module doesn't have resize/run/memory");
+    }
 
-    const encPtr = resizeFn(encoded.length);
+    const encPtr = module.resize(encoded.length);
 
-    console.log("ResizeFn returned", encPtr);
-
-    const memData = new Uint8Array(mem.buffer);
-    memData.set(encoded, encPtr); // Writes the context into memory
+    const memData = new Uint8Array(module.memory.buffer);
+    memData.set(encoded, encPtr);
 
     // Now run the function...
-    const runFn = this.ins.exports.run as Function;
+    console.log("RUN MODULE ", this.scalefn.Name);
 
-    const packed = runFn();
-
-    console.log("Return from runFn was ", packed);
+    const packed = module.run();
 
     const [ptr, len] = SFunction.unpackMemoryRef(packed);
-
-    console.log("PTR = " + ptr + ", LEN = " + len);
-
-    const memDataOut = new Uint8Array(mem.buffer);
+    const memDataOut = new Uint8Array(module.memory.buffer);
     const inContextBuff = memDataOut.slice(ptr, ptr + len);
 
-    console.log("Data is ", inContextBuff);
     i.RuntimeContext().Read(inContextBuff);
+
+    // TODO: Put module back in the pool? idk...
   }
 
   // Pack a pointer and length into a single 64bit

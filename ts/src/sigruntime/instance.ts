@@ -38,11 +38,11 @@ export class Instance<T extends Signature> {
     return this.runtime.signature.RuntimeContext();
   }
 
-  Run() {
+  async Run() {
     if (this.runtime.head === undefined) {
       throw (new Error("no compiled functions found in runtime"));
     }
     const fn = this.runtime.head;
-    fn.Run(this);
+    await fn.Run(this);
   }
 }

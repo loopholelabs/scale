@@ -54,14 +54,14 @@ describe("sigruntime", () => {
 
     const scalefnPassthrough = new ScaleFunc();
     scalefnPassthrough.Version = "TestVersion";
-    scalefnPassthrough.Name = "TestName";
+    scalefnPassthrough.Name = "Test.Passthrough";
     scalefnPassthrough.Signature = "ExampleName@ExampleVersion";
     scalefnPassthrough.Language = "go";
     scalefnPassthrough.Function = modPassthrough;
 
     const scalefnNext = new ScaleFunc();
     scalefnNext.Version = "TestVersion";
-    scalefnNext.Name = "TestName";
+    scalefnNext.Name = "Test.Next";
     scalefnNext.Signature = "ExampleName@ExampleVersion";
     scalefnNext.Language = "go";
     scalefnNext.Function = modNext;
