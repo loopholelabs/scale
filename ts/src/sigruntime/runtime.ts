@@ -32,7 +32,7 @@ export class Runtime<T extends Signature> {
   
   public signature: T;
   private fns: SFunction<T>[];
-  private head: undefined | SFunction<T>;
+  public head: undefined | SFunction<T>;
   private tail: undefined | SFunction<T>;
   
   constructor(wasi: WasiContext, sig: T, fns: ScaleFunc[]) {
@@ -59,6 +59,14 @@ export class Runtime<T extends Signature> {
 
         const f = new SFunction<T>(fn, ins.instance);
         this.fns.push(f);
+
+        if (this.head === undefined) {
+          this.head = f;
+        }
+        if (this.tail !== undefined) {
+          this.tail.next = f;
+        }
+        this.tail = f;
       }
 
       resolve(true);

@@ -17,9 +17,12 @@
 import { ScaleFunc } from "../signature/scaleFunc";
 import { Signature } from "../signature/signature";
 
+import { Instance } from "./instance";
+
 export class SFunction<T extends Signature> {
   private scalefn: ScaleFunc;
   private ins: WebAssembly.Instance;
+  public next: undefined | SFunction<T>;
 
   constructor(scalefn: ScaleFunc, ins: WebAssembly.Instance) {
     this.scalefn = scalefn;
@@ -27,5 +30,9 @@ export class SFunction<T extends Signature> {
 
     console.log("SFunction setup for ", scalefn);
     console.log("SFunction setup for WebAssembly.Instance ", ins);
+  }
+
+  Run(i: Instance<T>) {
+    console.log("TODO: SFunction Run");
   }
 }

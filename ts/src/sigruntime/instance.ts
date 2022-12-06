@@ -39,6 +39,10 @@ export class Instance<T extends Signature> {
   }
 
   Run() {
-    console.log("TODO: Instance.Run")
+    if (this.runtime.head === undefined) {
+      throw (new Error("no compiled functions found in runtime"));
+    }
+    const fn = this.runtime.head;
+    fn.Run(this);
   }
 }
