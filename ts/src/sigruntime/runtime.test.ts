@@ -48,17 +48,27 @@ describe("sigruntime", () => {
       "./src/sigruntime/modules/passthrough-TestRuntime.wasm"
     );
 
-    const scalefn = new ScaleFunc();
-    scalefn.Version = "TestVersion";
-    scalefn.Name = "TestName";
-    scalefn.Signature = "ExampleName@ExampleVersion";
-    scalefn.Language = "go";
-    scalefn.Function = modPassthrough;
+    const modNext = fs.readFileSync(
+      "./src/sigruntime/modules/next-TestRuntime.wasm"
+    );
+
+    const scalefnPassthrough = new ScaleFunc();
+    scalefnPassthrough.Version = "TestVersion";
+    scalefnPassthrough.Name = "TestName";
+    scalefnPassthrough.Signature = "ExampleName@ExampleVersion";
+    scalefnPassthrough.Language = "go";
+    scalefnPassthrough.Function = modPassthrough;
+
+    const scalefnNext = new ScaleFunc();
+    scalefnNext.Version = "TestVersion";
+    scalefnNext.Name = "TestName";
+    scalefnNext.Signature = "ExampleName@ExampleVersion";
+    scalefnNext.Language = "go";
+    scalefnNext.Function = modNext;
 
     const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi(), signature, [scalefn]);
+    const r = new Runtime(getNewWasi, signature, [scalefnNext, scalefnPassthrough]);
     await r.Ready;
-
 
     const i = r.Instance(null);
 

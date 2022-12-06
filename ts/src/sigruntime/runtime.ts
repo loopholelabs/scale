@@ -35,7 +35,7 @@ export class Runtime<T extends Signature> {
   public head: undefined | SFunction<T>;
   private tail: undefined | SFunction<T>;
   
-  constructor(wasi: WasiContext, sig: T, fns: ScaleFunc[]) {
+  constructor(wasiBuilder: () => WasiContext, sig: T, fns: ScaleFunc[]) {
     this.signature = sig;
     this.fns = [];
 
@@ -45,15 +45,16 @@ export class Runtime<T extends Signature> {
         return BigInt(0);
       };
 
-      const importObject = {
-        wasi_snapshot_preview1: wasi.getImportObject(),
-        env: {
-          next: nextFn,
-        },
-      };
-
       for(let i=0;i<fns.length;i++) {
+        const wasi = wasiBuilder();
         const fn = fns[i];
+        const importObject = {
+          wasi_snapshot_preview1: wasi.getImportObject(),
+          env: {
+            next: nextFn,
+          },
+        };
+        
         const ins = await WebAssembly.instantiate(fn.Function as Buffer, importObject);
         wasi.start(ins.instance);
 
