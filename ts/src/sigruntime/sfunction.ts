@@ -33,6 +33,51 @@ export class SFunction<T extends Signature> {
   }
 
   Run(i: Instance<T>) {
-    console.log("TODO: SFunction Run");
+    const encoded = i.RuntimeContext().Write();
+    // TODO: Call resize...
+    console.log("RuntimeContext is ", encoded);
+
+    const resizeFn = this.ins.exports.resize as Function;
+    const mem = this.ins.exports.memory as WebAssembly.Memory;
+
+    const encPtr = resizeFn(encoded.length);
+
+    console.log("ResizeFn returned", encPtr);
+
+    const memData = new Uint8Array(mem.buffer);
+    memData.set(encoded, encPtr); // Writes the context into memory
+
+    // Now run the function...
+    const runFn = this.ins.exports.run as Function;
+
+    const packed = runFn();
+
+    console.log("Return from runFn was ", packed);
+
+    const [ptr, len] = SFunction.unpackMemoryRef(packed);
+
+    console.log("PTR = " + ptr + ", LEN = " + len);
+
+    const memDataOut = new Uint8Array(mem.buffer);
+    const inContextBuff = memDataOut.slice(ptr, ptr + len);
+
+    console.log("Data is ", inContextBuff);
+    i.RuntimeContext().Read(inContextBuff);
   }
+
+  // Pack a pointer and length into a single 64bit
+  public static packMemoryRef(ptr: number, len: number): BigInt {
+    if (ptr > 0xffffffff || len > 0xffffffff) {
+      // Error! We can't do it.
+    }
+    return (BigInt(ptr) << BigInt(32)) | BigInt(len);
+  }
+
+  // Unpack a memory ref from 64bit to 2x32bits
+  public static unpackMemoryRef(packed: bigint): [number, number] {
+    const ptr = Number((packed >> BigInt(32)) & BigInt(0xffffffff));
+    const len = Number(packed & BigInt(0xffffffff));
+    return [ptr, len];
+  }
+
 }
