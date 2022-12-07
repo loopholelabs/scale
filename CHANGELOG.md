@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changes 
+
+- Added `runtime.NewSignature` type to signify a factory function for creating a new `signature.Signature` type.
+- Updating the `runtime.New` function to accept a `signature.New` factory function (`runtime.NewSignature`) instead of a `signature.Signature` type. 
+- Updated `runtime_test.go` to use the new `runtime.New` function signature.
+- Updated the `runtime.Instance` function to make the `next` argument optional. 
+
 ## [v0.1.1] - 2022-11-28
 
 ### Changes

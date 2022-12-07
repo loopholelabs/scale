@@ -38,6 +38,7 @@ var (
 // by whatever adapter is being used.
 type Next[T signature.Signature] func(ctx T) (T, error)
 
+// NewSignature is a factory function for creating a new signature.Signature.
 type NewSignature[T signature.Signature] func() T
 
 // Runtime is the Scale Runtime. It is responsible for initializing
