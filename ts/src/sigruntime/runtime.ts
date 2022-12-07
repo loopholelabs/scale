@@ -48,6 +48,8 @@ export class Runtime<T extends Signature> {
 
     this.wasiBuilder = wasiBuilder;
 
+    // We compile the modules async...
+    // After creating a Runtime you should then do 'await runtime.Ready' or equivalent.
     this.Ready = new Promise(async (resolve, reject) => {
 
       for(let i=0;i<fns.length;i++) {
@@ -79,36 +81,34 @@ export class Runtime<T extends Signature> {
     // NB This closure captures i.
     const nextFn = ((runtimeThis: Runtime<T>): Function => {
       return (ptr: number, len: number): BigInt => {
-        if (mod.memory===undefined || mod.resize===undefined) return BigInt(0);   // TODO
-        const memDataOut = new Uint8Array(mod.memory.buffer);
-        const inContextBuff = memDataOut.slice(ptr, ptr + len);
-        i.RuntimeContext().Read(inContextBuff);
+        if (mod.memory===undefined || mod.resize===undefined) {
+          // Critical unrecoverable error
+          // NB This would only ever happen if init() wasn't called on the Module.
+          return BigInt(0);
+        }
 
-        // Now call next...
         let buff: Uint8Array = new Uint8Array();
-        if (mod.sfunction.next === undefined) {
-          try {
+        try {
+          const memDataOut = new Uint8Array(mod.memory.buffer);
+          const inContextBuff = memDataOut.slice(ptr, ptr + len);
+          i.RuntimeContext().Read(inContextBuff);
+
+          // Now call next...
+          if (mod.sfunction.next === undefined) {
             i.ctx = i.next(i.Context());
             buff = i.RuntimeContext().Write();
-          } catch(e) {
-            buff = i.RuntimeContext().Error(e as Error);
-          }
-        } else {
-          try {
-            // TODO: This should be await?
+          } else {
             mod.sfunction.next.Run(i);
             buff = i.RuntimeContext().Write();
-          } catch(e) {
-            buff = i.RuntimeContext().Error(e as Error);
           }
+        } catch(e) {
+          buff = i.RuntimeContext().Error(e as Error);          
         }
 
         // Write it back out
         const encPtr = mod.resize(buff.length);
-
         const memData = new Uint8Array(mod.memory.buffer);
         memData.set(buff, encPtr);
-
         return SFunction.packMemoryRef(encPtr, buff.length);
       };
     })(this);
@@ -121,11 +121,10 @@ export class Runtime<T extends Signature> {
       },
     };
 
+    // TODO: We may need to do something async for browser contexts
+    // eg WebAssembly.instantiate(m, importObject);
     const inst = new WebAssembly.Instance(m, importObject);
-
     wasi.start(inst);
     return inst;
-
-    //return WebAssembly.instantiate(m, importObject);
   }
 }

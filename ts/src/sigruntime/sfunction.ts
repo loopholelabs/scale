@@ -51,17 +51,14 @@ export class SFunction<T extends Signature> {
     const memData = new Uint8Array(module.memory.buffer);
     memData.set(encoded, encPtr);
 
-    // Now run the function...
-    console.log("RUN MODULE ", this.scalefn.Name);
-
     const packed = module.run();
 
     const [ptr, len] = SFunction.unpackMemoryRef(packed);
     const memDataOut = new Uint8Array(module.memory.buffer);
     const inContextBuff = memDataOut.slice(ptr, ptr + len);
 
-    i.RuntimeContext().Read(inContextBuff);
-    // TODO: Put module back in the pool? idk...
+    i.RuntimeContext().Read(inContextBuff);   // NB This may throw an Error if the inContextBuff contains one.
+    // TODO: Put module back in the pool?...
   }
 
   // Pack a pointer and length into a single 64bit

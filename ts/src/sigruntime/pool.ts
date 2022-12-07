@@ -29,6 +29,7 @@ export class Pool<T extends Signature> {
     this.r = r;
   }
 
+  // For now, we don't actually have a pool, we just create new Modules each time.
   Get(): Module<T> {
     return new Module<T>(this.f, this.r);
   }
