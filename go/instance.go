@@ -29,15 +29,17 @@ type Instance[T signature.Signature] struct {
 	runtimeCtx signature.RuntimeContext
 }
 
-func (r *Runtime[T]) Instance(next Next[T]) (*Instance[T], error) {
+func (r *Runtime[T]) Instance(next ...Next[T]) (*Instance[T], error) {
+	ctx := r.new()
 	i := &Instance[T]{
-		next:       next,
 		runtime:    r,
-		ctx:        r.signature,
-		runtimeCtx: r.signature.RuntimeContext(),
+		ctx:        ctx,
+		runtimeCtx: ctx.RuntimeContext(),
 	}
 
-	if i.next == nil {
+	if len(next) > 0 {
+		i.next = next[0]
+	} else {
 		i.next = func(ctx T) (T, error) {
 			return ctx, nil
 		}
@@ -50,7 +52,7 @@ func (i *Instance[T]) Context() T {
 	return i.ctx
 }
 
-func (i *Instance[T]) RuntimeContext() signature.RuntimeContext {
+func (i *Instance[T]) runtimeContext() signature.RuntimeContext {
 	return i.runtimeCtx
 }
 
