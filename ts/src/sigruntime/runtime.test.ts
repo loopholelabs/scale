@@ -42,15 +42,15 @@ function getNewWasi(): WasiContext {
 }
 
 describe("sigruntime", () => {
-  it("Can run a simple signature e2e two modules", async () => {    
+  const modPassthrough = fs.readFileSync("./src/sigruntime/modules/passthrough-TestRuntime.wasm");
+  const modNext = fs.readFileSync("./src/sigruntime/modules/next-TestRuntime.wasm");
+  const modFile = fs.readFileSync("./src/sigruntime/modules/file-TestRuntime.wasm");
+  const modNetwork = fs.readFileSync("./src/sigruntime/modules/network-TestRuntime.wasm");
+  const modPanic = fs.readFileSync("./src/sigruntime/modules/panic-TestRuntime.wasm");
+  const modBadSignature = fs.readFileSync("./src/sigruntime/modules/bad-signature-TestRuntime.wasm");
 
-    const modPassthrough = fs.readFileSync(
-      "./src/sigruntime/modules/passthrough-TestRuntime.wasm"
-    );
 
-    const modNext = fs.readFileSync(
-      "./src/sigruntime/modules/next-TestRuntime.wasm"
-    );
+  it("Can run passthrough", async () => {    
 
     const scalefnPassthrough = new ScaleFunc();
     scalefnPassthrough.Version = "TestVersion";
@@ -59,31 +59,21 @@ describe("sigruntime", () => {
     scalefnPassthrough.Language = "go";
     scalefnPassthrough.Function = modPassthrough;
 
-    const scalefnNext = new ScaleFunc();
-    scalefnNext.Version = "TestVersion";
-    scalefnNext.Name = "Test.Next";
-    scalefnNext.Signature = "ExampleName@ExampleVersion";
-    scalefnNext.Language = "go";
-    scalefnNext.Function = modNext;
-
     const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnNext, scalefnPassthrough]);
+    const r = new Runtime(getNewWasi, signature, [scalefnPassthrough]);
     await r.Ready;
 
     const i = r.Instance(null);
-
     i.Context().Data = "Test Data";
 
-    i.Run();
+    expect(() => {
+      i.Run();
+    }).not.toThrowError();
 
     expect(i.Context().Data).toBe("Test Data");
   });
 
-  it("Can run a simple signature e2e one module with next", async () => {    
-
-    const modNext = fs.readFileSync(
-      "./src/sigruntime/modules/next-TestRuntime.wasm"
-    );
+  it("Can run next", async () => {    
 
     const scalefnNext = new ScaleFunc();
     scalefnNext.Version = "TestVersion";
@@ -105,9 +95,121 @@ describe("sigruntime", () => {
 
     i.Context().Data = "Test Data";
 
-    i.Run();
+    expect(() => {
+      i.Run();
+    }).not.toThrowError();
 
     expect(i.Context().Data).toBe("Hello, world!");
   });
 
+  it("Can run next error", async () => {    
+
+    const scalefnNext = new ScaleFunc();
+    scalefnNext.Version = "TestVersion";
+    scalefnNext.Name = "Test.Next";
+    scalefnNext.Signature = "ExampleName@ExampleVersion";
+    scalefnNext.Language = "go";
+    scalefnNext.Function = modNext;
+
+    const signature = new Context();    // TODO: Should be signature encapsulating context really...
+    const r = new Runtime(getNewWasi, signature, [scalefnNext]);
+    await r.Ready;
+
+    const nextfn = (ctx: Context): Context => {
+      throw new Error("Hello error");
+    }
+
+    const i = r.Instance(nextfn);
+
+    i.Context().Data = "Test Data";
+
+    expect(() => {
+      i.Run();
+    }).toThrow("Hello error");
+
+  });
+
+  it("Can run file error", async () => {    
+
+    const scalefnFile = new ScaleFunc();
+    scalefnFile.Version = "TestVersion";
+    scalefnFile.Name = "Test.File";
+    scalefnFile.Signature = "ExampleName@ExampleVersion";
+    scalefnFile.Language = "go";
+    scalefnFile.Function = modFile;
+
+    const signature = new Context();    // TODO: Should be signature encapsulating context really...
+    const r = new Runtime(getNewWasi, signature, [scalefnFile]);
+    await r.Ready;
+
+    const i = r.Instance(null);
+
+    expect(() => {
+      i.Run();
+    }).toThrowError();
+
+  });
+
+  it("Can run network error", async () => {    
+
+    const scalefnNetwork = new ScaleFunc();
+    scalefnNetwork.Version = "TestVersion";
+    scalefnNetwork.Name = "Test.File";
+    scalefnNetwork.Signature = "ExampleName@ExampleVersion";
+    scalefnNetwork.Language = "go";
+    scalefnNetwork.Function = modNetwork;
+
+    const signature = new Context();    // TODO: Should be signature encapsulating context really...
+    const r = new Runtime(getNewWasi, signature, [scalefnNetwork]);
+    await r.Ready;
+
+    const i = r.Instance(null);
+
+    expect(() => {
+      i.Run();
+    }).toThrowError();
+
+  });
+
+  it("Can run panic error", async () => {    
+
+    const scalefnPanic = new ScaleFunc();
+    scalefnPanic.Version = "TestVersion";
+    scalefnPanic.Name = "Test.File";
+    scalefnPanic.Signature = "ExampleName@ExampleVersion";
+    scalefnPanic.Language = "go";
+    scalefnPanic.Function = modPanic;
+
+    const signature = new Context();    // TODO: Should be signature encapsulating context really...
+    const r = new Runtime(getNewWasi, signature, [scalefnPanic]);
+    await r.Ready;
+
+    const i = r.Instance(null);
+
+    expect(() => {
+      i.Run();
+    }).toThrowError();
+
+  });
+
+  it("Can run bad-signature error", async () => {    
+
+    const scalefnBadSignature = new ScaleFunc();
+    scalefnBadSignature.Version = "TestVersion";
+    scalefnBadSignature.Name = "Test.File";
+    scalefnBadSignature.Signature = "ExampleName@ExampleVersion";
+    scalefnBadSignature.Language = "go";
+    scalefnBadSignature.Function = modBadSignature;
+
+    const signature = new Context();    // TODO: Should be signature encapsulating context really...
+    const r = new Runtime(getNewWasi, signature, [scalefnBadSignature]);
+    await r.Ready;
+
+    const i = r.Instance(null);
+
+    expect(() => {
+      i.Run();
+    }).toThrowError();
+
+  });
 });

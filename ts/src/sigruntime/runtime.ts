@@ -87,8 +87,6 @@ export class Runtime<T extends Signature> {
         // Now call next...
         let buff: Uint8Array = new Uint8Array();
         if (mod.sfunction.next === undefined) {
-          console.log("TODO: Run instance next");
-          // TODO: runs the instance
           try {
             i.ctx = i.next(i.Context());
             buff = i.RuntimeContext().Write();
@@ -97,7 +95,7 @@ export class Runtime<T extends Signature> {
           }
         } else {
           try {
-            // TODO: This should be await
+            // TODO: This should be await?
             mod.sfunction.next.Run(i);
             buff = i.RuntimeContext().Write();
           } catch(e) {
@@ -110,7 +108,7 @@ export class Runtime<T extends Signature> {
 
         const memData = new Uint8Array(mod.memory.buffer);
         memData.set(buff, encPtr);
-    
+
         return SFunction.packMemoryRef(encPtr, buff.length);
       };
     })(this);

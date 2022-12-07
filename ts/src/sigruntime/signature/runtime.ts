@@ -17,8 +17,6 @@ import { Kind, encodeError, decodeError, encodeString, decodeString, decodeNull 
 
 import { Signature, RuntimeContext } from "../../signature/signature";
 
-const NilError = new Error(""); // TODO
-
 export class Context implements RuntimeContext {
   // For now we'll just put the stuff here...
   public Data: string
@@ -31,9 +29,12 @@ export class Context implements RuntimeContext {
     return this;  //(this as RuntimeContext);
   }
 
-  Read(d: Uint8Array): Error {
+  Read(d: Uint8Array) {
+    if (d.length > 0 && d[0]===Kind.Error) {
+      const e = decodeError(d).value;
+      throw(e);
+    }
     this.Data = decodeString(d).value;
-    return NilError;
   }
 
   Write(): Uint8Array {

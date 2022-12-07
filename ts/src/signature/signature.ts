@@ -21,7 +21,7 @@ export interface GuestContext {
 }
 
 export interface RuntimeContext {
-  Read(b: Uint8Array): Error;
+  Read(b: Uint8Array);
   Write(): Uint8Array;
   Error(e: Error): Uint8Array;
 }

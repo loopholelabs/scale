@@ -61,7 +61,6 @@ export class SFunction<T extends Signature> {
     const inContextBuff = memDataOut.slice(ptr, ptr + len);
 
     i.RuntimeContext().Read(inContextBuff);
-
     // TODO: Put module back in the pool? idk...
   }
 

@@ -41,7 +41,7 @@ export class Instance<T extends Signature> {
     return this.runtime.signature.RuntimeContext();
   }
 
-  async Run() {
+  Run() {
     if (this.runtime.head === undefined) {
       throw (new Error("no compiled functions found in runtime"));
     }
