@@ -87,7 +87,14 @@ export class Runtime<T extends Signature> {
         // Now call next...
         let buff: Uint8Array = new Uint8Array();
         if (mod.sfunction.next === undefined) {
+          console.log("TODO: Run instance next");
           // TODO: runs the instance
+          try {
+            i.ctx = i.next(i.Context());
+            buff = i.RuntimeContext().Write();
+          } catch(e) {
+            buff = i.RuntimeContext().Error(e as Error);
+          }
         } else {
           try {
             // TODO: This should be await
@@ -97,8 +104,6 @@ export class Runtime<T extends Signature> {
             buff = i.RuntimeContext().Error(e as Error);
           }
         }
-
-        console.log("Hello from next()");
 
         // Write it back out
         const encPtr = mod.resize(buff.length);
@@ -118,7 +123,10 @@ export class Runtime<T extends Signature> {
       },
     };
 
-    return new WebAssembly.Instance(m, importObject);
+    const inst = new WebAssembly.Instance(m, importObject);
+
+    wasi.start(inst);
+    return inst;
 
     //return WebAssembly.instantiate(m, importObject);
   }

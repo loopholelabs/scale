@@ -42,7 +42,7 @@ function getNewWasi(): WasiContext {
 }
 
 describe("sigruntime", () => {
-  it("Can run a simple signature e2e one module", async () => {    
+  it("Can run a simple signature e2e two modules", async () => {    
 
     const modPassthrough = fs.readFileSync(
       "./src/sigruntime/modules/passthrough-TestRuntime.wasm"
@@ -77,8 +77,37 @@ describe("sigruntime", () => {
     i.Run();
 
     expect(i.Context().Data).toBe("Test Data");
+  });
 
-//    expect(12).toBe(34);
+  it("Can run a simple signature e2e one module with next", async () => {    
+
+    const modNext = fs.readFileSync(
+      "./src/sigruntime/modules/next-TestRuntime.wasm"
+    );
+
+    const scalefnNext = new ScaleFunc();
+    scalefnNext.Version = "TestVersion";
+    scalefnNext.Name = "Test.Next";
+    scalefnNext.Signature = "ExampleName@ExampleVersion";
+    scalefnNext.Language = "go";
+    scalefnNext.Function = modNext;
+
+    const signature = new Context();    // TODO: Should be signature encapsulating context really...
+    const r = new Runtime(getNewWasi, signature, [scalefnNext]);
+    await r.Ready;
+
+    const nextfn = (ctx: Context): Context => {
+      ctx.Data = "Hello, world!";
+      return ctx;
+    }
+
+    const i = r.Instance(nextfn);
+
+    i.Context().Data = "Test Data";
+
+    i.Run();
+
+    expect(i.Context().Data).toBe("Hello, world!");
   });
 
 });

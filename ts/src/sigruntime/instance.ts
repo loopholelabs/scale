@@ -19,10 +19,13 @@ import { Runtime, NextFn } from "./runtime";
 
 export class Instance<T extends Signature> {
   private runtime: Runtime<T>;
-  private next: NextFn<T>;
+  public next: NextFn<T>;
+  public ctx: T;
 
   constructor(r: Runtime<T>, n: null | NextFn<T>) {
     this.runtime = r;
+    this.ctx = r.signature;
+
     if (n === null) {
       this.next = (ctx: T) => ctx;
     } else {
@@ -31,7 +34,7 @@ export class Instance<T extends Signature> {
   }
 
   Context(): T {
-    return this.runtime.signature;
+    return this.ctx;
   }
 
   RuntimeContext(): RuntimeContext {
@@ -43,6 +46,6 @@ export class Instance<T extends Signature> {
       throw (new Error("no compiled functions found in runtime"));
     }
     const fn = this.runtime.head;
-    await fn.Run(this);
+    fn.Run(this);
   }
 }
