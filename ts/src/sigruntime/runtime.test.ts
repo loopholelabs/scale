@@ -49,6 +49,9 @@ describe("sigruntime", () => {
   const modPanic = fs.readFileSync("./src/sigruntime/modules/panic-TestRuntime.wasm");
   const modBadSignature = fs.readFileSync("./src/sigruntime/modules/bad-signature-TestRuntime.wasm");
 
+  const signatureFactory = () => {
+    return new Context();        // TODO: Should be signature encapsulating context really...
+  }
 
   it("Can run passthrough", async () => {    
 
@@ -59,8 +62,7 @@ describe("sigruntime", () => {
     scalefnPassthrough.Language = "go";
     scalefnPassthrough.Function = modPassthrough;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnPassthrough]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPassthrough]);
     await r.Ready;
 
     const i = r.Instance(null);
@@ -82,8 +84,7 @@ describe("sigruntime", () => {
     scalefnNext.Language = "go";
     scalefnNext.Function = modNext;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnNext]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNext]);
     await r.Ready;
 
     const nextfn = (ctx: Context): Context => {
@@ -111,8 +112,7 @@ describe("sigruntime", () => {
     scalefnNext.Language = "go";
     scalefnNext.Function = modNext;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnNext]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNext]);
     await r.Ready;
 
     const nextfn = (ctx: Context): Context => {
@@ -138,8 +138,7 @@ describe("sigruntime", () => {
     scalefnFile.Language = "go";
     scalefnFile.Function = modFile;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnFile]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnFile]);
     await r.Ready;
 
     const i = r.Instance(null);
@@ -159,8 +158,7 @@ describe("sigruntime", () => {
     scalefnNetwork.Language = "go";
     scalefnNetwork.Function = modNetwork;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnNetwork]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNetwork]);
     await r.Ready;
 
     const i = r.Instance(null);
@@ -180,8 +178,7 @@ describe("sigruntime", () => {
     scalefnPanic.Language = "go";
     scalefnPanic.Function = modPanic;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnPanic]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPanic]);
     await r.Ready;
 
     const i = r.Instance(null);
@@ -201,8 +198,7 @@ describe("sigruntime", () => {
     scalefnBadSignature.Language = "go";
     scalefnBadSignature.Function = modBadSignature;
 
-    const signature = new Context();    // TODO: Should be signature encapsulating context really...
-    const r = new Runtime(getNewWasi, signature, [scalefnBadSignature]);
+    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnBadSignature]);
     await r.Ready;
 
     const i = r.Instance(null);

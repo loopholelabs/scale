@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import { Signature } from "../signature/signature";
+import { Signature, SignatureFactory } from "../signature/signature";
 import { ScaleFunc } from "../signature/scaleFunc";
 
 import { SFunction } from "./sfunction";
@@ -32,7 +32,7 @@ export type NextFn<T extends Signature> = (ctx: T) => T;
 export class Runtime<T extends Signature> {
   public Ready: Promise<any>;
   
-  public signature: T;
+  public signatureFactory: SignatureFactory<T>;
   private fns: SFunction<T>[];
   public head: undefined | SFunction<T>;
   private tail: undefined | SFunction<T>;
@@ -41,8 +41,8 @@ export class Runtime<T extends Signature> {
 
   public modules: Map<string, Module<T>>;   // Map from unique module ID to module
 
-  constructor(wasiBuilder: () => WasiContext, sig: T, fns: ScaleFunc[]) {
-    this.signature = sig;
+  constructor(wasiBuilder: () => WasiContext, sigfac: SignatureFactory<T>, fns: ScaleFunc[]) {
+    this.signatureFactory = sigfac;
     this.fns = [];
     this.modules = new Map<string, Module<T>>;
 

@@ -21,7 +21,7 @@ export interface GuestContext {
 }
 
 export interface RuntimeContext {
-  Read(b: Uint8Array);
+  Read(b: Uint8Array): void;
   Write(): Uint8Array;
   Error(e: Error): Uint8Array;
 }
@@ -33,3 +33,5 @@ export interface Context {
 export interface Signature {
   RuntimeContext(): RuntimeContext
 }
+
+export type SignatureFactory<T extends Signature> = () => T;

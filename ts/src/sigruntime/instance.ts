@@ -24,7 +24,7 @@ export class Instance<T extends Signature> {
 
   constructor(r: Runtime<T>, n: null | NextFn<T>) {
     this.runtime = r;
-    this.ctx = r.signature;
+    this.ctx = r.signatureFactory();
 
     if (n === null) {
       this.next = (ctx: T) => ctx;
@@ -38,7 +38,7 @@ export class Instance<T extends Signature> {
   }
 
   RuntimeContext(): RuntimeContext {
-    return this.runtime.signature.RuntimeContext();
+    return this.ctx.RuntimeContext();
   }
 
   Run() {
