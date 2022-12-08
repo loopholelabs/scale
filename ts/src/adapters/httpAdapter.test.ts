@@ -19,10 +19,12 @@ import http from "http";
 import request from "supertest";
 import { HttpAdapter } from "./httpAdapter";
 import * as fs from "fs";
-import { Runtime } from "../runtime/runtime";
 import { WASI } from "wasi";
 
-import { Module, WasiContext } from "../runtime/module";
+import { ScaleFunc } from "../signature/scaleFunc";
+import { HttpContext, HttpContextFactory } from "../runtime/HttpContext";
+import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
+
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
@@ -51,18 +53,26 @@ describe("httpAdapter", () => {
       "./example_modules/http-middleware.wasm"
     );
     
-    // Create factory to return initted module
-    // module.new(moduleCode)
+    const scalefnEndpoint = new ScaleFunc();
+    scalefnEndpoint.Version = "TestVersion";
+    scalefnEndpoint.Name = "Test.HttpEndpoint";
+    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
+    scalefnEndpoint.Language = "go";
+    scalefnEndpoint.Function = modHttpEndpoint;
 
-    // const runtime = new Runtime([module.new(modCode), module.new(modCode2)]);
+    const scalefnMiddle = new ScaleFunc();
+    scalefnMiddle.Version = "TestVersion";
+    scalefnMiddle.Name = "Test.HttpEndpoint";
+    scalefnMiddle.Signature = "ExampleName@ExampleVersion";
+    scalefnMiddle.Language = "go";
+    scalefnMiddle.Function = modHttpMiddleware;
 
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
-    await moduleHttpEndpoint.init();
-    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
-    await moduleHttpMiddleware.init();
-    const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
+    const signatureFactory = HttpContextFactory;
 
-    var adapter = new HttpAdapter(runtime);
+    const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnMiddle, scalefnEndpoint]);
+    await r.Ready;
+
+    var adapter = new HttpAdapter(r);
 
     var server = http.createServer(adapter.getHandler());
   

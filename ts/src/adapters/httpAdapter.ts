@@ -14,20 +14,17 @@
 	limitations under the License.
 */
 import http from "http";
-import { Context } from "../runtime/context";
-import { Runtime } from "../runtime/runtime";
+import { HttpContext } from "../runtime/HttpContext";
+
+import { Runtime } from "../sigruntime/runtime";
 import {
-  Context as PgContext,
-  Request as PgRequest,
-  Response as PgResponse,
-  StringList as PgStringList,
+  Context, Request, Response, StringList
 } from "../runtime/generated/generated";
-import { Host } from "../runtime/host";
 
 export class HttpAdapter {
-  private _runtime: Runtime;
+  private _runtime: Runtime<HttpContext>;
 
-  constructor(runt: Runtime) {
+  constructor(runt: Runtime<HttpContext>) {
     this._runtime = runt;
   }
 
@@ -60,8 +57,11 @@ export class HttpAdapter {
 
       const c = HttpAdapter.toContext(req, body, res);
 
-      const newc = this._runtime.run(c);
-
+      const i = this._runtime.Instance(null);
+      i.Context().ctx = c;
+      i.Run();
+      const newc = i.Context().ctx;
+  
       if (newc != null) {
         HttpAdapter.fromContext(newc, res);        
       } else {
@@ -74,7 +74,7 @@ export class HttpAdapter {
 
   static fromContext(ctx: Context, res: http.ServerResponse) {
     // Copy stuff over here...
-    const ctxresp = ctx.context().Response;
+    const ctxresp = ctx.Response;
 
     res.statusCode = ctxresp.StatusCode;
     for(let k of ctxresp.Headers.keys()) {
@@ -92,7 +92,7 @@ export class HttpAdapter {
   }
 
   static toContext(req: http.IncomingMessage, body: Uint8Array, resp: http.ServerResponse) {
-    const reqheaders = new Map<string, PgStringList>();
+    const reqheaders = new Map<string, StringList>();
 
     let method = "unknown";
     if (req.method != undefined) {
@@ -114,10 +114,10 @@ export class HttpAdapter {
       } else {
         sl = vals;  // Multiple values
       }
-      reqheaders.set(k, new PgStringList(sl));
+      reqheaders.set(k, new StringList(sl));
     }
 
-    const preq = new PgRequest(
+    const preq = new Request(
       method,
       BigInt(body.length),
       protocol,
@@ -125,12 +125,12 @@ export class HttpAdapter {
       body,
       reqheaders
     );
-    const presp = new PgResponse(
+    const presp = new Response(
       resp.statusCode,
       new Uint8Array(),
-      new Map<string, PgStringList>()
+      new Map<string, StringList>()
     )
-    const c = new Context(new PgContext(preq, presp));
+    const c = new Context(preq, presp);
     return c;
   }
 }

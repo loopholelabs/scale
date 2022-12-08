@@ -51,7 +51,7 @@ export class SFunction<T extends Signature> {
     const memData = new Uint8Array(module.memory.buffer);
     memData.set(encoded, encPtr);
 
-    const packed = module.run();
+    const packed = module.run(encPtr, encoded.length);    // Backward compat. TODO: Remove args
 
     const [ptr, len] = SFunction.unpackMemoryRef(packed);
     const memDataOut = new Uint8Array(module.memory.buffer);

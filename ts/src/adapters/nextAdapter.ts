@@ -13,36 +13,36 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import http from "http";
-import { Context } from "../runtime/context";
-import { Runtime } from "../runtime/runtime";
+import { HttpContext } from "../runtime/HttpContext";
+
+import { Runtime } from "../sigruntime/runtime";
 import {
-  Context as PgContext,
-  Request as PgRequest,
-  Response as PgResponse,
-  StringList as PgStringList,
+  Context, Request, Response, StringList
 } from "../runtime/generated/generated";
-import { Host } from "../runtime/host";
 
 import { NextRequest, NextResponse } from 'next/server';
 
 // https://vercel.com/docs/concepts/functions/edge-functions#creating-edge-functions
 
 export class NextAdapter {
-  private _runtime: Runtime;
+  private _runtime: Runtime<HttpContext>;
 
-  constructor(runt: Runtime) {
+  constructor(runt: Runtime<HttpContext>) {
     this._runtime = runt;
   }
 
   getHandler() {
     return async (req: NextRequest) => {
 
-      const context = await NextAdapter.toContext(req);
+      const c = await NextAdapter.toContext(req);
 
-      const outContext = this._runtime.run(context);
-      if (outContext!=null) {
-        return NextAdapter.fromContext(outContext);
+      const i = this._runtime.Instance(null);
+      i.Context().ctx = c;
+      i.Run();
+      const newc = i.Context().ctx;
+  
+      if (newc!=null) {
+        return NextAdapter.fromContext(newc);
       }
 
       // Return server error
@@ -51,7 +51,7 @@ export class NextAdapter {
   }
 
   static fromContext(ctx: Context) {
-    const ctxresp = ctx.context().Response;
+    const ctxresp = ctx.Response;
 
     const headers = new Headers();
 
@@ -74,7 +74,7 @@ export class NextAdapter {
   }
 
   static async toContext(req: NextRequest): Promise<Context> {
-    const reqheaders = new Map<string, PgStringList>();
+    const reqheaders = new Map<string, StringList>();
 
     let method = "unknown";
     if (req.method != undefined) {
@@ -92,7 +92,7 @@ export class NextAdapter {
       if (typeof vals === 'string') {
         sl.push(vals);  // Single value
       }
-      reqheaders.set(k, new PgStringList(sl));
+      reqheaders.set(k, new StringList(sl));
     }
 
     // Read all of body
@@ -105,7 +105,7 @@ export class NextAdapter {
       body = new Uint8Array(b);
     }
 
-    const preq = new PgRequest(
+    const preq = new Request(
       method,
       BigInt(body.length),
       protocol,
@@ -116,12 +116,12 @@ export class NextAdapter {
 
     // Dummy response filled in here...
     let status = 200;
-    const presp = new PgResponse(
+    const presp = new Response(
       status,
       new Uint8Array(),
-      new Map<string, PgStringList>()
+      new Map<string, StringList>()
     )
-    const c = new Context(new PgContext(preq, presp));
+    const c = new Context(preq, presp);
     return c;
   }
 }

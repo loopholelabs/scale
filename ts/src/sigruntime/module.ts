@@ -42,6 +42,7 @@ export class Module<T extends Signature> {
 
     this.run = this.waInstance.exports.run as Function;
     this.resize = this.waInstance.exports.resize as Function;
+    if (this.resize === undefined) this.resize = this.waInstance.exports.malloc as Function;    // Backward compat. TODO: Remove
     this.memory = this.waInstance.exports.memory as WebAssembly.Memory;
   }
 

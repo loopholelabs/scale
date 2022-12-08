@@ -16,11 +16,12 @@
 
 import { TextEncoder, TextDecoder } from "util";
 import * as fs from "fs";
-import { Module, WasiContext } from "./module";
 import { Context, Request, Response, StringList } from "./generated/generated";
-import { Context as OurContext } from "./context";
-import { Runtime } from "./runtime";
 import { WASI } from "wasi";
+
+import { ScaleFunc } from "../signature/scaleFunc";
+import { HttpContext, HttpContextFactory } from "./HttpContext";
+import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
@@ -59,33 +60,38 @@ describe("runtime", () => {
     const resp1 = new Response(200, respBody, respHeaders);
     const context = new Context(req1, resp1);
 
-    // Now we can use context with a couple of wasm modules...
-
     const modHttpEndpoint = fs.readFileSync(
       "./example_modules/http-endpoint.wasm"
     );
 
-    //
-    // TODO: Encapsulate the module chain into a runtime with single entry point.
-    // Runtime r = new Runtime([]Module);
-    // r.run();
+    const scalefnEndpoint = new ScaleFunc();
+    scalefnEndpoint.Version = "TestVersion";
+    scalefnEndpoint.Name = "Test.HttpEndpoint";
+    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
+    scalefnEndpoint.Language = "go";
+    scalefnEndpoint.Function = modHttpEndpoint;
 
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
-    await moduleHttpEndpoint.init();
+    const signatureFactory = HttpContextFactory;
 
-    // Run the modules...
+    const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnEndpoint]);
+    await r.Ready;
 
-    const ctx = new OurContext(context);
+    const i = r.Instance(null);
+    i.Context().ctx = context;
 
-    const retContext = moduleHttpEndpoint.run(ctx);
+    i.Run();
+
+    const retContext = i.Context().ctx;
 
     expect(retContext).not.toBeNull();
 
     if (retContext != null) {
       // check the returns...
 
+      expect(retContext.Response.StatusCode).toBe(200);
+
       const dec = new TextDecoder();
-      const bodyText = dec.decode(retContext.context().Response.Body);
+      const bodyText = dec.decode(retContext.Response.Body);
 
       // The http-endpoint.wasm module copies the request body to the response body.
       expect(bodyText).toBe("Hello world this is a request body");
@@ -121,31 +127,47 @@ describe("runtime", () => {
       "./example_modules/http-middleware.wasm"
     );
 
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
-    await moduleHttpEndpoint.init();
-    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
-    await moduleHttpMiddleware.init();
-    const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
+    const scalefnEndpoint = new ScaleFunc();
+    scalefnEndpoint.Version = "TestVersion";
+    scalefnEndpoint.Name = "Test.HttpEndpoint";
+    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
+    scalefnEndpoint.Language = "go";
+    scalefnEndpoint.Function = modHttpEndpoint;
 
-    // Run the modules...
+    const scalefnMiddle = new ScaleFunc();
+    scalefnMiddle.Version = "TestVersion";
+    scalefnMiddle.Name = "Test.HttpEndpoint";
+    scalefnMiddle.Signature = "ExampleName@ExampleVersion";
+    scalefnMiddle.Language = "go";
+    scalefnMiddle.Function = modHttpMiddleware;
 
-    const ctx = new OurContext(context);
+    const signatureFactory = HttpContextFactory;
 
-    const retContext = runtime.run(ctx);
+    const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnMiddle, scalefnEndpoint]);
+    await r.Ready;
+
+    const i = r.Instance(null);
+    i.Context().ctx = context;
+
+    i.Run();
+
+    const retContext = i.Context().ctx;
 
     expect(retContext).not.toBeNull();
 
     if (retContext != null) {
       // check the returns...
 
+      expect(retContext.Response.StatusCode).toBe(200);
+
       const dec = new TextDecoder();
-      const bodyText = dec.decode(retContext.context().Response.Body);
+      const bodyText = dec.decode(retContext.Response.Body);
 
       // The http-endpoint.wasm module copies the request body to the response body.
       expect(bodyText).toBe("Hello world this is a request body");
 
       // The http-middleware.wasm adds a header
-      const middle = retContext.context().Response.Headers.get("MIDDLEWARE");
+      const middle = retContext.Response.Headers.get("MIDDLEWARE");
       expect(middle).toBeDefined();
       const vals = middle?.Value;
       if (vals !== undefined) {

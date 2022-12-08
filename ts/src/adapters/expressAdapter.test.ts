@@ -21,8 +21,10 @@ import * as fs from "fs";
 import request from "supertest";
 import { WASI } from "wasi";
 
-import { Module, WasiContext } from "../runtime/module";
-import { Runtime } from "../runtime/runtime";
+import { ScaleFunc } from "../signature/scaleFunc";
+import { HttpContext, HttpContextFactory } from "../runtime/HttpContext";
+import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
+
 import { ExpressAdapter } from "./expressAdapter";
 
 window.TextEncoder = TextEncoder;
@@ -53,14 +55,28 @@ describe("expressAdapter", () => {
     const modHttpMiddleware = fs.readFileSync(
       "./example_modules/http-middleware.wasm"
     );
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
-    await moduleHttpEndpoint.init();
-    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
-    await moduleHttpMiddleware.init();
-    const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
+
+    const scalefnEndpoint = new ScaleFunc();
+    scalefnEndpoint.Version = "TestVersion";
+    scalefnEndpoint.Name = "Test.HttpEndpoint";
+    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
+    scalefnEndpoint.Language = "go";
+    scalefnEndpoint.Function = modHttpEndpoint;
+
+    const scalefnMiddle = new ScaleFunc();
+    scalefnMiddle.Version = "TestVersion";
+    scalefnMiddle.Name = "Test.HttpEndpoint";
+    scalefnMiddle.Signature = "ExampleName@ExampleVersion";
+    scalefnMiddle.Language = "go";
+    scalefnMiddle.Function = modHttpMiddleware;
+
+    const signatureFactory = HttpContextFactory;
+
+    const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnMiddle, scalefnEndpoint]);
+    await r.Ready;
     
 
-    const adapter = new ExpressAdapter(runtime);
+    const adapter = new ExpressAdapter(r);
 
     app.use(
       bodyParser.raw({

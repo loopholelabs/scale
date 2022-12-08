@@ -14,19 +14,17 @@
 	limitations under the License.
 */
 import express from "express";
-import { Context } from "../runtime/context";
-import { Runtime } from "../runtime/runtime";
+import { HttpContext } from "../runtime/HttpContext";
+
+import { Runtime } from "../sigruntime/runtime";
 import {
-  Context as PgContext,
-  Request as PgRequest,
-  Response as PgResponse,
-  StringList as PgStringList,
+  Context, Request, Response, StringList
 } from "../runtime/generated/generated";
 
 export class ExpressAdapter {
-  private _runtime: Runtime;
+  private _runtime: Runtime<HttpContext>;
 
-  constructor(runt: Runtime) {
+  constructor(runt: Runtime<HttpContext>) {
     this._runtime = runt;
   }
 
@@ -40,7 +38,11 @@ export class ExpressAdapter {
     next: express.NextFunction
   ) {
     const c = ExpressAdapter.toContext(req, res);
-    const newc = this._runtime.run(c);
+
+    const i = this._runtime.Instance(null);
+    i.Context().ctx = c;
+    i.Run();
+    const newc = i.Context().ctx;
 
     if (newc != null) {
       // Now write it back out...
@@ -50,7 +52,7 @@ export class ExpressAdapter {
   }
 
   static fromContext(ctx: Context, resp: express.Response) {
-    const response = ctx.context().Response;
+    const response = ctx.Response;
     for(let k of response.Headers.keys()) {
       let vals = response.Headers.get(k);
       if (vals!==undefined) {
@@ -66,7 +68,7 @@ export class ExpressAdapter {
   }
 
   static toContext(req: express.Request, resp: express.Response): Context {
-    const reqheaders = new Map<string, PgStringList>();
+    const reqheaders = new Map<string, StringList>();
 
     for(let k in req.headers) {
       let vals = req.headers[k];
@@ -78,7 +80,7 @@ export class ExpressAdapter {
       } else {
         sl = vals;  // Multiple values
       }
-      reqheaders.set(k, new PgStringList(sl));
+      reqheaders.set(k, new StringList(sl));
     }
 
     let bodylen = 0;
@@ -90,7 +92,7 @@ export class ExpressAdapter {
       body = req.body;
     }
 
-    const preq = new PgRequest(
+    const preq = new Request(
       req.method,
       BigInt(bodylen),
       req.protocol,
@@ -123,11 +125,11 @@ export class ExpressAdapter {
 
     // TODO: Response body and headers if required...
 
-    const presp = new PgResponse(
+    const presp = new Response(
       resp.statusCode,
       new Uint8Array(),
-      new Map<string, PgStringList>()
+      new Map<string, StringList>()
     ); // respBody, respheaders);
-    return new Context(new PgContext(preq, presp));
+    return new Context(preq, presp);
   }
 }

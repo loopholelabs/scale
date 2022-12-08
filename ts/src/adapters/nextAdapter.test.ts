@@ -35,15 +35,15 @@ window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 import * as fs from "fs";
 import { WASI } from "wasi";
 
-import { Module, WasiContext } from "../runtime/module";
-
-import { Host } from "../runtime/host";
-import { Runtime } from "../runtime/runtime";
 import { NextAdapter } from "./nextAdapter";
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Context } from "../runtime/context";
 import { Context as PgContext, Request as PgRequest, Response as PgResponse, StringList as PgStringList } from "../runtime/generated/generated";
+
+import { ScaleFunc } from "../signature/scaleFunc";
+import { HttpContext, HttpContextFactory } from "../runtime/HttpContext";
+import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
+
 
 function getNewWasi(): WasiContext {
   const wasi = new WASI({
@@ -68,10 +68,10 @@ describe("nextAdapter", () => {
     const ctx = await NextAdapter.toContext(request);
 
     if (request.body != null ) {
-      expect(ctx.context().Request.Method).toBe(request.method);
-      expect(ctx.context().Request.Protocol).toBe((new URL(request.url)).protocol);
-      expect(Number(ctx.context().Request.ContentLength)).toBe(bodyData.length);
-      const reqBody = new TextDecoder().decode(ctx.context().Request.Body);
+      expect(ctx.Request.Method).toBe(request.method);
+      expect(ctx.Request.Protocol).toBe((new URL(request.url)).protocol);
+      expect(Number(ctx.Request.ContentLength)).toBe(bodyData.length);
+      const reqBody = new TextDecoder().decode(ctx.Request.Body);
       expect(reqBody).toBe(bodyData);
     }
   });
@@ -86,9 +86,8 @@ describe("nextAdapter", () => {
 
     const resp = new PgResponse(200, body, headers);
     const c = new PgContext(req, resp);
-    const ctx = new Context(c);
 
-    const response = NextAdapter.fromContext(ctx);
+    const response = NextAdapter.fromContext(c);
 
     // Read response.body
     let b = await (await response.blob()).arrayBuffer();
@@ -110,13 +109,27 @@ describe("nextAdapter", () => {
     const modHttpMiddleware = fs.readFileSync(
       "./example_modules/http-middleware.wasm"
     );
-    const moduleHttpEndpoint = new Module(modHttpEndpoint, getNewWasi());
-    await moduleHttpEndpoint.init();
-    const moduleHttpMiddleware = new Module(modHttpMiddleware, getNewWasi());
-    await moduleHttpMiddleware.init();
-    const runtime = new Runtime([moduleHttpMiddleware, moduleHttpEndpoint]);
 
-    const adapter = new NextAdapter(runtime);
+    const scalefnEndpoint = new ScaleFunc();
+    scalefnEndpoint.Version = "TestVersion";
+    scalefnEndpoint.Name = "Test.HttpEndpoint";
+    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
+    scalefnEndpoint.Language = "go";
+    scalefnEndpoint.Function = modHttpEndpoint;
+
+    const scalefnMiddle = new ScaleFunc();
+    scalefnMiddle.Version = "TestVersion";
+    scalefnMiddle.Name = "Test.HttpEndpoint";
+    scalefnMiddle.Signature = "ExampleName@ExampleVersion";
+    scalefnMiddle.Language = "go";
+    scalefnMiddle.Function = modHttpMiddleware;
+
+    const signatureFactory = HttpContextFactory;
+
+    const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnMiddle, scalefnEndpoint]);
+    await r.Ready;
+
+    const adapter = new NextAdapter(r);
 
     const handler = adapter.getHandler();
 
