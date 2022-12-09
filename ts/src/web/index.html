@@ -15,31 +15,71 @@
             border-radius: 6px;
         }
         h2 {
-            color: #080;
+            color: #444;
         }
 
         #status {
             background: #ccc;
         }
+
+        .delbutton {
+          color: red;
+        }
+
+        .upbutton {
+          color: blue;
+        }
+
+        #cmodules {
+          width: 100%;
+          border: 1px solid #6e6;
+          background: #dfd;
+          border-radius: 4px;
+          font-size: 13px;
+          border-collapse: collapse;
+        }
+
+        #cmodules thead {
+          background: #6c6;
+        }
+
+        #cmodules thead td {
+          font-weight: bold;
+        }
+
+        #cmodules td {
+          border: 1px solid #aaa;
+        }
     </style>
   </head>
   <body>
-    <h1>Scale Function Playground</h1>
+    <h1>HTTP Scale Function Playground</h1>
 
     <form onsubmit="return false;">
-      <input type="submit" value="Run" id="crun" /> <span id="status"></span>
-      <br><br>
       <table>
         <tr>
           <td valign="top">
-            <h2>Scale functions</h2>
+            <h2>Scale functions <input type="submit" value="Run" id="crun" /></h2>
+
             <table id="cmodules">
+              <thead><tr>
+                <td>Name</td>
+                <td>Actions</td>
+              </tr></thead>
+              <tbody></tbody>
+              <thead>
+                <tr>
+                  <td><input type="file" id="inputfile" /></td>
+                  <td><input type="submit" value="Add scale fn" id="cadd" /></td>
+                </tr>
+              </thead>
             </table>
-            <br>
-            <input type="file" id="inputfile" /> <input type="submit" value="Add scale fn" id="cadd" />
+
+            <span id="status"></span>
+
           </td>
           <td valign="top" width="30%">
-            <h2>Request:</h2>
+            <h2>INPUT</h2>
             <table>
               <tr><td>Method:</td><td><input type="text" id="cmethod" value="GET"></td></tr>
               <tr><td>Protocol:</td><td><input type="text" id="cprotocol" value="http"></td></tr>
@@ -52,7 +92,7 @@
             </table>                
           </td>
           <td valign="top" width="50%">
-            <h2>Response:</h2>
+            <h2>OUTPUT</h2>
             <table>
               <tr><td>Status:</td><td><span id="rstatus"></span></td></tr>
               <tr><td>Body:</td><td><div id="rbody"></div></tr>

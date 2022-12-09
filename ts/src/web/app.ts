@@ -140,21 +140,17 @@ init();
 function addModule(m: ScaleFunc) {
   const tab = (document.getElementById("cmodules") as HTMLTableElement);
 
-  const newRow = tab.insertRow(-1);
+  const newRow = tab.tBodies[0].insertRow(-1);
   const cell1 = newRow.insertCell(0);
   cell1.appendChild(document.createTextNode(m.Name===undefined?"":m.Name));
 
   const cell2 = newRow.insertCell(1);
-  const delbutton = document.createElement("button");
-  delbutton.appendChild(document.createTextNode("Del"));
+  const delbutton = document.createElement("a");
+  delbutton.href = "#";
+  delbutton.className = "delbutton";
+  delbutton.appendChild(document.createTextNode("Delete"));
   cell2.appendChild(delbutton);
 
-  const cell3 = newRow.insertCell(2);
-  const upbutton = document.createElement("button");
-  upbutton.appendChild(document.createTextNode("Up"));
-  cell3.appendChild(upbutton);
-  
-  const cell4 = newRow.insertCell(3);
 
   delbutton.onclick = function(mod, row) {
     return function() {
@@ -165,21 +161,6 @@ function addModule(m: ScaleFunc) {
         modules.splice(index, 1);
         console.log("Removed module from array ", modules);
       }
-    }
-  }(m, newRow);
-
-  upbutton.onclick = function(mod, row) {
-    return function() {
-      const index = modules.indexOf(mod);
-      if (index==0) return;   // Already at the top!
-
-      // Adjust the modules array, and also the UI...
-      modules[index] = modules[index - 1];
-      modules[index - 1] = m;
-
-      // Now the UI...
-//      row.remove();
-      tab.tBodies[0].insertBefore(row, tab.rows[index - 1]);
     }
   }(m, newRow);
 
