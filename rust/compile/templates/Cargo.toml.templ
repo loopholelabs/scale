@@ -1,0 +1,21 @@
+[package]
+name = "scale_signature_http"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+polyglot = { git = "https://github.com/loopholelabs/polyglot-rs" }
+lazy_static = "1.4.0"
+wee_alloc = "0.4.5"
+{{ range $dependency := .dependencies -}}
+{{ $dependency.Name }} = "{{ $dependency.Version }}"
+{{end -}}
+
+[lib]
+crate-type = ["cdylib"]
+path = "lib.rs"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
