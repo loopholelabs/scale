@@ -22,7 +22,7 @@ import request from "supertest";
 import { WASI } from "wasi";
 
 import { ScaleFunc } from "../signature/scaleFunc";
-import { HttpContext, HttpContextFactory } from "../runtime/HttpContext";
+import { HttpContext, HttpContextFactory } from "../http-signature/HttpContext";
 import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
 
 import { ExpressAdapter } from "./expressAdapter";

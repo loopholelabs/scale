@@ -14,12 +14,12 @@
 	limitations under the License.
 */
 import http from "http";
-import { HttpContext } from "../runtime/HttpContext";
+import { HttpContext } from "../http-signature/HttpContext";
 
 import { Runtime } from "../sigruntime/runtime";
 import {
   Context, Request, Response, StringList
-} from "../runtime/generated/generated";
+} from "../http-signature/generated/generated";
 
 export class HttpAdapter {
   private _runtime: Runtime<HttpContext>;

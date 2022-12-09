@@ -14,12 +14,12 @@
 	limitations under the License.
 */
 import express from "express";
-import { HttpContext } from "../runtime/HttpContext";
+import { HttpContext } from "../http-signature/HttpContext";
 
 import { Runtime } from "../sigruntime/runtime";
 import {
   Context, Request, Response, StringList
-} from "../runtime/generated/generated";
+} from "../http-signature/generated/generated";
 
 export class ExpressAdapter {
   private _runtime: Runtime<HttpContext>;

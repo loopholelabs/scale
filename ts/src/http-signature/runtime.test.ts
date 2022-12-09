@@ -21,6 +21,7 @@ import { WASI } from "wasi";
 
 import { ScaleFunc } from "../signature/scaleFunc";
 import { HttpContext, HttpContextFactory } from "./HttpContext";
+
 import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
 
 window.TextEncoder = TextEncoder;

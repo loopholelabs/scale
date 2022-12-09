@@ -16,12 +16,11 @@
 
 //import { TextEncoder, TextDecoder } from 'util';
 //import * as fs from 'fs';
-import { Module, WasiContext } from '../runtime/module';
-import { Host } from '../runtime/host';
-import { Context as RunContext } from '../runtime/context';
-import { Context, Request, Response, StringList } from "../runtime/generated/generated";
-import { Context as ourContext} from '../runtime/context';
-import { Runtime } from '../runtime/runtime';
+import { Context, Request, Response, StringList } from "../http-signature/generated/generated";
+import { Runtime, WasiContext } from '../sigruntime/runtime';
+
+import { ScaleFunc } from "../signature/scaleFunc";
+import { HttpContext, HttpContextFactory } from "../http-signature/HttpContext";
 
 const addHeaderButton = (document.getElementById('cheadersadd') as HTMLInputElement);
 addHeaderButton.onclick = function() {
@@ -69,11 +68,15 @@ addButton.onclick = async function() {
   
     reader.onload = function() {
       console.log(reader.result);
-      // This is an ArrayBuffer, use it to add a new module...
-      let module = new Module(Buffer.from(reader.result as ArrayBuffer), getNewWasi());
-      // Now add it to the runtime somehow...
-
-      addModule(module, file.name);
+      const d = Buffer.from(reader.result as ArrayBuffer);
+      const scalefn = new ScaleFunc();
+      scalefn.Version = "TestVersion";
+      scalefn.Name = file.name;
+      scalefn.Signature = "ExampleName@ExampleVersion";
+      scalefn.Language = "go";
+      scalefn.Function = d;
+  
+      addModule(scalefn);
     };
   
     reader.onerror = function() {
@@ -106,7 +109,7 @@ function getNewWasi() {
 
 const runButton = (document.getElementById('crun') as HTMLInputElement);
 
-let modules: Module[] = [];
+let modules: ScaleFunc[] = [];
 
 async function init() {
   const examples = [
@@ -121,74 +124,66 @@ async function init() {
   for(let i=0;i<examples.length;i++) {
     const modHttpEndpoint = await fetch(examples[i]);
     const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
-    let module = new Module(Buffer.from(arrayHttpEndpoint), getNewWasi());
-    addModule(module, examples[i]);
+    const scalefn = new ScaleFunc();
+    scalefn.Version = "TestVersion";
+    scalefn.Name = examples[i];
+    scalefn.Signature = "ExampleName@ExampleVersion";
+    scalefn.Language = "go";
+    scalefn.Function = Buffer.from(arrayHttpEndpoint);
+
+    addModule(scalefn);
   }
 }
 
 init();
 
-function addModule(m: Module, name: string) {
-  m.init().then(() => {
-    const tab = (document.getElementById("cmodules") as HTMLTableElement);
+function addModule(m: ScaleFunc) {
+  const tab = (document.getElementById("cmodules") as HTMLTableElement);
 
-    const newRow = tab.insertRow(-1);
-    const cell1 = newRow.insertCell(0);
-    cell1.appendChild(document.createTextNode(name));
+  const newRow = tab.insertRow(-1);
+  const cell1 = newRow.insertCell(0);
+  cell1.appendChild(document.createTextNode(m.Name===undefined?"":m.Name));
 
-    const cell2 = newRow.insertCell(1);
-    const delbutton = document.createElement("button");
-    delbutton.appendChild(document.createTextNode("Del"));
-    cell2.appendChild(delbutton);
+  const cell2 = newRow.insertCell(1);
+  const delbutton = document.createElement("button");
+  delbutton.appendChild(document.createTextNode("Del"));
+  cell2.appendChild(delbutton);
 
-    const cell3 = newRow.insertCell(2);
-    const upbutton = document.createElement("button");
-    upbutton.appendChild(document.createTextNode("Up"));
-    cell3.appendChild(upbutton);
-    
-    const cell4 = newRow.insertCell(3);
+  const cell3 = newRow.insertCell(2);
+  const upbutton = document.createElement("button");
+  upbutton.appendChild(document.createTextNode("Up"));
+  cell3.appendChild(upbutton);
+  
+  const cell4 = newRow.insertCell(3);
 
-    (m as any).orgRun = m.run;
-    m.run = function(c: RunContext): (RunContext | null) {
-      const ctime = performance.now();  //(new Date()).getTime();
-      const nc = (this as any).orgRun(c);
-      const etime = performance.now();   //(new Date()).getTime();
-
-      console.log("TIMING " + ctime + " - " + etime + " = " + (etime - ctime).toFixed(1));
-
-      cell4.innerHTML = (etime - ctime).toFixed(1);
-      return nc;
+  delbutton.onclick = function(mod, row) {
+    return function() {
+      row.remove();
+      // Delete this module from the array, and from the UI...
+      const index = modules.indexOf(mod);
+      if (index > -1) {
+        modules.splice(index, 1);
+        console.log("Removed module from array ", modules);
+      }
     }
+  }(m, newRow);
 
-    delbutton.onclick = function(mod, row) {
-      return function() {
-        row.remove();
-        // Delete this module from the array, and from the UI...
-        const index = modules.indexOf(mod);
-        if (index > -1) {
-          modules.splice(index, 1);
-          console.log("Removed module from array ", modules);
-        }
-      }
-    }(m, newRow);
+  upbutton.onclick = function(mod, row) {
+    return function() {
+      const index = modules.indexOf(mod);
+      if (index==0) return;   // Already at the top!
 
-    upbutton.onclick = function(mod, row) {
-      return function() {
-        const index = modules.indexOf(mod);
-        if (index==0) return;   // Already at the top!
+      // Adjust the modules array, and also the UI...
+      modules[index] = modules[index - 1];
+      modules[index - 1] = m;
 
-        // Adjust the modules array, and also the UI...
-        modules[index] = modules[index - 1];
-        modules[index - 1] = m;
+      // Now the UI...
+//      row.remove();
+      tab.tBodies[0].insertBefore(row, tab.rows[index - 1]);
+    }
+  }(m, newRow);
 
-        // Now the UI...
-  //      row.remove();
-        tab.tBodies[0].insertBefore(row, tab.rows[index - 1]);
-      }
-    }(m, newRow);
-
-    modules.push(m);
-  });
+  modules.push(m);
 }
 
 
@@ -237,26 +232,25 @@ runButton.onclick = async function() {
     const resp1 = new Response(200, respBody, respHeaders);        
     const context = new Context(req1, resp1);
 
-    Host.showContext(context);
+    const signatureFactory = HttpContextFactory;
 
-    // TODO: Read from form...
+    const r = new Runtime<HttpContext>(getNewWasi, signatureFactory, modules);
+    await r.Ready;
 
-    let runtime = new Runtime(modules);
-
-    let ctx = new ourContext(context);
+    const i = r.Instance(null);
+    i.Context().ctx = context;
 
     let ctime = (new Date()).getTime();
-    let retContext = runtime.run(ctx);
+    i.Run();
     let etime = (new Date()).getTime();
-    
-    if (retContext!=null) {
 
-      Host.showContext(retContext.context());
-      // TODO: Show in the fields etc...
+    const retContext = i.Context().ctx;
+
+    if (retContext!=null) {
 
       (document.getElementById('status') as HTMLInputElement).innerHTML = "Executed in " + (etime - ctime).toFixed(3) + "ms"
 
-      let resp = retContext.context().Response;
+      let resp = retContext.Response;
 
       (document.getElementById('rstatus') as HTMLElement).innerHTML = "" + resp.StatusCode;
       let dec = new TextDecoder();
@@ -286,4 +280,3 @@ runButton.onclick = async function() {
       }
     }
 }
-

@@ -38,10 +38,10 @@ import { WASI } from "wasi";
 import { NextAdapter } from "./nextAdapter";
 
 import { NextRequest, NextResponse } from 'next/server';
-import { Context as PgContext, Request as PgRequest, Response as PgResponse, StringList as PgStringList } from "../runtime/generated/generated";
+import { Context as PgContext, Request as PgRequest, Response as PgResponse, StringList as PgStringList } from "../http-signature/generated/generated";
 
 import { ScaleFunc } from "../signature/scaleFunc";
-import { HttpContext, HttpContextFactory } from "../runtime/HttpContext";
+import { HttpContext, HttpContextFactory } from "../http-signature/HttpContext";
 import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
 
 

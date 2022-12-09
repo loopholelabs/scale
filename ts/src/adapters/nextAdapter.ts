@@ -13,12 +13,13 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-import { HttpContext } from "../runtime/HttpContext";
+
+import { HttpContext } from "../http-signature/HttpContext";
 
 import { Runtime } from "../sigruntime/runtime";
 import {
   Context, Request, Response, StringList
-} from "../runtime/generated/generated";
+} from "../http-signature/generated/generated";
 
 import { NextRequest, NextResponse } from 'next/server';
 
