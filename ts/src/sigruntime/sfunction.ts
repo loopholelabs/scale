@@ -14,6 +14,7 @@
         limitations under the License.
 */
 
+import {v4 as uuidv4} from 'uuid';
 import { ScaleFunc } from "../signature/scaleFunc";
 import { Signature } from "../signature/signature";
 
@@ -24,12 +25,14 @@ export class SFunction<T extends Signature> {
   private scalefn: ScaleFunc;
   public mod: WebAssembly.Module;
   public next: undefined | SFunction<T>;
+  public id: string;
 
   public modulePool: undefined | Pool<T>;
 
   constructor(scalefn: ScaleFunc, mod: WebAssembly.Module) {
     this.scalefn = scalefn;
     this.mod = mod;
+    this.id = uuidv4();
   }
 
   Run(i: Instance<T>) {

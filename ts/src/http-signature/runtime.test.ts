@@ -77,7 +77,7 @@ describe("runtime", () => {
     const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnEndpoint]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
     i.Context().ctx = context;
 
     i.Run();
@@ -147,7 +147,7 @@ describe("runtime", () => {
     const r = new SigRuntime<HttpContext>(getNewWasi, signatureFactory, [scalefnMiddle, scalefnEndpoint]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
     i.Context().ctx = context;
 
     i.Run();

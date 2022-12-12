@@ -21,6 +21,7 @@ import { SFunction } from "./sfunction";
 import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
+import { CachedWasmInstance } from "./cachedWasmInstance";
 
 export interface WasiContext {
   start(instance: WebAssembly.Instance): void;
@@ -39,12 +40,9 @@ export class Runtime<T extends Signature> {
 
   private wasiBuilder: () => WasiContext;
 
-  public modules: Map<string, Module<T>>;   // Map from unique module ID to module
-
   constructor(wasiBuilder: () => WasiContext, sigfac: SignatureFactory<T>, fns: ScaleFunc[]) {
     this.signatureFactory = sigfac;
     this.fns = [];
-    this.modules = new Map<string, Module<T>>;
 
     this.wasiBuilder = wasiBuilder;
 
@@ -73,12 +71,23 @@ export class Runtime<T extends Signature> {
     });
   }
 
-  Instance(next: null | NextFn<T>): Instance<T> {
-    return new Instance<T>(this, next);
+  async Instance(next: null | NextFn<T>): Promise<Instance<T>> {
+    const i = new Instance<T>(this, next);
+    // Create instances for the functions and save them whithin the Instance.
+    for(let a=0;a<this.fns.length;a++) {
+      const mod = this.fns[a].mod;
+      const id = this.fns[a].id;
+      const cached = new CachedWasmInstance(this.wasiBuilder);
+      await cached.init(mod);
+      i.setInstance(id, cached);    // Store the instance here
+    }
+
+    return i;
   }
 
-  instantiate(m: WebAssembly.Module, mod: Module<T>, i: Instance<T>): WebAssembly.Instance {
-    // NB This closure captures i.
+  instantiate(fnid: string, mod: Module<T>, i: Instance<T>): WebAssembly.Instance {
+
+    // NB This closure captures i and mod
     const nextFn = ((runtimeThis: Runtime<T>): Function => {
       return (ptr: number, len: number): BigInt => {
         if (mod.memory===undefined || mod.resize===undefined) {
@@ -112,19 +121,10 @@ export class Runtime<T extends Signature> {
         return SFunction.packMemoryRef(encPtr, buff.length);
       };
     })(this);
-    
-    const wasi = this.wasiBuilder();
-    const importObject = {
-      wasi_snapshot_preview1: wasi.getImportObject(),
-      env: {
-        next: nextFn,
-      },
-    };
 
-    // TODO: We may need to do something async for browser contexts
-    // eg WebAssembly.instantiate(m, importObject);
-    const inst = new WebAssembly.Instance(m, importObject);
-    wasi.start(inst);
-    return inst;
+    //
+    const cached = i.getInstance(fnid);
+    cached.setNext(nextFn);
+    return cached.getInstance();
   }
 }

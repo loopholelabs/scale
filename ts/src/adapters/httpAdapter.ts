@@ -42,7 +42,7 @@ export class HttpAdapter {
         chunks.push(chunk);
     });
 
-    req.on('end', () => {
+    req.on('end', async () => {
       let length = 0;
       chunks.forEach(item => {
         length += item.length;
@@ -57,7 +57,7 @@ export class HttpAdapter {
 
       const c = HttpAdapter.toContext(req, body, res);
 
-      const i = this._runtime.Instance(null);
+      const i = await this._runtime.Instance(null);
       i.Context().ctx = c;
       i.Run();
       const newc = i.Context().ctx;

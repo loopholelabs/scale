@@ -20,13 +20,10 @@ import { Instance } from "./instance";
 import { Runtime } from "./runtime";
 import { SFunction } from "./sfunction";
 
-import { v4 as uuidv4 } from 'uuid';
-
 export class Module<T extends Signature> {
   private runtime: Runtime<T>;
   public sfunction: SFunction<T>;
 
-  private moduleName: string = "nothing";
   private waInstance: undefined | WebAssembly.Instance;
   public run: undefined | Function;
   public resize: undefined | Function;
@@ -38,7 +35,7 @@ export class Module<T extends Signature> {
   }
 
   init(i: Instance<T>) {
-    this.waInstance = this.runtime.instantiate(this.sfunction.mod, this, i);
+    this.waInstance = this.runtime.instantiate(this.sfunction.id, this, i);
 
     this.run = this.waInstance.exports.run as Function;
     this.resize = this.waInstance.exports.resize as Function;

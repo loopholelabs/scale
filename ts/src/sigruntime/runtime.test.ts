@@ -65,7 +65,7 @@ describe("sigruntime", () => {
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPassthrough]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
     i.Context().Data = "Test Data";
 
     expect(() => {
@@ -88,11 +88,12 @@ describe("sigruntime", () => {
     await r.Ready;
 
     const nextfn = (ctx: Context): Context => {
+      console.log("HERE");
       ctx.Data = "Hello, world!";
       return ctx;
     }
 
-    const i = r.Instance(nextfn);
+    const i = await r.Instance(nextfn);
 
     i.Context().Data = "Test Data";
 
@@ -119,7 +120,7 @@ describe("sigruntime", () => {
       throw new Error("Hello error");
     }
 
-    const i = r.Instance(nextfn);
+    const i = await r.Instance(nextfn);
 
     i.Context().Data = "Test Data";
 
@@ -141,7 +142,7 @@ describe("sigruntime", () => {
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnFile]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
 
     expect(() => {
       i.Run();
@@ -161,7 +162,7 @@ describe("sigruntime", () => {
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNetwork]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
 
     expect(() => {
       i.Run();
@@ -181,7 +182,7 @@ describe("sigruntime", () => {
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPanic]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
 
     expect(() => {
       i.Run();
@@ -201,7 +202,7 @@ describe("sigruntime", () => {
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnBadSignature]);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
 
     expect(() => {
       i.Run();

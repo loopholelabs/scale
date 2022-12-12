@@ -37,7 +37,7 @@ export class NextAdapter {
 
       const c = await NextAdapter.toContext(req);
 
-      const i = this._runtime.Instance(null);
+      const i = await this._runtime.Instance(null);
       i.Context().ctx = c;
       i.Run();
       const newc = i.Context().ctx;

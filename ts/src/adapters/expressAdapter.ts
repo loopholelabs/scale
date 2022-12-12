@@ -32,14 +32,14 @@ export class ExpressAdapter {
     return this.handler.bind(this);
   }
 
-  handler(
+  async handler(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) {
     const c = ExpressAdapter.toContext(req, res);
 
-    const i = this._runtime.Instance(null);
+    const i = await this._runtime.Instance(null);
     i.Context().ctx = c;
     i.Run();
     const newc = i.Context().ctx;

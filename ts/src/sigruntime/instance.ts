@@ -14,17 +14,23 @@
         limitations under the License.
 */
 
+import {v4 as uuidv4} from 'uuid';
 import { Signature, RuntimeContext } from "../signature/signature";
+import { CachedWasmInstance } from './cachedWasmInstance';
 import { Runtime, NextFn } from "./runtime";
 
 export class Instance<T extends Signature> {
   private runtime: Runtime<T>;
   public next: NextFn<T>;
   public ctx: T;
+  public id: string
+
+  private cache: Map<string,CachedWasmInstance> = new Map<string, CachedWasmInstance>;
 
   constructor(r: Runtime<T>, n: null | NextFn<T>) {
     this.runtime = r;
     this.ctx = r.signatureFactory();
+    this.id = uuidv4();
 
     if (n === null) {
       this.next = (ctx: T) => ctx;
@@ -47,5 +53,17 @@ export class Instance<T extends Signature> {
     }
     const fn = this.runtime.head;
     fn.Run(this);
+  }
+
+  setInstance(id:string, c: CachedWasmInstance) {
+    this.cache.set(id, c);
+  }
+
+  getInstance(id:string):CachedWasmInstance {
+    const c = this.cache.get(id);
+    if (c===undefined) {
+      throw new Error("Could not get cached ID");
+    }
+    return c;
   }
 }
