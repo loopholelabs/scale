@@ -45,7 +45,7 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 		f.modulePool.Put(module)
 	}()
 
-	ctxBuffer := i.RuntimeContext().Write()
+	ctxBuffer := i.runtimeContext().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
 	writeBuffer, err := module.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
@@ -70,7 +70,7 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
 	}
 
-	err = i.RuntimeContext().Read(readBuffer)
+	err = i.runtimeContext().Read(readBuffer)
 	if err != nil {
 		return fmt.Errorf("failed to deserialize context for function '%s': %w", f.scaleFunc.Name, err)
 	}
