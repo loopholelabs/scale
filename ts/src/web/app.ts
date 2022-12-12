@@ -396,7 +396,7 @@ runButton.onclick = async function() {
     const r = new Runtime<HttpContext>(getNewWasi, signatureFactory, modules);
     await r.Ready;
 
-    const i = r.Instance(null);
+    const i = await r.Instance(null);
     i.Context().ctx = context;
 
     let ctime = (new Date()).getTime();
