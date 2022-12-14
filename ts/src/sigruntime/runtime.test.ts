@@ -17,7 +17,7 @@
 import { TextEncoder, TextDecoder } from "util";
 import * as fs from "fs";
 
-import { ScaleFunc } from "../signature/scaleFunc";
+import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 
 import { Context } from "./signature/runtime";
 import { Runtime, WasiContext } from "./runtime";
@@ -54,12 +54,7 @@ describe("sigruntime", () => {
 
   it("Can run passthrough", async () => {    
 
-    const scalefnPassthrough = new ScaleFunc();
-    scalefnPassthrough.Version = "TestVersion";
-    scalefnPassthrough.Name = "Test.Passthrough";
-    scalefnPassthrough.Signature = "ExampleName@ExampleVersion";
-    scalefnPassthrough.Language = "go";
-    scalefnPassthrough.Function = modPassthrough;
+    const scalefnPassthrough = new ScaleFunc(V1Alpha, "Test.Passthrough", "ExampleName@ExampleVersion", Go, [], modPassthrough);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPassthrough]);
     await r.Ready;
@@ -76,12 +71,7 @@ describe("sigruntime", () => {
 
   it("Can run next", async () => {    
 
-    const scalefnNext = new ScaleFunc();
-    scalefnNext.Version = "TestVersion";
-    scalefnNext.Name = "Test.Next";
-    scalefnNext.Signature = "ExampleName@ExampleVersion";
-    scalefnNext.Language = "go";
-    scalefnNext.Function = modNext;
+    const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "ExampleName@ExampleVersion", Go, [], modNext);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNext]);
     await r.Ready;
@@ -105,12 +95,7 @@ describe("sigruntime", () => {
 
   it("Can run next error", async () => {    
 
-    const scalefnNext = new ScaleFunc();
-    scalefnNext.Version = "TestVersion";
-    scalefnNext.Name = "Test.Next";
-    scalefnNext.Signature = "ExampleName@ExampleVersion";
-    scalefnNext.Language = "go";
-    scalefnNext.Function = modNext;
+    const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "ExampleName@ExampleVersion", Go, [], modNext);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNext]);
     await r.Ready;
@@ -131,12 +116,7 @@ describe("sigruntime", () => {
 
   it("Can run file error", async () => {    
 
-    const scalefnFile = new ScaleFunc();
-    scalefnFile.Version = "TestVersion";
-    scalefnFile.Name = "Test.File";
-    scalefnFile.Signature = "ExampleName@ExampleVersion";
-    scalefnFile.Language = "go";
-    scalefnFile.Function = modFile;
+    const scalefnFile = new ScaleFunc(V1Alpha, "Test.File", "ExampleName@ExampleVersion", Go, [], modFile);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnFile]);
     await r.Ready;
@@ -151,12 +131,7 @@ describe("sigruntime", () => {
 
   it("Can run network error", async () => {    
 
-    const scalefnNetwork = new ScaleFunc();
-    scalefnNetwork.Version = "TestVersion";
-    scalefnNetwork.Name = "Test.File";
-    scalefnNetwork.Signature = "ExampleName@ExampleVersion";
-    scalefnNetwork.Language = "go";
-    scalefnNetwork.Function = modNetwork;
+    const scalefnNetwork = new ScaleFunc(V1Alpha, "Test.Network", "ExampleName@ExampleVersion", Go, [], modNetwork);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNetwork]);
     await r.Ready;
@@ -171,12 +146,7 @@ describe("sigruntime", () => {
 
   it("Can run panic error", async () => {    
 
-    const scalefnPanic = new ScaleFunc();
-    scalefnPanic.Version = "TestVersion";
-    scalefnPanic.Name = "Test.File";
-    scalefnPanic.Signature = "ExampleName@ExampleVersion";
-    scalefnPanic.Language = "go";
-    scalefnPanic.Function = modPanic;
+    const scalefnPanic = new ScaleFunc(V1Alpha, "Test.Panic", "ExampleName@ExampleVersion", Go, [], modPanic);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPanic]);
     await r.Ready;
@@ -191,12 +161,7 @@ describe("sigruntime", () => {
 
   it("Can run bad-signature error", async () => {    
 
-    const scalefnBadSignature = new ScaleFunc();
-    scalefnBadSignature.Version = "TestVersion";
-    scalefnBadSignature.Name = "Test.File";
-    scalefnBadSignature.Signature = "ExampleName@ExampleVersion";
-    scalefnBadSignature.Language = "go";
-    scalefnBadSignature.Function = modBadSignature;
+    const scalefnBadSignature = new ScaleFunc(V1Alpha, "Test.BadSig", "ExampleName@ExampleVersion", Go, [], modBadSignature);
 
     const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnBadSignature]);
     await r.Ready;

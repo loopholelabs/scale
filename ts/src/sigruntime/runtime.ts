@@ -15,7 +15,7 @@
 */
 
 import { Signature, SignatureFactory } from "@loopholelabs/scale-signature";
-import { ScaleFunc } from "../signature/scaleFunc";
+import { ScaleFunc } from "@loopholelabs/scalefile";
 
 import { SFunction } from "./sfunction";
 import { Instance } from "./instance";

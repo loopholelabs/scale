@@ -19,7 +19,7 @@ import * as fs from "fs";
 import { Context, Request, Response, StringList } from "./generated/generated";
 import { WASI } from "wasi";
 
-import { ScaleFunc } from "../signature/scaleFunc";
+import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 import { HttpContext, HttpContextFactory } from "./HttpContext";
 
 import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
@@ -65,12 +65,7 @@ describe("runtime", () => {
       "./example_modules/http-endpoint.wasm"
     );
 
-    const scalefnEndpoint = new ScaleFunc();
-    scalefnEndpoint.Version = "TestVersion";
-    scalefnEndpoint.Name = "Test.HttpEndpoint";
-    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
-    scalefnEndpoint.Language = "go";
-    scalefnEndpoint.Function = modHttpEndpoint;
+    const scalefnEndpoint = new ScaleFunc(V1Alpha, "Test.HttpEndpoint", "ExampleName@ExampleVersion", Go, [], modHttpEndpoint);
 
     const signatureFactory = HttpContextFactory;
 
@@ -128,19 +123,8 @@ describe("runtime", () => {
       "./example_modules/http-middleware.wasm"
     );
 
-    const scalefnEndpoint = new ScaleFunc();
-    scalefnEndpoint.Version = "TestVersion";
-    scalefnEndpoint.Name = "Test.HttpEndpoint";
-    scalefnEndpoint.Signature = "ExampleName@ExampleVersion";
-    scalefnEndpoint.Language = "go";
-    scalefnEndpoint.Function = modHttpEndpoint;
-
-    const scalefnMiddle = new ScaleFunc();
-    scalefnMiddle.Version = "TestVersion";
-    scalefnMiddle.Name = "Test.HttpEndpoint";
-    scalefnMiddle.Signature = "ExampleName@ExampleVersion";
-    scalefnMiddle.Language = "go";
-    scalefnMiddle.Function = modHttpMiddleware;
+    const scalefnEndpoint = new ScaleFunc(V1Alpha, "Test.HttpEndpoint", "ExampleName@ExampleVersion", Go, [], modHttpEndpoint);
+    const scalefnMiddle = new ScaleFunc(V1Alpha, "Test.HttpMiddleware", "ExampleName@ExampleVersion", Go, [], modHttpMiddleware);
 
     const signatureFactory = HttpContextFactory;
 

@@ -19,7 +19,8 @@
 import { Context, Request, Response, StringList } from "../http-signature/generated/generated";
 import { Runtime, WasiContext } from '../sigruntime/runtime';
 
-import { ScaleFunc } from "../signature/scaleFunc";
+import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
+
 import { HttpContext, HttpContextFactory } from "../http-signature/HttpContext";
 
 const addHeaderButton = (document.getElementById('cheadersadd') as HTMLInputElement);
@@ -69,12 +70,7 @@ addButton.onclick = async function() {
     reader.onload = function() {
       console.log(reader.result);
       const d = Buffer.from(reader.result as ArrayBuffer);
-      const scalefn = new ScaleFunc();
-      scalefn.Version = "TestVersion";
-      scalefn.Name = file.name;
-      scalefn.Signature = "ExampleName@ExampleVersion";
-      scalefn.Language = "go";
-      scalefn.Function = d;
+      const scalefn = new ScaleFunc(V1Alpha, file.name, "ExampleName@ExampleVersion", Go, [], d);
   
       addModule(scalefn);
     };
@@ -290,25 +286,17 @@ let modules: ScaleFunc[] = [];
 
 async function init() {
   const examples = [
+    "./middleware-java.wasm",
+    "./middleware-typescript.wasm",
     "./go-middleware.wasm",
-    "./java-headers.wasm",
-    "./hello-ts.wasm",
-    "./java-appendBody.wasm",
-    "./java-appendBody.wasm",
     "./go-endpoint.wasm",
     "./java-endpoint.wasm"
   ];
 
   for(let i=0;i<examples.length;i++) {
-    const modHttpEndpoint = await fetch(examples[i]);
-    const arrayHttpEndpoint = await modHttpEndpoint.arrayBuffer();
-    const scalefn = new ScaleFunc();
-    scalefn.Version = "TestVersion";
-    scalefn.Name = examples[i];
-    scalefn.Signature = "ExampleName@ExampleVersion";
-    scalefn.Language = "go";
-    scalefn.Function = Buffer.from(arrayHttpEndpoint);
-
+    const mod = await fetch(examples[i]);
+    const arrayModule = await mod.arrayBuffer();
+    const scalefn = new ScaleFunc(V1Alpha, examples[i], "ExampleName@ExampleVersion", Go, [], Buffer.from(arrayModule));
     addModule(scalefn);
   }
 }
