@@ -22,7 +22,7 @@ import { WASI } from "wasi";
 import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 import { HttpContext, HttpContextFactory } from "./HttpContext";
 
-import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
+import { Runtime as SigRuntime, WasiContext } from "../runtime/runtime";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];

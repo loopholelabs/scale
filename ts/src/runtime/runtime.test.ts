@@ -41,12 +41,12 @@ function getNewWasi(): WasiContext {
 }
 
 describe("sigruntime", () => {
-  const modPassthrough = fs.readFileSync("./src/sigruntime/modules/passthrough-TestRuntime.wasm");
-  const modNext = fs.readFileSync("./src/sigruntime/modules/next-TestRuntime.wasm");
-  const modFile = fs.readFileSync("./src/sigruntime/modules/file-TestRuntime.wasm");
-  const modNetwork = fs.readFileSync("./src/sigruntime/modules/network-TestRuntime.wasm");
-  const modPanic = fs.readFileSync("./src/sigruntime/modules/panic-TestRuntime.wasm");
-  const modBadSignature = fs.readFileSync("./src/sigruntime/modules/bad-signature-TestRuntime.wasm");
+  const modPassthrough = fs.readFileSync("./src/runtime/modules/passthrough-TestRuntime.wasm");
+  const modNext = fs.readFileSync("./src/runtime/modules/next-TestRuntime.wasm");
+  const modFile = fs.readFileSync("./src/runtime/modules/file-TestRuntime.wasm");
+  const modNetwork = fs.readFileSync("./src/runtime/modules/network-TestRuntime.wasm");
+  const modPanic = fs.readFileSync("./src/runtime/modules/panic-TestRuntime.wasm");
+  const modBadSignature = fs.readFileSync("./src/runtime/modules/bad-signature-TestRuntime.wasm");
 
   const signatureFactory = () => {
     return new Context();        // TODO: Should be signature encapsulating context really...

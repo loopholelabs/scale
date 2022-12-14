@@ -16,7 +16,7 @@
 import express from "express";
 import { HttpContext } from "../http-signature/HttpContext";
 
-import { Runtime } from "../sigruntime/runtime";
+import { Runtime } from "../runtime/runtime";
 import {
   Context, Request, Response, StringList
 } from "../http-signature/generated/generated";

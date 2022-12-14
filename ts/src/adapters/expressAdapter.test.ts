@@ -23,7 +23,7 @@ import { WASI } from "wasi";
 
 import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 import { HttpContext, HttpContextFactory } from "../http-signature/HttpContext";
-import { Runtime as SigRuntime, WasiContext } from "../sigruntime/runtime";
+import { Runtime as SigRuntime, WasiContext } from "../runtime/runtime";
 
 import { ExpressAdapter } from "./expressAdapter";
 

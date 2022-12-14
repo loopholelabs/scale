@@ -17,7 +17,7 @@
 //import { TextEncoder, TextDecoder } from 'util';
 //import * as fs from 'fs';
 import { Context, Request, Response, StringList } from "../http-signature/generated/generated";
-import { Runtime, WasiContext } from '../sigruntime/runtime';
+import { Runtime, WasiContext } from '../runtime/runtime';
 
 import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 
