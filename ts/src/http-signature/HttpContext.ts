@@ -18,7 +18,7 @@
 
 import { Context, StringList } from "./generated/generated";
 
-import { Signature, RuntimeContext } from "../signature/signature";
+import { Signature, RuntimeContext } from "@loopholelabs/scale-signature";
 
 import { Kind, encodeError, decodeError } from "@loopholelabs/polyglot-ts";
 

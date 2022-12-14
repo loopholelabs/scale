@@ -17,7 +17,6 @@
 import { TextEncoder, TextDecoder } from "util";
 import * as fs from "fs";
 
-import { Signature } from "../signature/signature";
 import { ScaleFunc } from "../signature/scaleFunc";
 
 import { Context } from "./signature/runtime";

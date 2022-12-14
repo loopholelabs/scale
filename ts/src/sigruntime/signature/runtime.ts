@@ -15,7 +15,7 @@
 */
 import { Kind, encodeError, decodeError, encodeString, decodeString, decodeNull } from "@loopholelabs/polyglot-ts";
 
-import { Signature, RuntimeContext } from "../../signature/signature";
+import { RuntimeContext } from "@loopholelabs/scale-signature";
 
 export class Context implements RuntimeContext {
   // For now we'll just put the stuff here...

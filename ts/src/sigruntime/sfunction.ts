@@ -16,7 +16,7 @@
 
 import {v4 as uuidv4} from 'uuid';
 import { ScaleFunc } from "../signature/scaleFunc";
-import { Signature } from "../signature/signature";
+import { Signature } from "@loopholelabs/scale-signature";
 
 import { Instance } from "./instance";
 import { Pool } from "./pool";

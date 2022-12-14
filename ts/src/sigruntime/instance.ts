@@ -15,7 +15,7 @@
 */
 
 import {v4 as uuidv4} from 'uuid';
-import { Signature, RuntimeContext } from "../signature/signature";
+import { Signature, RuntimeContext } from "@loopholelabs/scale-signature";
 import { CachedWasmInstance } from './cachedWasmInstance';
 import { Runtime, NextFn } from "./runtime";
 

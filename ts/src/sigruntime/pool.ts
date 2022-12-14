@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import { Signature } from "../signature/signature";
+import { Signature } from "@loopholelabs/scale-signature";
 
 import { SFunction } from "./sfunction";
 import { Runtime } from "./runtime";
