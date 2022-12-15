@@ -1,12 +1,9 @@
-mod guest;
-mod request;
-mod response;
+#[path = "{{ .path }}"]
 mod scale;
-mod http_signature;
 
 use std::io::Cursor;
-use guest::{GuestContext, PTR, LEN, READ_BUFFER};
-use http_signature::HttpContext;
+use scale_signature_http::guest::{GuestContext, PTR, LEN, READ_BUFFER};
+use scale_signature_http::http_signature::HttpContext;
 use scale::scale;
 extern crate wee_alloc;
 
