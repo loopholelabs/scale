@@ -41,7 +41,7 @@ export class CachedWasmInstance {
   }
 
   next(ptr: number, len: number): number {
-    if (this.nextFn===undefined) {
+    if (this.nextFn === undefined) {
       console.log("nextFn was not set!");
       return 0;   // TODO
     } else {
@@ -55,7 +55,7 @@ export class CachedWasmInstance {
   }
 
   getInstance(): WebAssembly.Instance {
-    if(this.instance===undefined) {
+    if (this.instance === undefined) {
       throw new Error("Instance wasn't created correctly");
     }
     return this.instance;

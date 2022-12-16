@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { ScaleFunc } from "@loopholelabs/scalefile";
 import { Signature } from "@loopholelabs/scale-signature";
 

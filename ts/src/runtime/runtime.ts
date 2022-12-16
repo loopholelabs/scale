@@ -32,7 +32,7 @@ export type NextFn<T extends Signature> = (ctx: T) => T;
 
 export class Runtime<T extends Signature> {
   public Ready: Promise<any>;
-  
+
   public signatureFactory: SignatureFactory<T>;
   private fns: SFunction<T>[];
   public head: undefined | SFunction<T>;
@@ -50,7 +50,7 @@ export class Runtime<T extends Signature> {
     // After creating a Runtime you should then do 'await runtime.Ready' or equivalent.
     this.Ready = new Promise(async (resolve, reject) => {
 
-      for(let i=0;i<fns.length;i++) {
+      for (let i = 0; i < fns.length; i++) {
         const fn = fns[i];
         const mod = await WebAssembly.compile(fn.Function as Buffer);
 
@@ -74,7 +74,7 @@ export class Runtime<T extends Signature> {
   async Instance(next: null | NextFn<T>): Promise<Instance<T>> {
     const i = new Instance<T>(this, next);
     // Create instances for the functions and save them whithin the Instance.
-    for(let a=0;a<this.fns.length;a++) {
+    for (let a = 0; a < this.fns.length; a++) {
       const mod = this.fns[a].mod;
       const id = this.fns[a].id;
       const cached = new CachedWasmInstance(this.wasiBuilder);
@@ -90,7 +90,7 @@ export class Runtime<T extends Signature> {
     // NB This closure captures i and mod
     const nextFn = ((runtimeThis: Runtime<T>): Function => {
       return (ptr: number, len: number): BigInt => {
-        if (mod.memory===undefined || mod.resize===undefined) {
+        if (mod.memory === undefined || mod.resize === undefined) {
           // Critical unrecoverable error
           // NB This would only ever happen if init() wasn't called on the Module.
           return BigInt(0);
@@ -110,8 +110,8 @@ export class Runtime<T extends Signature> {
             mod.sfunction.next.Run(i);
             buff = i.RuntimeContext().Write();
           }
-        } catch(e) {
-          buff = i.RuntimeContext().Error(e as Error);          
+        } catch (e) {
+          buff = i.RuntimeContext().Error(e as Error);
         }
 
         // Write it back out

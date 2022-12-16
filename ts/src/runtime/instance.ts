@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { Signature, RuntimeContext } from "@loopholelabs/scale-signature";
 import { CachedWasmInstance } from './cachedWasmInstance';
 import { Runtime, NextFn } from "./runtime";
@@ -25,7 +25,7 @@ export class Instance<T extends Signature> {
   public ctx: T;
   public id: string
 
-  private cache: Map<string,CachedWasmInstance> = new Map<string, CachedWasmInstance>;
+  private cache: Map<string, CachedWasmInstance> = new Map<string, CachedWasmInstance>;
 
   constructor(r: Runtime<T>, n: null | NextFn<T>) {
     this.runtime = r;
@@ -55,13 +55,13 @@ export class Instance<T extends Signature> {
     fn.Run(this);
   }
 
-  setInstance(id:string, c: CachedWasmInstance) {
+  setInstance(id: string, c: CachedWasmInstance) {
     this.cache.set(id, c);
   }
 
-  getInstance(id:string):CachedWasmInstance {
+  getInstance(id: string): CachedWasmInstance {
     const c = this.cache.get(id);
-    if (c===undefined) {
+    if (c === undefined) {
       throw new Error("Could not get cached ID");
     }
     return c;

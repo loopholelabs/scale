@@ -52,7 +52,7 @@ describe("sigruntime", () => {
     return new Context();        // TODO: Should be signature encapsulating context really...
   }
 
-  it("Can run passthrough", async () => {    
+  it("Can run passthrough", async () => {
 
     const scalefnPassthrough = new ScaleFunc(V1Alpha, "Test.Passthrough", "ExampleName@ExampleVersion", Go, [], modPassthrough);
 
@@ -69,7 +69,7 @@ describe("sigruntime", () => {
     expect(i.Context().Data).toBe("Test Data");
   });
 
-  it("Can run next", async () => {    
+  it("Can run next", async () => {
 
     const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "ExampleName@ExampleVersion", Go, [], modNext);
 
@@ -93,7 +93,7 @@ describe("sigruntime", () => {
     expect(i.Context().Data).toBe("Hello, world!");
   });
 
-  it("Can run next error", async () => {    
+  it("Can run next error", async () => {
 
     const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "ExampleName@ExampleVersion", Go, [], modNext);
 
@@ -114,7 +114,7 @@ describe("sigruntime", () => {
 
   });
 
-  it("Can run file error", async () => {    
+  it("Can run file error", async () => {
 
     const scalefnFile = new ScaleFunc(V1Alpha, "Test.File", "ExampleName@ExampleVersion", Go, [], modFile);
 
@@ -129,7 +129,7 @@ describe("sigruntime", () => {
 
   });
 
-  it("Can run network error", async () => {    
+  it("Can run network error", async () => {
 
     const scalefnNetwork = new ScaleFunc(V1Alpha, "Test.Network", "ExampleName@ExampleVersion", Go, [], modNetwork);
 
@@ -144,7 +144,7 @@ describe("sigruntime", () => {
 
   });
 
-  it("Can run panic error", async () => {    
+  it("Can run panic error", async () => {
 
     const scalefnPanic = new ScaleFunc(V1Alpha, "Test.Panic", "ExampleName@ExampleVersion", Go, [], modPanic);
 
@@ -159,7 +159,7 @@ describe("sigruntime", () => {
 
   });
 
-  it("Can run bad-signature error", async () => {    
+  it("Can run bad-signature error", async () => {
 
     const scalefnBadSignature = new ScaleFunc(V1Alpha, "Test.BadSig", "ExampleName@ExampleVersion", Go, [], modBadSignature);
 

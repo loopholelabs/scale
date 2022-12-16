@@ -1,0 +1,37 @@
+name: npm CI
+
+on: [push, pull_request]
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ts
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v2-beta
+        with:
+          path: ./ts
+          node-version: "16"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache the dependency directories
+        uses: actions/cache@v2
+        with:
+          path: |
+            ./ts/node_modules
+          key: npm
+      - name: Install dependencies with npm
+        run: npm install --legacy-peer-deps
+      - name: Build with npm
+        run: npm run build
+      - name: Publish to npm
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          path: ./ts
+          token: ${{ secrets.NPM_AUTH_TOKEN }}
+          access: "public"

@@ -14,10 +14,8 @@
 	limitations under the License.
 */
 
-export * from "./sigruntime/runtime";
-export * from "./sigruntime/module";
-export * from "./sigruntime/pool";
-export * from "./sigruntime/instance";
-export * from "./sigruntime/sfunction";
-
-export * from "./adapters/expressAdapter";
+export * from "./runtime/runtime";
+export * from "./runtime/module";
+export * from "./runtime/pool";
+export * from "./runtime/instance";
+export * from "./runtime/sfunction";
