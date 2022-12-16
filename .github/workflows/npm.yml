@@ -32,6 +32,7 @@ jobs:
 #        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         uses: JS-DevTools/npm-publish@v1
         with:
+          package: ./ts/package.json
           path: ./ts
           token: ${{ secrets.NPM_AUTH_TOKEN }}
           access: "public"
