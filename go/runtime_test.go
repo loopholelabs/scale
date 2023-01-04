@@ -83,10 +83,10 @@ func TestRuntime(t *testing.T) {
 			Name:   "Passthrough",
 			Module: passthroughModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
-				i, err := r.Instance(nil)
+				i, err := r.Instance()
 				require.NoError(t, err)
 
 				i.Context().Data = "Test Data"
@@ -106,7 +106,7 @@ func TestRuntime(t *testing.T) {
 					return ctx, nil
 				}
 
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -128,7 +128,7 @@ func TestRuntime(t *testing.T) {
 					return nil, errors.New("next error")
 				}
 
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -142,7 +142,7 @@ func TestRuntime(t *testing.T) {
 			Name:   "File",
 			Module: fileModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -156,7 +156,7 @@ func TestRuntime(t *testing.T) {
 			Name:   "Network",
 			Module: networkModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -170,7 +170,7 @@ func TestRuntime(t *testing.T) {
 			Name:   "Panic",
 			Module: panicModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -184,7 +184,7 @@ func TestRuntime(t *testing.T) {
 			Name:   "BadSignature",
 			Module: badSignatureModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New(), []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)

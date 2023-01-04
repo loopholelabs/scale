@@ -21,7 +21,7 @@ import (
 	"github.com/tetratelabs/wazero/api"
 )
 
-func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint64) (_ []uint64) {
+func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint64) {
 	pointer := uint32(params[0])
 	length := uint32(params[1])
 	r.modulesMu.RLock()
@@ -37,7 +37,7 @@ func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint6
 		return
 	}
 
-	err := m.instance.RuntimeContext().Read(buf)
+	err := m.instance.runtimeContext().Read(buf)
 	if err != nil {
 		return
 	}
@@ -46,16 +46,16 @@ func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint6
 	if m.function.next == nil {
 		m.instance.ctx, err = m.instance.next(m.instance.Context())
 		if err != nil {
-			ctxBuffer = m.instance.RuntimeContext().Error(err)
+			ctxBuffer = m.instance.runtimeContext().Error(err)
 		} else {
-			ctxBuffer = m.instance.RuntimeContext().Write()
+			ctxBuffer = m.instance.runtimeContext().Write()
 		}
 	} else {
 		err = m.function.next.Run(ctx, m.instance)
 		if err != nil {
-			ctxBuffer = m.instance.RuntimeContext().Error(err)
+			ctxBuffer = m.instance.runtimeContext().Error(err)
 		} else {
-			ctxBuffer = m.instance.RuntimeContext().Write()
+			ctxBuffer = m.instance.runtimeContext().Write()
 		}
 	}
 
