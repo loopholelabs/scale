@@ -1,0 +1,49 @@
+{
+  "name": "@loopholelabs/scale-ts",
+  "version": "0.1.2",
+  "description": "TypeScript version of the scale functions.",
+  "source": "src/index.ts",
+  "main": "dist/main.js",
+  "module": "dist/module.js",
+  "types": "dist/types.d.ts",
+  "scripts": {
+    "build": "parcel build",
+    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache"
+  },
+  "targets": {
+    "default": {
+      "distDir": "./dist"
+    }
+  },
+  "dependencies": {
+    "@loopholelabs/polyglot-ts": "^0.3.0",
+    "@loopholelabs/scale-signature": "^0.1.2",
+    "@loopholelabs/scalefile": "^0.1.1",
+    "@swc/helpers": "^0.4.12",
+    "@types/jest": "^29.2.0",
+    "@types/node-fetch": "^2.6.2",
+    "jest": "^29.2.2",
+    "jest-environment-jsdom": "^29.2.2",
+    "next": "^12.3.3",
+    "node-fetch": "^2.6.7",
+    "parcel": "^2.7.0",
+    "ts-jest": "^29.0.3",
+    "util": "^0.12.5",
+    "uuid": "^9.0.0",
+    "wasi": "^0.0.6"
+  },
+  "devDependencies": {
+    "@parcel/packager-ts": "^2.7.0",
+    "@parcel/transformer-typescript-types": "^2.7.0",
+    "@parcel/validator-typescript": "^2.7.0",
+    "@types/node": "^18.11.5",
+    "@types/uuid": "^9.0.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "events": "^3.3.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "tty-browserify": "^0.0.1",
+    "typescript": "^4.7.0"
+  }
+}
