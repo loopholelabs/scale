@@ -18,4 +18,4 @@ export * from "./runtime/runtime";
 export * from "./runtime/module";
 export * from "./runtime/pool";
 export * from "./runtime/instance";
-export * from "./runtime/sfunction";
+export * from "./runtime/func";
