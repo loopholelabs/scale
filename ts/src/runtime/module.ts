@@ -18,29 +18,29 @@ import { Signature } from "@loopholelabs/scale-signature";
 
 import { Instance } from "./instance";
 import { Runtime } from "./runtime";
-import { SFunction } from "./sfunction";
+import { Func } from "./func";
 
 export class Module<T extends Signature> {
   private runtime: Runtime<T>;
-  public sfunction: SFunction<T>;
+  public sfunction: Func<T>;
 
-  private waInstance: undefined | WebAssembly.Instance;
+  private wasmInstance: undefined | WebAssembly.Instance;
   public run: undefined | Function;
   public resize: undefined | Function;
   public memory: undefined | WebAssembly.Memory;
 
-  constructor(f: SFunction<T>, r: Runtime<T>) {
+  constructor(f: Func<T>, r: Runtime<T>) {
     this.sfunction = f;
     this.runtime = r;
   }
 
   init(i: Instance<T>) {
-    this.waInstance = this.runtime.instantiate(this.sfunction.id, this, i);
+    this.wasmInstance = this.runtime.instantiate(this.sfunction.id, this, i);
 
-    this.run = this.waInstance.exports.run as Function;
-    this.resize = this.waInstance.exports.resize as Function;
-    if (this.resize === undefined) this.resize = this.waInstance.exports.malloc as Function;    // Backward compat. TODO: Remove
-    this.memory = this.waInstance.exports.memory as WebAssembly.Memory;
+    this.run = this.wasmInstance.exports.run as Function;
+    this.resize = this.wasmInstance.exports.resize as Function;
+    if (this.resize === undefined) this.resize = this.wasmInstance.exports.malloc as Function;    // Backward compat. TODO: Remove
+    this.memory = this.wasmInstance.exports.memory as WebAssembly.Memory;
   }
 
 }

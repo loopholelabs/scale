@@ -21,10 +21,10 @@ import { Signature } from "@loopholelabs/scale-signature";
 import { Instance } from "./instance";
 import { Pool } from "./pool";
 
-export class SFunction<T extends Signature> {
+export class Func<T extends Signature> {
   private scalefn: ScaleFunc;
   public mod: WebAssembly.Module;
-  public next: undefined | SFunction<T>;
+  public next: undefined | Func<T>;
   public id: string;
 
   public modulePool: undefined | Pool<T>;
@@ -56,7 +56,7 @@ export class SFunction<T extends Signature> {
 
     const packed = module.run(encPtr, encoded.length);    // Backward compat. TODO: Remove args
 
-    const [ptr, len] = SFunction.unpackMemoryRef(packed);
+    const [ptr, len] = Func.unpackMemoryRef(packed);
     const memDataOut = new Uint8Array(module.memory.buffer);
     const inContextBuff = memDataOut.slice(ptr, ptr + len);
 

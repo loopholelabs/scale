@@ -17,11 +17,13 @@
 import { Signature, SignatureFactory } from "@loopholelabs/scale-signature";
 import { ScaleFunc } from "@loopholelabs/scalefile";
 
-import { SFunction } from "./sfunction";
+import { Func } from "./func";
 import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
 import { CachedWasmInstance } from "./cachedWasmInstance";
+
+import { getNewWasi } from "./wasi";
 
 export interface WasiContext {
   start(instance: WebAssembly.Instance): void;
@@ -30,13 +32,20 @@ export interface WasiContext {
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
+export async function GetRuntime<T extends Signature>(sigfac: SignatureFactory<T>, fns: ScaleFunc[]) {
+  const wasiBuilder = getNewWasi;
+  const r = new Runtime(wasiBuilder, sigfac, fns);
+  await r.Ready;
+  return r;
+}
+
 export class Runtime<T extends Signature> {
   public Ready: Promise<any>;
 
   public signatureFactory: SignatureFactory<T>;
-  private fns: SFunction<T>[];
-  public head: undefined | SFunction<T>;
-  private tail: undefined | SFunction<T>;
+  private fns: Func<T>[];
+  public head: undefined | Func<T>;
+  private tail: undefined | Func<T>;
 
   private wasiBuilder: () => WasiContext;
 
@@ -54,7 +63,7 @@ export class Runtime<T extends Signature> {
         const fn = fns[i];
         const mod = await WebAssembly.compile(fn.Function as Buffer);
 
-        const f = new SFunction<T>(fn, mod);
+        const f = new Func<T>(fn, mod);
         f.modulePool = new Pool<T>(f, this);
         this.fns.push(f);
 
@@ -118,7 +127,7 @@ export class Runtime<T extends Signature> {
         const encPtr = mod.resize(buff.length);
         const memData = new Uint8Array(mod.memory.buffer);
         memData.set(buff, encPtr);
-        return SFunction.packMemoryRef(encPtr, buff.length);
+        return Func.packMemoryRef(encPtr, buff.length);
       };
     })(this);
 

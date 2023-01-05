@@ -16,15 +16,15 @@
 
 import { Signature } from "@loopholelabs/scale-signature";
 
-import { SFunction } from "./sfunction";
+import { Func } from "./func";
 import { Runtime } from "./runtime";
 import { Module } from "./module";
 
 export class Pool<T extends Signature> {
-  private f: SFunction<T>;
+  private f: Func<T>;
   private r: Runtime<T>;
 
-  constructor(f: SFunction<T>, r: Runtime<T>) {
+  constructor(f: Func<T>, r: Runtime<T>) {
     this.f = f;
     this.r = r;
   }

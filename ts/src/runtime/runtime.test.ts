@@ -20,25 +20,10 @@ import * as fs from "fs";
 import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 
 import { Context } from "./signature/runtime";
-import { Runtime, WasiContext } from "./runtime";
-import { WASI } from "wasi";
+import { GetRuntime, Runtime } from "./runtime";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
-
-function getNewWasi(): WasiContext {
-  const wasi = new WASI({
-    args: [],
-    env: {},
-  });
-  const w: WasiContext = {
-    getImportObject: () => wasi.wasiImport,
-    start: (instance: WebAssembly.Instance) => {
-      wasi.start(instance);
-    }
-  }
-  return w;
-}
 
 describe("sigruntime", () => {
   const modPassthrough = fs.readFileSync("./src/runtime/modules/passthrough-TestRuntime.wasm");
@@ -56,8 +41,7 @@ describe("sigruntime", () => {
 
     const scalefnPassthrough = new ScaleFunc(V1Alpha, "Test.Passthrough", "ExampleName@ExampleVersion", Go, [], modPassthrough);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPassthrough]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnPassthrough]);
 
     const i = await r.Instance(null);
     i.Context().Data = "Test Data";
@@ -73,8 +57,7 @@ describe("sigruntime", () => {
 
     const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "ExampleName@ExampleVersion", Go, [], modNext);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNext]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnNext]);
 
     const nextfn = (ctx: Context): Context => {
       console.log("HERE");
@@ -97,8 +80,7 @@ describe("sigruntime", () => {
 
     const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "ExampleName@ExampleVersion", Go, [], modNext);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNext]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnNext]);
 
     const nextfn = (ctx: Context): Context => {
       throw new Error("Hello error");
@@ -118,8 +100,7 @@ describe("sigruntime", () => {
 
     const scalefnFile = new ScaleFunc(V1Alpha, "Test.File", "ExampleName@ExampleVersion", Go, [], modFile);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnFile]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnFile]);
 
     const i = await r.Instance(null);
 
@@ -133,8 +114,7 @@ describe("sigruntime", () => {
 
     const scalefnNetwork = new ScaleFunc(V1Alpha, "Test.Network", "ExampleName@ExampleVersion", Go, [], modNetwork);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnNetwork]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnNetwork]);
 
     const i = await r.Instance(null);
 
@@ -148,8 +128,7 @@ describe("sigruntime", () => {
 
     const scalefnPanic = new ScaleFunc(V1Alpha, "Test.Panic", "ExampleName@ExampleVersion", Go, [], modPanic);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnPanic]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnPanic]);
 
     const i = await r.Instance(null);
 
@@ -163,8 +142,7 @@ describe("sigruntime", () => {
 
     const scalefnBadSignature = new ScaleFunc(V1Alpha, "Test.BadSig", "ExampleName@ExampleVersion", Go, [], modBadSignature);
 
-    const r = new Runtime<Context>(getNewWasi, signatureFactory, [scalefnBadSignature]);
-    await r.Ready;
+    const r = await GetRuntime(signatureFactory, [scalefnBadSignature]);
 
     const i = await r.Instance(null);
 
