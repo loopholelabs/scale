@@ -1,6 +1,6 @@
 {
   "name": "@loopholelabs/scale-ts",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "TypeScript version of the scale functions.",
   "source": "src/index.ts",
   "main": "dist/main.js",
