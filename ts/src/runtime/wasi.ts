@@ -16,9 +16,6 @@
 
 import { WasiContext } from "./runtime";
 
-import { WASI } from "wasi";
-
-
 var barebonesWASI = function() {
 
   var WASI_ESUCCESS = 0;
@@ -106,7 +103,7 @@ var barebonesWASI = function() {
 }
 
 
-export function getNewWasiBrowser() {
+export function getNewWasi(): WasiContext {
   const w: WasiContext = {
     getImportObject: () =>{  /* Minimal import object */
       return barebonesWASI();
@@ -131,28 +128,4 @@ export function getNewWasiBrowser() {
     }
   }
   return w;
-}
-
-// Creates a new wasi for use in node
-export function getNewWasiNode(): WasiContext {
-  const wasi = new WASI({
-    args: [],
-    env: {},
-  });
-  const w: WasiContext = {
-    getImportObject: () => wasi.wasiImport,
-    start: (instance: WebAssembly.Instance) => {
-      wasi.start(instance);
-    }
-  }
-  return w;
-}
-
-// Try to get a wasiBuilder using 'WASI'. If that fails, fallback on the browser version.
-export function getNewWasi(): WasiContext {
-  try {
-    return getNewWasiNode();
-  } catch(e) {
-    return getNewWasiBrowser();
-  }
 }
