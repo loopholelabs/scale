@@ -76,7 +76,7 @@ func TestRuntime(t *testing.T) {
 
 	modules := []*harness.Module{passthroughModule, nextModule, fileModule, networkModule, panicModule, badSignatureModule}
 
-	generatedModules := harness.Setup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
+	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
 
 	var testCases = []TestCase{
 		{
