@@ -5,7 +5,8 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-scale_signature_http = "0.0.1"
+scale_signature_http = "0.0.4"
+
 wee_alloc = "0.4.5"
 {{ range $dependency := .dependencies -}}
 {{ $dependency.Name }} = "{{ $dependency.Version }}"
