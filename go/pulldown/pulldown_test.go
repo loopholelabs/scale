@@ -27,16 +27,12 @@ import (
 )
 
 func TestPulldownCache(t *testing.T) {
-	sc := StoreConfig{
-		CacheDirectory: "testCache",
-		PullPolicy:     NeverPullPolicy,
-	}
-
-	pc := PulldownConfig{
-		APIKey:       "123",
-		Organization: "loophole",
-		Function:     "Test1",
-		Tag:          "0.1.0",
+	conf := &Config{
+		cacheDirectory: "testCache",
+		pullPolicy:     NeverPullPolicy,
+		apiKey:         "123",
+		organization:   "loophole",
+		tag:            "0.1.0",
 	}
 
 	sf := &scalefile.ScaleFile{
@@ -47,6 +43,8 @@ func TestPulldownCache(t *testing.T) {
 		Source:    "Hello world",
 	}
 
+	function := "TestFunction"
+
 	var b bytes.Buffer
 	bwriter := bufio.NewWriter(&b)
 
@@ -56,11 +54,18 @@ func TestPulldownCache(t *testing.T) {
 	require.NoError(t, err)
 
 	// Write it to the cache...
-	err = saveToCache(pc, sc, b.Bytes())
+	err = saveToCache(function, conf, b.Bytes())
 	require.NoError(t, err)
 
 	// Try reading a scalefile from the cache...
-	newsf, err := New(pc, sc)
+	// Also tests that the With* works
+	newsf, err := New(function,
+		WithCacheDirectory(conf.cacheDirectory),
+		WithPullPolicy(conf.pullPolicy),
+		WithOrganization(conf.organization),
+		WithApiKey(conf.apiKey),
+		WithTag(conf.tag))
+
 	require.NoError(t, err)
 
 	// Now assert that the newsf is same as our original sf.
@@ -75,6 +80,6 @@ func TestPulldownCache(t *testing.T) {
 	assert.Equal(t, b.Bytes(), newb.Bytes())
 
 	// cleanup - remove cache dir
-	err = removeCache(sc)
+	err = removeCache(conf)
 	require.NoError(t, err)
 }

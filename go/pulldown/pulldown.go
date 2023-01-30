@@ -42,48 +42,73 @@ var (
 	ErrNoFunction   = errors.New("function does not exist and pull policy is never")
 )
 
-// Specifies a pulldown request
-type PulldownConfig struct {
-	APIKey       string
-	Organization string
-	Function     string
-	Tag          string
+type Config struct {
+	pullPolicy     PullPolicy
+	cacheDirectory string
+	apiKey         string
+	organization   string
+	tag            string
 }
 
-// StoreConfig
-type StoreConfig struct {
-	CacheDirectory string
-	PullPolicy     PullPolicy
+type Option func(config *Config)
+
+func WithPullPolicy(pullPolicy PullPolicy) Option {
+	return func(config *Config) {
+		config.pullPolicy = pullPolicy
+	}
 }
 
-// Default store config
-var DefaultStoreConfig = StoreConfig{
-	CacheDirectory: "~/.cache/scale/functions",
-	PullPolicy:     AlwaysPullPolicy,
+func WithCacheDirectory(cacheDirectory string) Option {
+	return func(config *Config) {
+		config.cacheDirectory = cacheDirectory
+	}
 }
 
-// What we get back from the API call
-type PulldownResponse struct {
-	URL  string
-	Hash string
+func WithApiKey(apiKey string) Option {
+	return func(config *Config) {
+		config.apiKey = apiKey
+	}
+}
+
+func WithOrganization(organization string) Option {
+	return func(config *Config) {
+		config.organization = organization
+	}
+}
+
+func WithTag(tag string) Option {
+	return func(config *Config) {
+		config.tag = tag
+	}
 }
 
 // Create a new runtime for a specific scalefile
-func New(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
+func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
+	// Default config
+	conf := &Config{
+		pullPolicy:     AlwaysPullPolicy,
+		cacheDirectory: "~/.cache/scale/functions",
+		tag:            "latest",
+		organization:   "loopholelabs",
+		apiKey:         "",
+	}
+	for _, opt := range opts {
+		opt(conf)
+	}
+
 	// First check our local cache...
+	sf, err := getFromCache(function, conf)
 
-	sf, err := getFromCache(pc, sc)
-
-	if err == nil && sc.PullPolicy != AlwaysPullPolicy {
+	if err == nil && conf.pullPolicy != AlwaysPullPolicy {
 		return sf, err
 	}
 
-	if sc.PullPolicy == NeverPullPolicy {
+	if conf.pullPolicy == NeverPullPolicy {
 		return nil, ErrNoFunction
 	}
 
 	// Contact the API endpoint with the request
-	response, err := apiRequest(pc)
+	response, err := apiRequest(function, conf)
 	if err != nil {
 		return sf, err
 	}
@@ -113,7 +138,7 @@ func New(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
 	}
 
 	// Save to our local cache
-	err = saveToCache(pc, sc, data)
+	err = saveToCache(function, conf, data)
 	if err != nil {
 		return nil, err
 	}
@@ -125,29 +150,29 @@ func New(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
 
 // build a filename from the config
 // TODO: We should use the hash in the filename for optimization
-func buildFilename(pc PulldownConfig) string {
-	return fmt.Sprintf("%s-%s-%s.scale", pc.Organization, pc.Function, pc.Tag)
+func buildFilename(function string, conf *Config) string {
+	return fmt.Sprintf("%s-%s-%s.scale", conf.organization, function, conf.tag)
 }
 
 // Get a scalefile from the local cache
-func getFromCache(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
-	f := buildFilename(pc)
+func getFromCache(function string, conf *Config) (*scalefile.ScaleFile, error) {
+	f := buildFilename(function, conf)
 
 	// Try to read the scalefile
-	path := fmt.Sprintf("%s%c%s", sc.CacheDirectory, os.PathSeparator, f)
+	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
 	return scalefile.Read(path)
 }
 
 // Save a scalefile to our local cache
-func saveToCache(pc PulldownConfig, sc StoreConfig, data []byte) error {
-	err := os.MkdirAll(sc.CacheDirectory, os.ModePerm)
+func saveToCache(function string, conf *Config, data []byte) error {
+	err := os.MkdirAll(conf.cacheDirectory, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	// Overwrite the file
-	f := buildFilename(pc)
-	path := fmt.Sprintf("%s%c%s", sc.CacheDirectory, os.PathSeparator, f)
+	f := buildFilename(function, conf)
+	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
 
 	fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
@@ -167,12 +192,18 @@ func saveToCache(pc PulldownConfig, sc StoreConfig, data []byte) error {
 	return nil
 }
 
-func removeCache(sc StoreConfig) error {
-	return os.RemoveAll(sc.CacheDirectory)
+func removeCache(conf *Config) error {
+	return os.RemoveAll(conf.cacheDirectory)
+}
+
+// What we get back from the API call
+type PulldownResponse struct {
+	URL  string
+	Hash string
 }
 
 // Perform the scale api request to find the correct URL and hash
-func apiRequest(pc PulldownConfig) (PulldownResponse, error) {
+func apiRequest(function string, conf *Config) (PulldownResponse, error) {
 	// TODO
 
 	return PulldownResponse{
