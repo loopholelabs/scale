@@ -31,8 +31,6 @@ func TestPulldownCache(t *testing.T) {
 		cacheDirectory: "testCache",
 		pullPolicy:     NeverPullPolicy,
 		apiKey:         "123",
-		organization:   "loophole",
-		tag:            "0.1.0",
 	}
 
 	sf := &scalefile.ScaleFile{
@@ -62,9 +60,7 @@ func TestPulldownCache(t *testing.T) {
 	newsf, err := New(function,
 		WithCacheDirectory(conf.cacheDirectory),
 		WithPullPolicy(conf.pullPolicy),
-		WithOrganization(conf.organization),
-		WithApiKey(conf.apiKey),
-		WithTag(conf.tag))
+		WithApiKey(conf.apiKey))
 
 	require.NoError(t, err)
 

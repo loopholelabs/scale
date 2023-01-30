@@ -46,8 +46,6 @@ type Config struct {
 	pullPolicy     PullPolicy
 	cacheDirectory string
 	apiKey         string
-	organization   string
-	tag            string
 }
 
 type Option func(config *Config)
@@ -70,26 +68,12 @@ func WithApiKey(apiKey string) Option {
 	}
 }
 
-func WithOrganization(organization string) Option {
-	return func(config *Config) {
-		config.organization = organization
-	}
-}
-
-func WithTag(tag string) Option {
-	return func(config *Config) {
-		config.tag = tag
-	}
-}
-
 // Create a new runtime for a specific scalefile
 func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
 	// Default config
 	conf := &Config{
 		pullPolicy:     AlwaysPullPolicy,
 		cacheDirectory: "~/.cache/scale/functions",
-		tag:            "latest",
-		organization:   "loopholelabs",
 		apiKey:         "",
 	}
 	for _, opt := range opts {
@@ -151,7 +135,7 @@ func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
 // build a filename from the config
 // TODO: We should use the hash in the filename for optimization
 func buildFilename(function string, conf *Config) string {
-	return fmt.Sprintf("%s-%s-%s.scale", conf.organization, function, conf.tag)
+	return fmt.Sprintf("%s.scale", function)
 }
 
 // Get a scalefile from the local cache
