@@ -30,8 +30,11 @@ import (
 )
 
 const POLICY_PULL_ALWAYS = "always"
+const POLICY_PULL_IF_NOT_PRESENT = "ifNotPresent"
+const POLICY_PULL_NEVER = "never"
 
 var ERROR_HASH_MISMATCH = errors.New("Hash mismatch")
+var ERROR_NO_FUNCTION = errors.New("Function does not exist and pull policy was never")
 
 // Specifies a pulldown request
 type PulldownConfig struct {
@@ -67,6 +70,10 @@ func New(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
 
 	if err == nil && sc.PullPolicy != POLICY_PULL_ALWAYS {
 		return sf, err
+	}
+
+	if sc.PullPolicy == POLICY_PULL_NEVER {
+		return nil, ERROR_NO_FUNCTION
 	}
 
 	// Contact the API endpoint with the request
@@ -152,6 +159,10 @@ func saveToCache(pc PulldownConfig, sc StoreConfig, data []byte) error {
 	}
 
 	return nil
+}
+
+func removeCache(sc StoreConfig) error {
+	return os.RemoveAll(sc.CacheDirectory)
 }
 
 // Perform the scale api request to find the correct URL and hash
