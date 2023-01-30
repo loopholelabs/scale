@@ -29,7 +29,7 @@ import (
 func TestPulldownCache(t *testing.T) {
 	sc := StoreConfig{
 		CacheDirectory: "testCache",
-		PullPolicy:     POLICY_PULL_IF_NOT_PRESENT,
+		PullPolicy:     NeverPullPolicy,
 	}
 
 	pc := PulldownConfig{

@@ -29,12 +29,18 @@ import (
 	"github.com/loopholelabs/scalefile"
 )
 
-const POLICY_PULL_ALWAYS = "always"
-const POLICY_PULL_IF_NOT_PRESENT = "ifNotPresent"
-const POLICY_PULL_NEVER = "never"
+type PullPolicy string
 
-var ERROR_HASH_MISMATCH = errors.New("Hash mismatch")
-var ERROR_NO_FUNCTION = errors.New("Function does not exist and pull policy was never")
+const (
+	AlwaysPullPolicy       PullPolicy = "always"
+	IfNotPresentPullPolicy            = "if-not-present"
+	NeverPullPolicy                   = "never"
+)
+
+var (
+	ErrHashMismatch = errors.New("hash mismatch")
+	ErrNoFunction   = errors.New("function does not exist and pull policy is never")
+)
 
 // Specifies a pulldown request
 type PulldownConfig struct {
@@ -47,13 +53,13 @@ type PulldownConfig struct {
 // StoreConfig
 type StoreConfig struct {
 	CacheDirectory string
-	PullPolicy     string
+	PullPolicy     PullPolicy
 }
 
 // Default store config
 var DefaultStoreConfig = StoreConfig{
 	CacheDirectory: "~/.cache/scale/functions",
-	PullPolicy:     "allways",
+	PullPolicy:     AlwaysPullPolicy,
 }
 
 // What we get back from the API call
@@ -68,12 +74,12 @@ func New(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
 
 	sf, err := getFromCache(pc, sc)
 
-	if err == nil && sc.PullPolicy != POLICY_PULL_ALWAYS {
+	if err == nil && sc.PullPolicy != AlwaysPullPolicy {
 		return sf, err
 	}
 
-	if sc.PullPolicy == POLICY_PULL_NEVER {
-		return nil, ERROR_NO_FUNCTION
+	if sc.PullPolicy == NeverPullPolicy {
+		return nil, ErrNoFunction
 	}
 
 	// Contact the API endpoint with the request
@@ -103,7 +109,7 @@ func New(pc PulldownConfig, sc StoreConfig) (*scalefile.ScaleFile, error) {
 	s := hex.EncodeToString(bs)
 
 	if s != response.Hash {
-		return nil, ERROR_HASH_MISMATCH
+		return nil, ErrHashMismatch
 	}
 
 	// Save to our local cache
