@@ -108,12 +108,10 @@ func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
 		return nil, err
 	}
 
-	// TODO: Verify the hash with response.Hash
 	h := sha256.New()
 	h.Write(data)
 
 	bs := h.Sum(nil)
-	// Convert it to hexstring
 
 	s := hex.EncodeToString(bs)
 
