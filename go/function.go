@@ -19,6 +19,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+
 	signature "github.com/loopholelabs/scale-signature"
 	"github.com/loopholelabs/scale/go/utils"
 	"github.com/loopholelabs/scalefile/scalefunc"
@@ -52,7 +53,7 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 		return fmt.Errorf("failed to allocate memory for function '%s': %w", f.scaleFunc.Name, err)
 	}
 
-	if !module.module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer) {
+	if !module.module.Memory().Write(uint32(writeBuffer[0]), ctxBuffer) {
 		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.Name)
 	}
 
@@ -65,7 +66,7 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 	}
 
 	offset, length := utils.UnpackUint32(packed[0])
-	readBuffer, ok := module.module.Memory().Read(ctx, offset, length)
+	readBuffer, ok := module.module.Memory().Read(offset, length)
 	if !ok {
 		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
 	}
