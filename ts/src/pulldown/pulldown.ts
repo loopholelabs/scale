@@ -14,6 +14,8 @@
 	limitations under the License.
 */
 
+import { ScaleFile } from "@loopholelabs/scalefile"
+
 export type PullPolicy = string;
 
 export const AlwaysPullPolicy: PullPolicy = "always";
@@ -47,6 +49,10 @@ export function WithApiKey(apiKey: string): Option {
   return (c: Config) => {
     c.apiKey = apiKey;
   }
+}
+
+export function NewPulldown(function:string, opts:Option...): ScaleFile {
+
 }
 
 /*
