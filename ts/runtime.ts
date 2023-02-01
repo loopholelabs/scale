@@ -21,51 +21,35 @@ import { Func } from "./func";
 import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
-import { CachedWasmInstance } from "./cachedWasmInstance";
-
-import { getNewWasi } from "./wasi";
-
-export interface WasiContext {
-  start(instance: WebAssembly.Instance): void;
-  getImportObject(): any;
-}
+import { Cache } from "./cache";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
-export async function GetRuntime<T extends Signature>(sigfac: SignatureFactory<T>, fns: ScaleFunc[]) {
-  const wasiBuilder = getNewWasi;
-  const r = new Runtime(wasiBuilder, sigfac, fns);
-  await r.Ready;
+export async function New<T extends Signature>(newSignature: SignatureFactory<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
+  const r = new Runtime(newSignature, functions);
+  await r.Ready();
   return r;
 }
 
 export class Runtime<T extends Signature> {
-  public Ready: Promise<any>;
-
-  public signatureFactory: SignatureFactory<T>;
-  private fns: Func<T>[];
+  public NewSignature: SignatureFactory<T>;
+  private readonly ready: Promise<any>;
+  private functions: Func<T>[];
   public head: undefined | Func<T>;
-  private tail: undefined | Func<T>;
+  public tail: undefined | Func<T>;
 
-  private wasiBuilder: () => WasiContext;
+  constructor(newSignature: SignatureFactory<T>, functions: ScaleFunc[]) {
+    this.NewSignature = newSignature;
+    this.functions = [];
 
-  constructor(wasiBuilder: () => WasiContext, sigfac: SignatureFactory<T>, fns: ScaleFunc[]) {
-    this.signatureFactory = sigfac;
-    this.fns = [];
-
-    this.wasiBuilder = wasiBuilder;
-
-    // We compile the modules async...
-    // After creating a Runtime you should then do 'await runtime.Ready' or equivalent.
-    this.Ready = new Promise(async (resolve, reject) => {
-
-      for (let i = 0; i < fns.length; i++) {
-        const fn = fns[i];
+    this.ready = new Promise(async (resolve) => {
+      for (let i = 0; i < functions.length; i++) {
+        const fn = functions[i];
         const mod = await WebAssembly.compile(fn.Function as Buffer);
 
         const f = new Func<T>(fn, mod);
         f.modulePool = new Pool<T>(f, this);
-        this.fns.push(f);
+        this.functions.push(f);
 
         if (this.head === undefined) {
           this.head = f;
@@ -80,38 +64,36 @@ export class Runtime<T extends Signature> {
     });
   }
 
+  async Ready() {
+    await this.ready;
+  }
+
   async Instance(next: null | NextFn<T>): Promise<Instance<T>> {
     const i = new Instance<T>(this, next);
-    // Create instances for the functions and save them whithin the Instance.
-    for (let a = 0; a < this.fns.length; a++) {
-      const mod = this.fns[a].mod;
-      const id = this.fns[a].id;
-      const cached = new CachedWasmInstance(this.wasiBuilder);
-      await cached.init(mod);
-      i.setInstance(id, cached);    // Store the instance here
+    for (let a = 0; a < this.functions.length; a++) {
+      const mod = this.functions[a].mod;
+      const id = this.functions[a].id;
+      const cache = new Cache();
+      await cache.Initialize(mod);
+      i.SetInstance(id, cache);
     }
 
     return i;
   }
 
-  instantiate(fnid: string, mod: Module<T>, i: Instance<T>): WebAssembly.Instance {
-
-    // NB This closure captures i and mod
-    const nextFn = ((runtimeThis: Runtime<T>): Function => {
+  Instantiate(fnid: string, mod: Module<T>, i: Instance<T>): WebAssembly.Instance {
+    const nextFunction = ((): Function => {
       return (ptr: number, len: number): BigInt => {
         if (mod.memory === undefined || mod.resize === undefined) {
-          // Critical unrecoverable error
-          // NB This would only ever happen if init() wasn't called on the Module.
           return BigInt(0);
         }
-
-        let buff: Uint8Array = new Uint8Array();
+        let buff: Uint8Array;
         try {
           const memDataOut = new Uint8Array(mod.memory.buffer);
           const inContextBuff = memDataOut.slice(ptr, ptr + len);
+
           i.RuntimeContext().Read(inContextBuff);
 
-          // Now call next...
           if (mod.sfunction.next === undefined) {
             i.ctx = i.next(i.Context());
             buff = i.RuntimeContext().Write();
@@ -123,17 +105,15 @@ export class Runtime<T extends Signature> {
           buff = i.RuntimeContext().Error(e as Error);
         }
 
-        // Write it back out
         const encPtr = mod.resize(buff.length);
         const memData = new Uint8Array(mod.memory.buffer);
         memData.set(buff, encPtr);
         return Func.packMemoryRef(encPtr, buff.length);
       };
-    })(this);
+    })();
 
-    //
-    const cached = i.getInstance(fnid);
-    cached.setNext(nextFn);
+    const cached = i.GetInstance(fnid);
+    cached.SetNext(nextFunction);
     return cached.getInstance();
   }
 }

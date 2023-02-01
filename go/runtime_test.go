@@ -1,5 +1,4 @@
 //go:build !tinygo && !js && !wasm
-// +build !tinygo,!js,!wasm
 
 /*
 	Copyright 2022 Loophole Labs
@@ -23,7 +22,7 @@ import (
 	"context"
 	"errors"
 	"github.com/loopholelabs/scale/go/tests/harness"
-	signature "github.com/loopholelabs/scale/go/tests/signature"
+	signature "github.com/loopholelabs/scale/go/tests/signature/example-signature"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,35 +36,35 @@ type TestCase struct {
 	Run    func(*scalefunc.ScaleFunc, *testing.T)
 }
 
-func TestRuntime(t *testing.T) {
+func TestRuntimeGo(t *testing.T) {
 	passthroughModule := &harness.Module{
 		Name:      "passthrough",
 		Path:      "tests/modules/passthrough/passthrough.go",
-		Signature: "github.com/loopholelabs/scale/go/tests/signature",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
 	nextModule := &harness.Module{
 		Name:      "next",
 		Path:      "tests/modules/next/next.go",
-		Signature: "github.com/loopholelabs/scale/go/tests/signature",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
 	fileModule := &harness.Module{
 		Name:      "file",
 		Path:      "tests/modules/file/file.go",
-		Signature: "github.com/loopholelabs/scale/go/tests/signature",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
 	networkModule := &harness.Module{
 		Name:      "network",
 		Path:      "tests/modules/network/network.go",
-		Signature: "github.com/loopholelabs/scale/go/tests/signature",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
 	panicModule := &harness.Module{
 		Name:      "panic",
 		Path:      "tests/modules/panic/panic.go",
-		Signature: "github.com/loopholelabs/scale/go/tests/signature",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
 	badSignatureModule := &harness.Module{
@@ -202,10 +201,58 @@ func TestRuntime(t *testing.T) {
 			require.NoError(t, err)
 
 			scaleFunc := &scalefunc.ScaleFunc{
-				Version:   "TestVersion",
+				Version:   scalefunc.V1Alpha,
 				Name:      "TestName",
+				Tag:       "TestTag",
 				Signature: "ExampleName@ExampleVersion",
 				Language:  "go",
+				Function:  module,
+			}
+			testCase.Run(scaleFunc, t)
+		})
+	}
+}
+
+func TestRuntimeRs(t *testing.T) {
+	networkModule := &harness.Module{
+		Name:      "network",
+		Path:      "../rust/tests/modules/network/network.rs",
+		Signature: "example_signature",
+	}
+
+	modules := []*harness.Module{networkModule}
+
+	generatedModules := harness.RustSetup(t, modules)
+	_ = generatedModules
+
+	var testCases = []TestCase{
+		{
+			Name:   "Network",
+			Module: networkModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(nil)
+				require.NoError(t, err)
+
+				err = i.Run(context.Background())
+				require.Error(t, err)
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			module, err := os.ReadFile(generatedModules[testCase.Module])
+			require.NoError(t, err)
+
+			scaleFunc := &scalefunc.ScaleFunc{
+				Version:   scalefunc.V1Alpha,
+				Name:      "TestName",
+				Tag:       "TestTag",
+				Signature: "ExampleName@ExampleVersion",
+				Language:  "rs",
 				Function:  module,
 			}
 			testCase.Run(scaleFunc, t)

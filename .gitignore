@@ -2,3 +2,7 @@
 *.wasm
 *.bak
 .fleet
+node_modules
+dist
+coverage
+.parcel-cache

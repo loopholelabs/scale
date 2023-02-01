@@ -2,7 +2,7 @@ package main
 
 import (
 	scale "{{ .path }}"
-	signature "{{ .signature }}"
+	context "{{ .signature }}"
 	"github.com/loopholelabs/scale/go/utils"
 )
 
@@ -11,7 +11,7 @@ func main() {}
 
 //export run
 func run() uint64 {
-	ctx := signature.New()
+	ctx := context.New()
 	guestCtx := ctx.GuestContext()
 	err := guestCtx.FromReadBuffer()
 	if err != nil {
@@ -27,5 +27,5 @@ func run() uint64 {
 
 //export resize
 func resize(size uint32) uint32 {
-	return signature.Resize(size)
+	return context.Resize(size)
 }

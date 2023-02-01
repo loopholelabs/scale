@@ -1,0 +1,14 @@
+[package]
+name = "example_signature"
+version = "0.1.0"
+edition = "2021"
+description = "example signature"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+polyglot_rs = "0.1.0"
+scale_signature = "0.1.7"
+lazy_static = "1.4.0"
+wee_alloc = "0.4.5"

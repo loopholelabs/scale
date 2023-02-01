@@ -16,20 +16,22 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { Signature, RuntimeContext } from "@loopholelabs/scale-signature";
-import { CachedWasmInstance } from './cachedWasmInstance';
+import { Cache } from './cache';
 import { Runtime, NextFn } from "./runtime";
+
+const ErrNoCompiledFunctions = new Error("no compiled functions found in runtime");
+const ErrNoCacheID = new Error("no cache id found in instance");
 
 export class Instance<T extends Signature> {
   private runtime: Runtime<T>;
   public next: NextFn<T>;
   public ctx: T;
   public id: string
-
-  private cache: Map<string, CachedWasmInstance> = new Map<string, CachedWasmInstance>;
+  private cache: Map<string, Cache> = new Map<string, Cache>;
 
   constructor(r: Runtime<T>, n: null | NextFn<T>) {
     this.runtime = r;
-    this.ctx = r.signatureFactory();
+    this.ctx = r.NewSignature();
     this.id = uuidv4();
 
     if (n === null) {
@@ -49,20 +51,20 @@ export class Instance<T extends Signature> {
 
   Run() {
     if (this.runtime.head === undefined) {
-      throw (new Error("no compiled functions found in runtime"));
+      throw ErrNoCompiledFunctions;
     }
     const fn = this.runtime.head;
     fn.Run(this);
   }
 
-  setInstance(id: string, c: CachedWasmInstance) {
+  SetInstance(id: string, c: Cache) {
     this.cache.set(id, c);
   }
 
-  getInstance(id: string): CachedWasmInstance {
+  GetInstance(id: string): Cache {
     const c = this.cache.get(id);
     if (c === undefined) {
-      throw new Error("Could not get cached ID");
+      throw ErrNoCacheID;
     }
     return c;
   }

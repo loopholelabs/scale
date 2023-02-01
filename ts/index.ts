@@ -14,8 +14,8 @@
 	limitations under the License.
 */
 
-export * from "./runtime/runtime";
-export * from "./runtime/module";
-export * from "./runtime/pool";
-export * from "./runtime/instance";
-export * from "./runtime/func";
+export * from "./runtime";
+export * from "./module";
+export * from "./pool";
+export * from "./instance";
+export * from "./func";

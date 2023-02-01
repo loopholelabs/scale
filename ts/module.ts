@@ -35,7 +35,7 @@ export class Module<T extends Signature> {
   }
 
   init(i: Instance<T>) {
-    this.wasmInstance = this.runtime.instantiate(this.sfunction.id, this, i);
+    this.wasmInstance = this.runtime.Instantiate(this.sfunction.id, this, i);
 
     this.run = this.wasmInstance.exports.run as Function;
     this.resize = this.wasmInstance.exports.resize as Function;

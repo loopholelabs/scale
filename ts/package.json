@@ -2,7 +2,7 @@
   "name": "@loopholelabs/scale-ts",
   "version": "0.1.4",
   "description": "TypeScript version of the scale functions.",
-  "source": "src/index.ts",
+  "source": "index.ts",
   "main": "dist/main.js",
   "module": "dist/module.js",
   "types": "dist/types.d.ts",
@@ -16,9 +16,9 @@
     }
   },
   "dependencies": {
-    "@loopholelabs/polyglot-ts": "^0.3.0",
-    "@loopholelabs/scale-signature": "^0.1.2",
-    "@loopholelabs/scalefile": "^0.1.1",
+    "@loopholelabs/polyglot-ts": "^0.4.0",
+    "@loopholelabs/scale-signature": "^0.1.4",
+    "@loopholelabs/scalefile": "^0.1.4",
     "@swc/helpers": "^0.4.12",
     "@types/jest": "^29.2.0",
     "@types/node-fetch": "^2.6.2",

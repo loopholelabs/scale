@@ -5,10 +5,10 @@ go 1.18
 require (
 	github.com/google/uuid v1.3.0
 	github.com/loopholelabs/polyglot-go v0.5.1
-	github.com/loopholelabs/scale-signature v0.1.1
-	github.com/loopholelabs/scalefile v0.1.0
+	github.com/loopholelabs/scale-signature v0.1.7
+	github.com/loopholelabs/scalefile v0.1.4
 	github.com/stretchr/testify v1.8.1
-	github.com/tetratelabs/wazero v1.0.0-pre.4
+	github.com/tetratelabs/wazero v1.0.0-pre.8
 )
 
 require (

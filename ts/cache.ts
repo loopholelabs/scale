@@ -14,20 +14,15 @@
         limitations under the License.
 */
 
-import { WasiContext } from "./runtime";
+import { NewWASI } from "./wasi";
 
-export class CachedWasmInstance {
-  private wasiBuilder: () => WasiContext;
-
+export class Cache {
+  private readonly wasiBuilder = NewWASI
   private instance: undefined | WebAssembly.Instance;
-  private nextFn: undefined | Function;
+  private nextFunction: undefined | Function;
+  constructor() {}
 
-  constructor(wasiBuilder: () => WasiContext) {
-    this.wasiBuilder = wasiBuilder;
-  }
-
-  // Initialize the instance
-  async init(m: WebAssembly.Module) {
+  async Initialize(m: WebAssembly.Module) {
     const wasi = this.wasiBuilder();
     const importObject = {
       wasi_snapshot_preview1: wasi.getImportObject(),
@@ -40,18 +35,17 @@ export class CachedWasmInstance {
     wasi.start(this.instance);
   }
 
-  next(ptr: number, len: number): number {
-    if (this.nextFn === undefined) {
-      console.log("nextFn was not set!");
-      return 0;   // TODO
+  private next(ptr: number, len: number): number {
+    if (this.nextFunction === undefined) {
+      return 0;
     } else {
-      return this.nextFn(ptr, len);
+      return this.nextFunction(ptr, len);
     }
   }
 
   // Set the next function
-  setNext(fn: Function) {
-    this.nextFn = fn;
+  SetNext(fn: Function) {
+    this.nextFunction = fn;
   }
 
   getInstance(): WebAssembly.Instance {

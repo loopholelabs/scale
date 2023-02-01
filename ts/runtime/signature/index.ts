@@ -13,12 +13,16 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 */
+
 import { Kind, encodeError, decodeError, encodeString, decodeString } from "@loopholelabs/polyglot-ts";
 
 import { RuntimeContext } from "@loopholelabs/scale-signature";
 
+export function New(): Context {
+  return new Context();
+}
+
 export class Context implements RuntimeContext {
-  // For now we'll just put the stuff here...
   public Data: string
 
   constructor() {
@@ -26,7 +30,7 @@ export class Context implements RuntimeContext {
   }
 
   RuntimeContext(): RuntimeContext {
-    return this;  //(this as RuntimeContext);
+    return this;
   }
 
   Read(d: Uint8Array) {
@@ -45,3 +49,8 @@ export class Context implements RuntimeContext {
     return encodeError(new Uint8Array(), e);
   }
 }
+
+export default {
+    New: New,
+    Context: Context,
+};
