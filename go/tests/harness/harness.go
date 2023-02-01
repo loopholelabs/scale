@@ -30,10 +30,11 @@ import (
 )
 
 type Module struct {
-	Path         string
-	Name         string
-	Signature    string
-	Dependencies []*scalefile.Dependency
+	Path          string
+	Name          string
+	Signature     string
+	SignaturePath string
+	Dependencies  []*scalefile.Dependency
 }
 
 func GoSetup(t testing.TB, modules []*Module, importPath string) map[*Module]string {
@@ -158,7 +159,7 @@ func RustSetup(t testing.TB, modules []*Module) map[*Module]string {
 				Version: "0.4.5",
 			},
 		}
-		err = g.GenerateRsCargo(cargoFile, dependencies, module.Signature, "../../../signature/example-signature")
+		err = g.GenerateRsCargo(cargoFile, dependencies, module.Signature, module.SignaturePath)
 		require.NoError(t, err, fmt.Sprintf("failed to generate lib.rs for scale function %s", module.Name))
 
 		err = cargoFile.Close()

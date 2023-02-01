@@ -268,48 +268,62 @@ func TestRuntimeGo(t *testing.T) {
 
 func TestRuntimeRs(t *testing.T) {
 	passthroughModule := &harness.Module{
-		Name:      "passthrough",
-		Path:      "../rust/tests/modules/passthrough/passthrough.rs",
-		Signature: "example_signature",
+		Name:          "passthrough",
+		Path:          "../rust/tests/modules/passthrough/passthrough.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
 	modifyModule := &harness.Module{
-		Name:      "modify",
-		Path:      "../rust/tests/modules/modify/modify.rs",
-		Signature: "example_signature",
+		Name:          "modify",
+		Path:          "../rust/tests/modules/modify/modify.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
 	nextModule := &harness.Module{
-		Name:      "next",
-		Path:      "../rust/tests/modules/next/next.rs",
-		Signature: "example_signature",
+		Name:          "next",
+		Path:          "../rust/tests/modules/next/next.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
 	modifyNextModule := &harness.Module{
-		Name:      "modifynext",
-		Path:      "../rust/tests/modules/modifynext/modifynext.rs",
-		Signature: "example_signature",
+		Name:          "modifynext",
+		Path:          "../rust/tests/modules/modifynext/modifynext.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
 	fileModule := &harness.Module{
-		Name:      "file",
-		Path:      "../rust/tests/modules/file/file.rs",
-		Signature: "example_signature",
+		Name:          "file",
+		Path:          "../rust/tests/modules/file/file.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
 	networkModule := &harness.Module{
-		Name:      "network",
-		Path:      "../rust/tests/modules/network/network.rs",
-		Signature: "example_signature",
+		Name:          "network",
+		Path:          "../rust/tests/modules/network/network.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
 	panicModule := &harness.Module{
-		Name:      "panic",
-		Path:      "../rust/tests/modules/panic/panic.rs",
-		Signature: "example_signature",
+		Name:          "panic",
+		Path:          "../rust/tests/modules/panic/panic.rs",
+		Signature:     "example_signature",
+		SignaturePath: "../../../signature/example-signature",
 	}
 
-	modules := []*harness.Module{passthroughModule, modifyModule, nextModule, modifyNextModule, fileModule, networkModule, panicModule}
+	badSignatureModule := &harness.Module{
+		Name:          "bad_signature",
+		Path:          "../rust/tests/modules/bad_signature/bad_signature.rs",
+		Signature:     "bad_signature",
+		SignaturePath: "../../../signature/bad-signature",
+	}
+
+	modules := []*harness.Module{passthroughModule, modifyModule, nextModule, modifyNextModule, fileModule, networkModule, panicModule, badSignatureModule}
 
 	generatedModules := harness.RustSetup(t, modules)
 	_ = generatedModules
@@ -455,6 +469,20 @@ func TestRuntimeRs(t *testing.T) {
 
 				err = i.Run(context.Background())
 				require.Error(t, err)
+			},
+		},
+		{
+			Name:   "BadSignature",
+			Module: badSignatureModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(nil)
+				require.NoError(t, err)
+
+				err = i.Run(context.Background())
+				assert.Error(t, err)
 			},
 		},
 	}
