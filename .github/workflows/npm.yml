@@ -25,7 +25,7 @@ jobs:
             ./ts/node_modules
           key: npm
       - name: Install dependencies with npm
-        run: npm install --legacy-peer-deps
+        run: npm install --legacy-peer-deps --include=dev
       - name: Build with npm
         run: npm run build
       - name: Publish to npm

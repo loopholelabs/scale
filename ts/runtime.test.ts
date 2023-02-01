@@ -17,133 +17,187 @@
 import { TextEncoder, TextDecoder } from "util";
 import * as fs from "fs";
 
-import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
+import {ScaleFunc, V1Alpha, Go, Rust} from "@loopholelabs/scalefile";
 
-import * as signature from "./runtime/signature" ;
+import * as signature from "./tests/signature" ;
 import { New } from "./runtime";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
-describe("sigruntime", () => {
-  const modPassthrough = fs.readFileSync("./runtime/modules/passthrough-TestRuntime.wasm");
-  const modNext = fs.readFileSync("./runtime/modules/next-TestRuntime.wasm");
-  const modFile = fs.readFileSync("./runtime/modules/file-TestRuntime.wasm");
-  const modNetwork = fs.readFileSync("./runtime/modules/network-TestRuntime.wasm");
-  const modPanic = fs.readFileSync("./runtime/modules/panic-TestRuntime.wasm");
-  const modBadSignature = fs.readFileSync("./runtime/modules/bad-signature-TestRuntime.wasm");
+describe("TestRuntimeTs", () => {
+  const modPassthroughGo = fs.readFileSync("./tests/modules/passthrough-TestRuntimeGo.wasm");
+  const modPassthroughRs = fs.readFileSync("./tests/modules/passthrough-TestRuntimeRs.wasm");
+  const modModifyGo = fs.readFileSync("./tests/modules/modify-TestRuntimeGo.wasm");
+  const modModifyRs = fs.readFileSync("./tests/modules/modify-TestRuntimeRs.wasm");
+  const modNextGo = fs.readFileSync("./tests/modules/next-TestRuntimeGo.wasm");
+  const modNextRs = fs.readFileSync("./tests/modules/next-TestRuntimeRs.wasm");
+  const modModifyNextGo = fs.readFileSync("./tests/modules/modifynext-TestRuntimeGo.wasm");
+  const modModifyNextRs = fs.readFileSync("./tests/modules/modifynext-TestRuntimeRs.wasm");
+  const modFileGo = fs.readFileSync("./tests/modules/file-TestRuntimeGo.wasm");
+  const modFileRs = fs.readFileSync("./tests/modules/file-TestRuntimeRs.wasm");
+  const modNetworkGo = fs.readFileSync("./tests/modules/network-TestRuntimeGo.wasm");
+  const modNetworkRs = fs.readFileSync("./tests/modules/network-TestRuntimeRs.wasm");
+  const modPanicGo = fs.readFileSync("./tests/modules/panic-TestRuntimeGo.wasm");
+  const modPanicRs = fs.readFileSync("./tests/modules/panic-TestRuntimeRs.wasm");
+  const modBadSignatureGo = fs.readFileSync("./tests/modules/bad-signature-TestRuntimeGo.wasm");
+  const modBadSignatureRs = fs.readFileSync("./tests/modules/bad-signature-TestRuntimeRs.wasm");
 
-  it("Can run passthrough", async () => {
+  const passthrough = [
+    { name: "Passthrough", module: modPassthroughGo, language: Go },
+    { name: "Passthrough", module: modPassthroughRs, language: Rust },
+  ]
 
-    const scalefnPassthrough = new ScaleFunc(V1Alpha, "Test.Passthrough", "Test.TestTag", "ExampleName@ExampleVersion", Go, modPassthrough);
+  passthrough.forEach((fn) => {
+    it(`${fn.name} ${fn.language}`, async () => {
+      const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+      const r = await New(signature.New, [sfn]);
+      const i = await r.Instance(null);
+      i.Context().Data = "Test Data";
+      expect(() => {
+        i.Run();
+      }).not.toThrowError();
+      expect(i.Context().Data).toBe("Test Data");
+    });
+  })
 
-    const r = await New(signature.New, [scalefnPassthrough]);
+  const modify = [
+    { name: "Modify", module: modModifyGo, language: Go },
+    { name: "Modify", module: modModifyRs, language: Rust },
+  ]
 
-    const i = await r.Instance(null);
-    i.Context().Data = "Test Data";
+  modify.forEach((fn) => {
+    it(`${fn.name} ${fn.language}`, async () => {
+      const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+      const r = await New(signature.New, [sfn]);
+      const i = await r.Instance(null);
+      i.Context().Data = "Test Data";
+      expect(() => {
+        i.Run();
+      }).not.toThrowError();
+      expect(i.Context().Data).toBe("modified");
+    });
+  })
 
-    expect(() => {
-      i.Run();
-    }).not.toThrowError();
+  const next = [
+    { name: "Next", module: modNextGo, language: Go },
+    { name: "Next", module: modNextRs, language: Rust },
+  ]
 
-    expect(i.Context().Data).toBe("Test Data");
-  });
+  next.forEach((fn) => {
+    it(`${fn.name} ${fn.language}`, async () => {
+      const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+      const r = await New(signature.New, [sfn]);
+      const i = await r.Instance(function (ctx: signature.Context): signature.Context {
+        ctx.Data = "Hello, world!";
+        return ctx;
+      });
+      i.Context().Data = "Test Data";
+      expect(() => {
+        i.Run();
+      }).not.toThrowError();
+      expect(i.Context().Data).toBe("Hello, world!");
+    });
+  })
 
-  it("Can run next", async () => {
+  const modifynext = [
+    { name: "ModifyNext", module: modModifyNextGo, language: Go },
+    { name: "ModifyNext", module: modModifyNextRs, language: Rust },
+  ]
 
-    const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "Test.TestTag", "ExampleName@ExampleVersion", Go, modNext);
+  modifynext.forEach((fn) => {
+      it(`${fn.name} ${fn.language}`, async () => {
+          const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+          const r = await New(signature.New, [sfn]);
+          const i = await r.Instance(function (ctx: signature.Context): signature.Context {
+            ctx.Data += "-next";
+            return ctx;
+          });
+          i.Context().Data = "Test Data";
+          expect(() => {
+          i.Run();
+          }).not.toThrowError();
+          expect(i.Context().Data).toBe("modified-next");
+      });
+  })
 
-    const r = await New(signature.New, [scalefnNext]);
+  next.forEach((fn) => {
+    it(`${fn.name} error ${fn.language}`, async () => {
+        const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+        const r = await New(signature.New, [sfn]);
+        const i = await r.Instance(function (ctx: signature.Context): signature.Context {
+          throw new Error("Hello error");
+        });
+        i.Context().Data = "Test Data";
+        expect(() => {
+          i.Run();
+        }).toThrow("Hello error");
+    });
+  })
 
-    const nextfn = (ctx: signature.Context): signature.Context => {
-      ctx.Data = "Hello, world!";
-      return ctx;
-    }
+  const file = [
+    { name: "File", module: modFileGo, language: Go },
+    { name: "File", module: modFileRs, language: Rust },
+  ]
 
-    const i = await r.Instance(nextfn);
+    file.forEach((fn) => {
+        it(`${fn.name} ${fn.language}`, async () => {
+            const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+            const r = await New(signature.New, [sfn]);
+            const i = await r.Instance(null);
+            i.Context().Data = "Test Data";
+            expect(() => {
+              i.Run();
+            }).toThrowError();
+        });
+    })
 
-    i.Context().Data = "Test Data";
 
-    expect(() => {
-      i.Run();
-    }).not.toThrowError();
+   const network = [
+    { name: "Network", module: modNetworkGo, language: Go },
+    { name: "Network", module: modNetworkRs, language: Rust },
+    ]
 
-    expect(i.Context().Data).toBe("Hello, world!");
-  });
+    network.forEach((fn) => {
+        it(`${fn.name} ${fn.language}`, async () => {
+            const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+            const r = await New(signature.New, [sfn]);
+            const i = await r.Instance(null);
+            expect(() => {
+            i.Run();
+            }).toThrowError();
+        });
+    })
 
-  it("Can run next error", async () => {
+    const panic = [
+    { name: "Panic", module: modPanicGo, language: Go },
+    { name: "Panic", module: modPanicRs, language: Rust },
+    ]
 
-    const scalefnNext = new ScaleFunc(V1Alpha, "Test.Next", "Test.TestTag", "ExampleName@ExampleVersion", Go, modNext);
+    panic.forEach((fn) => {
+        it(`${fn.name} ${fn.language}`, async () => {
+            const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+            const r = await New(signature.New, [sfn]);
+            const i = await r.Instance(null);
+            expect(() => {
+            i.Run();
+            }).toThrowError();
+        });
+    })
 
-    const r = await New(signature.New, [scalefnNext]);
+    const badSignature = [
+    { name: "BadSignature", module: modBadSignatureGo, language: Go },
+    { name: "BadSignature", module: modBadSignatureRs, language: Rust },
+    ]
 
-    const nextfn = (ctx: signature.Context): signature.Context => {
-      throw new Error("Hello error");
-    }
-
-    const i = await r.Instance(nextfn);
-
-    i.Context().Data = "Test Data";
-
-    expect(() => {
-      i.Run();
-    }).toThrow("Hello error");
-
-  });
-
-  it("Can run file error", async () => {
-
-    const scalefnFile = new ScaleFunc(V1Alpha, "Test.File", "Test.TestTag", "ExampleName@ExampleVersion", Go, modFile);
-
-    const r = await New(signature.New, [scalefnFile]);
-
-    const i = await r.Instance(null);
-
-    expect(() => {
-      i.Run();
-    }).toThrowError();
-
-  });
-
-  it("Can run network error", async () => {
-
-    const scalefnNetwork = new ScaleFunc(V1Alpha, "Test.Network", "Test.TestTag", "ExampleName@ExampleVersion", Go, modNetwork);
-
-    const r = await New(signature.New, [scalefnNetwork]);
-
-    const i = await r.Instance(null);
-
-    expect(() => {
-      i.Run();
-    }).toThrowError();
-
-  });
-
-  it("Can run panic error", async () => {
-
-    const scalefnPanic = new ScaleFunc(V1Alpha, "Test.Panic", "Test.TestTag", "ExampleName@ExampleVersion", Go, modPanic);
-
-    const r = await New(signature.New, [scalefnPanic]);
-
-    const i = await r.Instance(null);
-
-    expect(() => {
-      i.Run();
-    }).toThrowError();
-
-  });
-
-  it("Can run bad-signature error", async () => {
-
-    const scalefnBadSignature = new ScaleFunc(V1Alpha, "Test.BadSig", "Test.TestTag", "ExampleName@ExampleVersion", Go, modBadSignature);
-
-    const r = await New(signature.New, [scalefnBadSignature]);
-
-    const i = await r.Instance(null);
-
-    expect(() => {
-      i.Run();
-    }).toThrowError();
-
-  });
+    badSignature.forEach((fn) => {
+        it(`${fn.name} ${fn.language}`, async () => {
+            const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
+            const r = await New(signature.New, [sfn]);
+            const i = await r.Instance(null);
+            expect(() => {
+            i.Run();
+            }).toThrowError();
+        });
+    })
 });
