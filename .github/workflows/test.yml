@@ -24,5 +24,12 @@ jobs:
         with:
           tinygo-version: 0.26.0
 
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+          target: wasm32-unknown-unknown
+
       - name: Test
         run: go test -v ./...
