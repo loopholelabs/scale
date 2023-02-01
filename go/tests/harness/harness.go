@@ -151,7 +151,11 @@ func RustSetup(t testing.TB, modules []*Module) map[*Module]string {
 		dependencies := []*scalefile.Dependency{
 			{
 				Name:    "scale_signature",
-				Version: "0.1.7",
+				Version: "0.1.8",
+			},
+			{
+				Name:    "wee_alloc",
+				Version: "0.4.5",
 			},
 		}
 		err = g.GenerateRsCargo(cargoFile, dependencies, module.Signature, "../../../signature/example-signature")

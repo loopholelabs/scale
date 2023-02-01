@@ -15,10 +15,9 @@
 */
 
 
-use std::net::{TcpStream};
 use example_signature::context::Context;
 
 pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Error>> {
-    let _stream = TcpStream::connect("google.com:80")?;
-    Ok(ctx)
+    ctx.data = "modified".to_string();
+    ctx.next()
 }

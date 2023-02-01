@@ -43,9 +43,21 @@ func TestRuntimeGo(t *testing.T) {
 		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
+	modifyModule := &harness.Module{
+		Name:      "modify",
+		Path:      "tests/modules/modify/modify.go",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
+	}
+
 	nextModule := &harness.Module{
 		Name:      "next",
 		Path:      "tests/modules/next/next.go",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
+	}
+
+	modifyNextModule := &harness.Module{
+		Name:      "modifynext",
+		Path:      "tests/modules/modifynext/modifynext.go",
 		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
 	}
 
@@ -73,7 +85,7 @@ func TestRuntimeGo(t *testing.T) {
 		Signature: "github.com/loopholelabs/scale/go/tests/signature/bad-signature",
 	}
 
-	modules := []*harness.Module{passthroughModule, nextModule, fileModule, networkModule, panicModule, badSignatureModule}
+	modules := []*harness.Module{passthroughModule, modifyModule, nextModule, modifyNextModule, fileModule, networkModule, panicModule, badSignatureModule}
 
 	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
 
@@ -97,6 +109,24 @@ func TestRuntimeGo(t *testing.T) {
 			},
 		},
 		{
+			Name:   "Modify",
+			Module: modifyModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "modified", i.Context().Data)
+			},
+		},
+		{
 			Name:   "Next",
 			Module: nextModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
@@ -117,6 +147,29 @@ func TestRuntimeGo(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Equal(t, "Hello, World!", i.Context().Data)
+			},
+		},
+		{
+			Name:   "ModifyNext",
+			Module: modifyNextModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *signature.Context) (*signature.Context, error) {
+					ctx.Data = ctx.Data + "-next"
+					return ctx, nil
+				}
+
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(next)
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "modified-next", i.Context().Data)
 			},
 		},
 		{
@@ -214,21 +267,185 @@ func TestRuntimeGo(t *testing.T) {
 }
 
 func TestRuntimeRs(t *testing.T) {
+	passthroughModule := &harness.Module{
+		Name:      "passthrough",
+		Path:      "../rust/tests/modules/passthrough/passthrough.rs",
+		Signature: "example_signature",
+	}
+
+	modifyModule := &harness.Module{
+		Name:      "modify",
+		Path:      "../rust/tests/modules/modify/modify.rs",
+		Signature: "example_signature",
+	}
+
+	nextModule := &harness.Module{
+		Name:      "next",
+		Path:      "../rust/tests/modules/next/next.rs",
+		Signature: "example_signature",
+	}
+
+	modifyNextModule := &harness.Module{
+		Name:      "modifynext",
+		Path:      "../rust/tests/modules/modifynext/modifynext.rs",
+		Signature: "example_signature",
+	}
+
+	fileModule := &harness.Module{
+		Name:      "file",
+		Path:      "../rust/tests/modules/file/file.rs",
+		Signature: "example_signature",
+	}
+
 	networkModule := &harness.Module{
 		Name:      "network",
 		Path:      "../rust/tests/modules/network/network.rs",
 		Signature: "example_signature",
 	}
 
-	modules := []*harness.Module{networkModule}
+	panicModule := &harness.Module{
+		Name:      "panic",
+		Path:      "../rust/tests/modules/panic/panic.rs",
+		Signature: "example_signature",
+	}
+
+	modules := []*harness.Module{passthroughModule, modifyModule, nextModule, modifyNextModule, fileModule, networkModule, panicModule}
 
 	generatedModules := harness.RustSetup(t, modules)
 	_ = generatedModules
 
 	var testCases = []TestCase{
 		{
+			Name:   "Passthrough",
+			Module: passthroughModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data", i.Context().Data)
+			},
+		},
+		{
+			Name:   "Modify",
+			Module: modifyModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "modified", i.Context().Data)
+			},
+		},
+		{
+			Name:   "Next",
+			Module: nextModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *signature.Context) (*signature.Context, error) {
+					ctx.Data = "Hello, World!"
+					return ctx, nil
+				}
+
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(next)
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Hello, World!", i.Context().Data)
+			},
+		},
+		{
+			Name:   "ModifyNext",
+			Module: modifyNextModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *signature.Context) (*signature.Context, error) {
+					ctx.Data = ctx.Data + "-next"
+					return ctx, nil
+				}
+
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(next)
+				require.NoError(t, err)
+
+				i.Context().Data = "Test Data"
+
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "modified-next", i.Context().Data)
+			},
+		},
+		{
+			Name:   "NextError",
+			Module: nextModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				next := func(ctx *signature.Context) (*signature.Context, error) {
+					return nil, errors.New("next error")
+				}
+
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(next)
+				require.NoError(t, err)
+
+				err = i.Run(context.Background())
+				require.ErrorIs(t, err, errors.New("next error"))
+			},
+		},
+		{
+			Name:   "File",
+			Module: fileModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(nil)
+				require.NoError(t, err)
+
+				err = i.Run(context.Background())
+				require.ErrorContains(t, err, "operation not supported on this platform")
+			},
+		},
+		{
 			Name:   "Network",
 			Module: networkModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(nil)
+				require.NoError(t, err)
+
+				err = i.Run(context.Background())
+				require.ErrorContains(t, err, "operation not supported on this platform")
+			},
+		},
+		{
+			Name:   "Panic",
+			Module: panicModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
 				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)

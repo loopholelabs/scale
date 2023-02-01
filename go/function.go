@@ -72,7 +72,7 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 
 	err = i.runtimeContext().Read(readBuffer)
 	if err != nil {
-		return fmt.Errorf("failed to deserialize context for function '%s': %w", f.scaleFunc.Name, err)
+		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
 	}
 
 	return nil

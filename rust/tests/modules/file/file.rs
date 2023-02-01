@@ -14,11 +14,10 @@
 	limitations under the License.
 */
 
-
-use std::net::{TcpStream};
+use std::fs;
 use example_signature::context::Context;
 
 pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Error>> {
-    let _stream = TcpStream::connect("google.com:80")?;
+    let _body = fs::read_to_string("tests/modules/rust/file.rs")?;
     Ok(ctx)
 }

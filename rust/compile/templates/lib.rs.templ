@@ -18,7 +18,7 @@ pub unsafe extern "C" fn run() -> u64 {
     let guest_context = ctx.guest_context();
     return match guest_context.from_read_buffer() {
         Some(err) => {
-            let (ptr, len) = guest_context.error_write_buffer(&err.to_string());
+            let (ptr, len) = guest_context.error_write_buffer(err);
             pack_uint32(ptr, len)
         },
         None => {
@@ -28,9 +28,9 @@ pub unsafe extern "C" fn run() -> u64 {
                     let (ptr, len) = guest_ctx.to_write_buffer();
                     pack_uint32(ptr, len)
                 },
-                Err(e) => {
+                Err(err) => {
                     let guest_ctx = ctx.guest_context();
-                    let (ptr, len) = guest_ctx.error_write_buffer(&e.to_string());
+                    let (ptr, len) = guest_ctx.error_write_buffer(err);
                     pack_uint32(ptr, len)
                 }
             };

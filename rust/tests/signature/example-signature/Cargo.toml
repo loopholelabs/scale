@@ -8,7 +8,7 @@ description = "example signature"
 path = "lib.rs"
 
 [dependencies]
-polyglot_rs = "0.1.0"
-scale_signature = "0.1.7"
+polyglot_rs = "0.6.0"
+scale_signature = "0.1.8"
 lazy_static = "1.4.0"
 wee_alloc = "0.4.5"

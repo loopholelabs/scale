@@ -6,3 +6,5 @@ node_modules
 dist
 coverage
 .parcel-cache
+target
+Cargo.lock
