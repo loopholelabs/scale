@@ -110,7 +110,7 @@ func GoSetup(t testing.TB, modules []*Module, importPath string) map[*Module]str
 	return generated
 }
 
-func RustSetup(t testing.TB, modules []*Module) map[*Module]string {
+func RustSetup(t testing.TB, modules []*Module, dependencies []*scalefile.Dependency) map[*Module]string {
 	cargo, err := exec.LookPath("cargo")
 	require.NoError(t, err, "cargo not found in path")
 
@@ -149,16 +149,8 @@ func RustSetup(t testing.TB, modules []*Module) map[*Module]string {
 		require.NoError(t, err, fmt.Sprintf("failed to close lib.rs for scale function %s", module.Name))
 
 		cargoFile, err := os.OpenFile(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "Cargo.toml"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		dependencies := []*scalefile.Dependency{
-			{
-				Name:    "scale_signature",
-				Version: "0.1.8",
-			},
-			{
-				Name:    "wee_alloc",
-				Version: "0.4.5",
-			},
-		}
+		require.NoError(t, err, fmt.Sprintf("failed to create Cargo.toml for scale function %s", module.Name))
+
 		err = g.GenerateRsCargo(cargoFile, dependencies, module.Signature, module.SignaturePath)
 		require.NoError(t, err, fmt.Sprintf("failed to generate lib.rs for scale function %s", module.Name))
 

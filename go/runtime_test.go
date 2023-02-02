@@ -21,8 +21,10 @@ package runtime
 import (
 	"context"
 	"errors"
+	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scale/go/tests/harness"
 	signature "github.com/loopholelabs/scale/go/tests/signature/example-signature"
+	"github.com/loopholelabs/scalefile"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -258,6 +260,78 @@ func TestRuntimeGo(t *testing.T) {
 				Name:      "TestName",
 				Tag:       "TestTag",
 				Signature: "ExampleName@ExampleVersion",
+				Language:  scalefunc.Go,
+				Function:  module,
+			}
+			testCase.Run(scaleFunc, t)
+		})
+	}
+}
+
+func TestRuntimeHTTPSignatureGo(t *testing.T) {
+	passthroughModule := &harness.Module{
+		Name:      "http-passthrough",
+		Path:      "tests/modules/http-passthrough/http-passthrough.go",
+		Signature: "github.com/loopholelabs/scale-signature-http",
+	}
+
+	handlerModule := &harness.Module{
+		Name:      "http-handler",
+		Path:      "tests/modules/http-handler/http-handler.go",
+		Signature: "github.com/loopholelabs/scale-signature-http",
+	}
+
+	modules := []*harness.Module{passthroughModule, handlerModule}
+
+	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
+
+	var testCases = []TestCase{
+		{
+			Name:   "Passthrough",
+			Module: passthroughModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Response().SetBody("Test Data")
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data", string(i.Context().Response().Body()))
+			},
+		},
+		{
+			Name:   "Handler",
+			Module: handlerModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Response().SetBody("Test Data")
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data-modified", string(i.Context().Response().Body()))
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			module, err := os.ReadFile(generatedModules[testCase.Module])
+			require.NoError(t, err)
+
+			scaleFunc := &scalefunc.ScaleFunc{
+				Version:   scalefunc.V1Alpha,
+				Name:      "TestName",
+				Tag:       "TestTag",
+				Signature: "ExampleName@ExampleVersion",
 				Language:  "go",
 				Function:  module,
 			}
@@ -325,8 +399,18 @@ func TestRuntimeRs(t *testing.T) {
 
 	modules := []*harness.Module{passthroughModule, modifyModule, nextModule, modifyNextModule, fileModule, networkModule, panicModule, badSignatureModule}
 
-	generatedModules := harness.RustSetup(t, modules)
-	_ = generatedModules
+	dependencies := []*scalefile.Dependency{
+		{
+			Name:    "scale_signature",
+			Version: "0.2.0",
+		},
+		{
+			Name:    "wee_alloc",
+			Version: "0.4.5",
+		},
+	}
+
+	generatedModules := harness.RustSetup(t, modules, dependencies)
 
 	var testCases = []TestCase{
 		{
@@ -497,7 +581,94 @@ func TestRuntimeRs(t *testing.T) {
 				Name:      "TestName",
 				Tag:       "TestTag",
 				Signature: "ExampleName@ExampleVersion",
-				Language:  "rs",
+				Language:  scalefunc.Rust,
+				Function:  module,
+			}
+			testCase.Run(scaleFunc, t)
+		})
+	}
+}
+
+func TestRuntimeHTTPSignatureRs(t *testing.T) {
+	passthroughModule := &harness.Module{
+		Name:      "http_passthrough",
+		Path:      "../rust/tests/modules/http_passthrough/http_passthrough.rs",
+		Signature: "scale_signature_http",
+	}
+
+	handlerModule := &harness.Module{
+		Name:      "http_handler",
+		Path:      "../rust/tests/modules/http_handler/http_handler.rs",
+		Signature: "scale_signature_http",
+	}
+
+	modules := []*harness.Module{passthroughModule, handlerModule}
+
+	dependencies := []*scalefile.Dependency{
+		{
+			Name:    "scale_signature",
+			Version: "0.2.0",
+		},
+		{
+			Name:    "scale_signature_http",
+			Version: "0.1.6",
+		},
+		{
+			Name:    "wee_alloc",
+			Version: "0.4.5",
+		},
+	}
+
+	generatedModules := harness.RustSetup(t, modules, dependencies)
+
+	var testCases = []TestCase{
+		{
+			Name:   "Passthrough",
+			Module: passthroughModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Response().SetBody("Test Data")
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data", string(i.Context().Response().Body()))
+			},
+		},
+		{
+			Name:   "Handler",
+			Module: handlerModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance()
+				require.NoError(t, err)
+
+				i.Context().Response().SetBody("Test Data")
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data-modified", string(i.Context().Response().Body()))
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			module, err := os.ReadFile(generatedModules[testCase.Module])
+			require.NoError(t, err)
+
+			scaleFunc := &scalefunc.ScaleFunc{
+				Version:   scalefunc.V1Alpha,
+				Name:      "TestName",
+				Tag:       "TestTag",
+				Signature: "ExampleName@ExampleVersion",
+				Language:  "go",
 				Function:  module,
 			}
 			testCase.Run(scaleFunc, t)

@@ -3,7 +3,7 @@
 use crate::context::Context;
 use crate::bad_signature::{Decode, Encode, BadContext};
 use scale_signature::{Context as ContextTrait, GuestContext as GuestContextTrait};
-use std::io::{Cursor};
+use std::io::Cursor;
 
 pub static mut READ_BUFFER: Vec<u8> = Vec::new();
 pub static mut WRITE_BUFFER: Vec<u8> = Vec::new();
