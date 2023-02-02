@@ -302,11 +302,11 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Generated().Response.Body = []byte("Test Data")
+				i.Context().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data", string(i.Context().Generated().Response.Body))
+				assert.Equal(t, "Test Data", string(i.Context().Response.Body))
 			},
 		},
 		{
@@ -319,11 +319,11 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Generated().Response.Body = []byte("Test Data")
+				i.Context().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data-modified", string(i.Context().Generated().Response.Body))
+				assert.Equal(t, "Test Data-modified", string(i.Context().Response.Body))
 			},
 		},
 		{
@@ -334,16 +334,16 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 				require.NoError(t, err)
 
 				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
-					ctx.Generated().Response.Body = append(ctx.Generated().Response.Body, []byte("-next")...)
+					ctx.Response.Body = append(ctx.Response.Body, []byte("-next")...)
 					return ctx, nil
 				})
 				require.NoError(t, err)
 
-				i.Context().Generated().Response.Body = []byte("Test Data")
+				i.Context().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data-modified-next", string(i.Context().Generated().Response.Body))
+				assert.Equal(t, "Test Data-modified-next", string(i.Context().Response.Body))
 			},
 		},
 	}
@@ -643,7 +643,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 		},
 		{
 			Name:    "scale_signature_http",
-			Version: "0.2.1",
+			Version: "0.2.2",
 		},
 		{
 			Name:    "wee_alloc",
@@ -664,11 +664,11 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Generated().Response.Body = []byte("Test Data")
+				i.Context().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data", string(i.Context().Generated().Response.Body))
+				assert.Equal(t, "Test Data", string(i.Context().Response.Body))
 			},
 		},
 		{
@@ -681,11 +681,11 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Generated().Response.Body = []byte("Test Data")
+				i.Context().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data-modified", string(i.Context().Generated().Response.Body))
+				assert.Equal(t, "Test Data-modified", string(i.Context().Response.Body))
 			},
 		},
 		{
@@ -696,16 +696,16 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 				require.NoError(t, err)
 
 				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
-					ctx.Generated().Response.Body = append(ctx.Generated().Response.Body, []byte("-next")...)
+					ctx.Response.Body = append(ctx.Response.Body, []byte("-next")...)
 					return ctx, nil
 				})
 				require.NoError(t, err)
 
-				i.Context().Generated().Response.Body = []byte("Test Data")
+				i.Context().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data-modified-next", string(i.Context().Generated().Response.Body))
+				assert.Equal(t, "Test Data-modified-next", string(i.Context().Response.Body))
 			},
 		},
 	}

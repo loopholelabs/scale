@@ -21,15 +21,14 @@ import { Runtime } from "./runtime";
 import { Module } from "./module";
 
 export class Pool<T extends Signature> {
-  private f: Func<T>;
-  private r: Runtime<T>;
+  private readonly f: Func<T>;
+  private readonly r: Runtime<T>;
 
   constructor(f: Func<T>, r: Runtime<T>) {
     this.f = f;
     this.r = r;
   }
 
-  // For now, we don't actually have a pool, we just create new Modules each time.
   Get(): Module<T> {
     return new Module<T>(this.f, this.r);
   }

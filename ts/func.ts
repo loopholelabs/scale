@@ -23,15 +23,15 @@ import { Pool } from "./pool";
 
 export class Func<T extends Signature> {
   private scalefn: ScaleFunc;
-  public mod: WebAssembly.Module;
+  public wasmModule: WebAssembly.Module;
   public next: undefined | Func<T>;
   public id: string;
 
   public modulePool: undefined | Pool<T>;
 
-  constructor(scalefn: ScaleFunc, mod: WebAssembly.Module) {
+  constructor(scalefn: ScaleFunc, wasmModule: WebAssembly.Module) {
     this.scalefn = scalefn;
-    this.mod = mod;
+    this.wasmModule = wasmModule;
     this.id = uuidv4();
   }
 

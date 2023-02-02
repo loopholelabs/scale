@@ -48,7 +48,7 @@ export class Cache {
     this.nextFunction = fn;
   }
 
-  getInstance(): WebAssembly.Instance {
+  GetInstance(): WebAssembly.Instance {
     if (this.instance === undefined) {
       throw new Error("Instance wasn't created correctly");
     }

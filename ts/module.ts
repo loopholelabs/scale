@@ -35,11 +35,15 @@ export class Module<T extends Signature> {
   }
 
   init(i: Instance<T>) {
-    this.wasmInstance = this.runtime.Instantiate(this.sfunction.id, this, i);
+    this.wasmInstance = this.runtime.InstantiateModule(this.sfunction.id, this, i);
 
     this.run = this.wasmInstance.exports.run as Function;
     this.resize = this.wasmInstance.exports.resize as Function;
-    if (this.resize === undefined) this.resize = this.wasmInstance.exports.malloc as Function;    // Backward compat. TODO: Remove
+
+    if (this.run === undefined || this.resize === undefined) {
+        throw new Error("failed to find run or resize implementations");
+    }
+
     this.memory = this.wasmInstance.exports.memory as WebAssembly.Memory;
   }
 

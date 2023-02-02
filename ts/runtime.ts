@@ -16,6 +16,7 @@
 
 import { Signature, NewSignature } from "@loopholelabs/scale-signature";
 import { ScaleFunc } from "@loopholelabs/scalefile";
+import * as httpSignature  from "@loopholelabs/scale-signature-http";
 
 import { Func } from "./func";
 import { Instance } from "./instance";
@@ -25,7 +26,11 @@ import { Cache } from "./cache";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
-export async function New<T extends Signature>(newSignature: NewSignature<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
+export async function New(functions: ScaleFunc[]): Promise<Runtime<httpSignature.Context>> {
+ return NewFromSignature(httpSignature.New, functions);
+}
+
+export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
   const r = new Runtime(newSignature, functions);
   await r.Ready();
   return r;
@@ -71,17 +76,17 @@ export class Runtime<T extends Signature> {
   async Instance(next: null | NextFn<T>): Promise<Instance<T>> {
     const i = new Instance<T>(this, next);
     for (let a = 0; a < this.functions.length; a++) {
-      const mod = this.functions[a].mod;
+      const module = this.functions[a].wasmModule;
       const id = this.functions[a].id;
       const cache = new Cache();
-      await cache.Initialize(mod);
+      await cache.Initialize(module);
       i.SetInstance(id, cache);
     }
 
     return i;
   }
 
-  Instantiate(fnid: string, mod: Module<T>, i: Instance<T>): WebAssembly.Instance {
+  InstantiateModule(fnid: string, mod: Module<T>, i: Instance<T>): WebAssembly.Instance {
     const nextFunction = ((): Function => {
       return (ptr: number, len: number): BigInt => {
         if (mod.memory === undefined || mod.resize === undefined) {
@@ -114,6 +119,6 @@ export class Runtime<T extends Signature> {
 
     const cached = i.GetInstance(fnid);
     cached.SetNext(nextFunction);
-    return cached.getInstance();
+    return cached.GetInstance();
   }
 }
