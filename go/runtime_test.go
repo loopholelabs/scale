@@ -643,7 +643,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 		},
 		{
 			Name:    "scale_signature_http",
-			Version: "0.2.2",
+			Version: "0.2.3",
 		},
 		{
 			Name:    "wee_alloc",
