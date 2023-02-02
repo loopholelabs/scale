@@ -10,8 +10,8 @@ github.com/loopholelabs/polyglot-go v0.5.1 h1:21QVDELp+EodPUAL+Aw8GNXLyt2BFj9gYQ
 github.com/loopholelabs/polyglot-go v0.5.1/go.mod h1:Z0QiNv4KRuWjQWpUerMhmkvRh6ks1pYmEH4SGpG0EHQ=
 github.com/loopholelabs/scale-signature v0.2.0 h1:kBk8yCka2Bj8IX9NMZuKy+JGhNhOQ0/rD7XUvwAaryI=
 github.com/loopholelabs/scale-signature v0.2.0/go.mod h1:X34VL10YoTrMWs6hLM2DzN4cOB4glaF+j4VbNj5iDTs=
-github.com/loopholelabs/scale-signature-http v0.2.2 h1:XJ2+XGD5iH9GJhNd+Wiu00ubawDEzGHGwwtZb2Z6xCA=
-github.com/loopholelabs/scale-signature-http v0.2.2/go.mod h1:I3cM1r/HSOGPkpzK3BdxbyrU+48tKPbUeCIOHGft8jU=
+github.com/loopholelabs/scale-signature-http v0.2.3 h1:v3HnHV4eGB+zmA4cv54DGIS9o3VAHv1EzayeG5o5dII=
+github.com/loopholelabs/scale-signature-http v0.2.3/go.mod h1:I3cM1r/HSOGPkpzK3BdxbyrU+48tKPbUeCIOHGft8jU=
 github.com/loopholelabs/scalefile v0.1.4 h1:Y9NJr1hnPwa73vUenyey3in6M2k09rts9J7Z9OLfMY8=
 github.com/loopholelabs/scalefile v0.1.4/go.mod h1:fPq4xcXpAzWErW1tqLTex2xIrHJ/iCRFb4et6+sbOvk=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
