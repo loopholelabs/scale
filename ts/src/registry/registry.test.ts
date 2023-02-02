@@ -15,7 +15,7 @@
 */
 
 /*
-package pulldown
+package registry
 
 import (
 	"bufio"

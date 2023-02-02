@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package pulldown
+package registry
 
 import (
 	"bufio"

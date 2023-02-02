@@ -14,48 +14,60 @@
 	limitations under the License.
 */
 
-import { ScaleFile } from "@loopholelabs/scalefile"
+package registry
 
-export type PullPolicy = string;
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
 
-export const AlwaysPullPolicy: PullPolicy = "always";
-export const IfNotPresentPullPolicy: PullPolicy = "if-not-present";
-export const NeverPullPolicy: PullPolicy = "never";
+	"github.com/loopholelabs/scalefile"
+)
 
-export var ErrHasMismatch = new Error("hash mismatch");
-export var ErrNoFunction = new Error("function does not exist and pull policy is never");
+type PullPolicy string
 
-export interface Config {
-  pullPolicy: PullPolicy
-  cacheDirectory: string
-  apiKey: string
+const (
+	AlwaysPullPolicy       PullPolicy = "always"
+	IfNotPresentPullPolicy            = "if-not-present"
+	NeverPullPolicy                   = "never"
+)
+
+var (
+	ErrHashMismatch = errors.New("hash mismatch")
+	ErrNoFunction   = errors.New("function does not exist and pull policy is never")
+)
+
+type Config struct {
+	pullPolicy     PullPolicy
+	cacheDirectory string
+	apiKey         string
 }
 
-export type Option = (c: Config) => void;
+type Option func(config *Config)
 
-export function WithPullPolicy(pullPolicy: PullPolicy): Option {
-  return (c: Config) => {
-    c.pullPolicy = pullPolicy;
-  }
+func WithPullPolicy(pullPolicy PullPolicy) Option {
+	return func(config *Config) {
+		config.pullPolicy = pullPolicy
+	}
 }
 
-export function WithCacheDirectory(cacheDirectory: string): Option {
-  return (c: Config) => {
-    c.cacheDirectory = cacheDirectory;
-  }
+func WithCacheDirectory(cacheDirectory string) Option {
+	return func(config *Config) {
+		config.cacheDirectory = cacheDirectory
+	}
 }
 
-export function WithApiKey(apiKey: string): Option {
-  return (c: Config) => {
-    c.apiKey = apiKey;
-  }
+func WithApiKey(apiKey string) Option {
+	return func(config *Config) {
+		config.apiKey = apiKey
+	}
 }
 
-export function NewPulldown(function:string, opts:Option...): ScaleFile {
-
-}
-
-/*
 // Create a new runtime for a specific scalefile
 func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
 	// Default config
@@ -181,4 +193,3 @@ func apiRequest(function string, conf *Config) (PulldownResponse, error) {
 		Hash: "1234",
 	}, nil
 }
-*/
