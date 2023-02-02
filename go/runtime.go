@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/scale-signature"
+	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
@@ -54,7 +55,11 @@ type Runtime[T signature.Signature] struct {
 	modules   map[string]*Module[T]
 }
 
-func New[T signature.Signature](ctx context.Context, sig signature.NewSignature[T], functions []*scalefunc.ScaleFunc) (*Runtime[T], error) {
+func New(ctx context.Context, functions []*scalefunc.ScaleFunc) (*Runtime[*httpSignature.Context], error) {
+	return NewWithSignature(ctx, httpSignature.New, functions)
+}
+
+func NewWithSignature[T signature.Signature](ctx context.Context, sig signature.NewSignature[T], functions []*scalefunc.ScaleFunc) (*Runtime[T], error) {
 	if len(functions) == 0 {
 		return nil, NoFunctionsError
 	}
