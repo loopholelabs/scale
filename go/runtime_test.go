@@ -96,7 +96,7 @@ func TestRuntimeGo(t *testing.T) {
 			Name:   "Passthrough",
 			Module: passthroughModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -114,7 +114,7 @@ func TestRuntimeGo(t *testing.T) {
 			Name:   "Modify",
 			Module: modifyModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -137,7 +137,7 @@ func TestRuntimeGo(t *testing.T) {
 					return ctx, nil
 				}
 
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -160,7 +160,7 @@ func TestRuntimeGo(t *testing.T) {
 					return ctx, nil
 				}
 
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -182,7 +182,7 @@ func TestRuntimeGo(t *testing.T) {
 					return nil, errors.New("next error")
 				}
 
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -196,7 +196,7 @@ func TestRuntimeGo(t *testing.T) {
 			Name:   "File",
 			Module: fileModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -210,7 +210,7 @@ func TestRuntimeGo(t *testing.T) {
 			Name:   "Network",
 			Module: networkModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -224,7 +224,7 @@ func TestRuntimeGo(t *testing.T) {
 			Name:   "Panic",
 			Module: panicModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -238,7 +238,7 @@ func TestRuntimeGo(t *testing.T) {
 			Name:   "BadSignature",
 			Module: badSignatureModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -296,7 +296,7 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 			Name:   "Passthrough",
 			Module: passthroughModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -313,7 +313,7 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 			Name:   "Handler",
 			Module: handlerModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -330,7 +330,7 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 			Name:   "Next",
 			Module: nextModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
@@ -443,7 +443,7 @@ func TestRuntimeRs(t *testing.T) {
 			Name:   "Passthrough",
 			Module: passthroughModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -461,7 +461,7 @@ func TestRuntimeRs(t *testing.T) {
 			Name:   "Modify",
 			Module: modifyModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -484,7 +484,7 @@ func TestRuntimeRs(t *testing.T) {
 					return ctx, nil
 				}
 
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -507,7 +507,7 @@ func TestRuntimeRs(t *testing.T) {
 					return ctx, nil
 				}
 
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -529,7 +529,7 @@ func TestRuntimeRs(t *testing.T) {
 					return nil, errors.New("next error")
 				}
 
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(next)
@@ -543,7 +543,7 @@ func TestRuntimeRs(t *testing.T) {
 			Name:   "File",
 			Module: fileModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -557,7 +557,7 @@ func TestRuntimeRs(t *testing.T) {
 			Name:   "Network",
 			Module: networkModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -571,7 +571,7 @@ func TestRuntimeRs(t *testing.T) {
 			Name:   "Panic",
 			Module: panicModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -585,7 +585,7 @@ func TestRuntimeRs(t *testing.T) {
 			Name:   "BadSignature",
 			Module: badSignatureModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(nil)
@@ -658,7 +658,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 			Name:   "Passthrough",
 			Module: passthroughModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -675,7 +675,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 			Name:   "Handler",
 			Module: handlerModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance()
@@ -692,7 +692,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 			Name:   "Next",
 			Module: nextModule,
 			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
 				require.NoError(t, err)
 
 				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
