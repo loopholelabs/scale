@@ -30,10 +30,11 @@ import (
 )
 
 type Module struct {
-	Path         string
-	Name         string
-	Signature    string
-	Dependencies []*scalefile.Dependency
+	Path          string
+	Name          string
+	Signature     string
+	SignaturePath string
+	Dependencies  []*scalefile.Dependency
 }
 
 func GoSetup(t testing.TB, modules []*Module, importPath string) map[*Module]string {
@@ -68,7 +69,7 @@ func GoSetup(t testing.TB, modules []*Module, importPath string) map[*Module]str
 		file, err := os.OpenFile(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "main.go"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		require.NoError(t, err, fmt.Sprintf("failed to create main.go for scale function %s", module.Name))
 
-		err = g.GenerateGoMain(file, module.Signature, fmt.Sprintf("%s/%s/%s-%s-build/scale", importPath, module.Name, module.Name, t.Name()))
+		err = g.GenerateGoMain(file, fmt.Sprintf("%s/%s/%s-%s-build/scale", importPath, module.Name, module.Name, t.Name()), module.Signature)
 		require.NoError(t, err, fmt.Sprintf("failed to generate main.go for scale function %s", module.Name))
 
 		err = file.Close()
@@ -109,7 +110,7 @@ func GoSetup(t testing.TB, modules []*Module, importPath string) map[*Module]str
 	return generated
 }
 
-func RustSetup(t testing.TB, modules []*Module, importPath string) map[*Module]string {
+func RustSetup(t testing.TB, modules []*Module, dependencies []*scalefile.Dependency) map[*Module]string {
 	cargo, err := exec.LookPath("cargo")
 	require.NoError(t, err, "cargo not found in path")
 
@@ -141,15 +142,20 @@ func RustSetup(t testing.TB, modules []*Module, importPath string) map[*Module]s
 		file, err := os.OpenFile(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "lib.rs"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 		require.NoError(t, err, fmt.Sprintf("failed to create lib.rs for scale function %s", module.Name))
 
-		err = g.GenerateLibRs(file, module.Signature, importPath)
-
-		cargoFile, err := os.OpenFile(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "Cargo.toml"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		dependencies := []*scalefile.Dependency{}
-		err = g.GenerateCargoTomlfile(cargoFile, dependencies)
+		err = g.GenerateRsLib(file, "./scale/scale.rs", module.Signature)
 		require.NoError(t, err, fmt.Sprintf("failed to generate lib.rs for scale function %s", module.Name))
 
 		err = file.Close()
 		require.NoError(t, err, fmt.Sprintf("failed to close lib.rs for scale function %s", module.Name))
+
+		cargoFile, err := os.OpenFile(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "Cargo.toml"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		require.NoError(t, err, fmt.Sprintf("failed to create Cargo.toml for scale function %s", module.Name))
+
+		err = g.GenerateRsCargo(cargoFile, dependencies, module.Signature, module.SignaturePath)
+		require.NoError(t, err, fmt.Sprintf("failed to generate lib.rs for scale function %s", module.Name))
+
+		err = cargoFile.Close()
+		require.NoError(t, err, fmt.Sprintf("failed to close Cargo.toml for scale function %s", module.Name))
 
 		err = os.Mkdir(path.Join(moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()), "scale"), 0755)
 		if !os.IsExist(err) {
@@ -175,7 +181,6 @@ func RustSetup(t testing.TB, modules []*Module, importPath string) map[*Module]s
 		require.NoError(t, err, fmt.Sprintf("failed to get working directory for scale function %s", module.Name))
 
 		cmd := exec.Command(cargo, "build", "--target", "wasm32-unknown-unknown", "--manifest-path", "Cargo.toml")
-
 		cmd.Dir = path.Join(wd, moduleDir, fmt.Sprintf("%s-%s-build", module.Name, t.Name()))
 
 		err = cmd.Run()

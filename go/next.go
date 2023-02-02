@@ -32,7 +32,7 @@ func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint6
 		return
 	}
 
-	buf, ok := m.module.Memory().Read(ctx, pointer, length)
+	buf, ok := m.module.Memory().Read(pointer, length)
 	if !ok {
 		return
 	}
@@ -64,7 +64,7 @@ func (r *Runtime[T]) next(ctx context.Context, module api.Module, params []uint6
 	if err != nil {
 		return
 	}
-	module.Memory().Write(ctx, uint32(writeBuffer[0]), ctxBuffer)
+	module.Memory().Write(uint32(writeBuffer[0]), ctxBuffer)
 
 	return
 }

@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/scale-signature"
+	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
@@ -38,16 +39,13 @@ var (
 // by whatever adapter is being used.
 type Next[T signature.Signature] func(ctx T) (T, error)
 
-// NewSignature is a factory function for creating a new signature.Signature.
-type NewSignature[T signature.Signature] func() T
-
 // Runtime is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
 type Runtime[T signature.Signature] struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
 
-	new NewSignature[T]
+	new signature.NewSignature[T]
 
 	functions []*Function[T]
 	head      *Function[T]
@@ -57,7 +55,11 @@ type Runtime[T signature.Signature] struct {
 	modules   map[string]*Module[T]
 }
 
-func New[T signature.Signature](ctx context.Context, sig NewSignature[T], functions []*scalefunc.ScaleFunc) (*Runtime[T], error) {
+func New(ctx context.Context, functions []*scalefunc.ScaleFunc) (*Runtime[*httpSignature.Context], error) {
+	return NewWithSignature(ctx, httpSignature.New, functions)
+}
+
+func NewWithSignature[T signature.Signature](ctx context.Context, sig signature.NewSignature[T], functions []*scalefunc.ScaleFunc) (*Runtime[T], error) {
 	if len(functions) == 0 {
 		return nil, NoFunctionsError
 	}
