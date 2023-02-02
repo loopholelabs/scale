@@ -54,14 +54,16 @@ export class Func<T extends Signature> {
     const memData = new Uint8Array(module.memory.buffer);
     memData.set(encoded, encPtr);
 
-    const packed = module.run(encPtr, encoded.length);    // Backward compat. TODO: Remove args
+    const packed = module.run(encPtr, encoded.length);
 
     const [ptr, len] = Func.unpackMemoryRef(packed);
     const memDataOut = new Uint8Array(module.memory.buffer);
     const inContextBuff = memDataOut.slice(ptr, ptr + len);
 
-    i.RuntimeContext().Read(inContextBuff);   // NB This may throw an Error if the inContextBuff contains one.
-    // TODO: Put module back in the pool?...
+    const err = i.RuntimeContext().Read(inContextBuff);
+    if (err !== undefined) {
+      throw err;
+    }
   }
 
   // Pack a pointer and length into a single 64bit

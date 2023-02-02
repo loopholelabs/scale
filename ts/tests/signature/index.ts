@@ -1,56 +1,44 @@
-/*
-  Copyright 2022 Loophole Labs
+import { Kind, decodeError } from "@loopholelabs/polyglot-ts";
 
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
+import {ExampleContext} from "./example.signature";
+import {RuntimeContext as RuntimeContextInterface, Signature} from "@loopholelabs/scale-signature";
 
-       http://www.apache.org/licenses/LICENSE-2.0
+export class RuntimeContext implements RuntimeContextInterface {
+  private readonly context: ExampleContext;
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-*/
+  constructor(context: ExampleContext) {
+    this.context = context;
+  }
 
-import { Kind, encodeError, decodeError, encodeString, decodeString } from "@loopholelabs/polyglot-ts";
+  Read(b: Uint8Array): Error | undefined {
+    if (b.length > 0 && b[0] === Kind.Error) {
+      return decodeError(b).value;
+    }
+    Object.assign(this.context, ExampleContext.decode(b).value);
+    return undefined;
+  }
 
-import { RuntimeContext } from "@loopholelabs/scale-signature";
+  Write(): Uint8Array {
+    return this.context.encode(new Uint8Array());
+  }
+
+  Error(err: Error): Uint8Array {
+    return this.context.internalError(new Uint8Array(), err);
+  }
+}
 
 export function New(): Context {
   return new Context();
 }
 
-export class Context implements RuntimeContext {
-  public Data: string
-
+export class Context extends ExampleContext implements Signature {
+  private readonly runtimeContext;
   constructor() {
-    this.Data = "";
+    super("");
+    this.runtimeContext = new RuntimeContext(this);
   }
 
   RuntimeContext(): RuntimeContext {
-    return this;
-  }
-
-  Read(d: Uint8Array) {
-    if (d.length > 0 && d[0] === Kind.Error) {
-      const e = decodeError(d).value;
-      throw (e);
-    }
-    this.Data = decodeString(d).value;
-  }
-
-  Write(): Uint8Array {
-    return encodeString(new Uint8Array(), this.Data);
-  }
-
-  Error(e: Error): Uint8Array {
-    return encodeError(new Uint8Array(), e);
+    return this.runtimeContext;
   }
 }
-
-export default {
-    New: New,
-    Context: Context,
-};

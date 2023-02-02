@@ -281,7 +281,13 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 		Signature: "github.com/loopholelabs/scale-signature-http",
 	}
 
-	modules := []*harness.Module{passthroughModule, handlerModule}
+	nextModule := &harness.Module{
+		Name:      "http-next",
+		Path:      "tests/modules/http-next/http-next.go",
+		Signature: "github.com/loopholelabs/scale-signature-http",
+	}
+
+	modules := []*harness.Module{passthroughModule, handlerModule, nextModule}
 
 	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
 
@@ -296,11 +302,11 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Response().SetBody("Test Data")
+				i.Context().Generated().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data", string(i.Context().Response().Body()))
+				assert.Equal(t, "Test Data", string(i.Context().Generated().Response.Body))
 			},
 		},
 		{
@@ -313,11 +319,31 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Response().SetBody("Test Data")
+				i.Context().Generated().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data-modified", string(i.Context().Response().Body()))
+				assert.Equal(t, "Test Data-modified", string(i.Context().Generated().Response.Body))
+			},
+		},
+		{
+			Name:   "Next",
+			Module: nextModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
+					ctx.Generated().Response.Body = append(ctx.Generated().Response.Body, []byte("-next")...)
+					return ctx, nil
+				})
+				require.NoError(t, err)
+
+				i.Context().Generated().Response.Body = []byte("Test Data")
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data-modified-next", string(i.Context().Generated().Response.Body))
 			},
 		},
 	}
@@ -602,7 +628,13 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 		Signature: "scale_signature_http",
 	}
 
-	modules := []*harness.Module{passthroughModule, handlerModule}
+	nextModule := &harness.Module{
+		Name:      "http_next",
+		Path:      "../rust/tests/modules/http_next/http_next.rs",
+		Signature: "scale_signature_http",
+	}
+
+	modules := []*harness.Module{passthroughModule, handlerModule, nextModule}
 
 	dependencies := []*scalefile.Dependency{
 		{
@@ -611,7 +643,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 		},
 		{
 			Name:    "scale_signature_http",
-			Version: "0.1.6",
+			Version: "0.2.1",
 		},
 		{
 			Name:    "wee_alloc",
@@ -632,11 +664,11 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Response().SetBody("Test Data")
+				i.Context().Generated().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data", string(i.Context().Response().Body()))
+				assert.Equal(t, "Test Data", string(i.Context().Generated().Response.Body))
 			},
 		},
 		{
@@ -649,11 +681,31 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 				i, err := r.Instance()
 				require.NoError(t, err)
 
-				i.Context().Response().SetBody("Test Data")
+				i.Context().Generated().Response.Body = []byte("Test Data")
 				err = i.Run(context.Background())
 				assert.NoError(t, err)
 
-				assert.Equal(t, "Test Data-modified", string(i.Context().Response().Body()))
+				assert.Equal(t, "Test Data-modified", string(i.Context().Generated().Response.Body))
+			},
+		},
+		{
+			Name:   "Next",
+			Module: nextModule,
+			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+				r, err := New(context.Background(), httpSignature.New, []*scalefunc.ScaleFunc{scaleFunc})
+				require.NoError(t, err)
+
+				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
+					ctx.Generated().Response.Body = append(ctx.Generated().Response.Body, []byte("-next")...)
+					return ctx, nil
+				})
+				require.NoError(t, err)
+
+				i.Context().Generated().Response.Body = []byte("Test Data")
+				err = i.Run(context.Background())
+				assert.NoError(t, err)
+
+				assert.Equal(t, "Test Data-modified-next", string(i.Context().Generated().Response.Body))
 			},
 		},
 	}

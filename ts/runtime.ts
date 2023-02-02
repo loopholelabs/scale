@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import { Signature, SignatureFactory } from "@loopholelabs/scale-signature";
+import { Signature, NewSignature } from "@loopholelabs/scale-signature";
 import { ScaleFunc } from "@loopholelabs/scalefile";
 
 import { Func } from "./func";
@@ -25,20 +25,20 @@ import { Cache } from "./cache";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
-export async function New<T extends Signature>(newSignature: SignatureFactory<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
+export async function New<T extends Signature>(newSignature: NewSignature<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
   const r = new Runtime(newSignature, functions);
   await r.Ready();
   return r;
 }
 
 export class Runtime<T extends Signature> {
-  public NewSignature: SignatureFactory<T>;
+  public NewSignature: NewSignature<T>;
   private readonly ready: Promise<any>;
   private functions: Func<T>[];
   public head: undefined | Func<T>;
   public tail: undefined | Func<T>;
 
-  constructor(newSignature: SignatureFactory<T>, functions: ScaleFunc[]) {
+  constructor(newSignature: NewSignature<T>, functions: ScaleFunc[]) {
     this.NewSignature = newSignature;
     this.functions = [];
 
