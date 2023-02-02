@@ -40,7 +40,7 @@ func (g *Generator) GenerateGoModfile(writer io.Writer, dependencies []*scalefil
 	})
 }
 
-func (g *Generator) GenerateGoMain(writer io.Writer, signature string, path string) error {
+func (g *Generator) GenerateGoMain(writer io.Writer, path string, signature string) error {
 	return g.template.ExecuteTemplate(writer, "main.go.templ", map[string]interface{}{
 		"path":      path,
 		"signature": signature,

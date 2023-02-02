@@ -34,13 +34,15 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (g *Generator) GenerateCargoTomlfile(writer io.Writer, dependencies []*scalefile.Dependency) error {
+func (g *Generator) GenerateRsCargo(writer io.Writer, dependencies []*scalefile.Dependency, signature string, signaturePath string) error {
 	return g.template.ExecuteTemplate(writer, "Cargo.toml.templ", map[string]interface{}{
-		"dependencies": dependencies,
+		"dependencies":   dependencies,
+		"signature":      signature,
+		"signature_path": signaturePath,
 	})
 }
 
-func (g *Generator) GenerateLibRs(writer io.Writer, signature string, path string) error {
+func (g *Generator) GenerateRsLib(writer io.Writer, path string, signature string) error {
 	return g.template.ExecuteTemplate(writer, "lib.rs.templ", map[string]interface{}{
 		"path":      path,
 		"signature": signature,
