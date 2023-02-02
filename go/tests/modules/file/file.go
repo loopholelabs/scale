@@ -1,5 +1,4 @@
 //go:build tinygo || js || wasm
-// +build tinygo js wasm
 
 /*
 Copyright 2022 Loophole Labs
@@ -19,7 +18,7 @@ limitations under the License.
 package scale
 
 import (
-	signature "github.com/loopholelabs/scale/go/tests/signature"
+	signature "github.com/loopholelabs/scale/go/tests/signature/example-signature"
 	"os"
 )
 

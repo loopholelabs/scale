@@ -1,4 +1,9 @@
 .idea
-*.wasm
 *.bak
 .fleet
+node_modules
+dist
+coverage
+.parcel-cache
+*target
+Cargo.lock
