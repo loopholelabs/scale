@@ -20,7 +20,7 @@ import * as fs from "fs";
 import {ScaleFunc, V1Alpha, Go, Rust} from "@loopholelabs/scalefile";
 
 import * as signature from "./tests/signature" ;
-import * as httpSignature from "../../scale-signature-http";
+import * as httpSignature from "@loopholelabs/scale-signature-http";
 
 import { New } from "./runtime";
 
