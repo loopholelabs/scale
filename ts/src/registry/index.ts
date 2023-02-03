@@ -52,7 +52,7 @@ export function WithApiKey(apiKey: string): Option {
   }
 }
 
-export async function NewPulldown(func: string, ...opts: [Option]): Promise<ScaleFile> {
+export async function New(func: string, ...opts: Option[]): Promise<ScaleFile> {
   const config: Config = {
     pullPolicy: AlwaysPullPolicy,
     cacheDirectory: "~/.cache/scale/functions",
@@ -82,7 +82,7 @@ export async function NewPulldown(func: string, ...opts: [Option]): Promise<Scal
   const string = new TextDecoder("utf-8").decode(data);
   scaleFile = ScaleFile.Decode(string);
   saveToCache(func, scaleFile, config);
-  return scaleFile
+  return scaleFile;
 }
 
 function buildFilename(func: string, config: Config): string {
@@ -95,7 +95,7 @@ function getFromCache (func: string, config: Config): ScaleFile {
   return ScaleFile.Read(path);
 }
 
-function saveToCache (func: string, scaleFile: ScaleFile, config: Config): void {
+export function saveToCache (func: string, scaleFile: ScaleFile, config: Config): void {
   const file = buildFilename(func, config);
   const path = `${config.cacheDirectory}/${file}`;
   ScaleFile.Write(path, scaleFile);
@@ -116,10 +116,10 @@ function apiRequest (func: string, config: Config): PulldownResponse {
 
 async function computeSha256 (data: ArrayBuffer): Promise<string> {
   // use crypto subtle if available, otherwise fall back to a pure JS implementation
-    if (window.crypto && window.crypto.subtle) {
-      const hash = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hash));
-      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    }
-    return sha256(data);
+  if (window.crypto && window.crypto.subtle) {
+    const hash = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hash));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  return sha256(data);
 }
