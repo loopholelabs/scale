@@ -6,10 +6,6 @@ use scale::scale;
 
 use {{ .signature }}::context;
 use scale_signature::Context;
-use wee_alloc;
-
-#[global_allocator]
-pub static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[cfg_attr(target_arch = "wasm32", export_name = "run")]
 #[no_mangle]

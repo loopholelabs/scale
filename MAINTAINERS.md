@@ -1,1 +1,3 @@
 - Shivansh Vij <shivanshvij@loopholelabs.io> @shivanshvij
+- Dan Phillips <dan@loopholelabs.io> @dphilla
+- Jimmy Moore <jimmy@loopholelabs.io> @jimmyaxod

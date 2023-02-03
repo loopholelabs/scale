@@ -9,6 +9,4 @@ path = "lib.rs"
 
 [dependencies]
 polyglot_rs = "0.6.0"
-scale_signature = "0.2.0"
-lazy_static = "1.4.0"
-wee_alloc = "0.4.5"
+scale_signature = "0.2.1"
