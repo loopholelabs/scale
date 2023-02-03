@@ -358,7 +358,7 @@ func TestRuntimeHTTPSignatureGo(t *testing.T) {
 				Name:      "TestName",
 				Tag:       "TestTag",
 				Signature: "ExampleName@ExampleVersion",
-				Language:  "go",
+				Language:  scalefunc.Go,
 				Function:  module,
 			}
 			testCase.Run(scaleFunc, t)
@@ -428,11 +428,7 @@ func TestRuntimeRs(t *testing.T) {
 	dependencies := []*scalefile.Dependency{
 		{
 			Name:    "scale_signature",
-			Version: "0.2.0",
-		},
-		{
-			Name:    "wee_alloc",
-			Version: "0.4.5",
+			Version: "0.2.1",
 		},
 	}
 
@@ -639,15 +635,11 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 	dependencies := []*scalefile.Dependency{
 		{
 			Name:    "scale_signature",
-			Version: "0.2.0",
+			Version: "0.2.1",
 		},
 		{
 			Name:    "scale_signature_http",
-			Version: "0.2.3",
-		},
-		{
-			Name:    "wee_alloc",
-			Version: "0.4.5",
+			Version: "0.2.4",
 		},
 	}
 
@@ -720,7 +712,7 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 				Name:      "TestName",
 				Tag:       "TestTag",
 				Signature: "ExampleName@ExampleVersion",
-				Language:  "go",
+				Language:  scalefunc.Go,
 				Function:  module,
 			}
 			testCase.Run(scaleFunc, t)
