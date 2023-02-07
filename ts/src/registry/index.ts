@@ -87,6 +87,10 @@ export async function New(func: string, tag: string, ...opts: Option[]): Promise
     return scaleFunc
   }
 
+  if (config.pullPolicy === NeverPullPolicy) {
+    throw ErrNoFunction;
+  }
+
   // Contact the API endpoint with the request
   const response = await apiRequest(func, tag, config);
   const data = await downloadScaleFunc(response.presigned_url);
@@ -109,7 +113,7 @@ function getFromCache (func: string, tag: string, config: Config): ScaleFunc | u
   const file = buildFilename(func, tag, config);
   const path = `${config.cacheDirectory}/${file}`;
   try {
-    ScaleFunc.Read(path);
+    return ScaleFunc.Read(path);
   } catch (error: any) {
     if (error.code === 'ENOENT') {
       return undefined;
