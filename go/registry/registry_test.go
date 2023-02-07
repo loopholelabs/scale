@@ -17,11 +17,10 @@
 package registry
 
 import (
-	"bufio"
-	"bytes"
+	"os"
 	"testing"
 
-	"github.com/loopholelabs/scalefile"
+	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,31 +32,27 @@ func TestPulldownCache(t *testing.T) {
 		apiKey:         "123",
 	}
 
-	sf := &scalefile.ScaleFile{
-		Version:   scalefile.V1Alpha,
+	sf := &scalefunc.ScaleFunc{
+		Version:   scalefunc.V1Alpha,
 		Name:      "Test1",
 		Signature: "signature1",
-		Language:  scalefile.Go,
-		Source:    "Hello world",
+		Tag:       "1",
+		Language:  scalefunc.Go,
+		Function:  []byte("Hello world"),
 	}
 
 	function := "TestFunction"
+	tag := "1"
 
-	var b bytes.Buffer
-	bwriter := bufio.NewWriter(&b)
-
-	err := scalefile.Encode(bwriter, sf)
-	require.NoError(t, err)
-	err = bwriter.Flush()
-	require.NoError(t, err)
+	b := sf.Encode()
 
 	// Write it to the cache...
-	err = saveToCache(function, conf, b.Bytes())
+	err := saveToCache(function, tag, conf, b)
 	require.NoError(t, err)
 
 	// Try reading a scalefile from the cache...
 	// Also tests that the With* works
-	newsf, err := New(function,
+	newsf, err := New(function, tag,
 		WithCacheDirectory(conf.cacheDirectory),
 		WithPullPolicy(conf.pullPolicy),
 		WithApiKey(conf.apiKey))
@@ -65,17 +60,31 @@ func TestPulldownCache(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now assert that the newsf is same as our original sf.
-	var newb bytes.Buffer
-	newbwriter := bufio.NewWriter(&newb)
 
-	err = scalefile.Encode(newbwriter, newsf)
-	require.NoError(t, err)
-	err = newbwriter.Flush()
-	require.NoError(t, err)
+	newb := newsf.Encode()
 
-	assert.Equal(t, b.Bytes(), newb.Bytes())
-
+	assert.Equal(t, b, newb)
 	// cleanup - remove cache dir
 	err = removeCache(conf)
 	require.NoError(t, err)
+}
+
+func TestRegistryDownload(t *testing.T) {
+	/* This test requires a valid API key for the scale dev api to run, the SCALE_API_KEY environment variable must be
+	set in the testing environment. */
+	apiKey := os.Getenv("SCALE_API_KEY")
+	if apiKey == "" {
+		t.Skip("Skipping test, SCALE_API_KEY environment variable not set")
+	}
+	sf, err := New("TestRegistryDownload", "1",
+		WithApiKey(apiKey),
+		WithBaseUrl("https://api.dev.scale.sh/v1"),
+		WithOrganization("alex"),
+	)
+	require.NoError(t, err)
+	require.Equal(t, "TestRegistryDownload", sf.Name)
+	require.Equal(t, "1", sf.Tag)
+	require.Equal(t, "signature1", sf.Signature)
+	require.Equal(t, scalefunc.Go, sf.Language)
+	require.Equal(t, scalefunc.V1Alpha, sf.Version)
 }

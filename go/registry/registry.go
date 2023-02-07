@@ -17,16 +17,15 @@
 package registry
 
 import (
-	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"github.com/loopholelabs/scalefile/scalefunc"
+	"io"
 	"net/http"
 	"os"
-
-	"github.com/loopholelabs/scalefile"
 )
 
 type PullPolicy string
@@ -46,6 +45,8 @@ type Config struct {
 	pullPolicy     PullPolicy
 	cacheDirectory string
 	apiKey         string
+	apiBaseUrl     string
+	organization   string
 }
 
 type Option func(config *Config)
@@ -68,20 +69,34 @@ func WithApiKey(apiKey string) Option {
 	}
 }
 
+func WithBaseUrl(apiBaseUrl string) Option {
+	return func(config *Config) {
+		config.apiBaseUrl = apiBaseUrl
+	}
+}
+
+func WithOrganization(organization string) Option {
+	return func(config *Config) {
+		config.organization = organization
+	}
+}
+
 // Create a new runtime for a specific scalefile
-func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
+func New(function string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
 	// Default config
 	conf := &Config{
 		pullPolicy:     AlwaysPullPolicy,
 		cacheDirectory: "~/.cache/scale/functions",
 		apiKey:         "",
+		apiBaseUrl:     "https://api.scale.sh/v1",
+		organization:   "default",
 	}
 	for _, opt := range opts {
 		opt(conf)
 	}
 
 	// First check our local cache...
-	sf, err := getFromCache(function, conf)
+	sf, err := getFromCache(function, tag, conf)
 
 	if err == nil && conf.pullPolicy != AlwaysPullPolicy {
 		return sf, err
@@ -92,18 +107,18 @@ func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
 	}
 
 	// Contact the API endpoint with the request
-	response, err := apiRequest(function, conf)
+	response, err := apiRequest(function, tag, conf)
 	if err != nil {
 		return sf, err
 	}
 
-	// Get the scalefile from the URL
-	httpResp, err := http.Get(response.URL)
+	// Get the scalefunc from the URL
+	httpResp, err := http.Get(response.PresignedURL)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(httpResp.Body)
+	data, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -113,47 +128,50 @@ func New(function string, opts ...Option) (*scalefile.ScaleFile, error) {
 
 	bs := h.Sum(nil)
 
-	s := hex.EncodeToString(bs)
+	s := base64.URLEncoding.EncodeToString(bs)
 
 	if s != response.Hash {
 		return nil, ErrHashMismatch
 	}
 
 	// Save to our local cache
-	err = saveToCache(function, conf, data)
+	err = saveToCache(function, tag, conf, data)
 	if err != nil {
 		return nil, err
 	}
 
 	// Decode to a scalefile
-	reader := bytes.NewReader(data)
-	return scalefile.Decode(reader)
+	err = sf.Decode(data)
+	if err != nil {
+		return nil, err
+	}
+	return sf, nil
 }
 
 // build a filename from the config
 // TODO: We should use the hash in the filename for optimization
-func buildFilename(function string, conf *Config) string {
-	return fmt.Sprintf("%s.scale", function)
+func buildFilename(function string, tag string, conf *Config) string {
+	return fmt.Sprintf("%s.%s.scale", function, tag)
 }
 
 // Get a scalefile from the local cache
-func getFromCache(function string, conf *Config) (*scalefile.ScaleFile, error) {
-	f := buildFilename(function, conf)
+func getFromCache(function string, tag string, conf *Config) (*scalefunc.ScaleFunc, error) {
+	f := buildFilename(function, tag, conf)
 
 	// Try to read the scalefile
 	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
-	return scalefile.Read(path)
+	return scalefunc.Read(path)
 }
 
 // Save a scalefile to our local cache
-func saveToCache(function string, conf *Config, data []byte) error {
+func saveToCache(function string, tag string, conf *Config, data []byte) error {
 	err := os.MkdirAll(conf.cacheDirectory, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	// Overwrite the file
-	f := buildFilename(function, conf)
+	f := buildFilename(function, tag, conf)
 	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
 
 	fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
@@ -178,18 +196,44 @@ func removeCache(conf *Config) error {
 	return os.RemoveAll(conf.cacheDirectory)
 }
 
-// What we get back from the API call
-type PulldownResponse struct {
-	URL  string
-	Hash string
+// PulldownResponse API response when requesting a function
+type GetFunctionResponse struct {
+	Name         string `json:"name"`
+	Tag          string `json:"tag"`
+	Organization string `json:"organization"`
+	Public       bool   `json:"public"`
+	Hash         string `json:"hash"`
+	PresignedURL string `json:"presigned_url"`
 }
 
-// Perform the scale api request to find the correct URL and hash
-func apiRequest(function string, conf *Config) (PulldownResponse, error) {
-	// TODO
+func apiRequest(function string, tag string, conf *Config) (*GetFunctionResponse, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest(
+		"GET",
+		fmt.Sprintf("%s/registry/function/%s/%s/%s", conf.apiBaseUrl, conf.organization, function, tag),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conf.apiKey))
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != 200 {
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		bodyString := string(bodyBytes)
+		return nil, errors.New(bodyString)
+	}
 
-	return PulldownResponse{
-		URL:  "http://google.com",
-		Hash: "1234",
-	}, nil
+	response := &GetFunctionResponse{}
+	err = json.NewDecoder(res.Body).Decode(response)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
 }

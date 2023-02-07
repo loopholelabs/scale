@@ -12,8 +12,8 @@ github.com/loopholelabs/scale-signature v0.2.0 h1:kBk8yCka2Bj8IX9NMZuKy+JGhNhOQ0
 github.com/loopholelabs/scale-signature v0.2.0/go.mod h1:X34VL10YoTrMWs6hLM2DzN4cOB4glaF+j4VbNj5iDTs=
 github.com/loopholelabs/scale-signature-http v0.2.3 h1:v3HnHV4eGB+zmA4cv54DGIS9o3VAHv1EzayeG5o5dII=
 github.com/loopholelabs/scale-signature-http v0.2.3/go.mod h1:I3cM1r/HSOGPkpzK3BdxbyrU+48tKPbUeCIOHGft8jU=
-github.com/loopholelabs/scalefile v0.1.4 h1:Y9NJr1hnPwa73vUenyey3in6M2k09rts9J7Z9OLfMY8=
-github.com/loopholelabs/scalefile v0.1.4/go.mod h1:fPq4xcXpAzWErW1tqLTex2xIrHJ/iCRFb4et6+sbOvk=
+github.com/loopholelabs/scalefile v0.1.5 h1:mFeZmbLRw/9FQD6+anZwvkyAekb2rYSR61TkXxHwxVI=
+github.com/loopholelabs/scalefile v0.1.5/go.mod h1:fPq4xcXpAzWErW1tqLTex2xIrHJ/iCRFb4et6+sbOvk=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
