@@ -14,8 +14,10 @@
 	limitations under the License.
 */
 
-import { ScaleFile } from "@loopholelabs/scalefile"
+import {ScaleFunc} from "@loopholelabs/scalefile"
 import { sha256 } from "js-sha256";
+import * as fs from "fs";
+import { webcrypto as crypto } from "crypto";
 
 export type PullPolicy = string;
 
@@ -29,7 +31,9 @@ export var ErrNoFunction = new Error("function does not exist and pull policy is
 export interface Config {
   pullPolicy: PullPolicy
   cacheDirectory: string
-  apiKey: string
+  apiKey: string,
+  apiBaseUrl: string,
+  organization: string,
 }
 
 export type Option = (c: Config) => void;
@@ -52,74 +56,121 @@ export function WithApiKey(apiKey: string): Option {
   }
 }
 
-export async function New(func: string, ...opts: Option[]): Promise<ScaleFile> {
+export function WithApiBaseUrl(apiBaseUrl: string): Option {
+    return (c: Config) => {
+        c.apiBaseUrl = apiBaseUrl;
+    }
+}
+
+export function WithOrganization(organization: string): Option {
+    return (c: Config) => {
+        c.organization = organization;
+    }
+}
+
+export async function New(func: string, tag: string, ...opts: Option[]): Promise<ScaleFunc> {
   const config: Config = {
     pullPolicy: AlwaysPullPolicy,
     cacheDirectory: "~/.cache/scale/functions",
     apiKey: "",
+    apiBaseUrl: "https://api.scale.sh/v1",
+    organization: "default",
   }
 
   for (const opt of opts) {
     opt(config);
   }
 
-  let scaleFile = getFromCache(func, config);
-  if (scaleFile && config.pullPolicy != AlwaysPullPolicy) {
-    return scaleFile
+  let scaleFunc = getFromCache(func, tag, config);
+  if (scaleFunc && config.pullPolicy != AlwaysPullPolicy) {
+    return scaleFunc
   }
 
   // Contact the API endpoint with the request
-  const response = apiRequest(func, config);
-  const httpResp = await fetch(response.URL)
+  const response = await apiRequest(func, tag, config);
+  const httpResp = await fetch(response.presigned_url)
   const data = await httpResp.arrayBuffer();
 
   const hash = await computeSha256(data);
-  if (hash !== response.Hash) {
+  if (hash !== response.hash) {
     throw ErrHasMismatch;
   }
 
-
-  const string = new TextDecoder("utf-8").decode(data);
-  scaleFile = ScaleFile.Decode(string);
-  saveToCache(func, scaleFile, config);
-  return scaleFile;
+  scaleFunc = ScaleFunc.Decode(new Uint8Array(data));
+  saveToCache(func, tag, config, scaleFunc);
+  return scaleFunc;
 }
 
-function buildFilename(func: string, config: Config): string {
-    return `${func}.scale`;
+function buildFilename(func: string, tag: string, config: Config): string {
+    return `${func}.${tag}.scale`;
 }
 
-function getFromCache (func: string, config: Config): ScaleFile {
-  const file = buildFilename(func, config);
+function getFromCache (func: string, tag: string, config: Config): ScaleFunc | undefined {
+  const file = buildFilename(func, tag, config);
   const path = `${config.cacheDirectory}/${file}`;
-  return ScaleFile.Read(path);
-}
-
-export function saveToCache (func: string, scaleFile: ScaleFile, config: Config): void {
-  const file = buildFilename(func, config);
-  const path = `${config.cacheDirectory}/${file}`;
-  ScaleFile.Write(path, scaleFile);
-}
-
-interface PulldownResponse {
-  URL: string
-  Hash: string
-}
-
-function apiRequest (func: string, config: Config): PulldownResponse {
-  // TODO
-  return {
-    URL: "https://example.com",
-    Hash: "deadbeef",
+  try {
+    ScaleFunc.Read(path);
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      return undefined;
+    }
+    throw error
   }
+}
+
+export function saveToCache (func: string, tag: string, config: Config, scaleFunc: ScaleFunc): void {
+  const file = buildFilename(func, tag, config);
+  if (!fs.existsSync(config.cacheDirectory)) {
+    fs.mkdirSync(config.cacheDirectory, { recursive: true });
+  }
+  const path = `${config.cacheDirectory}/${file}`;
+  ScaleFunc.Write(path, scaleFunc);
+}
+
+interface GetFunctionResponse {
+  name: string,
+  tag: string,
+  organization: string,
+  public: boolean,
+  hash: string,
+  presigned_url: string,
+}
+
+async function apiRequest (func: string, tag: string, config: Config): Promise<GetFunctionResponse> {
+  const response = await fetch(`${config.apiBaseUrl}/registry/function/${config.organization}/${func}/${tag}`, {
+    method: 'get',
+    headers: new Headers({
+      'Authorization': `Bearer ${config.apiKey}`,
+    }),
+  });
+  return response.json();
 }
 
 async function computeSha256 (data: ArrayBuffer): Promise<string> {
   // use crypto subtle if available, otherwise fall back to a pure JS implementation
-  if (window.crypto && window.crypto.subtle) {
+  if (crypto && crypto.subtle) {
     const hash = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hash));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    return base64FromArrayBuffer(hash);
   }
-  return sha256(data);
+  const hash = sha256.create();
+  hash.update(data);
+  return base64FromArrayBuffer(hash.arrayBuffer())
+}
+
+/*
+* This method, while appearing quite unorthodox, is the most efficient way to get a base64 value from an array buffer
+* while avoiding an expensive intermediate string representation
+* */
+async function base64FromArrayBuffer (data: ArrayBuffer) {
+  if (typeof window !== "undefined") {
+    const base64url: string = await new Promise((r) => {
+      const reader = new FileReader()
+      reader.onload = () => r(reader.result as string)
+      reader.readAsDataURL(new Blob([data]))
+    })
+
+    return base64url.split(",", 2)[1]
+  } else {
+    return Buffer.from(data).toString("base64").replace(/\+/g, "-");
+  }
 }
