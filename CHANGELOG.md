@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.2.2] - 2023-02-03
+
+### Changes
+
+- Removing `wee_alloc` from all dependencies and from the rust generator
+- Bumping `scale-signature` version to `v0.2.1`
+- Bumping `scale-signature-http` version to `v0.2.4`
+
 ## [v0.2.1] - 2023-02-02
 
 ### Changes
