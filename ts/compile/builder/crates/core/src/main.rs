@@ -4,9 +4,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[path = "utils/utils.rs"]
-mod utils;
-
 
 extern crate quickjs_wasm_sys;
 extern crate once_cell;
@@ -19,12 +16,9 @@ use quickjs_wasm_sys::{
   JS_ToCStringLen2, JS_EVAL_TYPE_GLOBAL, JS_GetPropertyStr, JS_GetPropertyUint32, 
   JS_DefinePropertyValueStr, JS_DefinePropertyValueUint32, JS_PROP_C_W_E,
   JS_TAG_BIG_INT, JS_TAG_BOOL, JS_TAG_EXCEPTION, JS_TAG_INT, JS_TAG_NULL,
-  JS_TAG_OBJECT, JS_TAG_STRING, JS_TAG_UNDEFINED,
+  JS_TAG_OBJECT, JS_TAG_STRING, JS_TAG_UNDEFINED, JS_GetArrayBuffer, JS_BigIntToUint64
 };
 use std::os::raw::{c_char, c_int, c_void};
-
-use utils::{pack_uint32, unpack_uint32, vec_to_js, js_to_vec, set_buffer, resize_buffer, set_next_buffer};
-use utils::{READ_BUFFER, RETURN_BUFFER, NEXT_READ_BUFFER};
 
 use std::io::{self, Cursor, Read, Write};
 use std::ffi::CString;
@@ -34,7 +28,6 @@ extern crate wee_alloc;
 #[cfg(not(test))]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 
 use once_cell::sync::OnceCell;
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
@@ -55,24 +48,26 @@ extern "C" {
 }
 
 // Wrap the exported next function so it can be called from js
-fn nextwrap(context: *mut JSContext, jsval1: JSValue, int1: c_int, jsval2: *mut JSValue, int2: c_int) -> JSValue {
+fn nextwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: *mut JSValue, _int2: c_int) -> JSValue {
   unsafe {
-    let vec = js_to_vec(context, *jsval2);
-    let (ptr, len) = set_next_buffer(vec);
+    // The args are [ptr / len]
+    // TODO: Make sure it's an array of 2 vals?
+    let ptr = JS_GetPropertyUint32(context, *jsval2, 0);    
+    let len = JS_GetPropertyUint32(context, *jsval2, 1);    
 
-    let packed = _next(ptr, len);
-    let (ptr, len) = unpack_uint32(packed);    
-    let rvec = Vec::from_raw_parts(ptr as *mut u8, len as usize, len as usize);
-    return vec_to_js(context, &rvec);
+    let packed = _next(ptr as u32, len as u32);
+    return JS_NewInt64_Ext(context, packed as i64);    
   }
 }
 
-#[cfg_attr(all(target_arch = "wasm32"), export_name = "resize")]
-#[no_mangle]
-pub unsafe extern "C" fn resize(size: u32) -> *const u8 {
-  return resize_buffer(size);
+// Get the address of a javascript ArrayBuffer
+fn getaddrwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: *mut JSValue, _int2: c_int) -> JSValue {
+  unsafe {
+    let mut len = 0;    
+    let addr = JS_GetArrayBuffer(context, &mut len, *jsval2) as i32;    
+    return JS_NewInt32_Ext(context, addr);
+  }
 }
-
 
 #[export_name = "wizer.initialize"]
 pub extern "C" fn init() {
@@ -106,6 +101,10 @@ pub extern "C" fn init() {
         let run_fn = JS_GetPropertyStr(context, exports, run_key.as_ptr());
         ENTRY_RUN.set(run_fn).unwrap();
 
+        let resize_key = CString::new("resize").unwrap();
+        let resize_fn = JS_GetPropertyStr(context, exports, resize_key.as_ptr());
+        ENTRY_RESIZE.set(resize_fn).unwrap();
+
         // Setup console.log and console.error to pipe through to io::stderr
         let log_cb = console_log_to(io::stderr());
         let error_cb = console_log_to(io::stderr());
@@ -119,6 +118,9 @@ pub extern "C" fn init() {
 
         // Setup a function called next() in the global_object
         set_callback(context, global, "scale_fn_next", &nextwrap);
+
+        // Setup a function called getaddr() in the global object
+        set_callback(context, global, "getaddr", &getaddrwrap);
 
         ENTRY_EXPORTS.set(exports).unwrap();
 
@@ -204,7 +206,7 @@ fn main() {
         let main = ENTRY_MAIN.get().unwrap();
 
         let args: Vec<JSValue> = Vec::new();
-        let ret = JS_Call(*context, *main, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
+        let _ret = JS_Call(*context, *main, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
     }
 }
 
@@ -216,28 +218,52 @@ fn run() -> u64 {
     let exports = ENTRY_EXPORTS.get().unwrap();
     let runfn = ENTRY_RUN.get().unwrap();
 
-    let input_vals = vec_to_js(*context, &READ_BUFFER);
-    let mut args: Vec<JSValue> = Vec::new();
-    args.push(input_vals);
+    let args: Vec<JSValue> = Vec::new();
     let ret = JS_Call(*context, *runfn, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
 
     let ret_tag = (ret >> 32) as i32;
     if ret_tag == JS_TAG_EXCEPTION {
       // TODO Get the exception and handle and return to host?...
       //
-      println!("Exception from js!");
-      // Signal error for now.
-      return 900;
-    }
-
-    if ret_tag != JS_TAG_OBJECT {
-      println!("Return from run was not an object!");
+      println!("Rust/js: Exception from js!");
       // Signal error for now.
       return 999;
     }
 
-    let retvec = js_to_vec(*context, ret);
-    let (ptr, len) = set_buffer(retvec);
-    return pack_uint32(ptr, len);
+    let mut valret = 0_u64;
+    let err = JS_BigIntToUint64(*context, &mut valret, ret);
+    if err < 0 {
+      // TODO: Return a better error maybe...
+      println!("Rust/js: Error converting run return value");
+      return 999;
+    }      
+    return valret;
+  }
+}
+
+#[cfg_attr(all(target_arch = "wasm32"), export_name = "resize")]
+#[no_mangle]
+pub unsafe extern "C" fn resize(size: u32) -> *mut u8 {
+  unsafe {
+    let context = JS_CONTEXT.get().unwrap();
+    let exports = ENTRY_EXPORTS.get().unwrap();
+    let resizefn = ENTRY_RESIZE.get().unwrap();
+
+    let mut args: Vec<JSValue> = Vec::new();
+    let jval = JS_NewInt32_Ext(*context, size as i32);
+    args.push(jval);
+
+    let ret = JS_Call(*context, *resizefn, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
+
+    let ret_tag = (ret >> 32) as i32;
+    if ret_tag == JS_TAG_EXCEPTION {
+      // TODO Get the exception and handle and return to host?...
+      //
+      println!("Rust/js: Exception from js!");
+      // Signal error for now.
+      return 999 as *mut u8;
+    }
+
+    return ret as *mut u8;
   }
 }
