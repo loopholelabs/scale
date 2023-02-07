@@ -18,6 +18,7 @@ import {ScaleFunc} from "@loopholelabs/scalefile"
 import { sha256 } from "js-sha256";
 import * as fs from "fs";
 import { webcrypto as crypto } from "crypto";
+import https from "https";
 
 export type PullPolicy = string;
 
@@ -88,8 +89,7 @@ export async function New(func: string, tag: string, ...opts: Option[]): Promise
 
   // Contact the API endpoint with the request
   const response = await apiRequest(func, tag, config);
-  const httpResp = await fetch(response.presigned_url)
-  const data = await httpResp.arrayBuffer();
+  const data = await downloadScaleFunc(response.presigned_url);
 
   const hash = await computeSha256(data);
   if (hash !== response.hash) {
@@ -137,13 +137,64 @@ interface GetFunctionResponse {
 }
 
 async function apiRequest (func: string, tag: string, config: Config): Promise<GetFunctionResponse> {
-  const response = await fetch(`${config.apiBaseUrl}/registry/function/${config.organization}/${func}/${tag}`, {
-    method: 'get',
-    headers: new Headers({
-      'Authorization': `Bearer ${config.apiKey}`,
-    }),
+  if (typeof window !== "undefined") {
+    const response = await fetch(`${config.apiBaseUrl}/registry/function/${config.organization}/${func}/${tag}`, {
+      method: 'get',
+      headers: new Headers({
+        'Authorization': `Bearer ${config.apiKey}`,
+      }),
+    });
+    return response.json();
+  }
+  return new Promise((resolve, reject) => {
+    let body: Uint8Array[] = [];
+    const request = https.request(`${config.apiBaseUrl}/registry/function/${config.organization}/${func}/${tag}`, {
+      method: 'get',
+      headers: {
+        'Authorization': `Bearer ${config.apiKey}`,
+      },
+    }, (response) => {
+      response.on('data', (chunk) => {
+        body.push(chunk);
+      })
+
+      response.on('end', () => {
+        const data = Buffer.concat(body).toString();
+        resolve(JSON.parse(data));
+      })
+
+      response.on('error', (error) => {
+        reject(error);
+      });
+    });
+
+    request.end();
   });
-  return response.json();
+}
+
+async function downloadScaleFunc (url: string): Promise<ArrayBuffer> {
+  if (typeof window !== "undefined") {
+    const httpResp = await fetch(url)
+    return httpResp.arrayBuffer();
+  }
+  return new Promise((resolve, reject) => {
+    let body: Uint8Array[] = [];
+    const request = https.request(url, (response) => {
+      response.on('data', (chunk) => {
+        body.push(chunk);
+      })
+
+      response.on('end', () => {
+        resolve(Buffer.concat(body));
+      })
+
+      response.on('error', (error) => {
+        reject(error);
+      });
+    });
+
+    request.end();
+  });
 }
 
 async function computeSha256 (data: ArrayBuffer): Promise<string> {
