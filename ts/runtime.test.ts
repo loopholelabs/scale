@@ -24,9 +24,6 @@ import * as httpSignature from "@loopholelabs/scale-signature-http";
 
 import { New, NewFromSignature } from "./runtime";
 
-window.TextEncoder = TextEncoder;
-window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
-
 describe("TestRuntimeTs", () => {
     const modPassthroughGo = fs.readFileSync("./tests/modules/passthrough-TestRuntimeGo.wasm");
     const modPassthroughRs = fs.readFileSync("./tests/modules/passthrough-TestRuntimeRs.wasm");

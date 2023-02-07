@@ -30,8 +30,6 @@ test('TestPulldownCache', async () => {
         "signature1",
         "go", Buffer.from("Hello world"),
     );
-    // scaleFunc.Size = 66;
-    // scaleFunc.Checksum = "a66a977df03c95a83eee8396e083b72c229ccc83455677f189cb97d5d09ba21b";
 
     const func = "TestFunction"
     const tag = "1"
