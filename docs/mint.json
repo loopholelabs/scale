@@ -1,28 +1,33 @@
 {
-  "name": "fRPC",
+  "name": "Scale",
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "dark": "/logo/dark.svg",
+    "href": "https://scale.sh"
   },
   "favicon": "/favicon.png",
   "colors": {
-    "primary": "#AB1CFC",
-    "light": "#C854FF",
+    "primary": "#7c34ff",
+    "light": "#ae82ff",
     "dark": "#9015D9",
     "ultraLight": "#F8EEFE",
-    "ultraDark": "#6A06A5"
+    "ultraDark": "#6A06A5",
+    "background": {
+      "light": "#F8EEFE",
+        "dark": "#08111F"
+    }
   },
-  "topbarLinks": [
-    {
-      "name": "Home",
-      "url": "https://loopholelabs.io"
-    },
+  "topbarLinks": [],
+  "topbarCtaButton": {
+    "type": "github",
+    "url": "https://github.com/loopholelabs/scale"
+  },
+  "anchors": [
     {
       "name": "Blog",
+      "icon": "newspaper",
       "url": "https://loopholelabs.io/blog"
-    }
-  ],
-  "anchors": [
+    },
     {
       "name": "Discord",
       "icon": "discord",
@@ -31,7 +36,7 @@
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/loopholelabs"
+      "url": "https://github.com/loopholelabs/scale"
     }
   ],
   "navigation": [
@@ -52,6 +57,5 @@
     "anchors": "group-hover:bg-gradient-to-tr from-[#7c34ff] to-[#fe9195]",
     "activeAnchors": "bg-gradient-to-tr",
     "navigationItem": "duration-100"
-  },
-  "backgroundImage": "/images/lightbackground.png"
+  }
 }
