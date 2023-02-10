@@ -19,6 +19,8 @@ import { sha256 } from "js-sha256";
 import * as fs from "fs";
 import { webcrypto as crypto } from "crypto";
 import https from "https";
+import * as os from "os";
+import path from "path";
 
 export type PullPolicy = string;
 
@@ -28,6 +30,10 @@ export const NeverPullPolicy: PullPolicy = "never";
 
 export var ErrHasMismatch = new Error("hash mismatch");
 export var ErrNoFunction = new Error("function does not exist and pull policy is never");
+export var ErrDownloadFailed = new Error("The scalefunc could not be retrieved from the server")
+
+const defaultApiBaseUrl = "https://api.scale.sh/v1"
+const defaultCacheSubpath = ".cache/scale/functions"
 
 export interface Config {
   pullPolicy: PullPolicy
@@ -70,11 +76,13 @@ export function WithOrganization(organization: string): Option {
 }
 
 export async function New(func: string, tag: string, ...opts: Option[]): Promise<ScaleFunc> {
+  const defaultCacheDirectory = path.join(os.homedir(), defaultCacheSubpath)
+
   const config: Config = {
     pullPolicy: AlwaysPullPolicy,
-    cacheDirectory: "~/.cache/scale/functions",
+    cacheDirectory: defaultCacheDirectory,
     apiKey: "",
-    apiBaseUrl: "https://api.scale.sh/v1",
+    apiBaseUrl: defaultApiBaseUrl,
     organization: "default",
   }
 
@@ -82,17 +90,26 @@ export async function New(func: string, tag: string, ...opts: Option[]): Promise
     opt(config);
   }
 
-  let scaleFunc = getFromCache(func, tag, config);
-  if (scaleFunc && config.pullPolicy != AlwaysPullPolicy) {
-    return scaleFunc
-  }
+  let scaleFunc: ScaleFunc | undefined = undefined;
 
-  if (config.pullPolicy === NeverPullPolicy) {
-    throw ErrNoFunction;
+  if (config.pullPolicy !== AlwaysPullPolicy) {
+    let scaleFunc = getFromCache(func, tag, undefined, config);
+    if (scaleFunc && config.pullPolicy != AlwaysPullPolicy) {
+      return scaleFunc
+    }
+
+    if (config.pullPolicy === NeverPullPolicy) {
+      throw ErrNoFunction;
+    }
   }
 
   // Contact the API endpoint with the request
   const response = await apiRequest(func, tag, config);
+  scaleFunc = getFromCache(func, tag, response.hash, config);
+  if (scaleFunc) {
+    return scaleFunc;
+  }
+
   const data = await downloadScaleFunc(response.presigned_url);
 
   const hash = await computeSha256(data);
@@ -101,29 +118,47 @@ export async function New(func: string, tag: string, ...opts: Option[]): Promise
   }
 
   scaleFunc = ScaleFunc.Decode(new Uint8Array(data));
-  saveToCache(func, tag, config, scaleFunc);
+  saveToCache(func, tag, hash, config, scaleFunc);
   return scaleFunc;
 }
 
-function buildFilename(func: string, tag: string, config: Config): string {
-    return `${func}.${tag}.scale`;
+function buildFilename(func: string, tag: string, hash: string, config: Config): string {
+    return `${func}.${tag}.${hash}.scale`;
 }
 
-function getFromCache (func: string, tag: string, config: Config): ScaleFunc | undefined {
-  const file = buildFilename(func, tag, config);
-  const path = `${config.cacheDirectory}/${file}`;
-  try {
-    return ScaleFunc.Read(path);
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      return undefined;
+function getFromCache (func: string, tag: string, hash: string | undefined, config: Config): ScaleFunc | undefined {
+  if (hash) {
+    const file = buildFilename(func, tag, hash, config);
+    const filePath = path.join(config.cacheDirectory, file);
+    try {
+      return ScaleFunc.Read(filePath);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return undefined;
+      }
+      throw error
     }
-    throw error
   }
+
+  const filePrefix = `${func}.${tag}.`
+    const files = fs.readdirSync(config.cacheDirectory);
+    for (const file of files) {
+      if (file.startsWith(filePrefix)) {
+        const filePath = path.join(config.cacheDirectory, file);
+        try {
+          return ScaleFunc.Read(filePath);
+        } catch (error: any) {
+          if (error.code === 'ENOENT') {
+            return undefined;
+          }
+          throw error
+        }
+      }
+    }
 }
 
-export function saveToCache (func: string, tag: string, config: Config, scaleFunc: ScaleFunc): void {
-  const file = buildFilename(func, tag, config);
+export function saveToCache (func: string, tag: string, hash: string, config: Config, scaleFunc: ScaleFunc): void {
+  const file = buildFilename(func, tag, hash, config);
   if (!fs.existsSync(config.cacheDirectory)) {
     fs.mkdirSync(config.cacheDirectory, { recursive: true });
   }
@@ -184,6 +219,10 @@ async function downloadScaleFunc (url: string): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     let body: Uint8Array[] = [];
     const request = https.request(url, (response) => {
+      if (response.statusCode !== 200) {
+        reject(ErrDownloadFailed);
+      }
+
       response.on('data', (chunk) => {
         body.push(chunk);
       })
@@ -201,7 +240,7 @@ async function downloadScaleFunc (url: string): Promise<ArrayBuffer> {
   });
 }
 
-async function computeSha256 (data: ArrayBuffer): Promise<string> {
+export async function computeSha256 (data: ArrayBuffer): Promise<string> {
   // use crypto subtle if available, otherwise fall back to a pure JS implementation
   if (crypto && crypto.subtle) {
     const hash = await crypto.subtle.digest("SHA-256", data);

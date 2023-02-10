@@ -23,9 +23,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/scalefile/scalefunc"
+	"github.com/mitchellh/go-homedir"
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type PullPolicy string
@@ -36,16 +38,20 @@ const (
 	NeverPullPolicy                   = "never"
 )
 
+const defaultCacheSubpath = ".cache/scale/functions"
+const defaultAPIBaseURL = "https://api.scale.sh/v1"
+
 var (
-	ErrHashMismatch = errors.New("hash mismatch")
-	ErrNoFunction   = errors.New("function does not exist and pull policy is never")
+	ErrHashMismatch   = errors.New("hash mismatch")
+	ErrNoFunction     = errors.New("function does not exist and pull policy is never")
+	ErrDownloadFailed = errors.New("the scale func could not be retrieved from the server")
 )
 
 type Config struct {
 	pullPolicy     PullPolicy
 	cacheDirectory string
 	apiKey         string
-	apiBaseUrl     string
+	apiBaseURL     string
 	organization   string
 }
 
@@ -63,15 +69,15 @@ func WithCacheDirectory(cacheDirectory string) Option {
 	}
 }
 
-func WithApiKey(apiKey string) Option {
+func WithAPIKey(apiKey string) Option {
 	return func(config *Config) {
 		config.apiKey = apiKey
 	}
 }
 
-func WithBaseUrl(apiBaseUrl string) Option {
+func WithBaseURL(baseURL string) Option {
 	return func(config *Config) {
-		config.apiBaseUrl = apiBaseUrl
+		config.apiBaseURL = baseURL
 	}
 }
 
@@ -84,31 +90,44 @@ func WithOrganization(organization string) Option {
 // Create a new runtime for a specific scalefile
 func New(function string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
 	// Default config
+	defaultPath, err := homedir.Expand(defaultCacheSubpath)
+	if err != nil {
+		return nil, err
+	}
 	conf := &Config{
 		pullPolicy:     AlwaysPullPolicy,
-		cacheDirectory: "~/.cache/scale/functions",
+		cacheDirectory: defaultPath,
 		apiKey:         "",
-		apiBaseUrl:     "https://api.scale.sh/v1",
+		apiBaseURL:     defaultAPIBaseURL,
 		organization:   "default",
 	}
 	for _, opt := range opts {
 		opt(conf)
 	}
 
+	var sf *scalefunc.ScaleFunc
+
 	// First check our local cache...
-	sf, err := getFromCache(function, tag, conf)
+	if conf.pullPolicy != AlwaysPullPolicy {
+		sf, err := getFromCache(function, tag, "", conf)
 
-	if err == nil && conf.pullPolicy != AlwaysPullPolicy {
-		return sf, err
-	}
+		if err == nil && conf.pullPolicy != AlwaysPullPolicy {
+			return sf, err
+		}
 
-	if conf.pullPolicy == NeverPullPolicy {
-		return nil, ErrNoFunction
+		if conf.pullPolicy == NeverPullPolicy {
+			return nil, ErrNoFunction
+		}
 	}
 
 	// Contact the API endpoint with the request
 	response, err := apiRequest(function, tag, conf)
 	if err != nil {
+		return nil, err
+	}
+
+	sf, err = getFromCache(function, tag, response.Hash, conf)
+	if err == nil {
 		return sf, err
 	}
 
@@ -116,6 +135,10 @@ func New(function string, tag string, opts ...Option) (*scalefunc.ScaleFunc, err
 	httpResp, err := http.Get(response.PresignedURL)
 	if err != nil {
 		return nil, err
+	}
+
+	if httpResp.StatusCode != 200 {
+		return nil, ErrDownloadFailed
 	}
 
 	data, err := io.ReadAll(httpResp.Body)
@@ -128,14 +151,14 @@ func New(function string, tag string, opts ...Option) (*scalefunc.ScaleFunc, err
 
 	bs := h.Sum(nil)
 
-	s := base64.URLEncoding.EncodeToString(bs)
+	hash := base64.URLEncoding.EncodeToString(bs)
 
-	if s != response.Hash {
+	if hash != response.Hash {
 		return nil, ErrHashMismatch
 	}
 
 	// Save to our local cache
-	err = saveToCache(function, tag, conf, data)
+	err = saveToCache(function, tag, hash, conf, data)
 	if err != nil {
 		return nil, err
 	}
@@ -149,29 +172,49 @@ func New(function string, tag string, opts ...Option) (*scalefunc.ScaleFunc, err
 }
 
 // build a filename from the config
-// TODO: We should use the hash in the filename for optimization
-func buildFilename(function string, tag string, conf *Config) string {
-	return fmt.Sprintf("%s.%s.scale", function, tag)
+func buildFilename(function string, tag string, hash string, conf *Config) string {
+	return fmt.Sprintf("%s.%s.%s.scale", function, tag, hash)
 }
 
 // Get a scalefile from the local cache
-func getFromCache(function string, tag string, conf *Config) (*scalefunc.ScaleFunc, error) {
-	f := buildFilename(function, tag, conf)
+func getFromCache(function string, tag string, hash string, conf *Config) (*scalefunc.ScaleFunc, error) {
+	if hash != "" {
+		f := buildFilename(function, tag, hash, conf)
 
-	// Try to read the scalefile
-	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
-	return scalefunc.Read(path)
+		// Try to read the scalefile
+		path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
+		return scalefunc.Read(path)
+	}
+
+	filePrefix := fmt.Sprintf("%s.%s.", function, tag)
+	files, err := os.ReadDir(conf.cacheDirectory)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		name := file.Name()
+		if strings.HasPrefix(name, filePrefix) {
+			path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, name)
+			return scalefunc.Read(path)
+		}
+	}
+	return nil, ErrNoFunction
 }
 
 // Save a scalefile to our local cache
-func saveToCache(function string, tag string, conf *Config, data []byte) error {
+func saveToCache(function string, tag string, hash string, conf *Config, data []byte) error {
 	err := os.MkdirAll(conf.cacheDirectory, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	// Overwrite the file
-	f := buildFilename(function, tag, conf)
+	f := buildFilename(function, tag, hash, conf)
 	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
 
 	fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
@@ -210,7 +253,7 @@ func apiRequest(function string, tag string, conf *Config) (*GetFunctionResponse
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		"GET",
-		fmt.Sprintf("%s/registry/function/%s/%s/%s", conf.apiBaseUrl, conf.organization, function, tag),
+		fmt.Sprintf("%s/registry/function/%s/%s/%s", conf.apiBaseURL, conf.organization, function, tag),
 		nil,
 	)
 	if err != nil {

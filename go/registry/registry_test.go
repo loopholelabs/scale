@@ -17,6 +17,8 @@
 package registry
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"os"
 	"testing"
 
@@ -24,6 +26,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const testingAPIBaseURl = "https://api.dev.scale.sh/v1"
 
 func TestPulldownCache(t *testing.T) {
 	conf := &Config{
@@ -44,10 +48,17 @@ func TestPulldownCache(t *testing.T) {
 	function := "TestFunction"
 	tag := "1"
 
+	h := sha256.New()
+	h.Write(sf.Function)
+
+	bs := h.Sum(nil)
+
+	hash := base64.URLEncoding.EncodeToString(bs)
+
 	b := sf.Encode()
 
 	// Write it to the cache...
-	err := saveToCache(function, tag, conf, b)
+	err := saveToCache(function, tag, hash, conf, b)
 	require.NoError(t, err)
 
 	// Try reading a scalefile from the cache...
@@ -55,7 +66,7 @@ func TestPulldownCache(t *testing.T) {
 	newsf, err := New(function, tag,
 		WithCacheDirectory(conf.cacheDirectory),
 		WithPullPolicy(conf.pullPolicy),
-		WithApiKey(conf.apiKey))
+		WithAPIKey(conf.apiKey))
 
 	require.NoError(t, err)
 
@@ -77,8 +88,8 @@ func TestRegistryDownload(t *testing.T) {
 		t.Skip("Skipping test, SCALE_API_KEY environment variable not set")
 	}
 	sf, err := New("TestRegistryDownload", "1",
-		WithApiKey(apiKey),
-		WithBaseUrl("https://api.dev.scale.sh/v1"),
+		WithAPIKey(apiKey),
+		WithBaseURL(testingAPIBaseURl),
 		WithOrganization("alex"),
 	)
 	require.NoError(t, err)

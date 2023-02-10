@@ -7,9 +7,11 @@ import {
     New,
     WithCacheDirectory,
     WithPullPolicy,
-    WithApiKey, WithApiBaseUrl, WithOrganization
+    WithApiKey, WithApiBaseUrl, WithOrganization, computeSha256
 } from './index';
 import {ScaleFunc} from "@loopholelabs/scalefile";
+
+const testingApiBaseUrl = "https://api.dev.scale.sh/v1"
 
 /**
  * @jest-environment node
@@ -19,7 +21,7 @@ test('TestPulldownCache', async () => {
         cacheDirectory: "testCache",
         pullPolicy: NeverPullPolicy,
         apiKey: "123",
-        apiBaseUrl: "https://api.scale.sh/v1",
+        apiBaseUrl: testingApiBaseUrl,
         organization: "testOrg",
     }
 
@@ -28,12 +30,14 @@ test('TestPulldownCache', async () => {
         "TestFunction",
         "1",
         "signature1",
-        "go", Buffer.from("Hello world"),
+        "go",
+        Buffer.from("Hello world"),
     );
 
     const func = "TestFunction"
     const tag = "1"
-    saveToCache(func, tag, config, scaleFunc)
+    const hash = await computeSha256(scaleFunc.Function);
+    saveToCache(func, tag, hash, config, scaleFunc)
 
     // Try reading a scalefile from the cache
     const newScaleFunc = await New(
@@ -65,7 +69,7 @@ test('TestRegistryDownload', async () => {
         "TestRegistryDownload",
         "1",
         WithApiKey(apiKey),
-        WithApiBaseUrl("https://api.dev.scale.sh/v1"),
+        WithApiBaseUrl(testingApiBaseUrl),
         WithOrganization("alex"),
     );
 
