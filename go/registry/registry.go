@@ -277,7 +277,7 @@ func apiRequest(function string, tag string, conf *Config) (*GetFunctionResponse
 		return nil, errors.New(bodyString)
 	}
 
-	response := &GetFunctionResponse{}
+	response := new(GetFunctionResponse)
 	err = json.NewDecoder(res.Body).Decode(response)
 	if err != nil {
 		return nil, err
