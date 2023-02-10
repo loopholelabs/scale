@@ -250,7 +250,7 @@ type GetFunctionResponse struct {
 }
 
 func apiRequest(function string, tag string, conf *Config) (*GetFunctionResponse, error) {
-	client := &http.Client{}
+	client := http.DefaultClient
 	req, err := http.NewRequest(
 		"GET",
 		fmt.Sprintf("%s/registry/function/%s/%s/%s", conf.apiBaseURL, conf.organization, function, tag),
