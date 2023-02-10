@@ -10,11 +10,9 @@
     "primary": "#7c34ff",
     "light": "#ae82ff",
     "dark": "#9015D9",
-    "ultraLight": "#F8EEFE",
-    "ultraDark": "#6A06A5",
     "background": {
-      "light": "#F8EEFE",
-        "dark": "#08111F"
+      "light": "#FFFFFF",
+      "dark": "#08111F"
     }
   },
   "topbarLinks": [],
@@ -25,7 +23,7 @@
   "anchors": [
     {
       "name": "Blog",
-      "icon": "newspaper",
+      "icon": "square-rss",
       "url": "https://loopholelabs.io/blog"
     },
     {
@@ -57,5 +55,12 @@
     "anchors": "group-hover:bg-gradient-to-tr from-[#7c34ff] to-[#fe9195]",
     "activeAnchors": "bg-gradient-to-tr",
     "navigationItem": "duration-100"
+  },
+  "backgroundImage": "/images/grid.svg",
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_ozdiEGAuVg8Ru1tsyG092ND3oxhMtVewZO6Tg74s8MF",
+      "apiHost": "https://data.scale.sh"
+    }
   }
 }
