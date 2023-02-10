@@ -208,9 +208,13 @@ func getFromCache(function string, tag string, hash string, conf *Config) (*scal
 
 // Save a scalefile to our local cache
 func saveToCache(function string, tag string, hash string, conf *Config, data []byte) error {
-	err := os.MkdirAll(conf.cacheDirectory, os.ModePerm)
-	if err != nil {
-		return err
+	// check if directory exists
+	_, err := os.Stat(conf.cacheDirectory)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(conf.cacheDirectory, os.ModePerm)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Overwrite the file
