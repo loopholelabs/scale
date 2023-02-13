@@ -44,7 +44,49 @@
     },
     {
       "group": "Getting Started",
-      "pages": ["getting-started/overview", "getting-started/quick-start"]
+      "pages": [
+        "getting-started/quick-start",
+        "getting-started/install"
+      ]
+    },
+    {
+      "group": "Writing Scale Functions",
+      "pages": [
+        "getting-started/writing-scale-functions",
+        "getting-started/examples"
+      ]
+    },
+    {
+      "group": "Using Scale Functions",
+      "pages": [
+        "getting-started/scale-run",
+        "getting-started/embedding",
+        "getting-started/publishing"
+      ]
+    },
+    {
+      "group": "Registry",
+      "pages": [
+        "registry/overview",
+        "registry/publishing",
+        "registry/open-api"
+      ]
+    },
+    {
+      "group": "Adapters",
+      "pages": [
+        "adapters/go",
+        "adapters/fasthttp",
+        "adapters/expressjs",
+        "adapters/nextjs"
+      ]
+    },
+    {
+      "group": "Signatures",
+      "pages": [
+        "signatures/overview",
+        "signatures/http"
+      ]
     }
   ],
   "footerSocials": {
