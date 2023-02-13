@@ -23,12 +23,6 @@ use std::os::raw::{c_char, c_int, c_void};
 use std::io::{self, Cursor, Read, Write};
 use std::ffi::CString;
 
-extern crate wee_alloc;
-
-#[cfg(not(test))]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 use once_cell::sync::OnceCell;
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
 
