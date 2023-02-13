@@ -9,6 +9,5 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1.0"
 quickjs-wasm-sys = "0.1.1"
-wee_alloc = "0.4.5"
 once_cell = "1.4.0"
 lazy_static = "1.4.0"
