@@ -1,26 +1,18 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
-
-#[macro_use]
-extern crate lazy_static;
-
 
 extern crate quickjs_wasm_sys;
 extern crate once_cell;
 
 use quickjs_wasm_sys::{
-  ext_js_exception, ext_js_null, ext_js_undefined, size_t as JS_size_t, JSCFunctionData,
-  JSContext, JSValue, JS_Eval, JS_FreeCString, JS_GetGlobalObject, JS_NewArray, JS_NewBigInt64,
-  JS_Call, JS_NewBool_Ext, JS_NewCFunctionData, JS_NewContext, JS_NewFloat64_Ext, JS_NewInt32_Ext,
-  JS_NewInt64_Ext, JS_NewObject, JS_NewRuntime, JS_NewStringLen, JS_NewUint32_Ext,
-  JS_ToCStringLen2, JS_EVAL_TYPE_GLOBAL, JS_GetPropertyStr, JS_GetPropertyUint32, 
-  JS_DefinePropertyValueStr, JS_DefinePropertyValueUint32, JS_PROP_C_W_E,
-  JS_TAG_BIG_INT, JS_TAG_BOOL, JS_TAG_EXCEPTION, JS_TAG_INT, JS_TAG_NULL,
-  JS_TAG_OBJECT, JS_TAG_STRING, JS_TAG_UNDEFINED, JS_GetArrayBuffer, JS_BigIntToUint64
+  ext_js_exception, ext_js_undefined, size_t as JS_size_t, JSCFunctionData,
+  JSContext, JSValue, JS_Eval, JS_FreeCString, JS_GetGlobalObject,
+  JS_Call, JS_NewCFunctionData, JS_NewContext, JS_NewInt32_Ext,
+  JS_NewInt64_Ext, JS_NewObject, JS_NewRuntime, JS_ToCStringLen2, JS_EVAL_TYPE_GLOBAL,
+  JS_GetPropertyStr, JS_GetPropertyUint32, JS_DefinePropertyValueStr, JS_PROP_C_W_E,
+  JS_TAG_EXCEPTION, JS_GetArrayBuffer, JS_BigIntToUint64
 };
-use std::os::raw::{c_char, c_int, c_void};
+use std::os::raw::{c_int, c_void};
 
-use std::io::{self, Cursor, Read, Write};
+use std::io::{self, Read, Write};
 use std::ffi::CString;
 
 use once_cell::sync::OnceCell;
