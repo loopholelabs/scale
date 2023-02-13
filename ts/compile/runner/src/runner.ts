@@ -18,7 +18,7 @@ import { TextEncoder, TextDecoder } from "text-encoding";
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global["TextDecoder"];
 
-import { GuestContext, HttpContext, HttpRequest, HttpResponse, HttpStringList } from "@loopholelabs/scale-signature-http";
+import { Resize, GuestContext, HttpContext, HttpRequest, HttpResponse, HttpStringList } from "@loopholelabs/scale-signature-http";
 
 export type ScaleFunction = (a: GuestContext) => GuestContext;
 
@@ -48,9 +48,9 @@ function runFunction(): bigint {
 
 }
 
-// Route the resize through to the guestContext
+// Route the resize through to the signature
 function resizeFunction(size: number): number {
-  let n = ctx.Resize(size);
+  let n = Resize(size);
   return n;
 }
 
