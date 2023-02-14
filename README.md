@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Tests](https://github.com/loopholelabs/scale/actions/workflows/test.yml/badge.svg)](https://github.com/loopholelabs/scale/actions/workflows/test.yml)
 
-This library contains Scale Runtime for [Scale Functions](https://scale.sh).
+[Scale Runtime](https://scale.sh) is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.
 
 **This library requires Go1.18 or later.**
 
