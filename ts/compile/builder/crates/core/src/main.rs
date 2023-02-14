@@ -214,7 +214,6 @@ fn global_err(msg: &str) -> u64 {
     // Now pack the address and length and return...
     let ptr = GLOBAL_ERROR.as_ptr() as u64;
     let len = GLOBAL_ERROR.len() as u64;
-    println!("Global error is {ptr} / {len} - {msg}");
     return (ptr << 32) | len;
   }
 }
