@@ -18,10 +18,12 @@ BUILDER=../builder/target/release/jsbuilder
 
 ${BUILDER} dist/${TARGET}${JS} -o wasm/${TARGET}_opt.wasm
 
+SRC=`realpath dist/${TARGET}${JS}`
+
 # Build a non-optimized version
-cp dist/${TARGET}${JS} ../host/crates/core/src/index.js
+#cp dist/${TARGET}${JS} ../host/crates/core/src/index.js
 cd ../host
-make
+JS_SOURCE=${SRC} make
 cd ../runner
 cp ../host/target/wasm32-wasi/release/host_core.wasm wasm/${TARGET}.wasm
 done
