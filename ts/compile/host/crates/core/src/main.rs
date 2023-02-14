@@ -2,6 +2,7 @@
 extern crate quickjs_wasm_sys;
 extern crate once_cell;
 extern crate polyglot_rs;
+extern crate flate2;
 
 use polyglot_rs::{Encoder};   // So we can encode an error...
 
@@ -15,7 +16,10 @@ use quickjs_wasm_sys::{
 };
 use std::os::raw::{c_int, c_void};
 
-use std::io::{self, Cursor, Write};
+use flate2::read::GzDecoder;
+use std::str;
+
+use std::io::{self, Cursor, Read, Write};
 use std::ffi::CString;
 use std::error::Error;
 
@@ -147,8 +151,18 @@ fn main() {
     // let mut contents = String::new();
     // io::stdin().read_to_string(&mut contents).unwrap();
 
-    // Include the js file as a string
-    let contents = include_str!(env!("JS_SOURCE"));
+    let mut contents = String::new();
+
+    let data = include_bytes!(env!("JS_SOURCE"));
+
+    if env!("JS_ZIPPED") == "true" {      
+      // Unzip the data
+      let mut gz = GzDecoder::new(&data[..]);
+      gz.read_to_string(&mut contents).unwrap();
+    } else {
+      // Include the js file as a string
+      contents = str::from_utf8(data).unwrap().to_string();
+    }
 
     let len = contents.len() - 1;
     let input = CString::new(contents).unwrap();
