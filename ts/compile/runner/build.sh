@@ -16,5 +16,12 @@ JS=`cat dist/${TARGET}/index.html | tr ">" "\n" | grep nomodule | awk -F'"' '{pr
 # Use the builder to build a wasm module
 BUILDER=../builder/target/release/jsbuilder
 
-${BUILDER} dist/${TARGET}${JS} -o ${TARGET}.wasm
+${BUILDER} dist/${TARGET}${JS} -o wasm/${TARGET}_opt.wasm
+
+# Build a non-optimized version
+cp dist/${TARGET}${JS} ../host/crates/core/src/index.js
+cd ../host
+make
+cd ../runner
+cp ../host/target/wasm32-wasi/release/host_core.wasm wasm/${TARGET}.wasm
 done
