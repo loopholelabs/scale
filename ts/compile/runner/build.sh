@@ -20,10 +20,17 @@ ${BUILDER} dist/${TARGET}${JS} -o wasm/${TARGET}_opt.wasm
 
 SRC=`realpath dist/${TARGET}${JS}`
 
+cat ${SRC} | gzip > ${SRC}.gz
+
 # Build a non-optimized version
 #cp dist/${TARGET}${JS} ../host/crates/core/src/index.js
 cd ../host
-JS_SOURCE=${SRC} make
+rm -rf target
+JS_SOURCE=${SRC} JS_ZIPPED=false make
+cp target/wasm32-wasi/release/host_core.wasm ../runner/wasm/${TARGET}.wasm
+rm -rf target
+JS_SOURCE=${SRC}.gz JS_ZIPPED=true make
+cp target/wasm32-wasi/release/host_core.wasm ../runner/wasm/${TARGET}_gz.wasm
+
 cd ../runner
-cp ../host/target/wasm32-wasi/release/host_core.wasm wasm/${TARGET}.wasm
 done
