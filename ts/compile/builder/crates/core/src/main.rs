@@ -1,6 +1,9 @@
 
 extern crate quickjs_wasm_sys;
 extern crate once_cell;
+extern crate polyglot_rs;
+
+use polyglot_rs::{Encoder};   // So we can encode an error...
 
 use quickjs_wasm_sys::{
   ext_js_exception, ext_js_undefined, size_t as JS_size_t, JSCFunctionData,
@@ -12,8 +15,9 @@ use quickjs_wasm_sys::{
 };
 use std::os::raw::{c_int, c_void};
 
-use std::io::{self, Read, Write};
+use std::io::{self, Cursor, Read, Write};
 use std::ffi::CString;
+use std::error::Error;
 
 use once_cell::sync::OnceCell;
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
@@ -25,6 +29,9 @@ static mut ENTRY_RUN: OnceCell<JSValue> = OnceCell::new();
 static mut ENTRY_RESIZE: OnceCell<JSValue> = OnceCell::new();
 
 static SCRIPT_NAME: &str = "script.js";
+
+static mut GLOBAL_ERROR: Vec<u8> = Vec::new();
+
 
 // The function env.next exported by the host
 #[link(wasm_import_module = "env")]
@@ -196,6 +203,22 @@ fn main() {
     }
 }
 
+fn global_err(msg: &str) -> u64 {
+  let mut cursor = Cursor::new(Vec::new());
+  cursor.encode_error(Box::<dyn Error>::from(msg)).unwrap();
+
+  unsafe {
+
+    GLOBAL_ERROR = cursor.into_inner();
+
+    // Now pack the address and length and return...
+    let ptr = GLOBAL_ERROR.as_ptr() as u64;
+    let len = GLOBAL_ERROR.len() as u64;
+    println!("Global error is {ptr} / {len} - {msg}");
+    return (ptr << 32) | len;
+  }
+}
+
 
 #[export_name = "run"]
 fn run() -> u64 {
@@ -209,19 +232,14 @@ fn run() -> u64 {
 
     let ret_tag = (ret >> 32) as i32;
     if ret_tag == JS_TAG_EXCEPTION {
-      // TODO Get the exception and handle and return to host?...
-      //
-      println!("Rust/js: Exception from js!");
-      // Signal error for now.
-      return 999;
+      // TODO: Get the exact exception message and return to the host
+      return global_err(&"Rust/js: Exception from js runtime");
     }
 
     let mut valret = 0_u64;
     let err = JS_BigIntToUint64(*context, &mut valret, ret);
     if err < 0 {
-      // TODO: Return a better error maybe...
-      println!("Rust/js: Error converting run return value");
-      return 999;
+      return global_err(&"Rust/js: Error converting run return value");
     }      
     return valret;
   }
@@ -243,11 +261,8 @@ pub unsafe extern "C" fn resize(size: u32) -> *mut u8 {
 
     let ret_tag = (ret >> 32) as i32;
     if ret_tag == JS_TAG_EXCEPTION {
-      // TODO Get the exception and handle and return to host?...
-      //
-      println!("Rust/js: Exception from js!");
-      // Signal error for now.
-      return 999 as *mut u8;
+      // TODO: Get the exact exception message and return to the host
+      return global_err("Rust/js: Exception from js runtime") as *mut u8;
     }
 
     return ret as *mut u8;
