@@ -148,7 +148,7 @@ fn main() {
     // io::stdin().read_to_string(&mut contents).unwrap();
 
     // Include the js file as a string
-    let contents = include_str!("index.js");    
+    let contents = include_str!(env!("JS_SOURCE"));
 
     let len = contents.len() - 1;
     let input = CString::new(contents).unwrap();
