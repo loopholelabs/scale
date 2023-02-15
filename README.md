@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/loopholelabs/scale)](https://goreportcard.com/report/github.com/loopholelabs/scale)
 [![Go Reference](https://pkg.go.dev/badge/github.com/loopholelabs/scale.svg)](https://pkg.go.dev/github.com/loopholelabs/scale)
 
-Scale is a Webassembly-powered function runtime enabling composable, language-agnostic software development. 
+[Scale](https://scale.sh) is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.
 
 With Scale Functions you can write code in any language, then use it from any other language, environment, or runtime, with state-of-the-art sandboxing qualities, startup times, and overall performance. This initial release includes client support for Go and Rust, with runtimes for Go and TypeScript.
 
