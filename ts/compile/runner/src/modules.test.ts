@@ -1,0 +1,55 @@
+/*
+        Copyright 2022 Loophole Labs
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+                   http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+*/
+
+import { TextEncoder, TextDecoder } from "text-encoding";
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as typeof global["TextDecoder"];
+
+import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
+import { New } from "@loopholelabs/scale-ts";
+import * as fs from "fs";
+import { kMaxLength } from "buffer";
+
+describe("modules", () => {
+  let mods = [
+    {path: "wasm/module_middleware.wasm", description: "middleware"},
+    {path: "wasm/module_middleware_opt.wasm", description: "middleware (speed optimized)"},
+    {path: "wasm/module_middleware_gz.wasm", description: "middleware (size optimized)"}
+  ];
+
+  for (let k of mods) {
+    const modNext = fs.readFileSync(k.path);
+    var stats = fs.statSync(k.path);
+    var fileSizeInBytes = stats.size;
+    // Convert the file size to megabytes (optional)
+    var fileSizeInMegabytes = (fileSizeInBytes / (1024*1024)).toFixed(2);
+
+    it("Can run module " + k.description + " " + fileSizeInMegabytes + "Mb" , async () => {
+      
+      const fn = new ScaleFunc(V1Alpha, "Test.Middleware", "Test.Tag", "ExampleName@ExampleVersion", Go, modNext);
+      const r = await New([fn]);
+      const i = await r.Instance(null);
+      i.Run();
+      let header = i.Context().Response.Headers.get("FROM_TYPESCRIPT");
+      expect(header).not.toBeUndefined();
+      if (header != undefined) {
+        let bits = header.Value;
+        expect(bits.length).toBe(1);
+        expect(bits[0]).toBe("TRUE");
+      }
+    });
+  }
+});
