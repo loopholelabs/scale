@@ -2,10 +2,12 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Tests](https://github.com/loopholelabs/scale/actions/workflows/test.yml/badge.svg)](https://github.com/loopholelabs/scale/actions/workflows/test.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/loopholelabs/scale)](https://goreportcard.com/report/github.com/loopholelabs/scale)
+[![Go Reference](https://pkg.go.dev/badge/github.com/loopholelabs/scale.svg)](https://pkg.go.dev/github.com/loopholelabs/scale)
 
-This library contains Scale Runtime for [Scale Functions](https://scale.sh).
+Scale is a Webassembly-powered function runtime enabling composable, language-agnostic software development. 
 
-**This library requires Go1.18 or later.**
+With Scale Functions you can write code in any language, then use it from any other language, environment, or runtime, with state-of-the-art sandboxing qualities, startup times, and overall performance. This initial release includes client support for Go and Rust, with runtimes for Go and TypeScript.
 
 ## Important note about releases and stability
 
