@@ -52,4 +52,17 @@ describe("modules", () => {
       }
     });
   }
+
+  it("Can run module error" , async () => {
+    const modError = fs.readFileSync("wasm/module_error.wasm");    
+    const fn = new ScaleFunc(V1Alpha, "Test.Error", "Test.Tag", "ExampleName@ExampleVersion", Go, modError);
+    const r = await New([fn]);
+    const i = await r.Instance(null);
+
+    expect(() => {
+      i.Run();
+    }).toThrow("Something went wrong");
+
+  });
+
 });
