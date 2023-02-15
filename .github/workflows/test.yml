@@ -15,7 +15,7 @@ jobs:
       - name: Install Golang
         uses: actions/setup-go@v3
         with:
-          go-version: "1.19"
+          go-version: "1.20"
           check-latest: true
           cache: true
 
@@ -35,21 +35,21 @@ jobs:
       - name: Install Tinygo
         uses: acifani/setup-tinygo@v1
         with:
-          tinygo-version: 0.26.0
+          tinygo-version: 0.27.0
 
       - name: Cache the node_modules directories
         uses: actions/cache@v2
         with:
           path: |
-            ./ts/node_modules
+            ./node_modules
           key: npm
       - name: Install dependencies with npm
         run: npm install --legacy-peer-deps --include=dev
-        working-directory: ./ts
+        working-directory: ./
 
       - name: Test Go Runtime
         run: go test -v ./...
 
       - name: Test TS Runtime
         run: npm run test
-        working-directory: ./ts
+        working-directory: ./
