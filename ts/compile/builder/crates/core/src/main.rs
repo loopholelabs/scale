@@ -88,12 +88,11 @@ fn js_init() {
 
     let mut js_contents = String::new();
 
+    // If we are building with js_source, we should include the data. If it ends with .gz then unzip it.
     #[cfg(feature = "js_source")]
     {
       let data = include_bytes!(env!("JS_SOURCE"));
-
       if env!("JS_SOURCE").ends_with(".gz") {
-      //if !option_env!("JS_ZIPPED").is_none() {
         // Unzip the data
         let mut gz = GzDecoder::new(&data[..]);
         gz.read_to_string(&mut js_contents).unwrap();
@@ -103,6 +102,7 @@ fn js_init() {
       }
     }
 
+    // If we are not building with js_source, we will read the javascript from stdin, which comes from the cli tool
     #[cfg(not(feature = "js_source"))]
     io::stdin().read_to_string(&mut js_contents).unwrap();
 
