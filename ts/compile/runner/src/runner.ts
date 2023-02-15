@@ -14,7 +14,6 @@
 declare var scale: ScaleFunction;     // This should be defined in the global scope.
 
 import { TextEncoder, TextDecoder } from "text-encoding";
-
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global["TextDecoder"];
 
@@ -50,8 +49,7 @@ function runFunction(): bigint {
 
 // Route the resize through to the signature
 function resizeFunction(size: number): number {
-  let n = Resize(size);
-  return n;
+  return Resize(size);
 }
 
 (global as any).Exports = {
