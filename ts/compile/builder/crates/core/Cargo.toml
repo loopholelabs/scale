@@ -11,3 +11,10 @@ anyhow = "1.0"
 quickjs-wasm-sys = "0.1.1"
 once_cell = "1.4.0"
 polyglot_rs = "0.6.1"
+flate2 = "1.0.25"
+
+[features]
+# Optimize using wizer to do pre-init
+default = ["wizer_opt"]
+wizer_opt = []
+js_source = []

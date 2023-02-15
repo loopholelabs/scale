@@ -1,7 +1,7 @@
-
 extern crate quickjs_wasm_sys;
 extern crate once_cell;
 extern crate polyglot_rs;
+extern crate flate2;
 
 use polyglot_rs::{Encoder};   // So we can encode an error...
 
@@ -15,11 +15,17 @@ use quickjs_wasm_sys::{
 };
 use std::os::raw::{c_int, c_void};
 
+#[cfg(feature = "js_source")]
+use flate2::read::GzDecoder;
+
+use std::str;
+
 use std::io::{self, Cursor, Read, Write};
 use std::ffi::CString;
 use std::error::Error;
 
 use once_cell::sync::OnceCell;
+static mut JS_INITIALIZED: bool = false;
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
 
 static mut ENTRY_EXPORTS: OnceCell<JSValue> = OnceCell::new();
@@ -62,63 +68,88 @@ fn getaddrwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: 
   }
 }
 
+// If we're doing wizer_opt, include the init here...
+#[cfg(feature = "wizer_opt")]
 #[export_name = "wizer.initialize"]
 pub extern "C" fn init() {
-    unsafe {
-        let runtime = JS_NewRuntime();
-        if runtime.is_null() {
-          panic!("Couldn't create JavaScript runtime");
-        }
-        let context = JS_NewContext(runtime);
-        if context.is_null() {
-          panic!("Couldn't create JavaScript context");
-        }
+  js_init();
+}
 
-        let mut contents = String::new();
-        io::stdin().read_to_string(&mut contents).unwrap();
-
-        let len = contents.len() - 1;
-        let input = CString::new(contents).unwrap();
-        let script_name = CString::new(SCRIPT_NAME).unwrap();
-        JS_Eval(context, input.as_ptr(), len as _, script_name.as_ptr(), JS_EVAL_TYPE_GLOBAL as i32);
-
-        let global = JS_GetGlobalObject(context);
-        let exports_key = CString::new("Exports").unwrap();
-        let exports = JS_GetPropertyStr(context, global, exports_key.as_ptr());
-
-        let main_key = CString::new("main").unwrap();
-        let main_fn = JS_GetPropertyStr(context, exports, main_key.as_ptr());
-        ENTRY_MAIN.set(main_fn).unwrap();
-
-        let run_key = CString::new("run").unwrap();
-        let run_fn = JS_GetPropertyStr(context, exports, run_key.as_ptr());
-        ENTRY_RUN.set(run_fn).unwrap();
-
-        let resize_key = CString::new("resize").unwrap();
-        let resize_fn = JS_GetPropertyStr(context, exports, resize_key.as_ptr());
-        ENTRY_RESIZE.set(resize_fn).unwrap();
-
-        // Setup console.log and console.error to pipe through to io::stderr
-        let log_cb = console_log_to(io::stderr());
-        let error_cb = console_log_to(io::stderr());
-
-        let console = JS_NewObject(context);
-        set_callback(context, console, "log", log_cb);
-        set_callback(context, console, "error", error_cb);
-
-        let console_name = CString::new("console").unwrap();
-        JS_DefinePropertyValueStr(context, global, console_name.as_ptr(), console, JS_PROP_C_W_E as i32);
-
-        // Setup a function called next() in the global_object
-        set_callback(context, global, "scale_fn_next", &nextwrap);
-
-        // Setup a function called getaddr() in the global object
-        set_callback(context, global, "getaddr", &getaddrwrap);
-
-        ENTRY_EXPORTS.set(exports).unwrap();
-
-        JS_CONTEXT.set(context).unwrap();
+fn js_init() {
+  unsafe {
+    let runtime = JS_NewRuntime();
+    if runtime.is_null() {
+      panic!("Couldn't create JavaScript runtime");
     }
+    let context = JS_NewContext(runtime);
+    if context.is_null() {
+      panic!("Couldn't create JavaScript context");
+    }
+
+    let mut js_contents = String::new();
+
+    #[cfg(feature = "js_source")]
+    {
+      let data = include_bytes!(env!("JS_SOURCE"));
+
+      if env!("JS_SOURCE").ends_with(".gz") {
+      //if !option_env!("JS_ZIPPED").is_none() {
+        // Unzip the data
+        let mut gz = GzDecoder::new(&data[..]);
+        gz.read_to_string(&mut js_contents).unwrap();
+      } else {
+        // Include the js file as a string
+        js_contents = str::from_utf8(data).unwrap().to_string();
+      }
+    }
+
+    #[cfg(not(feature = "js_source"))]
+    io::stdin().read_to_string(&mut js_contents).unwrap();
+
+    let len = js_contents.len() - 1;
+    let input = CString::new(js_contents).unwrap();
+    let script_name = CString::new(SCRIPT_NAME).unwrap();
+    JS_Eval(context, input.as_ptr(), len as _, script_name.as_ptr(), JS_EVAL_TYPE_GLOBAL as i32);
+
+    let global = JS_GetGlobalObject(context);
+    let exports_key = CString::new("Exports").unwrap();
+    let exports = JS_GetPropertyStr(context, global, exports_key.as_ptr());
+
+    let main_key = CString::new("main").unwrap();
+    let main_fn = JS_GetPropertyStr(context, exports, main_key.as_ptr());
+    ENTRY_MAIN.set(main_fn).unwrap();
+
+    let run_key = CString::new("run").unwrap();
+    let run_fn = JS_GetPropertyStr(context, exports, run_key.as_ptr());
+    ENTRY_RUN.set(run_fn).unwrap();
+
+    let resize_key = CString::new("resize").unwrap();
+    let resize_fn = JS_GetPropertyStr(context, exports, resize_key.as_ptr());
+    ENTRY_RESIZE.set(resize_fn).unwrap();
+
+    // Setup console.log and console.error to pipe through to io::stderr
+    let log_cb = console_log_to(io::stderr());
+    let error_cb = console_log_to(io::stderr());
+
+    let console = JS_NewObject(context);
+    set_callback(context, console, "log", log_cb);
+    set_callback(context, console, "error", error_cb);
+
+    let console_name = CString::new("console").unwrap();
+    JS_DefinePropertyValueStr(context, global, console_name.as_ptr(), console, JS_PROP_C_W_E as i32);
+
+    // Setup a function called next() in the global_object
+    set_callback(context, global, "scale_fn_next", &nextwrap);
+
+    // Setup a function called getaddr() in the global object
+    set_callback(context, global, "getaddr", &getaddrwrap);
+
+    ENTRY_EXPORTS.set(exports).unwrap();
+
+    JS_CONTEXT.set(context).unwrap();
+
+    JS_INITIALIZED = true;
+  }
 }
 
 fn set_callback<F>(context: *mut JSContext, global: JSValue, fn_name: impl Into<Vec<u8>>, f: F)
@@ -193,14 +224,18 @@ where
 }
 
 fn main() {
-    unsafe {
-        let context = JS_CONTEXT.get().unwrap();
-        let exports = ENTRY_EXPORTS.get().unwrap();
-        let main = ENTRY_MAIN.get().unwrap();
-
-        let args: Vec<JSValue> = Vec::new();
-        let _ret = JS_Call(*context, *main, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
+  unsafe {
+    if !JS_INITIALIZED {
+      js_init();
     }
+
+    let context = JS_CONTEXT.get().unwrap();
+    let exports = ENTRY_EXPORTS.get().unwrap();
+    let main = ENTRY_MAIN.get().unwrap();
+
+    let args: Vec<JSValue> = Vec::new();
+    let _ret = JS_Call(*context, *main, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
+  }
 }
 
 fn global_err(msg: &str) -> u64 {
