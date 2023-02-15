@@ -65,4 +65,18 @@ describe("modules", () => {
 
   });
 
+  it("Can run module endpoint" , async () => {
+    const modEndpoint = fs.readFileSync("wasm/module_endpoint.wasm");    
+    const fn = new ScaleFunc(V1Alpha, "Test.Error", "Test.Tag", "ExampleName@ExampleVersion", Go, modEndpoint);
+    const r = await New([fn]);
+    const i = await r.Instance(null);
+
+    i.Run();
+
+    let decoder = new TextDecoder();
+    let body = decoder.decode(i.Context().Response.Body);
+
+    expect(body).toBe("Hello from typescript!");
+  });
+
 });
