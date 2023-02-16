@@ -35,7 +35,7 @@ jobs:
       - name: Install Tinygo
         uses: acifani/setup-tinygo@v1
         with:
-          tinygo-version: 0.26.0
+          tinygo-version: 0.27.0
 
       - name: Cache the node_modules directories
         uses: actions/cache@v2
