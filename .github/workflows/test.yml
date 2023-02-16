@@ -41,15 +41,15 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
-            ./ts/node_modules
+            ./node_modules
           key: npm
       - name: Install dependencies with npm
         run: npm install --legacy-peer-deps --include=dev
-        working-directory: ./ts
+        working-directory: ./
 
       - name: Test Go Runtime
         run: go test -v ./...
 
       - name: Test TS Runtime
         run: npm run test
-        working-directory: ./ts
+        working-directory: ./

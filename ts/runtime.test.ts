@@ -25,29 +25,29 @@ import * as httpSignature from "@loopholelabs/scale-signature-http";
 import { New, NewFromSignature } from "./runtime";
 
 describe("TestRuntimeTs", () => {
-    const modPassthroughGo = fs.readFileSync("./tests/modules/passthrough-TestRuntimeGo.wasm");
-    const modPassthroughRs = fs.readFileSync("./tests/modules/passthrough-TestRuntimeRs.wasm");
-    const modModifyGo = fs.readFileSync("./tests/modules/modify-TestRuntimeGo.wasm");
-    const modModifyRs = fs.readFileSync("./tests/modules/modify-TestRuntimeRs.wasm");
-    const modNextGo = fs.readFileSync("./tests/modules/next-TestRuntimeGo.wasm");
-    const modNextRs = fs.readFileSync("./tests/modules/next-TestRuntimeRs.wasm");
-    const modModifyNextGo = fs.readFileSync("./tests/modules/modifynext-TestRuntimeGo.wasm");
-    const modModifyNextRs = fs.readFileSync("./tests/modules/modifynext-TestRuntimeRs.wasm");
-    const modFileGo = fs.readFileSync("./tests/modules/file-TestRuntimeGo.wasm");
-    const modFileRs = fs.readFileSync("./tests/modules/file-TestRuntimeRs.wasm");
-    const modNetworkGo = fs.readFileSync("./tests/modules/network-TestRuntimeGo.wasm");
-    const modNetworkRs = fs.readFileSync("./tests/modules/network-TestRuntimeRs.wasm");
-    const modPanicGo = fs.readFileSync("./tests/modules/panic-TestRuntimeGo.wasm");
-    const modPanicRs = fs.readFileSync("./tests/modules/panic-TestRuntimeRs.wasm");
-    const modBadSignatureGo = fs.readFileSync("./tests/modules/bad-signature-TestRuntimeGo.wasm");
-    const modBadSignatureRs = fs.readFileSync("./tests/modules/bad-signature-TestRuntimeRs.wasm");
+    const modPassthroughGo = fs.readFileSync("./ts/tests/modules/passthrough-TestRuntimeGo.wasm");
+    const modPassthroughRs = fs.readFileSync("./ts/tests/modules/passthrough-TestRuntimeRs.wasm");
+    const modModifyGo = fs.readFileSync("./ts/tests/modules/modify-TestRuntimeGo.wasm");
+    const modModifyRs = fs.readFileSync("./ts/tests/modules/modify-TestRuntimeRs.wasm");
+    const modNextGo = fs.readFileSync("./ts/tests/modules/next-TestRuntimeGo.wasm");
+    const modNextRs = fs.readFileSync("./ts/tests/modules/next-TestRuntimeRs.wasm");
+    const modModifyNextGo = fs.readFileSync("./ts/tests/modules/modifynext-TestRuntimeGo.wasm");
+    const modModifyNextRs = fs.readFileSync("./ts/tests/modules/modifynext-TestRuntimeRs.wasm");
+    const modFileGo = fs.readFileSync("./ts/tests/modules/file-TestRuntimeGo.wasm");
+    const modFileRs = fs.readFileSync("./ts/tests/modules/file-TestRuntimeRs.wasm");
+    const modNetworkGo = fs.readFileSync("./ts/tests/modules/network-TestRuntimeGo.wasm");
+    const modNetworkRs = fs.readFileSync("./ts/tests/modules/network-TestRuntimeRs.wasm");
+    const modPanicGo = fs.readFileSync("./ts/tests/modules/panic-TestRuntimeGo.wasm");
+    const modPanicRs = fs.readFileSync("./ts/tests/modules/panic-TestRuntimeRs.wasm");
+    const modBadSignatureGo = fs.readFileSync("./ts/tests/modules/bad-signature-TestRuntimeGo.wasm");
+    const modBadSignatureRs = fs.readFileSync("./ts/tests/modules/bad-signature-TestRuntimeRs.wasm");
 
-    const modHttpPassthroughGo = fs.readFileSync("./tests/modules/http-passthrough-TestRuntimeHTTPSignatureGo.wasm");
-    const modHttpPassthroughRs = fs.readFileSync("./tests/modules/http-passthrough-TestRuntimeHTTPSignatureRs.wasm");
-    const modHttpHandlerGo = fs.readFileSync("./tests/modules/http-handler-TestRuntimeHTTPSignatureGo.wasm");
-    const modHttpHandlerRs = fs.readFileSync("./tests/modules/http-handler-TestRuntimeHTTPSignatureRs.wasm");
-    const modHttpNextGo = fs.readFileSync("./tests/modules/http-next-TestRuntimeHTTPSignatureGo.wasm");
-    const modHttpNextRs = fs.readFileSync("./tests/modules/http-next-TestRuntimeHTTPSignatureRs.wasm");
+    const modHttpPassthroughGo = fs.readFileSync("./ts/tests/modules/http-passthrough-TestRuntimeHTTPSignatureGo.wasm");
+    const modHttpPassthroughRs = fs.readFileSync("./ts/tests/modules/http-passthrough-TestRuntimeHTTPSignatureRs.wasm");
+    const modHttpHandlerGo = fs.readFileSync("./ts/tests/modules/http-handler-TestRuntimeHTTPSignatureGo.wasm");
+    const modHttpHandlerRs = fs.readFileSync("./ts/tests/modules/http-handler-TestRuntimeHTTPSignatureRs.wasm");
+    const modHttpNextGo = fs.readFileSync("./ts/tests/modules/http-next-TestRuntimeHTTPSignatureGo.wasm");
+    const modHttpNextRs = fs.readFileSync("./ts/tests/modules/http-next-TestRuntimeHTTPSignatureRs.wasm");
 
   const passthrough = [
     { name: "Passthrough", module: modPassthroughGo, language: Go },
