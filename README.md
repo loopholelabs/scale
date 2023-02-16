@@ -2,8 +2,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Tests](https://github.com/loopholelabs/scale/actions/workflows/test.yml/badge.svg)](https://github.com/loopholelabs/scale/actions/workflows/test.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/loopholelabs/scale)](https://goreportcard.com/report/github.com/loopholelabs/scale)
-[![Go Reference](https://pkg.go.dev/badge/github.com/loopholelabs/scale.svg)](https://pkg.go.dev/github.com/loopholelabs/scale)
+[![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)
 
 [Scale](https://scale.sh) is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.
 

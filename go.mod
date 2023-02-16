@@ -11,7 +11,7 @@ require (
 	github.com/loopholelabs/auth v0.2.25
 	github.com/loopholelabs/polyglot-go v0.5.1
 	github.com/loopholelabs/scale-signature v0.2.3
-	github.com/loopholelabs/scale-signature-http v0.3.0
+	github.com/loopholelabs/scale-signature-http v0.3.1
 	github.com/loopholelabs/scalefile v0.1.5
 	github.com/stretchr/testify v1.8.1
 	github.com/tetratelabs/wazero v1.0.0-pre.8
