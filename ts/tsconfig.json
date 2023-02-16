@@ -5,6 +5,7 @@
     "module": "commonjs",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
@@ -12,5 +13,5 @@
       "scale-js": ["."]
     },
     "types": ["node", "jest"]
-  }
+  },
 }

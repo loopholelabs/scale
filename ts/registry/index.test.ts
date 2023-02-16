@@ -1,15 +1,15 @@
 // setup jest
 import 'jest';
 import {
-    Config,
     NeverPullPolicy,
-    saveToCache,
+    defaultOrganization,
     New,
     WithCacheDirectory,
     WithPullPolicy,
-    WithApiKey, WithApiBaseUrl, WithOrganization, computeSha256
+    WithAPIKey, WithBaseURL, WithOrganization, computeSHA256
 } from './index';
-import {ScaleFunc} from "@loopholelabs/scalefile";
+import {ScaleFunc, V1Alpha, Go} from "@loopholelabs/scalefile";
+import {Storage} from "../storage";
 
 const testingApiBaseUrl = "https://api.dev.scale.sh/v1"
 
@@ -17,35 +17,27 @@ const testingApiBaseUrl = "https://api.dev.scale.sh/v1"
  * @jest-environment node
  */
 test('TestPulldownCache', async () => {
-    const config: Config = {
-        cacheDirectory: "testCache",
-        pullPolicy: NeverPullPolicy,
-        apiKey: "123",
-        apiBaseUrl: testingApiBaseUrl,
-        organization: "testOrg",
-    }
+    const st = new Storage("testDirectory");
 
     const scaleFunc = new ScaleFunc(
-        "v1alpha",
+        V1Alpha,
         "TestFunction",
         "1",
         "signature1",
-        "go",
+        Go,
         Buffer.from("Hello world"),
     );
 
     const func = "TestFunction"
     const tag = "1"
-    const hash = await computeSha256(scaleFunc.Function);
-    saveToCache(func, tag, hash, config, scaleFunc)
+    const hash = await computeSHA256(scaleFunc.Function);
+    st.Put(func, tag, defaultOrganization, hash, scaleFunc)
 
-    // Try reading a scalefile from the cache
     const newScaleFunc = await New(
         func,
         tag,
-        WithCacheDirectory("testCache"),
-        WithPullPolicy(config.pullPolicy),
-        WithApiKey(config.apiKey)
+        WithCacheDirectory("testDirectory"),
+        WithPullPolicy(NeverPullPolicy),
     );
 
     expect(newScaleFunc.Version).toBe(scaleFunc.Version);
@@ -68,8 +60,8 @@ test('TestRegistryDownload', async () => {
     const scaleFunc = await New(
         "TestRegistryDownload",
         "1",
-        WithApiKey(apiKey),
-        WithApiBaseUrl(testingApiBaseUrl),
+        WithAPIKey(apiKey),
+        WithBaseURL(testingApiBaseUrl),
         WithOrganization("alex"),
     );
 

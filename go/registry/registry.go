@@ -19,15 +19,32 @@ package registry
 import (
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
+	openapiClient "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
+	"github.com/loopholelabs/auth"
+	openapi "github.com/loopholelabs/auth/pkg/client/openapi"
+	"github.com/loopholelabs/auth/pkg/client/session"
+	"github.com/loopholelabs/scale/go/client"
+	"github.com/loopholelabs/scale/go/client/models"
+	"github.com/loopholelabs/scale/go/client/registry"
+	"github.com/loopholelabs/scale/go/storage"
 	"github.com/loopholelabs/scalefile/scalefunc"
-	"github.com/mitchellh/go-homedir"
 	"io"
 	"net/http"
-	"os"
-	"strings"
+	"net/url"
+)
+
+const (
+	DefaultOrganization = "scale"
+)
+
+var (
+	DefaultCookieURL = &url.URL{
+		Scheme: "https",
+		Host:   "scale.sh",
+	}
 )
 
 type PullPolicy string
@@ -38,249 +55,236 @@ const (
 	NeverPullPolicy                   = "never"
 )
 
-const defaultCacheSubpath = ".cache/scale/functions"
-const defaultAPIBaseURL = "https://api.scale.sh/v1"
-
 var (
 	ErrHashMismatch   = errors.New("hash mismatch")
-	ErrNoFunction     = errors.New("function does not exist and pull policy is never")
-	ErrDownloadFailed = errors.New("the scale func could not be retrieved from the server")
+	ErrNoFunction     = errors.New("function does not exist locally and pull policy does not allow pulling from registry")
+	ErrDownloadFailed = errors.New("scale function could not be pull from the registry")
 )
 
-type Config struct {
+type config struct {
 	pullPolicy     PullPolicy
 	cacheDirectory string
 	apiKey         string
-	apiBaseURL     string
+	cookieURL      *url.URL
+	baseURL        string
 	organization   string
 }
 
-type Option func(config *Config)
+type Option func(config *config)
 
 func WithPullPolicy(pullPolicy PullPolicy) Option {
-	return func(config *Config) {
+	return func(config *config) {
 		config.pullPolicy = pullPolicy
 	}
 }
 
 func WithCacheDirectory(cacheDirectory string) Option {
-	return func(config *Config) {
+	return func(config *config) {
 		config.cacheDirectory = cacheDirectory
 	}
 }
 
 func WithAPIKey(apiKey string) Option {
-	return func(config *Config) {
+	return func(config *config) {
 		config.apiKey = apiKey
 	}
 }
 
 func WithBaseURL(baseURL string) Option {
-	return func(config *Config) {
-		config.apiBaseURL = baseURL
+	return func(config *config) {
+		config.baseURL = baseURL
 	}
 }
 
 func WithOrganization(organization string) Option {
-	return func(config *Config) {
+	return func(config *config) {
 		config.organization = organization
 	}
 }
 
-// Create a new runtime for a specific scalefile
-func New(function string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
-	// Default config
-	defaultPath, err := homedir.Expand(defaultCacheSubpath)
-	if err != nil {
-		return nil, err
+func WithCookieURL(cookieURL *url.URL) Option {
+	return func(config *config) {
+		config.cookieURL = cookieURL
 	}
-	conf := &Config{
-		pullPolicy:     AlwaysPullPolicy,
-		cacheDirectory: defaultPath,
-		apiKey:         "",
-		apiBaseURL:     defaultAPIBaseURL,
-		organization:   "default",
+}
+
+func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
+	conf := &config{
+		pullPolicy:   IfNotPresentPullPolicy,
+		baseURL:      client.DefaultHost,
+		cookieURL:    DefaultCookieURL,
+		organization: DefaultOrganization,
 	}
 	for _, opt := range opts {
 		opt(conf)
 	}
 
-	var sf *scalefunc.ScaleFunc
-
-	// First check our local cache...
-	if conf.pullPolicy != AlwaysPullPolicy {
-		sf, err := getFromCache(function, tag, "", conf)
-
-		if err == nil && conf.pullPolicy != AlwaysPullPolicy {
-			return sf, err
-		}
-
-		if conf.pullPolicy == NeverPullPolicy {
-			return nil, ErrNoFunction
-		}
+	if conf.baseURL == "" {
+		conf.baseURL = client.DefaultHost
 	}
 
-	// Contact the API endpoint with the request
-	response, err := apiRequest(function, tag, conf)
-	if err != nil {
-		return nil, err
+	if conf.cookieURL == nil {
+		conf.cookieURL = DefaultCookieURL
 	}
 
-	sf, err = getFromCache(function, tag, response.Hash, conf)
-	if err == nil {
-		return sf, err
+	if conf.organization == "" {
+		conf.organization = DefaultOrganization
 	}
 
-	// Get the scalefunc from the URL
-	httpResp, err := http.Get(response.PresignedURL)
-	if err != nil {
-		return nil, err
-	}
-
-	if httpResp.StatusCode != 200 {
-		return nil, ErrDownloadFailed
-	}
-
-	data, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	h := sha256.New()
-	h.Write(data)
-
-	bs := h.Sum(nil)
-
-	hash := base64.URLEncoding.EncodeToString(bs)
-
-	if hash != response.Hash {
-		return nil, ErrHashMismatch
-	}
-
-	// Save to our local cache
-	err = saveToCache(function, tag, hash, conf, data)
-	if err != nil {
-		return nil, err
-	}
-
-	// Decode to a scalefile
-	err = sf.Decode(data)
-	if err != nil {
-		return nil, err
-	}
-	return sf, nil
-}
-
-// build a filename from the config
-func buildFilename(function string, tag string, hash string, conf *Config) string {
-	return fmt.Sprintf("%s.%s.%s.scale", function, tag, hash)
-}
-
-// Get a scalefile from the local cache
-func getFromCache(function string, tag string, hash string, conf *Config) (*scalefunc.ScaleFunc, error) {
-	if hash != "" {
-		f := buildFilename(function, tag, hash, conf)
-
-		// Try to read the scalefile
-		path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
-		return scalefunc.Read(path)
-	}
-
-	filePrefix := fmt.Sprintf("%s.%s.", function, tag)
-	files, err := os.ReadDir(conf.cacheDirectory)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		name := file.Name()
-		if strings.HasPrefix(name, filePrefix) {
-			path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, name)
-			return scalefunc.Read(path)
-		}
-	}
-	return nil, ErrNoFunction
-}
-
-// Save a scalefile to our local cache
-func saveToCache(function string, tag string, hash string, conf *Config, data []byte) error {
-	// check if directory exists
-	_, err := os.Stat(conf.cacheDirectory)
-	if os.IsNotExist(err) {
-		err = os.MkdirAll(conf.cacheDirectory, os.ModePerm)
+	var err error
+	st := storage.Default
+	if conf.cacheDirectory != "" {
+		st, err = storage.New(conf.cacheDirectory)
 		if err != nil {
-			return err
+			return nil, fmt.Errorf("failed to create storage for directory %s: %w", conf.cacheDirectory, err)
 		}
 	}
 
-	// Overwrite the file
-	f := buildFilename(function, tag, hash, conf)
-	path := fmt.Sprintf("%s%c%s", conf.cacheDirectory, os.PathSeparator, f)
-
-	fh, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		return err
-	}
-
-	_, err = fh.Write(data)
-	if err != nil {
-		return err
-	}
-
-	err = fh.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func removeCache(conf *Config) error {
-	return os.RemoveAll(conf.cacheDirectory)
-}
-
-// PulldownResponse API response when requesting a function
-type GetFunctionResponse struct {
-	Name         string `json:"name"`
-	Tag          string `json:"tag"`
-	Organization string `json:"organization"`
-	Public       bool   `json:"public"`
-	Hash         string `json:"hash"`
-	PresignedURL string `json:"presigned_url"`
-}
-
-func apiRequest(function string, tag string, conf *Config) (*GetFunctionResponse, error) {
-	client := http.DefaultClient
-	req, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf("%s/registry/function/%s/%s/%s", conf.apiBaseURL, conf.organization, function, tag),
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conf.apiKey))
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if res.StatusCode != 200 {
-		bodyBytes, err := io.ReadAll(res.Body)
+	var o *openapiClient.Runtime
+	if conf.apiKey != "" {
+		o, err = openapi.AuthenticatedClient(conf.cookieURL, conf.baseURL, client.DefaultBasePath, client.DefaultSchemes, nil, &session.Session{
+			Kind:  auth.KindAPIKey,
+			Value: conf.apiKey,
+		})
 		if err != nil {
 			return nil, err
 		}
-		bodyString := string(bodyBytes)
-		return nil, errors.New(bodyString)
+	} else {
+		o = openapi.UnauthenticatedClient(conf.baseURL, client.DefaultBasePath, client.DefaultSchemes, nil)
 	}
 
-	response := new(GetFunctionResponse)
-	err = json.NewDecoder(res.Body).Decode(response)
-	if err != nil {
-		return nil, err
+	c := client.New(o, strfmt.Default)
+
+	switch conf.pullPolicy {
+	case NeverPullPolicy:
+		sf, _, err := st.Get(name, tag, conf.organization, "")
+		if err == nil {
+			return sf, nil
+		}
+		return nil, ErrNoFunction
+	case IfNotPresentPullPolicy:
+		sf, _, err := st.Get(name, tag, conf.organization, "")
+		if err == nil {
+			return sf, nil
+		}
+		var fn *models.ModelsGetFunctionResponse
+		if conf.organization == DefaultOrganization {
+			res, err := c.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
+			if err != nil {
+				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
+			}
+			fn = res.GetPayload()
+		} else {
+			res, err := c.Registry.GetRegistryFunctionOrganizationNameTag(registry.NewGetRegistryFunctionOrganizationNameTagParams().WithName(name).WithTag(tag).WithOrganization(conf.organization))
+			if err != nil {
+				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
+			}
+			fn = res.GetPayload()
+		}
+		res, err := http.Get(fn.PresignedURL)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			_ = res.Body.Close()
+		}()
+
+		if res.StatusCode != 200 {
+			return nil, ErrDownloadFailed
+		}
+
+		data, err := io.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		h := sha256.New()
+		h.Write(data)
+		bs := h.Sum(nil)
+		hash := base64.URLEncoding.EncodeToString(bs)
+		if hash != fn.Hash {
+			return nil, ErrHashMismatch
+		}
+
+		sf = new(scalefunc.ScaleFunc)
+		err = sf.Decode(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
+		}
+
+		err = st.Put(name, tag, conf.organization, hash, sf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to store retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
+		}
+
+		return sf, nil
+	case AlwaysPullPolicy:
+		sf, hash, _ := st.Get(name, tag, conf.organization, "")
+		var fn *models.ModelsGetFunctionResponse
+		if conf.organization == DefaultOrganization {
+			res, err := c.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
+			if err != nil {
+				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
+			}
+			fn = res.GetPayload()
+		} else {
+			res, err := c.Registry.GetRegistryFunctionOrganizationNameTag(registry.NewGetRegistryFunctionOrganizationNameTagParams().WithName(name).WithTag(tag).WithOrganization(conf.organization))
+			if err != nil {
+				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
+			}
+			fn = res.GetPayload()
+		}
+		if hash != "" {
+			if fn.Hash == hash {
+				return sf, nil
+			}
+		}
+
+		res, err := http.Get(fn.PresignedURL)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			_ = res.Body.Close()
+		}()
+
+		if res.StatusCode != 200 {
+			return nil, ErrDownloadFailed
+		}
+
+		data, err := io.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		h := sha256.New()
+		h.Write(data)
+		bs := h.Sum(nil)
+		computedHash := base64.URLEncoding.EncodeToString(bs)
+		if computedHash != fn.Hash {
+			return nil, ErrHashMismatch
+		}
+
+		sf = new(scalefunc.ScaleFunc)
+		err = sf.Decode(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
+		}
+
+		if hash != "" {
+			err = st.Delete(name, tag, conf.organization, hash)
+			if err != nil {
+				return nil, fmt.Errorf("failed to delete existing scale function %s/%s:%s: %w", conf.organization, name, tag, err)
+			}
+		}
+
+		err = st.Put(name, tag, conf.organization, hash, sf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to store retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
+		}
+
+		return sf, nil
+	default:
+		return nil, fmt.Errorf("unknown pull policy %s", conf.pullPolicy)
 	}
-	return response, nil
 }

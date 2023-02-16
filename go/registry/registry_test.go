@@ -19,6 +19,7 @@ package registry
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/loopholelabs/scale/go/storage"
 	"os"
 	"testing"
 
@@ -30,11 +31,9 @@ import (
 const testingAPIBaseURl = "https://api.dev.scale.sh/v1"
 
 func TestPulldownCache(t *testing.T) {
-	conf := &Config{
-		cacheDirectory: "testCache",
-		pullPolicy:     NeverPullPolicy,
-		apiKey:         "123",
-	}
+	tempDir := t.TempDir()
+	st, err := storage.New(tempDir)
+	require.NoError(t, err)
 
 	sf := &scalefunc.ScaleFunc{
 		Version:   scalefunc.V1Alpha,
@@ -54,29 +53,17 @@ func TestPulldownCache(t *testing.T) {
 	bs := h.Sum(nil)
 
 	hash := base64.URLEncoding.EncodeToString(bs)
-
-	b := sf.Encode()
-
-	// Write it to the cache...
-	err := saveToCache(function, tag, hash, conf, b)
+	err = st.Put(function, tag, DefaultOrganization, hash, sf)
 	require.NoError(t, err)
 
-	// Try reading a scalefile from the cache...
-	// Also tests that the With* works
-	newsf, err := New(function, tag,
-		WithCacheDirectory(conf.cacheDirectory),
-		WithPullPolicy(conf.pullPolicy),
-		WithAPIKey(conf.apiKey))
+	newsf, err := New(function, tag, WithCacheDirectory(tempDir), WithPullPolicy(NeverPullPolicy))
 
 	require.NoError(t, err)
 
-	// Now assert that the newsf is same as our original sf.
+	newsf.Size = 0
+	newsf.Checksum = ""
 
-	newb := newsf.Encode()
-
-	assert.Equal(t, b, newb)
-	// cleanup - remove cache dir
-	err = removeCache(conf)
+	assert.EqualValues(t, sf, newsf)
 	require.NoError(t, err)
 }
 
