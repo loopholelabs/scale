@@ -2,7 +2,7 @@
   "name": "@loopholelabs/scale-ts",
   "version": "0.3.0",
   "description": "TypeScript Scale Function Runtime",
-  "source": "ts/index.ts",
+  "source": "./ts/index.ts",
   "main": "dist/main.js",
   "module": "dist/module.js",
   "types": "dist/types.d.ts",
