@@ -428,7 +428,7 @@ func TestRuntimeRs(t *testing.T) {
 	dependencies := []*scalefile.Dependency{
 		{
 			Name:    "scale_signature",
-			Version: "0.2.7",
+			Version: "0.2.8",
 		},
 	}
 
@@ -635,11 +635,11 @@ func TestRuntimeHTTPSignatureRs(t *testing.T) {
 	dependencies := []*scalefile.Dependency{
 		{
 			Name:    "scale_signature",
-			Version: "0.2.7",
+			Version: "0.2.8",
 		},
 		{
 			Name:    "scale_signature_http",
-			Version: "0.3.2",
+			Version: "0.3.3",
 		},
 	}
 

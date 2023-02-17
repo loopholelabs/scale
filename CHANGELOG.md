@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.3] - 2023-02-17
+
+### Changes
+
+- Changed the implementation of `List` in `go/storage` so that it returns an `[]Entry` which contains the `Organization` and the `Hash` of the scale function
+- Changed the implementatin of `Get` in `go/storage` and `ts/storage` so they both Return an `Entry`
+
 ## [v0.3.2] - 2023-02-16
 
 ### Changes

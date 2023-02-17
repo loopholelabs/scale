@@ -18,12 +18,19 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+)
+
+var (
+	ErrInvalidName         = errors.New("invalid name")
+	ErrInvalidTag          = errors.New("invalid tag")
+	ErrInvalidOrganization = errors.New("invalid organization")
 )
 
 const (
@@ -33,6 +40,12 @@ const (
 var (
 	Default *Storage
 )
+
+type Entry struct {
+	ScaleFunc    *scalefunc.ScaleFunc
+	Hash         string
+	Organization string
+}
 
 func init() {
 	homeDir, err := os.UserHomeDir()
@@ -65,15 +78,31 @@ func New(baseDirectory string) (*Storage, error) {
 
 // Get returns the Scale Function with the given name, tag, and organization.
 // The hash parameter is optional and can be used to check for a specific hash.
-func (s *Storage) Get(name string, tag string, org string, hash string) (*scalefunc.ScaleFunc, string, error) {
+func (s *Storage) Get(name string, tag string, org string, hash string) (*Entry, error) {
+	if name == "" || !scalefunc.ValidName(name) {
+		return nil, ErrInvalidName
+	}
+
+	if tag == "" || !scalefunc.ValidName(tag) {
+		return nil, ErrInvalidTag
+	}
+
+	if org == "" || !scalefunc.ValidName(org) {
+		return nil, ErrInvalidOrganization
+	}
+
 	if hash != "" {
 		f := s.functionName(name, tag, org, hash)
 		p := s.fullPath(f)
 		sf, err := scalefunc.Read(p)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
-		return sf, hash, nil
+		return &Entry{
+			ScaleFunc:    sf,
+			Hash:         hash,
+			Organization: org,
+		}, nil
 	}
 
 	f := s.functionSearch(name, tag, org)
@@ -81,23 +110,27 @@ func (s *Storage) Get(name string, tag string, org string, hash string) (*scalef
 
 	matches, err := filepath.Glob(p)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	if len(matches) == 0 {
-		return nil, "", nil
+		return nil, nil
 	}
 
 	if len(matches) > 1 {
-		return nil, "", fmt.Errorf("multiple matches found for %s/%s:%s", org, name, tag)
+		return nil, fmt.Errorf("multiple matches found for %s/%s:%s", org, name, tag)
 	}
 
 	sf, err := scalefunc.Read(matches[0])
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	return sf, s.getHashFromFileName(matches[0]), nil
+	return &Entry{
+		ScaleFunc:    sf,
+		Hash:         s.getHashFromFileName(matches[0]),
+		Organization: s.getOrgFromFileName(matches[0]),
+	}, nil
 }
 
 // Put stores the Scale Function with the given name, tag, organization, and hash
@@ -113,12 +146,12 @@ func (s *Storage) Delete(name string, tag string, org string, hash string) error
 }
 
 // List returns all the Scale Functions stored in the storage
-func (s *Storage) List() ([]*scalefunc.ScaleFunc, error) {
+func (s *Storage) List() ([]Entry, error) {
 	entries, err := os.ReadDir(s.BaseDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read storage directory %s: %w", s.BaseDirectory, err)
 	}
-	var scaleFuncEntries []*scalefunc.ScaleFunc
+	var scaleFuncEntries []Entry
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -127,7 +160,11 @@ func (s *Storage) List() ([]*scalefunc.ScaleFunc, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode scale function %s: %w", s.fullPath(entry.Name()), err)
 		}
-		scaleFuncEntries = append(scaleFuncEntries, scaleFunc)
+		scaleFuncEntries = append(scaleFuncEntries, Entry{
+			ScaleFunc:    scaleFunc,
+			Hash:         s.getHashFromFileName(entry.Name()),
+			Organization: s.getOrgFromFileName(entry.Name()),
+		})
 	}
 	return scaleFuncEntries, nil
 }
@@ -151,4 +188,13 @@ func (s *Storage) getHashFromFileName(fileName string) string {
 	}
 
 	return split[3]
+}
+
+func (s *Storage) getOrgFromFileName(fileName string) string {
+	split := strings.Split(fileName, ".")
+	if len(split) != 5 {
+		return ""
+	}
+
+	return split[0]
 }
