@@ -79,15 +79,15 @@ func New(baseDirectory string) (*Storage, error) {
 // Get returns the Scale Function with the given name, tag, and organization.
 // The hash parameter is optional and can be used to check for a specific hash.
 func (s *Storage) Get(name string, tag string, org string, hash string) (*Entry, error) {
-	if name == "" || !scalefunc.ValidName(name) {
+	if name == "" || !scalefunc.ValidString(name) {
 		return nil, ErrInvalidName
 	}
 
-	if tag == "" || !scalefunc.ValidName(tag) {
+	if tag == "" || !scalefunc.ValidString(tag) {
 		return nil, ErrInvalidTag
 	}
 
-	if org == "" || !scalefunc.ValidName(org) {
+	if org == "" || !scalefunc.ValidString(org) {
 		return nil, ErrInvalidOrganization
 	}
 
@@ -174,15 +174,15 @@ func (s *Storage) fullPath(p string) string {
 }
 
 func (s *Storage) functionName(name string, tag string, org string, hash string) string {
-	return fmt.Sprintf("%s.%s.%s.%s.scale", org, name, tag, hash)
+	return fmt.Sprintf("%s_%s_%s_%s_scale", org, name, tag, hash)
 }
 
 func (s *Storage) functionSearch(name string, tag string, org string) string {
-	return fmt.Sprintf("%s.%s.%s.*.scale", org, name, tag)
+	return fmt.Sprintf("%s_%s_%s_*_scale", org, name, tag)
 }
 
 func (s *Storage) getHashFromFileName(fileName string) string {
-	split := strings.Split(fileName, ".")
+	split := strings.Split(fileName, "_")
 	if len(split) != 5 {
 		return ""
 	}
@@ -191,7 +191,7 @@ func (s *Storage) getHashFromFileName(fileName string) string {
 }
 
 func (s *Storage) getOrgFromFileName(fileName string) string {
-	split := strings.Split(fileName, ".")
+	split := strings.Split(fileName, "_")
 	if len(split) != 5 {
 		return ""
 	}
