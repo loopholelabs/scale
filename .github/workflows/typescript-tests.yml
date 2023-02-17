@@ -22,3 +22,5 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build with npm
         run: npm run build
+      - name: Test with npm
+        run: npm run test

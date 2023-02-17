@@ -20,10 +20,6 @@ import {webcrypto as crypto} from "crypto";
 
 import {Default, Storage} from "../storage";
 import {models_GetFunctionResponse, OpenAPI, RegistryService} from "../client";
-
-// @ts-ignore
-import path from "path";
-// @ts-ignore
 import https from "https";
 
 
@@ -136,7 +132,7 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
         notPresentFn = await RegistryService.getRegistryFunction3(name, tag, conf.organization)
       }
 
-      if(!notPresentFn.presigned_url) {
+      if(!notPresentFn.presigned_url || !notPresentFn.hash) {
         throw ErrDownloadFailed
       }
 
@@ -174,7 +170,7 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
       }
       const alwaysSF = ScaleFunc.Decode(new Uint8Array(alwaysData));
       if (alwaysGet) {
-        st.Delete(name, tag, conf.organization, alwaysHash)
+        st.Delete(name, tag, alwaysGet.organization, alwaysGet.hash)
       }
       st.Put(name, tag, conf.organization, alwaysHash, alwaysSF)
       return alwaysSF;

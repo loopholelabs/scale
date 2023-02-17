@@ -157,21 +157,21 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 
 	switch conf.pullPolicy {
 	case NeverPullPolicy:
-		sf, _, err := st.Get(name, tag, conf.organization, "")
+		entry, err := st.Get(name, tag, conf.organization, "")
 		if err != nil {
 			return nil, err
 		}
-		if sf != nil {
-			return sf, nil
+		if entry != nil {
+			return entry.ScaleFunc, nil
 		}
 		return nil, ErrNoFunction
 	case IfNotPresentPullPolicy:
-		sf, _, err := st.Get(name, tag, conf.organization, "")
+		entry, err := st.Get(name, tag, conf.organization, "")
 		if err != nil {
 			return nil, err
 		}
-		if sf != nil {
-			return sf, nil
+		if entry != nil {
+			return entry.ScaleFunc, nil
 		}
 		var fn *models.ModelsGetFunctionResponse
 		if conf.organization == DefaultOrganization {
@@ -212,7 +212,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 			return nil, ErrHashMismatch
 		}
 
-		sf = new(scalefunc.ScaleFunc)
+		sf := new(scalefunc.ScaleFunc)
 		err = sf.Decode(data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
@@ -225,7 +225,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 
 		return sf, nil
 	case AlwaysPullPolicy:
-		sf, hash, err := st.Get(name, tag, conf.organization, "")
+		entry, err := st.Get(name, tag, conf.organization, "")
 		if err != nil {
 			return nil, err
 		}
@@ -243,9 +243,9 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 			}
 			fn = res.GetPayload()
 		}
-		if hash != "" && sf != nil {
-			if fn.Hash == hash {
-				return sf, nil
+		if entry != nil {
+			if fn.Hash == entry.Hash {
+				return entry.ScaleFunc, nil
 			}
 		}
 
@@ -274,20 +274,20 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 			return nil, ErrHashMismatch
 		}
 
-		sf = new(scalefunc.ScaleFunc)
+		sf := new(scalefunc.ScaleFunc)
 		err = sf.Decode(data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
 		}
 
-		if hash != "" && sf != nil {
-			err = st.Delete(name, tag, conf.organization, hash)
+		if entry != nil {
+			err = st.Delete(name, tag, entry.Organization, entry.Hash)
 			if err != nil {
-				return nil, fmt.Errorf("failed to delete existing scale function %s/%s:%s: %w", conf.organization, name, tag, err)
+				return nil, fmt.Errorf("failed to delete existing scale function %s/%s:%s: %w", entry.Organization, name, tag, err)
 			}
 		}
 
-		err = st.Put(name, tag, conf.organization, hash, sf)
+		err = st.Put(name, tag, conf.organization, computedHash, sf)
 		if err != nil {
 			return nil, fmt.Errorf("failed to store retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
 		}
