@@ -68,8 +68,8 @@ export class Storage{
 
         return {
             scaleFunc: ScaleFunc.Read(matches[0]),
-            hash: matches[0].split("_")[3],
-            organization: matches[0].split("_")[0],
+            hash: path.basename(matches[0]).split("_")[3],
+            organization: path.basename(matches[0]).split("_")[0],
         };
     }
 
