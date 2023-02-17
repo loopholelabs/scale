@@ -24,6 +24,7 @@
     "@loopholelabs/scale-signature": "^0.2.8",
     "@loopholelabs/scale-signature-http": "^0.3.3",
     "@loopholelabs/scalefile": "^0.1.6",
+    "@loopholelabs/scale-ts": "^0.2.2",
     "@swc/helpers": "^0.4.12",
     "@types/jest": "^29.2.0",
     "@types/node-fetch": "^2.6.2",
@@ -39,6 +40,7 @@
     "parcel": "^2.7.0",
     "ts-jest": "^29.0.3",
     "util": "^0.12.5",
+    "text-encoding": "^0.7.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
