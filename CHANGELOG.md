@@ -7,6 +7,15 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.4] - 2023-02-17
+
+### Changes
+
+- Bumping `scale-signature` version to `v0.2.9`
+- Bumping `scale-signature-http` version to `v0.3.4`
+- Bumping `scalefile` version to `v0.1.7`
+- Updating `storage` libraries for both TS and Go to use the new `scalefile` library
+
 ## [v0.3.3] - 2023-02-17
 
 ### Changes
@@ -86,7 +95,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.3...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.4...HEAD
+[v0.3.4]: https://github.com/loopholelabs/scale/compare/v0.3.4
 [v0.3.3]: https://github.com/loopholelabs/scale/compare/v0.3.3
 [v0.3.2]: https://github.com/loopholelabs/scale/compare/v0.3.2
 [v0.3.1]: https://github.com/loopholelabs/scale/compare/v0.3.1
