@@ -8,14 +8,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup rust
-        uses: ATiltedTree/setup-rust@v1
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
         with:
-          rust-version: stable
-          components: clippy
-      - name: wasm target
-        working-directory: ts/compile/builder
-        run: rustup target add wasm32-wasi
+            toolchain: nightly
+            target: wasm32-wasi
+            override: true
+            components: rustfmt, clippy
       - name: Install wasi
         working-directory: ts/compile/builder
         run: ./install-wasi-sdk.sh
