@@ -14,22 +14,11 @@
         limitations under the License.
 */
 
-import {TextEncoder as te2, TextDecoder as td2} from "fastestsmallesttextencoderdecoder";
+// import {TextEncoder as te2, TextDecoder as td2} from "fastestsmallesttextencoderdecoder";
 
 import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 import { New } from "@loopholelabs/scale-ts";
 import * as fs from "fs";
-
-describe("text", () => {
-  let enc = new te2();
-  let dec = new td2();
-
-  let b = enc.encode("Hello world");
-  console.log("b is ", b);
-
-  let t = dec.decode(b);
-  console.log("t is ", t);
-});
 
 describe("modules", () => {
   let mods = [

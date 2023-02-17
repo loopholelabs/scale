@@ -15,7 +15,7 @@ cli: core
 
 core:
 		cd crates/core \
-				&& cargo build --release --target=wasm32-wasi \
+				&& RUSTFLAGS='-C target-feature=+bulk-memory' cargo build --release --target=wasm32-wasi \
 				&& cd -
 
 jssource:
