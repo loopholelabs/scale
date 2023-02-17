@@ -14,8 +14,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Adding API Client for both `Golang` and `Typescript`
 - Adding Registry Functionality for both `Golang` and `Typescript`
 - Adding `scalefile` support for `Typescript`
-- Bumping `scale-signature` version to `v0.2.3`
-- Bumping `scale-signature-http` version to `v0.3.1`
+- Bumping `scale-signature` version to `v0.2.7`
+- Bumping `scale-signature-http` version to `v0.3.2`
 
 ## [v0.3.0] - 2023-02-14
 
