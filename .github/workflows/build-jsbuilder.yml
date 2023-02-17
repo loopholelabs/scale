@@ -14,5 +14,5 @@ jobs:
           rust-version: stable
           components: clippy
       - name: Build jsbuilder
-        working-dir: ts/compile/builder
+        working-directory: ts/compile/builder
         run: make
