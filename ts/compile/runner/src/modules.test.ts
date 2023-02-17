@@ -21,7 +21,6 @@ global.TextDecoder = TextDecoder as typeof global["TextDecoder"];
 import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
 import { New } from "@loopholelabs/scale-ts";
 import * as fs from "fs";
-import { kMaxLength } from "buffer";
 
 describe("modules", () => {
   let mods = [
