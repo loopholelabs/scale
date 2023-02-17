@@ -28,13 +28,17 @@ describe("modules", () => {
   ];
 
   for (let k of mods) {
-    const modNext = fs.readFileSync(k.path);
-    var stats = fs.statSync(k.path);
-    var fileSizeInBytes = stats.size;
-    // Convert the file size to megabytes (optional)
-    var fileSizeInMegabytes = (fileSizeInBytes / (1024*1024)).toFixed(2);
+    let fileSizeInMegabytes = "";
+
+    try {
+      var stats = fs.statSync(k.path);
+      var fileSizeInBytes = stats.size;
+      // Convert the file size to megabytes (optional)
+      fileSizeInMegabytes = (fileSizeInBytes / (1024*1024)).toFixed(2);
+    } catch(e) {}
 
     it("Can run module " + k.description + " " + fileSizeInMegabytes + "Mb" , async () => {
+      const modNext = fs.readFileSync(k.path);
       
       const fn = new ScaleFunc(V1Alpha, "Test.Middleware", "Test.Tag", "ExampleName@ExampleVersion", Go, modNext);
       const r = await New([fn]);
