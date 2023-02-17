@@ -428,7 +428,7 @@ func TestRuntimeRs(t *testing.T) {
 	dependencies := []*scalefile.Dependency{
 		{
 			Name:    "scale_signature",
-			Version: "0.2.",
+			Version: "0.2.7",
 		},
 	}
 
