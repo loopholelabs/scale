@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.5] - 2023-02-17
+
+### Fixes
+
+- Fixing a bug in `go/storage` and `ts/storage` where the entire function path would be used to parse the filename instead of just the base file name
+
 ## [v0.3.4] - 2023-02-17
 
 ### Changes
@@ -95,7 +101,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.4...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.5...HEAD
+[v0.3.5]: https://github.com/loopholelabs/scale/compare/v0.3.5
 [v0.3.4]: https://github.com/loopholelabs/scale/compare/v0.3.4
 [v0.3.3]: https://github.com/loopholelabs/scale/compare/v0.3.3
 [v0.3.2]: https://github.com/loopholelabs/scale/compare/v0.3.2
