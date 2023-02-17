@@ -158,13 +158,19 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 	switch conf.pullPolicy {
 	case NeverPullPolicy:
 		sf, _, err := st.Get(name, tag, conf.organization, "")
-		if err == nil {
+		if err != nil {
+			return nil, err
+		}
+		if sf != nil {
 			return sf, nil
 		}
 		return nil, ErrNoFunction
 	case IfNotPresentPullPolicy:
 		sf, _, err := st.Get(name, tag, conf.organization, "")
-		if err == nil {
+		if err != nil {
+			return nil, err
+		}
+		if sf != nil {
 			return sf, nil
 		}
 		var fn *models.ModelsGetFunctionResponse
@@ -219,7 +225,10 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 
 		return sf, nil
 	case AlwaysPullPolicy:
-		sf, hash, _ := st.Get(name, tag, conf.organization, "")
+		sf, hash, err := st.Get(name, tag, conf.organization, "")
+		if err != nil {
+			return nil, err
+		}
 		var fn *models.ModelsGetFunctionResponse
 		if conf.organization == DefaultOrganization {
 			res, err := c.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
@@ -234,7 +243,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 			}
 			fn = res.GetPayload()
 		}
-		if hash != "" {
+		if hash != "" && sf != nil {
 			if fn.Hash == hash {
 				return sf, nil
 			}
@@ -271,7 +280,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
 		}
 
-		if hash != "" {
+		if hash != "" && sf != nil {
 			err = st.Delete(name, tag, conf.organization, hash)
 			if err != nil {
 				return nil, fmt.Errorf("failed to delete existing scale function %s/%s:%s: %w", conf.organization, name, tag, err)
