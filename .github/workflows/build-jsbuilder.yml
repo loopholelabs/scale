@@ -13,6 +13,12 @@ jobs:
         with:
           rust-version: stable
           components: clippy
+      - name: wasm target
+        working-directory: ts/compile/builder
+        run: rustup target add wasm32-wasi
+      - name: Install wasi
+        working-directory: ts/compile/builder
+        run: ./install-wasi-sdk.sh
       - name: Build jsbuilder
         working-directory: ts/compile/builder
         run: make
