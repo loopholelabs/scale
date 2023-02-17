@@ -1,20 +1,14 @@
 # Scale
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Tests](https://github.com/loopholelabs/scale/actions/workflows/test.yml/badge.svg)](https://github.com/loopholelabs/scale/actions/workflows/test.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/loopholelabs/scale)](https://goreportcard.com/report/github.com/loopholelabs/scale)
-[![Go Reference](https://pkg.go.dev/badge/github.com/loopholelabs/scale.svg)](https://pkg.go.dev/github.com/loopholelabs/scale)
+[![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)
+
+[![Golang](https://github.com/loopholelabs/scale/actions/workflows/golang-tests.yml/badge.svg)](https://github.com/loopholelabs/scale/actions/workflows/golang-tests.yml)
+[![Typescript](https://github.com/loopholelabs/scale/actions/workflows/typescript-tests.yml/badge.svg)](https://github.com/loopholelabs/scale/actions/workflows/typescript-tests.yml)
 
 [Scale](https://scale.sh) is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.
 
-With Scale Functions you can write code in any language, then use it from any other language, environment, or runtime, with state-of-the-art sandboxing qualities, startup times, and overall performance. This initial release includes client support for Go and Rust, with runtimes for Go and TypeScript.
-
-## Important note about releases and stability
-
-This repository generally follows [Semantic Versioning](https://semver.org/). However, **this library is currently in
-Beta** and is still considered experimental. Breaking changes of the library will _not_ trigger a new major release. The
-same is true for selected other new features explicitly marked as
-**EXPERIMENTAL** in [the changelog](/CHANGELOG.md).
+With Scale Functions you can write code in any language, then use it from any other language, environment, or runtime, with state-of-the-art sandboxing qualities, startup times, and overall performance. This initial release includes client support for [Golang](https://golang.org) and [Rust](https://www.rust-lang.org/), with runtimes for [Golang](https://golang.org) and [Typescript](https://www.typescriptlang.org/).
 
 ## Usage and Documentation
 

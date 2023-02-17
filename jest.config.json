@@ -3,5 +3,8 @@
   "collectCoverage": true,
   "coverageDirectory": "coverage",
   "preset": "ts-jest",
-  "testEnvironment": "jsdom"
+  "testEnvironment": "node",
+  "testMatch": [
+    "**/*.test.ts"
+  ]
 }

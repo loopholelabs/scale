@@ -22,10 +22,7 @@ import {ScaleFunc, V1Alpha, Go, Rust} from "@loopholelabs/scalefile";
 import * as signature from "./tests/signature" ;
 import * as httpSignature from "@loopholelabs/scale-signature-http";
 
-import { New, NewFromSignature } from "./runtime";
-
-window.TextEncoder = TextEncoder;
-window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+import { runtime } from "./index";
 
 describe("TestRuntimeTs", () => {
     const modPassthroughGo = fs.readFileSync("./ts/tests/modules/passthrough-TestRuntimeGo.wasm");
@@ -60,7 +57,7 @@ describe("TestRuntimeTs", () => {
   passthrough.forEach((fn) => {
     it(`${fn.name} ${fn.language}`, async () => {
       const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-      const r = await NewFromSignature(signature.New, [sfn]);
+      const r = await runtime.NewFromSignature(signature.New, [sfn]);
       const i = await r.Instance(null);
       i.Context().Data = "Test Data";
       expect(() => {
@@ -78,7 +75,7 @@ describe("TestRuntimeTs", () => {
   modify.forEach((fn) => {
     it(`${fn.name} ${fn.language}`, async () => {
       const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-      const r = await NewFromSignature(signature.New, [sfn]);
+      const r = await runtime.NewFromSignature(signature.New, [sfn]);
       const i = await r.Instance(null);
       i.Context().Data = "Test Data";
       expect(() => {
@@ -96,7 +93,7 @@ describe("TestRuntimeTs", () => {
   next.forEach((fn) => {
     it(`${fn.name} ${fn.language}`, async () => {
       const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-      const r = await NewFromSignature(signature.New, [sfn]);
+      const r = await runtime.NewFromSignature(signature.New, [sfn]);
       const i = await r.Instance(function (ctx: signature.Context): signature.Context {
         ctx.Data = "Hello, world!";
         return ctx;
@@ -117,7 +114,7 @@ describe("TestRuntimeTs", () => {
   modifynext.forEach((fn) => {
       it(`${fn.name} ${fn.language}`, async () => {
           const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-          const r = await NewFromSignature(signature.New, [sfn]);
+          const r = await runtime.NewFromSignature(signature.New, [sfn]);
           const i = await r.Instance(function (ctx: signature.Context): signature.Context {
             ctx.Data += "-next";
             return ctx;
@@ -133,7 +130,7 @@ describe("TestRuntimeTs", () => {
   next.forEach((fn) => {
     it(`${fn.name} error ${fn.language}`, async () => {
         const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-        const r = await NewFromSignature(signature.New, [sfn]);
+        const r = await runtime.NewFromSignature(signature.New, [sfn]);
         const i = await r.Instance(function (ctx: signature.Context): signature.Context {
           throw new Error("Hello error");
         });
@@ -152,7 +149,7 @@ describe("TestRuntimeTs", () => {
     file.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await NewFromSignature(signature.New, [sfn]);
+            const r = await runtime.NewFromSignature(signature.New, [sfn]);
             const i = await r.Instance(null);
             i.Context().Data = "Test Data";
             expect(() => {
@@ -170,7 +167,7 @@ describe("TestRuntimeTs", () => {
     network.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await NewFromSignature(signature.New, [sfn]);
+            const r = await runtime.NewFromSignature(signature.New, [sfn]);
             const i = await r.Instance(null);
             expect(() => {
             i.Run();
@@ -186,7 +183,7 @@ describe("TestRuntimeTs", () => {
     panic.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await NewFromSignature(signature.New, [sfn]);
+            const r = await runtime.NewFromSignature(signature.New, [sfn]);
             const i = await r.Instance(null);
             expect(() => {
             i.Run();
@@ -202,7 +199,7 @@ describe("TestRuntimeTs", () => {
     badSignature.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await NewFromSignature(signature.New, [sfn]);
+            const r = await runtime.NewFromSignature(signature.New, [sfn]);
             const i = await r.Instance(null);
             expect(() => {
             i.Run();
@@ -218,7 +215,7 @@ describe("TestRuntimeTs", () => {
     httpPassthrough.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await New([sfn]);
+            const r = await runtime.New([sfn]);
             const i = await r.Instance(null)
             i.Context().Response.Body = new TextEncoder().encode("Test Data");
             expect(() => {
@@ -237,7 +234,7 @@ describe("TestRuntimeTs", () => {
     httpHandler.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await New([sfn]);
+            const r = await runtime.New([sfn]);
             const i = await r.Instance(null)
             i.Context().Response.Body = new TextEncoder().encode("Test Data");
             expect(() => {
@@ -256,7 +253,7 @@ describe("TestRuntimeTs", () => {
     httpNext.forEach((fn) => {
         it(`${fn.name} ${fn.language}`, async () => {
             const sfn = new ScaleFunc(V1Alpha, `Test.${fn.name}`, "Test.TestTag", "ExampleName@ExampleVersion", fn.language, fn.module);
-            const r = await New([sfn]);
+            const r = await runtime.New([sfn]);
             const i = await r.Instance(function (ctx: httpSignature.Context): httpSignature.Context {
                 ctx.Response.Body = new TextEncoder().encode(new TextDecoder().decode(ctx.Response.Body) + "-next");
                 return ctx;

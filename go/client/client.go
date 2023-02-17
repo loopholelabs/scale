@@ -1,5 +1,5 @@
 /*
-	Copyright 2022 Loophole Labs
+	Copyright 2023 Loophole Labs
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -14,14 +14,5 @@
 	limitations under the License.
 */
 
-import * as runtime from "./runtime";
-import * as registry from "./registry";
-import * as client from "./client";
-import * as storage from "./storage";
-
-export {runtime, registry, client, storage};
-
-// export * from "./module";
-// export * from "./pool";
-// export * from "./instance";
-// export * from "./func";
+//go:generate swagger generate client -f https://api.scale.sh/v1/swagger.json -t ../ -c client -m client/models
+package client
