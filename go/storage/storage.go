@@ -85,11 +85,11 @@ func (s *Storage) Get(name string, tag string, org string, hash string) (*scalef
 	}
 
 	if len(matches) == 0 {
-		return nil, "", fmt.Errorf("no matches found for %s:%s", name, tag)
+		return nil, "", nil
 	}
 
 	if len(matches) > 1 {
-		return nil, "", fmt.Errorf("multiple matches found for %s:%s", name, tag)
+		return nil, "", fmt.Errorf("multiple matches found for %s/%s:%s", org, name, tag)
 	}
 
 	sf, err := scalefunc.Read(matches[0])
@@ -123,9 +123,9 @@ func (s *Storage) List() ([]*scalefunc.ScaleFunc, error) {
 		if entry.IsDir() {
 			continue
 		}
-		scaleFunc, err := scalefunc.Read(entry.Name())
+		scaleFunc, err := scalefunc.Read(s.fullPath(entry.Name()))
 		if err != nil {
-			return nil, fmt.Errorf("failed to decode scale function %s: %w", entry.Name(), err)
+			return nil, fmt.Errorf("failed to decode scale function %s: %w", s.fullPath(entry.Name()), err)
 		}
 		scaleFuncEntries = append(scaleFuncEntries, scaleFunc)
 	}
