@@ -128,8 +128,8 @@ func (s *Storage) Get(name string, tag string, org string, hash string) (*Entry,
 
 	return &Entry{
 		ScaleFunc:    sf,
-		Hash:         s.getHashFromFileName(matches[0]),
-		Organization: s.getOrgFromFileName(matches[0]),
+		Hash:         s.getHashFromFileName(path.Base(matches[0])),
+		Organization: s.getOrgFromFileName(path.Base(matches[0])),
 	}, nil
 }
 
