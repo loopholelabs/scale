@@ -26,15 +26,15 @@ export class Storage{
     }
 
     public Get(name: string, tag: string, org: string, hash: string | undefined): (Entry | undefined) {
-        if (name.length === 0 || !ScaleFunc.ValidName(name)) {
+        if (name.length === 0 || !ScaleFunc.ValidString(name)) {
             throw ErrInvalidName;
         }
 
-        if (tag.length === 0 || !ScaleFunc.ValidName(tag)) {
+        if (tag.length === 0 || !ScaleFunc.ValidString(tag)) {
             throw ErrInvalidTag;
         }
 
-        if (org.length === 0 || !ScaleFunc.ValidName(org)) {
+        if (org.length === 0 || !ScaleFunc.ValidString(org)) {
             throw ErrInvalidOrg;
         }
 
@@ -68,8 +68,8 @@ export class Storage{
 
         return {
             scaleFunc: ScaleFunc.Read(matches[0]),
-            hash: matches[0].split(".")[3],
-            organization: matches[0].split(".")[0],
+            hash: matches[0].split("_")[3],
+            organization: matches[0].split("_")[0],
         };
     }
 
@@ -90,11 +90,11 @@ export class Storage{
     }
 
     private functionName(name: string, tag: string, org: string, hash: string): string {
-        return `${org}.${name}.${tag}.${hash}.scale`;
+        return `${org}_${name}_${tag}_${hash}_scale`;
     }
 
     private functionSearch(name: string, tag: string, org: string): string {
-        return `${org}.${name}.${tag}.*.scale`;
+        return `${org}_${name}_${tag}_*_scale`;
     }
 }
 
