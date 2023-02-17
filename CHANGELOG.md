@@ -7,6 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.3] - 2023-02-17
+
+### Changes
+
+- Changed the implementation of `List` in `go/storage` so that it returns an `[]Entry` which contains the `Organization` and the `Hash` of the scale function
+- Changed the implementation of `Get` in `go/storage` and `ts/storage` so they both Return an `Entry`
+
 ## [v0.3.2] - 2023-02-16
 
 ### Changes
@@ -79,7 +86,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.2...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.3...HEAD
+[v0.3.3]: https://github.com/loopholelabs/scale/compare/v0.3.3
 [v0.3.2]: https://github.com/loopholelabs/scale/compare/v0.3.2
 [v0.3.1]: https://github.com/loopholelabs/scale/compare/v0.3.1
 [v0.3.0]: https://github.com/loopholelabs/scale/compare/v0.3.0

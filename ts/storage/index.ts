@@ -2,11 +2,19 @@ import {ScaleFunc} from "@loopholelabs/scalefile"
 import * as fs from "fs";
 import * as os from "os";
 import * as glob from "glob";
-
-// @ts-ignore
 import path from "path";
 
+let ErrInvalidName = new Error("invalid name");
+let ErrInvalidTag = new Error("invalid tag");
+let ErrInvalidOrg = new Error("invalid org");
+
 const defaultCacheDirectory = ".config/scale/functions"
+
+export interface Entry {
+    scaleFunc: ScaleFunc,
+    hash: string,
+    organization: string,
+}
 
 export class Storage{
     public baseDirectory: string;
@@ -17,17 +25,27 @@ export class Storage{
         }
     }
 
-    public Get(name: string, tag: string, org: string, hash: string | undefined): ({
-        hash: string,
-        scaleFunc: ScaleFunc
-    } | undefined) {
+    public Get(name: string, tag: string, org: string, hash: string | undefined): (Entry | undefined) {
+        if (name.length === 0 || !ScaleFunc.ValidName(name)) {
+            throw ErrInvalidName;
+        }
+
+        if (tag.length === 0 || !ScaleFunc.ValidName(tag)) {
+            throw ErrInvalidTag;
+        }
+
+        if (org.length === 0 || !ScaleFunc.ValidName(org)) {
+            throw ErrInvalidOrg;
+        }
+
         if (hash) {
             const f = this.functionName(name, tag, org, hash);
             const p = this.fullPath(f);
             try {
                 return {
                     hash: hash,
-                    scaleFunc: ScaleFunc.Read(p)
+                    scaleFunc: ScaleFunc.Read(p),
+                    organization: org,
                 };
             } catch (error: any) {
                 if (error.code === 'ENOENT') {
@@ -49,8 +67,9 @@ export class Storage{
         }
 
         return {
+            scaleFunc: ScaleFunc.Read(matches[0]),
             hash: matches[0].split(".")[3],
-            scaleFunc: ScaleFunc.Read(matches[0])
+            organization: matches[0].split(".")[0],
         };
     }
 
