@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.2] - 2023-02-16
+
+### Changes
+
+- Fixing bug in `go/storage` where the `List` function was not appending the storage BasePath properly
+- Fixing bug in `go/storage` where the `Get` function would return an error if the required scale function was not found (it now returns nil)
+- Updating the `golang` compile template's `main.go` file to not have a dependency on the `scale` runtime itself
+
 ## [v0.3.1] - 2023-02-15
 
 ### Changes
@@ -71,7 +79,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.2...HEAD
+[v0.3.2]: https://github.com/loopholelabs/scale/compare/v0.3.2
+[v0.3.1]: https://github.com/loopholelabs/scale/compare/v0.3.1
 [v0.3.0]: https://github.com/loopholelabs/scale/compare/v0.3.0
 [v0.2.2]: https://github.com/loopholelabs/scale/compare/v0.2.2
 [v0.2.1]: https://github.com/loopholelabs/scale/compare/v0.2.1
