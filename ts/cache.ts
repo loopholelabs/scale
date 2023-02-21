@@ -14,25 +14,23 @@
         limitations under the License.
 */
 
-import { NewWASI } from "./wasi";
+import {DisabledWASI} from "./wasi";
 
 export class Cache {
-  private readonly wasiBuilder = NewWASI
   private instance: undefined | WebAssembly.Instance;
   private nextFunction: undefined | Function;
   constructor() {}
 
   async Initialize(m: WebAssembly.Module) {
-    const wasi = this.wasiBuilder();
-    const importObject = {
-      wasi_snapshot_preview1: wasi.getImportObject(),
+    const wasi = new DisabledWASI();
+    this.instance = await WebAssembly.instantiate(m, {
+      wasi_snapshot_preview1: wasi.GetImports(),
       env: {
         next: this.next.bind(this),
       },
-    };
+    });
 
-    this.instance = await WebAssembly.instantiate(m, importObject);
-    wasi.start(this.instance);
+    wasi.SetInstance(this.instance);
   }
 
   private next(ptr: number, len: number): number {
