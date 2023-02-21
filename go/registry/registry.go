@@ -68,6 +68,7 @@ type config struct {
 	cookieURL      *url.URL
 	baseURL        string
 	organization   string
+	client         *client.ScaleAPIV1
 }
 
 type Option func(config *config)
@@ -108,6 +109,12 @@ func WithCookieURL(cookieURL *url.URL) Option {
 	}
 }
 
+func WithClient(client *client.ScaleAPIV1) Option {
+	return func(config *config) {
+		config.client = client
+	}
+}
+
 func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
 	conf := &config{
 		pullPolicy:   IfNotPresentPullPolicy,
@@ -140,20 +147,22 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		}
 	}
 
-	var o *openapiClient.Runtime
-	if conf.apiKey != "" {
-		o, err = openapi.AuthenticatedClient(conf.cookieURL, conf.baseURL, client.DefaultBasePath, client.DefaultSchemes, nil, &session.Session{
-			Kind:  auth.KindAPIKey,
-			Value: conf.apiKey,
-		})
-		if err != nil {
-			return nil, err
+	if conf.client == nil {
+		var o *openapiClient.Runtime
+		if conf.apiKey != "" {
+			o, err = openapi.AuthenticatedClient(conf.cookieURL, conf.baseURL, client.DefaultBasePath, client.DefaultSchemes, nil, &session.Session{
+				Kind:  auth.KindAPIKey,
+				Value: conf.apiKey,
+			})
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			o = openapi.UnauthenticatedClient(conf.baseURL, client.DefaultBasePath, client.DefaultSchemes, nil)
 		}
-	} else {
-		o = openapi.UnauthenticatedClient(conf.baseURL, client.DefaultBasePath, client.DefaultSchemes, nil)
-	}
 
-	c := client.New(o, strfmt.Default)
+		conf.client = client.New(o, strfmt.Default)
+	}
 
 	switch conf.pullPolicy {
 	case NeverPullPolicy:
@@ -175,13 +184,13 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		}
 		var fn *models.ModelsGetFunctionResponse
 		if conf.organization == DefaultOrganization {
-			res, err := c.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
+			res, err := conf.client.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
 			if err != nil {
 				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
 			}
 			fn = res.GetPayload()
 		} else {
-			res, err := c.Registry.GetRegistryFunctionOrganizationNameTag(registry.NewGetRegistryFunctionOrganizationNameTagParams().WithName(name).WithTag(tag).WithOrganization(conf.organization))
+			res, err := conf.client.Registry.GetRegistryFunctionOrganizationNameTag(registry.NewGetRegistryFunctionOrganizationNameTagParams().WithName(name).WithTag(tag).WithOrganization(conf.organization))
 			if err != nil {
 				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
 			}
@@ -231,13 +240,13 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		}
 		var fn *models.ModelsGetFunctionResponse
 		if conf.organization == DefaultOrganization {
-			res, err := c.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
+			res, err := conf.client.Registry.GetRegistryFunctionNameTag(registry.NewGetRegistryFunctionNameTagParams().WithName(name).WithTag(tag))
 			if err != nil {
 				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
 			}
 			fn = res.GetPayload()
 		} else {
-			res, err := c.Registry.GetRegistryFunctionOrganizationNameTag(registry.NewGetRegistryFunctionOrganizationNameTagParams().WithName(name).WithTag(tag).WithOrganization(conf.organization))
+			res, err := conf.client.Registry.GetRegistryFunctionOrganizationNameTag(registry.NewGetRegistryFunctionOrganizationNameTagParams().WithName(name).WithTag(tag).WithOrganization(conf.organization))
 			if err != nil {
 				return nil, fmt.Errorf("failed to get function %s/%s:%s from registry %s: %w", conf.organization, name, tag, conf.baseURL, err)
 			}
