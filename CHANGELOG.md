@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Features
+
+- Added `WithStorage` option to `go/registry` to allow for pre-configured Storage Clients to be used
+
 ## [v0.3.8] - 2023-02-19
 
 ### Features
