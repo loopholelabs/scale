@@ -65,7 +65,7 @@ func NewWithSignature[T signature.Signature](ctx context.Context, sig signature.
 	}
 
 	r := &Runtime[T]{
-		runtime:      wazero.NewRuntime(ctx),
+		runtime:      wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithCloseOnContextDone(true)),
 		moduleConfig: wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
 		modules:      make(map[string]*Module[T]),
 		new:          sig,

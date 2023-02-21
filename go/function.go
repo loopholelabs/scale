@@ -40,11 +40,6 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 	}
 
 	module.init(i)
-	defer func() {
-		module.reset()
-		f.modulePool.Put(module)
-	}()
-
 	ctxBuffer := i.runtimeContext().Write()
 	ctxBufferLength := uint64(len(ctxBuffer))
 	writeBuffer, err := module.resize.Call(ctx, ctxBufferLength)
@@ -75,5 +70,7 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
 	}
 
+	module.reset()
+	f.modulePool.Put(module)
 	return nil
 }
