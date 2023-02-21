@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "declaration": true,
     "paths": {
-      "scale-ts": ["./ts"]
+      "scale": ["./ts"]
     },
     "types": ["node", "jest"]
   },

@@ -37,7 +37,7 @@ func (r *Runtime[T]) Instance(next ...Next[T]) (*Instance[T], error) {
 		runtimeCtx: ctx.RuntimeContext(),
 	}
 
-	if len(next) > 0 {
+	if len(next) > 0 && next[0] != nil {
 		i.next = next[0]
 	} else {
 		i.next = func(ctx T) (T, error) {
