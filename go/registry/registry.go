@@ -69,6 +69,7 @@ type config struct {
 	baseURL        string
 	organization   string
 	client         *client.ScaleAPIV1
+	storage        *storage.Storage
 }
 
 type Option func(config *config)
@@ -82,6 +83,12 @@ func WithPullPolicy(pullPolicy PullPolicy) Option {
 func WithCacheDirectory(cacheDirectory string) Option {
 	return func(config *config) {
 		config.cacheDirectory = cacheDirectory
+	}
+}
+
+func WithStorage(st *storage.Storage) Option {
+	return func(config *config) {
+		config.storage = st
 	}
 }
 
@@ -139,11 +146,13 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 	}
 
 	var err error
-	st := storage.Default
-	if conf.cacheDirectory != "" {
-		st, err = storage.New(conf.cacheDirectory)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create storage for directory %s: %w", conf.cacheDirectory, err)
+	if conf.storage == nil {
+		conf.storage = storage.Default
+		if conf.cacheDirectory != "" {
+			conf.storage, err = storage.New(conf.cacheDirectory)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create storage for directory %s: %w", conf.cacheDirectory, err)
+			}
 		}
 	}
 
@@ -166,7 +175,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 
 	switch conf.pullPolicy {
 	case NeverPullPolicy:
-		entry, err := st.Get(name, tag, conf.organization, "")
+		entry, err := conf.storage.Get(name, tag, conf.organization, "")
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +184,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		}
 		return nil, ErrNoFunction
 	case IfNotPresentPullPolicy:
-		entry, err := st.Get(name, tag, conf.organization, "")
+		entry, err := conf.storage.Get(name, tag, conf.organization, "")
 		if err != nil {
 			return nil, err
 		}
@@ -227,14 +236,14 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
 		}
 
-		err = st.Put(name, tag, conf.organization, hash, sf)
+		err = conf.storage.Put(name, tag, conf.organization, hash, sf)
 		if err != nil {
 			return nil, fmt.Errorf("failed to store retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
 		}
 
 		return sf, nil
 	case AlwaysPullPolicy:
-		entry, err := st.Get(name, tag, conf.organization, "")
+		entry, err := conf.storage.Get(name, tag, conf.organization, "")
 		if err != nil {
 			return nil, err
 		}
@@ -290,13 +299,13 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		}
 
 		if entry != nil {
-			err = st.Delete(name, tag, entry.Organization, entry.Hash)
+			err = conf.storage.Delete(name, tag, entry.Organization, entry.Hash)
 			if err != nil {
 				return nil, fmt.Errorf("failed to delete existing scale function %s/%s:%s: %w", entry.Organization, name, tag, err)
 			}
 		}
 
-		err = st.Put(name, tag, conf.organization, computedHash, sf)
+		err = conf.storage.Put(name, tag, conf.organization, computedHash, sf)
 		if err != nil {
 			return nil, fmt.Errorf("failed to store retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
 		}
