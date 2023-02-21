@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.8] - 2023-02-19
+
+### Features
+
+- Added `WithClient` option to `go/registry` to allow for pre-configured OpenAPI Clients to be used
+
 ## [v0.3.7] - 2023-02-19
 
 ### Fixes
@@ -126,7 +132,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.7...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.8...HEAD
+[v0.3.8]: https://github.com/loopholelabs/scale/compare/v0.3.8
 [v0.3.7]: https://github.com/loopholelabs/scale/compare/v0.3.7
 [v0.3.6]: https://github.com/loopholelabs/scale/compare/v0.3.6
 [v0.3.5]: https://github.com/loopholelabs/scale/compare/v0.3.5
