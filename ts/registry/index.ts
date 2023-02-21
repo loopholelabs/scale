@@ -22,7 +22,6 @@ import {Default, Storage} from "../storage";
 import {models_GetFunctionResponse, OpenAPI, RegistryService} from "../client";
 import https from "https";
 
-
 export type PullPolicy = string;
 
 export const AlwaysPullPolicy: PullPolicy = "always";
