@@ -1,4 +1,4 @@
-name: Golang
+name: Golang Tests
 
 on: [pull_request]
 

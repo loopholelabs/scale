@@ -1,4 +1,4 @@
-name: Typescript
+name: Typescript Release
 
 on:
   release:
