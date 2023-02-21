@@ -13,6 +13,7 @@ import (
 	"github.com/loopholelabs/scale/go/client/access"
 	"github.com/loopholelabs/scale/go/client/health"
 	"github.com/loopholelabs/scale/go/client/registry"
+	"github.com/loopholelabs/scale/go/client/userinfo"
 )
 
 // Default scale API v1 HTTP client.
@@ -60,6 +61,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *ScaleAPIV1
 	cli.Access = access.New(transport, formats)
 	cli.Health = health.New(transport, formats)
 	cli.Registry = registry.New(transport, formats)
+	cli.Userinfo = userinfo.New(transport, formats)
 	return cli
 }
 
@@ -110,6 +112,8 @@ type ScaleAPIV1 struct {
 
 	Registry registry.ClientService
 
+	Userinfo userinfo.ClientService
+
 	Transport runtime.ClientTransport
 }
 
@@ -119,4 +123,5 @@ func (c *ScaleAPIV1) SetTransport(transport runtime.ClientTransport) {
 	c.Access.SetTransport(transport)
 	c.Health.SetTransport(transport)
 	c.Registry.SetTransport(transport)
+	c.Userinfo.SetTransport(transport)
 }

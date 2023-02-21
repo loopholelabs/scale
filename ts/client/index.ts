@@ -11,8 +11,10 @@ export type { models_CreateFunctionResponse } from './models/models_CreateFuncti
 export type { models_GetAPIKeyResponse } from './models/models_GetAPIKeyResponse';
 export type { models_GetFunctionResponse } from './models/models_GetFunctionResponse';
 export type { models_GetHealthResponse } from './models/models_GetHealthResponse';
+export type { models_UserInfoResponse } from './models/models_UserInfoResponse';
 
 export { AccessService } from './services/AccessService';
 export { FunctionService } from './services/FunctionService';
 export { HealthService } from './services/HealthService';
 export { RegistryService } from './services/RegistryService';
+export { UserinfoService } from './services/UserinfoService';

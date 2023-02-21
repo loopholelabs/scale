@@ -7,9 +7,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.9] - 2023-02-19
+
+### Changes
+
+- Bumping `auth` version to `v0.2.26`
+
 ### Features
 
 - Added `WithStorage` option to `go/registry` to allow for pre-configured Storage Clients to be used
+- Updated API Client to expose the new `UserInfo` endpoint from the Scale API
 
 ## [v0.3.8] - 2023-02-19
 
@@ -136,7 +143,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.8...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.9...HEAD
+[v0.3.9]: https://github.com/loopholelabs/scale/compare/v0.3.9
 [v0.3.8]: https://github.com/loopholelabs/scale/compare/v0.3.8
 [v0.3.7]: https://github.com/loopholelabs/scale/compare/v0.3.7
 [v0.3.6]: https://github.com/loopholelabs/scale/compare/v0.3.6
