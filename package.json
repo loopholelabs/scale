@@ -1,23 +1,15 @@
 {
-  "name": "@loopholelabs/scale-ts",
-  "version": "0.3.5",
+  "name": "@loopholelabs/scale",
+  "version": "0.3.6",
   "description": "Scale is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.",
-  "source": "./ts/index.ts",
-  "main": "dist/main.js",
-  "module": "dist/module.js",
-  "types": "dist/types.d.ts",
+  "source": "ts/index.ts",
+  "main": "main.js",
+  "module": "module.js",
+  "types": "types.d.ts",
   "license": "apache-2.0",
   "scripts": {
-    "build": "openapi -i https://api.scale.sh/v1/swagger.json -o ts/client -c axios && parcel build",
+    "build": "openapi -i https://api.scale.sh/v1/swagger.json -o ts/client -c axios && rm -rf dist && tsc --outDir dist && cp package.json dist",
     "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache && rm -rf testDirectory"
-  },
-  "files": [
-    "dist"
-  ],
-  "targets": {
-    "default": {
-      "distDir": "./dist"
-    }
   },
   "dependencies": {
     "@loopholelabs/polyglot-ts": "^0.4.0",
@@ -36,15 +28,11 @@
     "next": "^12.3.3",
     "node-fetch": "^2.6.7",
     "openapi-typescript-codegen": "^0.23.0",
-    "parcel": "^2.7.0",
     "ts-jest": "^29.0.3",
     "util": "^0.12.5",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@parcel/packager-ts": "^2.7.0",
-    "@parcel/transformer-typescript-types": "^2.7.0",
-    "@parcel/validator-typescript": "^2.7.0",
     "@types/glob": "^8.0.1",
     "@types/node": "^18.11.5",
     "@types/uuid": "^9.0.0",

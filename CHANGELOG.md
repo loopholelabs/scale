@@ -7,6 +7,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.6] - 2023-02-19
+
+### Features
+
+- In the `Go` runtime module actions are now cancellable via the given context
+
+### Changes
+
+- Removing `parcel.js` and using the `typescript` compiler directly to build typescript libraries
+- Renaming `@loopholelabs/scale-ts` library to `@loopholelabs/scale`
+- Bumping `wazero` to `1.0.0-pre.9`
+
+### Fixes
+
+- Fixing bugs in the `DisabledWASI` Polyfill implementation where the proper error codes would not be returned (`fd_write`, `fd_read`, `environ...`, `args...`)
+- Fixing bug in the `DisabledWASI` Polyfill implementation where the proper clock time would not get returned
+- Making sure the `client`, `registry`, and `storage` typescript packages get exported and packaged properly
+- Making sure modules that return an error get thrown away properly instead of being recycled
+
 ## [v0.3.5] - 2023-02-17
 
 ### Fixes
@@ -101,7 +120,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.5...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.6...HEAD
+[v0.3.6]: https://github.com/loopholelabs/scale/compare/v0.3.6
 [v0.3.5]: https://github.com/loopholelabs/scale/compare/v0.3.5
 [v0.3.4]: https://github.com/loopholelabs/scale/compare/v0.3.4
 [v0.3.3]: https://github.com/loopholelabs/scale/compare/v0.3.3

@@ -4,11 +4,11 @@ import * as os from "os";
 import * as glob from "glob";
 import path from "path";
 
-let ErrInvalidName = new Error("invalid name");
-let ErrInvalidTag = new Error("invalid tag");
-let ErrInvalidOrg = new Error("invalid org");
+export const ErrInvalidName = new Error("invalid name");
+export const ErrInvalidTag = new Error("invalid tag");
+export const ErrInvalidOrg = new Error("invalid org");
 
-const defaultCacheDirectory = ".config/scale/functions"
+export const DefaultCacheDirectory = ".config/scale/functions"
 
 export interface Entry {
     scaleFunc: ScaleFunc,
@@ -98,4 +98,4 @@ export class Storage{
     }
 }
 
-export const Default = new Storage(path.join(os.homedir(), defaultCacheDirectory));
+export const Default = new Storage(path.join(os.homedir(), DefaultCacheDirectory));

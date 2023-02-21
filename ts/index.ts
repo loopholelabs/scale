@@ -14,14 +14,6 @@
 	limitations under the License.
 */
 
-import * as runtime from "./runtime";
-import * as registry from "./registry";
-import * as client from "./client";
-import * as storage from "./storage";
-
-export {runtime, registry, client, storage};
-
-// export * from "./module";
-// export * from "./pool";
-// export * from "./instance";
-// export * from "./func";
+export * from "./runtime"
+export * from "./instance"
+export * from "./module"

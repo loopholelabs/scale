@@ -20,7 +20,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('*.json') }}
       - name: Install dependencies with npm
         run: npm install --legacy-peer-deps
-      - name: Build with npm
-        run: npm run build
       - name: Test with npm
         run: npm run test
+      - name: Build with npm
+        run: npm run build
