@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
 	github.com/google/uuid v1.3.0
-	github.com/loopholelabs/auth v0.2.25
+	github.com/loopholelabs/auth v0.2.26
 	github.com/loopholelabs/polyglot-go v0.5.1
 	github.com/loopholelabs/scale-signature v0.2.9
 	github.com/loopholelabs/scale-signature-http v0.3.4
