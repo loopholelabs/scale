@@ -18,7 +18,7 @@ package registry
 
 import (
 	"crypto/sha256"
-	"encoding/base64"
+	"encoding/hex"
 	"github.com/loopholelabs/scale/go/storage"
 	"os"
 	"testing"
@@ -52,7 +52,7 @@ func TestPulldownCache(t *testing.T) {
 
 	bs := h.Sum(nil)
 
-	hash := base64.URLEncoding.EncodeToString(bs)
+	hash := hex.EncodeToString(bs)
 	err = st.Put(function, tag, DefaultOrganization, hash, sf)
 	require.NoError(t, err)
 

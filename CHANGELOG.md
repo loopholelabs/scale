@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.10] - 2023-02-19
+
+### Fixes
+
+- Fixing bug in `Go` and `TS` Registry implementations where the computed hashes would get encoded in `base64` instead of `hex` leading to incorrect hashes
+
 ## [v0.3.9] - 2023-02-19
 
 ### Changes
@@ -143,7 +149,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.9...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.10...HEAD
+[v0.3.10]: https://github.com/loopholelabs/scale/compare/v0.3.10
 [v0.3.9]: https://github.com/loopholelabs/scale/compare/v0.3.9
 [v0.3.8]: https://github.com/loopholelabs/scale/compare/v0.3.8
 [v0.3.7]: https://github.com/loopholelabs/scale/compare/v0.3.7

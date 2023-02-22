@@ -18,13 +18,13 @@ package registry
 
 import (
 	"crypto/sha256"
-	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	openapiClient "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/loopholelabs/auth"
-	openapi "github.com/loopholelabs/auth/pkg/client/openapi"
+	"github.com/loopholelabs/auth/pkg/client/openapi"
 	"github.com/loopholelabs/auth/pkg/client/session"
 	"github.com/loopholelabs/scale/go/client"
 	"github.com/loopholelabs/scale/go/client/models"
@@ -225,7 +225,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		h := sha256.New()
 		h.Write(data)
 		bs := h.Sum(nil)
-		hash := base64.URLEncoding.EncodeToString(bs)
+		hash := hex.EncodeToString(bs)
 		if hash != fn.Hash {
 			return nil, ErrHashMismatch
 		}
@@ -287,7 +287,7 @@ func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) 
 		h := sha256.New()
 		h.Write(data)
 		bs := h.Sum(nil)
-		computedHash := base64.URLEncoding.EncodeToString(bs)
+		computedHash := hex.EncodeToString(bs)
 		if computedHash != fn.Hash {
 			return nil, ErrHashMismatch
 		}
