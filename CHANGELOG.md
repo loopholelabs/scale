@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.11] - 2023-02-20
+
+### Features
+
+- Updated API Client to expose the new `DeleteFunction` endpoint from the Scale API
+
 ## [v0.3.10] - 2023-02-19
 
 ### Fixes
@@ -149,7 +155,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.10...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.11...HEAD
+[v0.3.11]: https://github.com/loopholelabs/scale/compare/v0.3.11
 [v0.3.10]: https://github.com/loopholelabs/scale/compare/v0.3.10
 [v0.3.9]: https://github.com/loopholelabs/scale/compare/v0.3.9
 [v0.3.8]: https://github.com/loopholelabs/scale/compare/v0.3.8
