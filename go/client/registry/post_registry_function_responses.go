@@ -47,6 +47,12 @@ func (o *PostRegistryFunctionReader) ReadResponse(response runtime.ClientRespons
 			return nil, err
 		}
 		return nil, result
+	case 412:
+		result := NewPostRegistryFunctionPreconditionFailed()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewPostRegistryFunctionInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -315,6 +321,72 @@ func (o *PostRegistryFunctionNotFound) GetPayload() string {
 }
 
 func (o *PostRegistryFunctionNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostRegistryFunctionPreconditionFailed creates a PostRegistryFunctionPreconditionFailed with default headers values
+func NewPostRegistryFunctionPreconditionFailed() *PostRegistryFunctionPreconditionFailed {
+	return &PostRegistryFunctionPreconditionFailed{}
+}
+
+/*
+PostRegistryFunctionPreconditionFailed describes a response with status code 412, with default header values.
+
+Precondition Failed
+*/
+type PostRegistryFunctionPreconditionFailed struct {
+	Payload string
+}
+
+// IsSuccess returns true when this post registry function precondition failed response has a 2xx status code
+func (o *PostRegistryFunctionPreconditionFailed) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post registry function precondition failed response has a 3xx status code
+func (o *PostRegistryFunctionPreconditionFailed) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post registry function precondition failed response has a 4xx status code
+func (o *PostRegistryFunctionPreconditionFailed) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post registry function precondition failed response has a 5xx status code
+func (o *PostRegistryFunctionPreconditionFailed) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post registry function precondition failed response a status code equal to that given
+func (o *PostRegistryFunctionPreconditionFailed) IsCode(code int) bool {
+	return code == 412
+}
+
+// Code gets the status code for the post registry function precondition failed response
+func (o *PostRegistryFunctionPreconditionFailed) Code() int {
+	return 412
+}
+
+func (o *PostRegistryFunctionPreconditionFailed) Error() string {
+	return fmt.Sprintf("[POST /registry/function][%d] postRegistryFunctionPreconditionFailed  %+v", 412, o.Payload)
+}
+
+func (o *PostRegistryFunctionPreconditionFailed) String() string {
+	return fmt.Sprintf("[POST /registry/function][%d] postRegistryFunctionPreconditionFailed  %+v", 412, o.Payload)
+}
+
+func (o *PostRegistryFunctionPreconditionFailed) GetPayload() string {
+	return o.Payload
+}
+
+func (o *PostRegistryFunctionPreconditionFailed) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
 	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
