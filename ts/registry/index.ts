@@ -211,27 +211,17 @@ export async function computeSHA256 (data: ArrayBuffer): Promise<string> {
   // use crypto subtle if available, otherwise fall back to a pure JS implementation
   if (crypto && crypto.subtle) {
     const hash = await crypto.subtle.digest("SHA-256", data);
-    return base64FromArrayBuffer(hash);
+    return hexFromArrayBuffer(hash);
   }
   const hash = sha256.create();
   hash.update(data);
-  return base64FromArrayBuffer(hash.arrayBuffer())
+  return hexFromArrayBuffer(hash.arrayBuffer())
 }
 
 /*
-* This method, while appearing quite unorthodox, is the most efficient way to get a base64 value from an array buffer
+* This method, while appearing quite unorthodox, is the most efficient way to get a hexadecimal value from an array buffer
 * while avoiding an expensive intermediate string representation
 * */
-async function base64FromArrayBuffer (data: ArrayBuffer) {
-  if (typeof window !== "undefined") {
-    const base64url: string = await new Promise((r) => {
-      const reader = new FileReader()
-      reader.onload = () => r(reader.result as string)
-      reader.readAsDataURL(new Blob([data]))
-    })
-
-    return base64url.split(",", 2)[1]
-  } else {
-    return Buffer.from(data).toString("base64").replace(/\+/g, "-");
-  }
+async function hexFromArrayBuffer (data: ArrayBuffer) {
+  return Buffer.from(data).toString("hex");
 }
