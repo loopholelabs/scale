@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Dependencies
+
+- Bumping `golang.org/x/net` to `v0.7.0`
+- Bumping `golang.org/x/text` to `v0.7.0`
+
 ## [v0.3.11] - 2023-02-20
 
 ### Features
