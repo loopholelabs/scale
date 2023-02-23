@@ -13,9 +13,10 @@
 
 declare var scale: ScaleFunction;     // This should be defined in the global scope.
 
-// import { TextEncoder, TextDecoder } from "fastestsmallesttextencoderdecoder";
 
-import { TextEncoder, TextDecoder } from "text-encoding";
+import { TextEncoder, TextDecoder } from "./text";
+
+//import { TextEncoder, TextDecoder } from "text-encoding";
 (global as any).TextEncoder = TextEncoder;
 (global as any).TextDecoder = TextDecoder;
 
