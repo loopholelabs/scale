@@ -66,6 +66,10 @@ export class DisabledWASI {
 
     public SetInstance(instance: WebAssembly.Instance) {
         this.exports = instance.exports;
+        const start = (this.exports._start as Function | undefined);
+        if (start) {
+            start();
+        }
     }
 
     public environ_sizes_get(environCount: number, environBufSize: number): number {
