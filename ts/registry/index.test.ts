@@ -2,7 +2,7 @@
 import 'jest';
 import {
     NeverPullPolicy,
-    defaultOrganization,
+    DefaultOrganization,
     New,
     WithCacheDirectory,
     WithPullPolicy,
@@ -31,7 +31,7 @@ test('TestPulldownCache', async () => {
     const func = "TestFunction"
     const tag = "1"
     const hash = await computeSHA256(scaleFunc.Function);
-    st.Put(func, tag, defaultOrganization, hash, scaleFunc)
+    st.Put(func, tag, DefaultOrganization, hash, scaleFunc)
 
     const newScaleFunc = await New(
         func,

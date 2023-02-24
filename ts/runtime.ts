@@ -23,6 +23,7 @@ import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
 import { Cache } from "./cache";
+import { DisabledWASI } from "./wasi";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
@@ -30,32 +31,52 @@ export async function New(functions: ScaleFunc[]): Promise<Runtime<httpSignature
  return NewFromSignature(httpSignature.New, functions);
 }
 
-export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
+export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: ScaleFunc[]): Promise<RawRuntime<T>> {
   const r = new Runtime(newSignature, functions);
   await r.Ready();
   return r;
 }
 
-export class Runtime<T extends Signature> {
+export async function NewRaw(functions: Uint8Array[]): Promise<Runtime<httpSignature.Context>> {
+  return NewRawFromSignature(httpSignature.New, functions);
+}
+
+export async function NewRawFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: Uint8Array[]): Promise<RawRuntime<T>> {
+  const r = new RawRuntime(newSignature, functions);
+  await r.Ready();
+  return r;
+}
+
+export class RawRuntime<T extends Signature> {
   public NewSignature: NewSignature<T>;
   private readonly ready: Promise<any>;
   private functions: Func<T>[];
   public head: undefined | Func<T>;
   public tail: undefined | Func<T>;
 
-  constructor(newSignature: NewSignature<T>, functions: ScaleFunc[]) {
+  constructor(newSignature: NewSignature<T>, functions: WebAssembly.Module[] | Uint8Array[]) {
     this.NewSignature = newSignature;
     this.functions = [];
 
     this.ready = new Promise(async (resolve) => {
       for (let i = 0; i < functions.length; i++) {
         const fn = functions[i];
-        const mod = await WebAssembly.compile(fn.Function as Buffer);
-
-        const f = new Func<T>(fn, mod);
+        let f: Func<T>;
+        if (fn instanceof Uint8Array) {
+          const instantiatedSource =  await WebAssembly.instantiate(fn, {
+            wasi_snapshot_preview1: (new DisabledWASI()).GetImports(),
+            env: {
+              next: (ptr: number, len: number): number => {
+                return 0;
+              }
+            },
+          });
+          f = new Func<T>(instantiatedSource.module);
+        } else {
+          f = new Func<T>(fn);
+        }
         f.modulePool = new Pool<T>(f, this);
         this.functions.push(f);
-
         if (this.head === undefined) {
           this.head = f;
         }
@@ -120,5 +141,15 @@ export class Runtime<T extends Signature> {
     const cached = i.GetInstance(fnid);
     cached.SetNext(nextFunction);
     return cached.GetInstance();
+  }
+}
+
+export class Runtime<T extends Signature> extends RawRuntime<T>{
+  constructor(newSignature: NewSignature<T>, functions: ScaleFunc[]) {
+    let fns: Uint8Array[] = [];
+    for (let i = 0; i < functions.length; i++) {
+        fns.push(functions[i].Function);
+    }
+    super(newSignature, fns);
   }
 }

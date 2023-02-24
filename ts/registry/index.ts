@@ -28,12 +28,12 @@ export const AlwaysPullPolicy: PullPolicy = "always";
 export const IfNotPresentPullPolicy: PullPolicy = "if-not-present";
 export const NeverPullPolicy: PullPolicy = "never";
 
-export var ErrHasMismatch = new Error("hash mismatch");
-export var ErrNoFunction = new Error("function does not exist locally and pull policy does not allow pulling from registry");
-export var ErrDownloadFailed = new Error("scale function could not be pull from the registry")
+export const ErrHasMismatch = new Error("hash mismatch");
+export const ErrNoFunction = new Error("function does not exist locally and pull policy does not allow pulling from registry");
+export const ErrDownloadFailed = new Error("scale function could not be pull from the registry")
 
-export const defaultBaseURL = "api.scale.sh"
-export const defaultOrganization = "scale"
+export const DefaultBaseURL = "api.scale.sh"
+export const DefaultOrganization = "scale"
 
 interface config {
   pullPolicy?: PullPolicy
@@ -78,8 +78,8 @@ export function WithOrganization(organization: string): Option {
 export async function New(name: string, tag: string, ...opts: Option[]): Promise<ScaleFunc> {
   const conf: config = {
     pullPolicy: IfNotPresentPullPolicy,
-    baseURL: defaultBaseURL,
-    organization: defaultOrganization,
+    baseURL: DefaultBaseURL,
+    organization: DefaultOrganization,
   }
 
   for (const opt of opts) {
@@ -91,11 +91,11 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
   }
 
   if (!conf.baseURL || conf.baseURL === "") {
-    conf.baseURL = defaultBaseURL
+    conf.baseURL = DefaultBaseURL
   }
 
   if (!conf.organization || conf.organization === "") {
-    conf.organization = defaultOrganization
+    conf.organization = DefaultOrganization
   }
 
   let st = Default;
@@ -125,7 +125,7 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
       }
 
       let notPresentFn: models_GetFunctionResponse | undefined = undefined;
-      if (conf.organization === defaultOrganization) {
+      if (conf.organization === DefaultOrganization) {
         notPresentFn = await RegistryService.getRegistryFunction1(name, tag)
       } else {
         notPresentFn = await RegistryService.getRegistryFunction3(name, tag, conf.organization)
@@ -146,7 +146,7 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
     case AlwaysPullPolicy:
       const alwaysGet = st.Get(name, tag, conf.organization, "");
       let alwaysFn: models_GetFunctionResponse | undefined = undefined;
-      if (conf.organization === defaultOrganization) {
+      if (conf.organization === DefaultOrganization) {
         alwaysFn = await RegistryService.getRegistryFunction1(name, tag)
       } else {
         alwaysFn = await RegistryService.getRegistryFunction3(name, tag, conf.organization)
