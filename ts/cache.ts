@@ -22,16 +22,15 @@ export class Cache {
   constructor() {}
 
   async Initialize(m: WebAssembly.Module) {
-    const self = this;
     const wasi = new DisabledWASI();
-    self.instance = await WebAssembly.instantiate(m, {
+    const config = {
       wasi_snapshot_preview1: wasi.GetImports(),
       env: {
-        next: self.next.bind(self),
+        next: this.next.bind(this),
       },
-    });
-
-    wasi.SetInstance(self.instance);
+    }
+    this.instance = await WebAssembly.instantiate(m, config);
+    wasi.SetInstance(this.instance);
   }
 
   private next(ptr: number, len: number): number {
