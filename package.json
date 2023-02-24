@@ -3,8 +3,6 @@
   "version": "0.3.11",
   "description": "Scale is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.",
   "source": "ts/index.ts",
-  "main": "main.js",
-  "module": "module.js",
   "types": "types.d.ts",
   "license": "apache-2.0",
   "scripts": {
