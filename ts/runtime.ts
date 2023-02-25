@@ -52,7 +52,7 @@ export class Runtime<T extends Signature> {
         const fn = functions[i];
         let f: Func<T>;
         if (fn instanceof ScaleFunc) {
-          const mod = await WebAssembly.compile(fn.Function);
+          const mod = new WebAssembly.Module(fn.Function);
           f = new Func<T>(fn, mod);
         } else {
           f = fn
