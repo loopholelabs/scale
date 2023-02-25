@@ -22,81 +22,35 @@ import {Default, Storage} from "../storage";
 import {models_GetFunctionResponse, OpenAPI, RegistryService} from "../client";
 import https from "https";
 
-export type PullPolicy = string;
+import {
+  ComputeSHA256 as BrowserComputeSHA256,
+  DefaultConfig,
+  Option,
+  HexFromArrayBuffer,
+  ErrHasMismatch,
+  ErrDownloadFailed,
+  ErrNoFunction,
+  DefaultBaseURL,
+  DefaultOrganization,
+  PullPolicy,
+  NeverPullPolicy,
+  IfNotPresentPullPolicy,
+  AlwaysPullPolicy,
+  WithAPIKey,
+  WithBaseURL,
+  WithOrganization,
+  WithPullPolicy,
+  WithCacheDirectory,
+} from "./browser"
 
-export const AlwaysPullPolicy: PullPolicy = "always";
-export const IfNotPresentPullPolicy: PullPolicy = "if-not-present";
-export const NeverPullPolicy: PullPolicy = "never";
+export { ErrHasMismatch, ErrDownloadFailed, ErrNoFunction }
+export { PullPolicy, NeverPullPolicy, IfNotPresentPullPolicy, AlwaysPullPolicy }
+export { DefaultBaseURL, DefaultOrganization }
 
-export const ErrHasMismatch = new Error("hash mismatch");
-export const ErrNoFunction = new Error("function does not exist locally and pull policy does not allow pulling from registry");
-export const ErrDownloadFailed = new Error("scale function could not be pull from the registry")
+export { WithAPIKey, WithBaseURL, WithOrganization, WithCacheDirectory, WithPullPolicy }
 
-export const DefaultBaseURL = "api.scale.sh"
-export const DefaultOrganization = "scale"
-
-interface config {
-  pullPolicy?: PullPolicy
-  baseURL?: string,
-  organization?: string,
-  cacheDirectory?: string,
-  apiKey?: string,
-}
-
-export type Option = (c: config) => void;
-
-export function WithPullPolicy(pullPolicy: PullPolicy): Option {
-  return (c: config) => {
-    c.pullPolicy = pullPolicy;
-  }
-}
-
-export function WithCacheDirectory(cacheDirectory: string): Option {
-  return (c: config) => {
-    c.cacheDirectory = cacheDirectory;
-  }
-}
-
-export function WithAPIKey(apiKey: string): Option {
-  return (c: config) => {
-    c.apiKey = apiKey;
-  }
-}
-
-export function WithBaseURL(baseURL: string): Option {
-    return (c: config) => {
-        c.baseURL = baseURL;
-    }
-}
-
-export function WithOrganization(organization: string): Option {
-    return (c: config) => {
-        c.organization = organization;
-    }
-}
-
-export async function New(name: string, tag: string, ...opts: Option[]): Promise<ScaleFunc> {
-  const conf: config = {
-    pullPolicy: IfNotPresentPullPolicy,
-    baseURL: DefaultBaseURL,
-    organization: DefaultOrganization,
-  }
-
-  for (const opt of opts) {
-    opt(conf);
-  }
-
-  if (!conf.pullPolicy) {
-    conf.pullPolicy = IfNotPresentPullPolicy
-  }
-
-  if (!conf.baseURL || conf.baseURL === "") {
-    conf.baseURL = DefaultBaseURL
-  }
-
-  if (!conf.organization || conf.organization === "") {
-    conf.organization = DefaultOrganization
-  }
+export async function Download(name: string, tag: string, ...opts: Option[]): Promise<ScaleFunc> {
+  const conf = DefaultConfig(...opts)
 
   let st = Default;
   if (conf.cacheDirectory && conf.cacheDirectory != "") {
@@ -128,15 +82,15 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
       if (conf.organization === DefaultOrganization) {
         notPresentFn = await RegistryService.getRegistryFunction1(name, tag)
       } else {
-        notPresentFn = await RegistryService.getRegistryFunction3(name, tag, conf.organization)
+        notPresentFn = await RegistryService.getRegistryFunction3(conf.organization, name, tag)
       }
 
       if(!notPresentFn.presigned_url || !notPresentFn.hash) {
         throw ErrDownloadFailed
       }
 
-      const notPresentData = await download(notPresentFn.presigned_url);
-      const notPresentHash = await computeSHA256(notPresentData);
+      const notPresentData = await RawDownload(notPresentFn.presigned_url);
+      const notPresentHash = await ComputeSHA256(notPresentData);
       if (notPresentHash !== notPresentFn.hash) {
         throw ErrHasMismatch;
       }
@@ -149,7 +103,7 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
       if (conf.organization === DefaultOrganization) {
         alwaysFn = await RegistryService.getRegistryFunction1(name, tag)
       } else {
-        alwaysFn = await RegistryService.getRegistryFunction3(name, tag, conf.organization)
+        alwaysFn = await RegistryService.getRegistryFunction3(conf.organization, name, tag)
       }
 
       if(!alwaysFn.presigned_url || !alwaysFn.hash) {
@@ -162,8 +116,8 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
         }
       }
 
-      const alwaysData = await download(alwaysFn.presigned_url);
-      const alwaysHash = await computeSHA256(alwaysData);
+      const alwaysData = await RawDownload(alwaysFn.presigned_url);
+      const alwaysHash = await ComputeSHA256(alwaysData);
       if (alwaysHash !== alwaysFn.hash) {
         throw ErrHasMismatch;
       }
@@ -178,7 +132,16 @@ export async function New(name: string, tag: string, ...opts: Option[]): Promise
   }
 }
 
-async function download (url: string): Promise<ArrayBuffer> {
+export async function ComputeSHA256 (data: ArrayBuffer): Promise<string> {
+  if (crypto && crypto.subtle) {
+    return BrowserComputeSHA256(data);
+  }
+  const hash = sha256.create();
+  hash.update(data);
+  return HexFromArrayBuffer(hash.arrayBuffer())
+}
+
+async function RawDownload (url: string): Promise<ArrayBuffer> {
   if (typeof window !== "undefined") {
     const httpResp = await fetch(url)
     return httpResp.arrayBuffer();
@@ -205,23 +168,4 @@ async function download (url: string): Promise<ArrayBuffer> {
 
     request.end();
   });
-}
-
-export async function computeSHA256 (data: ArrayBuffer): Promise<string> {
-  // use crypto subtle if available, otherwise fall back to a pure JS implementation
-  if (crypto && crypto.subtle) {
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    return hexFromArrayBuffer(hash);
-  }
-  const hash = sha256.create();
-  hash.update(data);
-  return hexFromArrayBuffer(hash.arrayBuffer())
-}
-
-/*
-* This method, while appearing quite unorthodox, is the most efficient way to get a hexadecimal value from an array buffer
-* while avoiding an expensive intermediate string representation
-* */
-async function hexFromArrayBuffer (data: ArrayBuffer) {
-  return Buffer.from(data).toString("hex");
 }

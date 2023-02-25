@@ -17,25 +17,25 @@
 import { Signature } from "@loopholelabs/scale-signature";
 
 import { Instance } from "./instance";
-import { RawRuntime } from "./runtime";
+import { Runtime } from "./runtime";
 import { Func } from "./func";
 
 export class Module<T extends Signature> {
-  private runtime: RawRuntime<T>;
-  public sfunction: Func<T>;
+  private runtime: Runtime<T>;
+  public func: Func<T>;
 
   private wasmInstance: undefined | WebAssembly.Instance;
   public run: undefined | Function;
   public resize: undefined | Function;
   public memory: undefined | WebAssembly.Memory;
 
-  constructor(f: Func<T>, r: RawRuntime<T>) {
-    this.sfunction = f;
+  constructor(f: Func<T>, r: Runtime<T>) {
+    this.func = f;
     this.runtime = r;
   }
 
   init(i: Instance<T>) {
-    this.wasmInstance = this.runtime.InstantiateModule(this.sfunction.id, this, i);
+    this.wasmInstance = this.runtime.InstantiateModule(this.func.id, this, i);
 
     this.run = this.wasmInstance.exports.run as Function;
     this.resize = this.wasmInstance.exports.resize as Function;

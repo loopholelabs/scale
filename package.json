@@ -6,7 +6,7 @@
   "types": "types.d.ts",
   "license": "apache-2.0",
   "scripts": {
-    "build": "openapi -i https://api.scale.sh/v1/swagger.json -o ts/client -c axios && rm -rf dist && tsc --outDir dist && cp package.json dist",
+    "build": "openapi -i https://api.scale.sh/v1/swagger.json -o ts/client && rm -rf dist && tsc --outDir dist && cp package.json dist",
     "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache && rm -rf testDirectory"
   },
   "dependencies": {

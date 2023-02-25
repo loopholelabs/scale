@@ -17,19 +17,19 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Signature, RuntimeContext } from "@loopholelabs/scale-signature";
 import { Cache } from './cache';
-import {NextFn, RawRuntime} from "./runtime";
+import { NextFn, Runtime } from "./runtime";
 
 const ErrNoCompiledFunctions = new Error("no compiled functions found in runtime");
 const ErrNoCacheID = new Error("no cache id found in instance");
 
 export class Instance<T extends Signature> {
-  private runtime: RawRuntime<T>;
+  private runtime: Runtime<T>;
   public next: NextFn<T>;
   public ctx: T;
   public id: string
   private cache: Map<string, Cache> = new Map<string, Cache>;
 
-  constructor(r: RawRuntime<T>, n: null | NextFn<T>) {
+  constructor(r: Runtime<T>, n: null | NextFn<T>) {
     this.runtime = r;
     this.ctx = r.NewSignature();
     this.id = uuidv4();

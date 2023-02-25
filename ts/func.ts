@@ -19,15 +19,18 @@ import { Signature } from "@loopholelabs/scale-signature";
 
 import { Instance } from "./instance";
 import { Pool } from "./pool";
+import {ScaleFunc} from "@loopholelabs/scalefile";
 
 export class Func<T extends Signature> {
+  public scaleFunc: ScaleFunc;
   public wasmModule: WebAssembly.Module;
   public next: undefined | Func<T>;
   public id: string;
 
   public modulePool: undefined | Pool<T>;
 
-  constructor(wasmModule: WebAssembly.Module) {
+  constructor(scaleFunc: ScaleFunc, wasmModule: WebAssembly.Module) {
+    this.scaleFunc = scaleFunc;
     this.wasmModule = wasmModule;
     this.id = uuidv4();
   }
