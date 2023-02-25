@@ -15,6 +15,12 @@
 */
 
 import { ScaleFunc } from "@loopholelabs/scalefile"
+
+let crypto = global.crypto;
+if(global.crypto === undefined || global.crypto.subtle === undefined) {
+  crypto = require("crypto").webcrypto;
+}
+
 import { OpenAPI, RegistryService } from "../../client";
 
 export type PullPolicy = string;
