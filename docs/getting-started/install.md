@@ -1,0 +1,3 @@
+---
+title: Installing the CLI
+---

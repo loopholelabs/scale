@@ -5,6 +5,14 @@
     "dark": "/logo/dark.svg",
     "href": "https://scale.sh"
   },
+  "api": {
+    "baseUrl": [
+      "https://api.scale.sh/v1"
+    ],
+    "auth": {
+      "method": "bearer"
+    }
+  },
   "favicon": "/favicon.png",
   "colors": {
     "primary": "#7c34ff",
@@ -23,7 +31,8 @@
   "anchors": [
     {
       "name": "Blog",
-      "icon": "square-rss",
+      "icon": "newspaper",
+      "iconType": "solid",
       "url": "https://loopholelabs.io/blog"
     },
     {
@@ -44,7 +53,53 @@
     },
     {
       "group": "Getting Started",
-      "pages": ["getting-started/overview", "getting-started/quick-start"]
+      "pages": [
+        "getting-started/quick-start",
+        "getting-started/install",
+        "getting-started/write",
+        "getting-started/examples"
+      ]
+    },
+    {
+      "group": "Using Scale Functions",
+      "pages": [
+        "getting-started/run",
+        "getting-started/embedding",
+        "getting-started/publishing"
+      ]
+    },
+    {
+      "group": "Adapters",
+      "pages": [
+        {
+          "group": "Golang",
+          "pages": [
+            "adapters/golang/net-http",
+            "adapters/golang/fasthttp"
+          ]
+        },
+        {
+          "group": "JavaScript/TypeScript",
+            "pages": [
+              "adapters/javascript-typescript/expressjs"
+            ]
+        },
+        "adapters/nextjs"
+      ]
+    },
+    {
+      "group": "Registry",
+      "pages": [
+        "registry/overview",
+        "registry/publishing"
+      ]
+    },
+    {
+      "group": "Signatures",
+      "pages": [
+        "signatures/overview",
+        "signatures/http"
+      ]
     }
   ],
   "footerSocials": {
@@ -62,5 +117,8 @@
       "apiKey": "phc_ozdiEGAuVg8Ru1tsyG092ND3oxhMtVewZO6Tg74s8MF",
       "apiHost": "https://data.scale.sh"
     }
+  },
+  "metadata": {
+    "og:image": "https://scale.sh/images/og-image.png"
   }
 }
