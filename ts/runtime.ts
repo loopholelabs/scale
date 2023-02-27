@@ -26,11 +26,11 @@ import { Cache } from "./cache";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
-export async function New(functions: (ScaleFunc|Func<httpSignature.Context>)[]): Promise<Runtime<httpSignature.Context>> {
+export async function New(functions: (Promise<ScaleFunc>|ScaleFunc|Func<httpSignature.Context>)[]): Promise<Runtime<httpSignature.Context>> {
  return NewFromSignature(httpSignature.New, functions);
 }
 
-export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: (ScaleFunc|Func<T>)[]): Promise<Runtime<T>> {
+export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]): Promise<Runtime<T>> {
   const r = new Runtime(newSignature, functions);
   await r.Ready();
   return r;
@@ -43,7 +43,7 @@ export class Runtime<T extends Signature> {
   public head: undefined | Func<T>;
   public tail: undefined | Func<T>;
 
-  constructor(newSignature: NewSignature<T>, functions: (ScaleFunc|Func<T>)[]) {
+  constructor(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]) {
     this.NewSignature = newSignature;
     this.functions = [];
 
@@ -54,6 +54,9 @@ export class Runtime<T extends Signature> {
         if (fn instanceof ScaleFunc) {
           const mod = new WebAssembly.Module(fn.Function);
           f = new Func<T>(fn, mod);
+        } else if (fn instanceof Promise<ScaleFunc>) {
+            const mod = new WebAssembly.Module((await fn).Function);
+            f = new Func<T>(await fn, mod);
         } else {
           f = fn
         }
