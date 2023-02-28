@@ -52,10 +52,10 @@ export class Runtime<T extends Signature> {
         const fn = functions[i];
         let f: Func<T>;
         if (fn instanceof ScaleFunc) {
-          const mod = new WebAssembly.Module(fn.Function);
+          const mod = await WebAssembly["compile"](fn.Function);
           f = new Func<T>(fn, mod);
         } else if (fn instanceof Promise<ScaleFunc>) {
-            const mod = new WebAssembly.Module((await fn).Function);
+            const mod = await WebAssembly["compile"]((await fn).Function);
             f = new Func<T>(await fn, mod);
         } else {
           f = fn
