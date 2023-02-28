@@ -22,7 +22,7 @@ import { Func } from "./func";
 
 export class Module<T extends Signature> {
   private runtime: Runtime<T>;
-  public sfunction: Func<T>;
+  public func: Func<T>;
 
   private wasmInstance: undefined | WebAssembly.Instance;
   public run: undefined | Function;
@@ -30,12 +30,12 @@ export class Module<T extends Signature> {
   public memory: undefined | WebAssembly.Memory;
 
   constructor(f: Func<T>, r: Runtime<T>) {
-    this.sfunction = f;
+    this.func = f;
     this.runtime = r;
   }
 
   init(i: Instance<T>) {
-    this.wasmInstance = this.runtime.InstantiateModule(this.sfunction.id, this, i);
+    this.wasmInstance = this.runtime.InstantiateModule(this.func.id, this, i);
 
     this.run = this.wasmInstance.exports.run as Function;
     this.resize = this.wasmInstance.exports.resize as Function;

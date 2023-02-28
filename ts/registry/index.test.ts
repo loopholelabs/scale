@@ -2,11 +2,11 @@
 import 'jest';
 import {
     NeverPullPolicy,
-    defaultOrganization,
-    New,
+    DefaultOrganization,
+    Download,
     WithCacheDirectory,
     WithPullPolicy,
-    WithAPIKey, WithBaseURL, WithOrganization, computeSHA256
+    WithAPIKey, WithBaseURL, WithOrganization, ComputeSHA256,
 } from './index';
 import {ScaleFunc, V1Alpha, Go} from "@loopholelabs/scalefile";
 import {Storage} from "../storage";
@@ -30,10 +30,10 @@ test('TestPulldownCache', async () => {
 
     const func = "TestFunction"
     const tag = "1"
-    const hash = await computeSHA256(scaleFunc.Function);
-    st.Put(func, tag, defaultOrganization, hash, scaleFunc)
+    const hash = await ComputeSHA256(scaleFunc.Function);
+    st.Put(func, tag, DefaultOrganization, hash, scaleFunc)
 
-    const newScaleFunc = await New(
+    const newScaleFunc = await Download(
         func,
         tag,
         WithCacheDirectory("testDirectory"),
@@ -57,7 +57,7 @@ test('TestRegistryDownload', async () => {
         return
     }
 
-    const scaleFunc = await New(
+    const scaleFunc = await Download(
         "TestRegistryDownload",
         "1",
         WithAPIKey(apiKey),

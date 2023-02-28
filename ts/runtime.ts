@@ -23,14 +23,15 @@ import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
 import { Cache } from "./cache";
+import {DisabledWASI} from "./wasi";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
-export async function New(functions: ScaleFunc[]): Promise<Runtime<httpSignature.Context>> {
- return NewFromSignature(httpSignature.New, functions);
+export async function New(functions: (Promise<ScaleFunc>|ScaleFunc|Func<httpSignature.Context>)[]): Promise<Runtime<httpSignature.Context>> {
+  return NewFromSignature(httpSignature.New, functions);
 }
 
-export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: ScaleFunc[]): Promise<Runtime<T>> {
+export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]): Promise<Runtime<T>> {
   const r = new Runtime(newSignature, functions);
   await r.Ready();
   return r;
@@ -43,19 +44,43 @@ export class Runtime<T extends Signature> {
   public head: undefined | Func<T>;
   public tail: undefined | Func<T>;
 
-  constructor(newSignature: NewSignature<T>, functions: ScaleFunc[]) {
+  constructor(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]) {
     this.NewSignature = newSignature;
     this.functions = [];
 
     this.ready = new Promise(async (resolve) => {
       for (let i = 0; i < functions.length; i++) {
         const fn = functions[i];
-        const mod = await WebAssembly.compile(fn.Function as Buffer);
+        let f: Func<T>;
+        if (fn instanceof ScaleFunc) {
+          const wasi = new DisabledWASI();
+          const instantiatedSource = await WebAssembly.instantiate(fn.Function, {
+            wasi_snapshot_preview1: wasi.GetImports(),
+            env: {
+              next: (ptr: number, len: number): number => {
+                return 0;
+              }
+            },
+          });
+          f = new Func<T>(fn, instantiatedSource.module);
+        } else if (fn instanceof Promise<ScaleFunc>) {
+          const wasi = new DisabledWASI();
+          const resolvedFn = await fn;
+          const instantiatedSource = await WebAssembly.instantiate(resolvedFn.Function, {
+            wasi_snapshot_preview1: wasi.GetImports(),
+            env: {
+              next: (ptr: number, len: number): number => {
+                return 0;
+              }
+            },
+          });
+          f = new Func<T>(resolvedFn, instantiatedSource.module);
+        } else {
+          f = fn
+        }
 
-        const f = new Func<T>(fn, mod);
         f.modulePool = new Pool<T>(f, this);
         this.functions.push(f);
-
         if (this.head === undefined) {
           this.head = f;
         }
@@ -99,11 +124,11 @@ export class Runtime<T extends Signature> {
 
           i.RuntimeContext().Read(inContextBuff);
 
-          if (mod.sfunction.next === undefined) {
+          if (mod.func.next === undefined) {
             i.ctx = i.next(i.Context());
             buff = i.RuntimeContext().Write();
           } else {
-            mod.sfunction.next.Run(i);
+            mod.func.next.Run(i);
             buff = i.RuntimeContext().Write();
           }
         } catch (e) {

@@ -17,3 +17,4 @@
 export * from "./runtime"
 export * from "./instance"
 export * from "./module"
+export * from "./func"

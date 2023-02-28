@@ -122,7 +122,7 @@ func WithClient(client *client.ScaleAPIV1) Option {
 	}
 }
 
-func New(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
+func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
 	conf := &config{
 		pullPolicy:   IfNotPresentPullPolicy,
 		baseURL:      client.DefaultHost,
