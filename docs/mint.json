@@ -5,6 +5,14 @@
     "dark": "/logo/dark.svg",
     "href": "https://scale.sh"
   },
+  "api": {
+    "baseUrl": [
+      "https://api.scale.sh/v1"
+    ],
+    "auth": {
+      "method": "bearer"
+    }
+  },
   "favicon": "/favicon.png",
   "colors": {
     "primary": "#7c34ff",
@@ -23,7 +31,8 @@
   "anchors": [
     {
       "name": "Blog",
-      "icon": "square-rss",
+      "icon": "newspaper",
+      "iconType": "solid",
       "url": "https://loopholelabs.io/blog"
     },
     {
@@ -39,12 +48,75 @@
   ],
   "navigation": [
     {
-      "group": "Welcome",
-      "pages": ["introduction"]
+      "group": "Getting Started",
+      "pages": [
+        "getting-started/overview",
+        "getting-started/quick-start"
+      ]
     },
     {
-      "group": "Getting Started",
-      "pages": ["getting-started/overview", "getting-started/quick-start"]
+      "group": "Adapters",
+      "pages": [
+        {
+          "group": "Golang",
+          "pages": [
+            "adapters/golang/net-http",
+            "adapters/golang/fasthttp"
+          ]
+        },
+        {
+          "group": "JavaScript/TypeScript",
+            "pages": [
+              "adapters/javascript-typescript/expressjs"
+            ]
+        },
+        "adapters/nextjs"
+      ]
+    },
+    {
+      "group": "Registry",
+      "pages": [
+        "registry/overview",
+        {
+          "group": "API Reference",
+          "pages": [
+            "registry/api-reference/userinfo",
+            "registry/api-reference/health",
+            {
+              "group": "Functions",
+              "pages": [
+                "registry/api-reference/functions/upload-function",
+                "registry/api-reference/functions/pull-function",
+                "registry/api-reference/functions/list-functions",
+                "registry/api-reference/functions/delete-function"
+              ]
+            },
+            {
+              "group": "Access",
+              "pages": [
+                "registry/api-reference/access/create-apikey",
+                "registry/api-reference/access/list-apikeys",
+                "registry/api-reference/access/get-apikey",
+                "registry/api-reference/access/delete-apikey"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "CLI",
+        "pages": [
+            "cli/overview",
+            "cli/install"
+        ]
+    },
+    {
+      "group": "Signatures",
+      "pages": [
+        "signatures/overview",
+        "signatures/http"
+      ]
     }
   ],
   "footerSocials": {
@@ -62,5 +134,8 @@
       "apiKey": "phc_ozdiEGAuVg8Ru1tsyG092ND3oxhMtVewZO6Tg74s8MF",
       "apiHost": "https://data.scale.sh"
     }
+  },
+  "metadata": {
+    "og:image": "https://scale.sh/images/og-image.png"
   }
 }

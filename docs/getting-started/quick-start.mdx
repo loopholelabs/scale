@@ -1,317 +1,385 @@
 ---
 title: Quick Start
+description: Create, run, and publish your first Scale Function in just 5 minutes
 ---
 
-In this section we'll be going over how you can quickly get started with <Tooltip tip="Frisbee RPC">fRPC</Tooltip>,
-from defining your message types in a <Tooltip tip="Syntax used to describe protocol buffers">proto3</Tooltip> file, to writing your first server and client.
+In this section we’ll be going over how you can quickly get started with Scale to create, run and even publish your own function.
 
-We'll be building a simple echo service that will echo back the message it receives, and later on we'll also show how
-you can use the Frisbee framework itself to build a more complex <Tooltip tip="Publish and Subscribe">PUB\/SUB</Tooltip> service.
+We’ll be building a simple `Hello World` function using the [HTTP Signature](/signatures/http) that will return a simple greeting.
 
-# Installation
+<Tip>
+    Note that Scale currently supports using both [Golang](https://go.dev) and [Rust](https://www.rust-lang.org) as the Guest
+    Language, and the documentation will always have example implementations in both languages.
+</Tip>
 
-To get started with <Tooltip tip="Frisbee RPC">fRPC</Tooltip>, you'll need to make sure you have `Go`
-and the `protoc` compiler installed. Then, you'll need to install
-the `protoc-gen-go-frpc` <Tooltip tip="Plugins hook into the protoc compiler and allow for custom code generation">protoc plugin</Tooltip>
-which we will use to generate the server and client code.
+## Install the Scale CLI
 
-## Prerequisites
-
-- [Go](https://golang.org) - fRPC works with `Go` version 1.18 or later. For installation instructions see [Go's Getting Started Guide](https://golang.org/doc/install).
-- [Protocol Buffer Compiler (protoc)](https://developers.google.com/protocol-buffers) - fRPC works with `protoc` version 3. For installation instructions see the [Protoc Getting Started Guide](https://developers.google.com/protoc/docs/getting_started).
-
-If you're using MacOS and have [Brew](https://brew.sh/) installed, you can use `brew install go`
-to install Golang, and `brew install protoc` to install the protoc compiler.
-
-## Install the fRPC Plugin
-
-To install the `protoc-gen-go-frpc` plugin, you'll first need to make sure that your `$GOBIN` environment variable is set and available in
-your system path. See the [Go Environment Variables](https://golang.org/doc/code.html#GOPATH) page
-for more information, but in general, you can do this by adding the following to
-your `~/.bashrc` file:
-
-```sh .bashrc
-export GOBIN=$GOPATH/bin
-export PATH=$PATH:$GOBIN
-```
-
-To install the `protoc-gen-go-frpc` plugin itself, you'll need to run the following command:
+The Scale CLI is the primary tool for interacting with Scale Functions and the Scale Registry. It can be easily installed using the following command:
 
 ```bash
-$ go install github.com/loopholelabs/frpc-go/protoc-gen-go-frpc@latest
+curl -fsSL https://dl.scale.sh | sh
 ```
 
-This will install the `protoc-gen-go-frpc` plugin into your `$GOBIN` directory
-where it will be available for use by the `protoc` compiler.
+<Info>
+    The CLI attempts to install itself to `/usr/local/bin` by default, but you can also specify a different directory by setting the `INSTALL` environment variable like so:
 
-You can check that the plugin is installed and available by running the following command:
+    ```bash
+    curl -fsSL https://dl.scale.sh | INSTALL=./ sh
+    ```
+</Info>
+
+To verify that the CLI was installed correctly, you can run the following command:
 
 ```bash
-$ which protoc-gen-go-frpc
-/Users/<username>/go/bin/protoc-gen-go-frpc # or $GOPATH/bin/protoc-gen-go-frpc
+scale version
 ```
 
-# Create a Proto3 File
+For alternative installation methods or to build the CLI from source, please see the [CLI Installation Guide](/cli/install).
 
-Now that we have the prerequisites and the `protoc-gen-go-frpc` plugin installed,
-we can start writing our echo service. Let's start by creating a directory to house our project:
+## Install the Toolchain for your Guest Language
+
+Scale Functions currently support using both [Golang](https://go.dev) and [Rust](https://www.rust-lang.org) as the
+Guest Languages, but compiling them requires the appropriate toolchain to be installed on your machine.
+
+<Note>
+    To streamline compiling Scale Functions in the future, we're working on a cloud build service that will allow you to
+    compile your functions without having to install the toolchain on your machine. If you're interested in accessing this
+    service as soon as it's available, please [join our discord](https://loopholelabs.io/discord).
+</Note>
+
+This guide has instructions for installing the toolchain for both languages, but you can skip the one that you don't need.
+
+<Tabs>
+    <Tab title="Golang">
+        To use [Golang](https://go.dev) as the Guest Language, you'll need to install the following:
+        - The [Go](https://go.dev/doc/install) toolchain
+        - The [TinyGo](https://tinygo.org/getting-started/) compiler
+
+        The best way to install [Go](https://go.dev/doc/install) is to follow the official instructions for your
+        operating system and platform at [https://go.dev/doc/install](https://go.dev/doc/install).
+
+        You can verify that Go was installed correctly by running the following command:
+
+        ```bash
+        go version
+        ```
+
+        <Info>
+            The minimum supported version of Go for use with Scale Functions is `1.18`.
+        </Info>
+
+
+        The best way to install [TinyGo](https://tinygo.org/getting-started/) is to follow the official
+        instructions for your operating system and platform at
+        [https://tinygo.org/getting-started/install/](https://tinygo.org/getting-started/install).
+
+        You can verify that TinyGo was installed correctly by running the following command:
+
+        ```bash
+        tinygo version
+        ```
+
+        <Info>
+            The minimum supported version of TinyGo for use with Scale Functions is `0.27.0`.
+        </Info>
+    </Tab>
+    <Tab title="Rust">
+        To use [Rust](https://www.rust-lang.org) as the Guest Language, you'll need to install the following:
+        - The [Rust](https://www.rust-lang.org/tools/install) toolchain
+        - The [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager
+        - The [wasm32-unknown-unknown](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#platform-specific-dependencies) build target
+
+        The best way to install [Rust](https://www.rust-lang.org/tools/install) is to follow the official instructions for
+        your operating system and platform at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
+
+        In general, you'll want to install the `rustup` tool, which will allow you to easily install and manage multiple
+        versions of Rust on your machine. This can be done by running the following command:
+
+        ```bash
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        ```
+
+        You can verify that Rust was installed correctly by running the following command:
+
+        ```bash
+        rustc --version
+        ```
+
+        <Info>
+            The minimum supported version of Rust for use with Scale Functions is `1.67.0`.
+        </Info>
+
+        You can verify that Cargo was installed correctly by running the following command:
+
+        ```bash
+        cargo --version
+        ```
+
+        <Info>
+            The minimum supported version of Cargo for use with Scale Functions is `1.67.0`.
+        </Info>
+
+        Next, you'll need to install the `wasm32-unknown-unknown` build target. This can be done by running the following
+        command:
+
+        ```bash
+        rustup target add wasm32-unknown-unknown
+        ```
+
+        You can verify that the build target was installed correctly by running the following command and verifying that
+        `wasm32-unknown-unknown` is listed in the output:
+
+        ```bash
+        rustup target list --installed
+        ```
+    </Tab>
+</Tabs>
+
+## Create a New Function
+
+Once you have the Scale CLI and the toolchain for your Guest Language installed, you can create a new function by
+running the following command:
 
 ```bash
-$ mkdir -p ~/frpc
-$ cd ~/frpc
+scale new hello-world
 ```
 
-Now we'll create an `echo.proto` file and define our message types:
-
-```protobuf echo.proto
-option go_package = "/echo";
-
-message Request {
-  string Message = 1;
-}
-
-message Response{
-  string Message = 1;
-}
-```
-
-You can see that we've defined two message types, one for the `Request` and one for the `Response`.
-
-Next, we will define a new `EchoService{:.variable}` in our `proto3` file. This tells the compiler that we want to generate a server and client for this service.
-
-```protobuf echo.proto
-option go_package = "/echo";
-
-service EchoService {
-  rpc Echo(Request) returns (Response);
-}
-
-message Request {
-  string Message = 1;
-}
-
-message Response{
-  string Message = 1;
-}
-```
-
-And with that you should be ready. Next we'll start the `protoc` compiler to generate
-our fRPC server and client.
-
-# Generate the Server and Client
-
-Let's run the following command to generate the server and client code:
+This will create a new scale function in the current directory. You can also specify a different directory by passing the
+`--directory` or `-d` flag:
 
 ```bash
-$ protoc --go-frpc_out=. echo.proto
+scale new hello-world -d /path/to/directory
 ```
 
-This command tells the `protoc` compiler to generate the server and client code for us and
-by specifying the `--go-frpc_out` flag, we're implicitly specifying that we want to use the `protoc-gen-go-frpc` plugin.
+<Note>
+    By default, the CLI will create a new function using Golang as the Guest Language. If you want to use Rust instead,
+    you can pass the `--language` or `-l` flag:
 
-If we wanted to be more explicit, we could have run the following command:
+    ```bash
+    scale new hello-world -l rust
+    ```
+</Note>
+
+The following files will be created in the directory depending on the language you chose:
+
+<Tabs>
+    <Tab title="Golang">
+        <CodeGroup>
+            ```yaml scalefile
+            version: v1alpha
+            name: hello-world
+            tag: latest
+            signature: http@v0.3.4
+            language: go
+            dependencies:
+            - name: github.com/loopholelabs/scale-signature
+            version: v0.2.9
+            - name: github.com/loopholelabs/scale-signature-http
+            version: v0.3.4
+            source: scale.go
+            ```
+
+            ```go scale.go
+            //go:build tinygo || js || wasm
+            package scale
+
+            import (
+                signature "github.com/loopholelabs/scale-signature-http"
+            )
+
+            func Scale(ctx *signature.Context) (*signature.Context, error) {
+                ctx.Response().SetBody("Hello, World!")
+                return ctx.Next()
+            }
+            ```
+
+            ```go-module go.mod
+            module scale
+
+            go 1.18
+
+            require github.com/loopholelabs/scale-signature v0.2.9
+            require github.com/loopholelabs/scale-signature-http v0.3.4
+            ```
+        </CodeGroup>
+        The `scalefile` is the main configuration file for the function. It contains all of the metadata and configuration required
+        to build and run the function. The `scale.go` file contains the actual implementation of the function, and
+        the `go.mod` file is primarily used to provide [Intellisense](https://code.visualstudio.com/docs/editor/intellisense)
+        and Auto-Completion support in your IDE.
+    </Tab>
+    <Tab title="Rust">
+        <CodeGroup>
+            ```yaml scalefile
+            version: v1alpha
+            name: hello-world
+            tag: latest
+            signature: http@v0.3.4
+            language: rust
+            dependencies:
+            - name: scale_signature_http
+            version: 0.3.4
+            - name: scale_signature
+            version: 0.2.9
+            source: scale.rs
+            ```
+
+            ```rust scale.rs
+            use scale_signature_http::context::Context;
+
+            pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Error>> {
+                ctx.response().set_body("Hello, World!".to_string());
+                Ok(ctx)
+            }
+            ```
+
+            ```toml Cargo.toml
+            [package]
+            name = "scale"
+            version = "0.1.0"
+            edition = "2021"
+
+            [dependencies]
+            scale_signature_http = "0.3.4"
+            scale_signature = "0.2.9"
+
+            [lib]
+            crate-type = ["cdylib"]
+            path = "scale.rs"
+            ```
+
+        </CodeGroup>
+        The `scalefile` is the main configuration file for the function. It contains all of the metadata and configuration required
+        to build and run the function. The `scale.rs` file contains the actual implementation of the function, and
+        the `Cargo.toml` file is primarily used to provide [Intellisense](https://code.visualstudio.com/docs/editor/intellisense)
+        and Auto-Completion support in your IDE.
+    </Tab>
+</Tabs>
+
+<br/>
+<Info>
+    When adding new dependencies to your function, you'll need to add references to them in the `scalefile` to make sure
+    your function can be built properly.
+</Info>
+
+By default, the generated function will be configured to use the `HTTP Signature`,
+which provides an interface for handling HTTP requests and responses. To learn more about the `HTTP Signature` and the
+interfaces it provides, you can check out the [HTTP Signature Reference](/signatures/http).
+
+<Note>
+    The concept of a `Signature` is central to how Scale Functions provide cross-language type safety and it's documented
+    in more detail in the [Signatures](/signatures/overview) section of the documentation.
+</Note>
+
+## Build the Function
+
+Once you've created a new function, you can build it by running the following command:
 
 ```bash
-$ protoc --plugin=protoc-gen-go-frpc=$GOBIN/protoc-gen-go-frpc --go-frpc_out=. echo.proto
+scale build
 ```
 
-These commands should have generated a new folder at `~/frpc/echo`, which
-contains an `echo.frpc.go` file containing the server and client code. Within
-that file, you'll find the following interface:
+This will build the function and save it to the `Cache Directory` (which defaults to `~/.config/scale/functions` on Linux and macOS).
+You can also specify a different directory by passing the `--cache-directory` flag:
 
-```go echo.frpc.go
-...
-
-type EchoService interface {
-	Echo(context.Context, *Request) (*Response, error)
-}
-
-...
+```bash
+scale build --cache-directory /path/to/directory
 ```
 
-All we have left to do is implement the `EchoService{:.variable}` interface with our server-side logic,
-and pass that into the server. The generated library will then be able to handle everything else for us.
+<Info>
+    The `Cache Directory` is where the Scale CLI stores all of the built functions. This is where the CLI will look for
+    functions when you run commands like `scale run` or `scale push`.
+</Info>
 
-# Setting up the Server
+To list all of the functions that are currently in the `Cache Directory`, you can run the following command:
 
-To set up our server, we simply need to implement the `EchoService{:.variable}` interface and then start
-the server. We'll start by creating a new `server/main.go` file in our `~/frpc` directory:
-
-```go server/main.go
-package main
-
-import (
-	"context"
-    "frpc/echo"
-)
-
-type svc struct{}
-
-func (s *svc) Echo(_ context.Context, req *echo.Request) (*echo.Response, error) {
-	res := new(echo.Response)
-	res.Message = req.Message
-	return res, nil
-}
+```bash
+scale function list
 ```
 
-As you can see we've created a new struct called `svc{:.variable}` and implemented the `EchoService{:.variable}` interface by
-creating a new function called `Echo{:.function}` which takes a `context.Context` and an `*echo.Request` object.
-We aren't really using the context in this example so we just ignore that and instead return an `*echo.Response` object with the
-same message as the request.
-
-Now we can implement the server itself:
-
-```go server/server.go
-package main
-
-import (
-	"context"
-	"github.com/rs/zerolog"
-    "frpc/echo"
-	"log"
-	"os"
-	"runtime"
-	"time"
-)
-
-type svc struct{}
-
-func (s *svc) Echo(_ context.Context, req *echo.Request) (*echo.Response, error) {
-	res := new(echo.Response)
-	res.Message = req.Message
-	return res, nil
-}
-
-func main() {
-	frpcServer, err := echo.NewServer(new(svc), nil, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	err = frpcServer.Start(":8080")
-    if err != nil {
-        panic(err)
-    }
-}
+```
+  NAME (1)            TAG      ORG           LANGUAGE   SIGNATURE     HASH                                                               VERSION
+ ------------------- -------- ------------- ---------- ------------- ------------------------------------------------------------------ ---------
+  hello-world         latest                 rust       http@v0.3.4   8dad03b701cd124b55ff5caf7a36a9af5d19759fc73a9e8299bea4816f929777   v1alpha
 ```
 
-This additional `main` function runs when the server starts up, and passes in our `svc{:.variable}` struct to the
-generated `echo.NewServer()` function. It then binds the server to port `:8080` and starts listening for connections.
+## Run the Function
 
-We're passing in `nil` for both the `*tls.Config` and `logging` parameters in the generated `echo.NewServer()` function because
-we don't want to use TLS or logging in this example.
+Once you've built the function, you can run it by running the following command:
 
-# Setting up the Client
-
-To set up our client, we don't need to implement any additional logic, but we do need to create a new `client/main.go` file
-in our `~/frpc` directory:
-
-```go client/main.go
-package main
-
-import (
-	"context"
-	"fmt"
-	"frpc/echo"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-)
-
-func main() {
-	c, err := echo.NewClient(nil, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	err = c.Connect("127.0.0.1:8080")
-	if err != nil {
-		panic(err)
-	}
-}
+```bash
+scale run hello-world:latest
 ```
 
-Here, we're creating a new echo client using our generated `echo.NewClient()` function.
-Then, we're passing in the address of the server we want to connect to. But we're not actually sending any
-requests to the server yet.
+This will start a local HTTP server on port `8080` and will run the function whenever you make a request to it. You can
+also specify a different port by passing the `--port` or `-p` flag:
 
-To do that, we can write a simple look to send a request to the server every second and then print out the response:
-
-```go echo/client/client.go
-package main
-
-import (
-	"context"
-	"fmt"
-	"frpc/echo"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-)
-
-func main() {
-	c, err := echo.NewClient(nil, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	err = c.Connect("127.0.0.1:8080")
-	if err != nil {
-		panic(err)
-	}
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	req := echo.NewRequest()
-	i := 0
-	for {
-		select {
-		case <-stop:
-			err = c.Close()
-			if err != nil {
-				panic(err)
-			}
-			return
-		default:
-			req.Message = fmt.Sprintf("#%d", i)
-			log.Printf("Sending Request %s\n", req.Message)
-			res, err := c.EchoService.Echo(context.Background(), req)
-			if err != nil {
-				panic(err)
-			}
-			log.Printf("Received Response %s\n", res.Message)
-			time.Sleep(time.Second)
-			i++
-		}
-	}
-}
+```bash
+scale run hello-world:latest -p 3000
 ```
 
-The above loop registers a `stop` channel to receive a signal when the user hits `Ctrl+C`,
-and then starts sending a request to the server every second.
+<Note>
+    The `scale run` command is designed for use with the [HTTP Signature](/signatures/http). It can be used for both
+    local development and production deployments and makes it easy to test your function without having to deploy it.
+</Note>
 
-And that's it! We've now set up a simple echo client that can send requests to our server and print out the response.
+## Push the Function
 
-We were able to use a simple `proto3` file to define our request and response objects, and all we had to do was
-implement the `EchoService{:.variable}` interface. Everything else was handled for us by **fRPC**.
+Now that you've built and tested your function, you can push it to the Scale Registry. Once pushed, the function can be
+pulled and used in your existing Typescript or Golang services, or even by other users for their own applications.
 
-The complete code for this example is available in the [frpc-echo-example](https://github.com/loopholelabs/frpc-echo-example)
-repository on [Github](https://github.com/loopholelabs).
+To use the Scale Registry, you'll first have to authenticate with the Scale API. This process is the same for both new
+and existing users.
 
-# Next Steps
+To authenticate with the Scale API, you can run the following command:
 
-Now that we've seen how easy it is to use **fRPC**, we recommend you check out our [benchmarks](/performance/grpc-benchmarks) pages
-to learn more about how **fRPC** fares against other RPC frameworks.
+```bash
+scale auth login
+```
 
-If you want to learn more about how **fRPC** works under the hood, you can check out our [fRPC Concepts](/getting-started/concepts) page, or our [technical reference](/reference/overview).
+This will open a browser window and prompt you to log in to your Scale account. Once you've logged in, you can
+close the browser window and return to the terminal. You should now be able to push your function to the Scale Registry.
 
-Finally, if you'd like to learn how to use [Frisbee](https://github.com/loopholelabs/frisbee-go) (the underlying transport mechanism for fRPC)
-to implement your **own messaging protocol** that's fast and performant, you can check out the [frisbee-go Github repository](https://github.com/loopholelabs/frisbee-go).
+To check that you're authenticated, you can run the following command:
 
-If you need any help or have any feedback about Frisbee or fRPC, please to check out our [Discord Community](https://loopholelabs.io/discord)!
-Our team would love to hear your thoughts and understand how you're planning on using fRPC, and we're always happy to help!
+```bash
+scale auth status
+```
+
+```
+  MEMBER ORGS   OWNED ORGS      EMAIL                         ORG
+ ------------- --------------- ----------------------------- -------------
+  []            [shivanshvij]   shivanshvij@loopholelabs.io   shivanshvij
+```
+
+<Note>
+    It's also possible to authenticate with the Scale API using an API Key. To learn more about API Keys, you can check
+    out the [API Keys](/api-keys) section of the documentation.
+</Note>
+
+Once you've authenticated with the Scale API, you can push your function to the Scale Registry by running the following command:
+
+```bash
+scale push hello-world:latest
+```
+
+This will push the function to the Scale Registry and make it available for use in your existing services. By default
+the function will be private, but you can make it public by passing the `--public` flag:
+
+```bash
+scale push hello-world:latest --public
+```
+
+<Note>
+    The Scale Registry is currently in beta and may be subject to changes in the future. To learn more about the
+    Scale Registry, you can check out the [Registry](/registry/overview) section of the documentation or [join our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Next Steps
+
+Now that you've created and pushed your first function, you can check out the [Embedding Functions](/getting-started/embedding)
+guide to learn how to use your function inside your existing services.
+
+You can also check out our [Adapter Guides](/adapters) to learn how to integrate your functions with popular frameworks such as [Next.js](/adapters/nextjs).
+
+To learn more about how the Scale Registry works, you can check out the [Registry](/registry/overview) section, or you
+can check out the [Signatures](/signatures/overview) section to learn more about how Scale Signatures work.
