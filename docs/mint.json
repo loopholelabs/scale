@@ -48,12 +48,9 @@
   ],
   "navigation": [
     {
-      "group": "Welcome",
-      "pages": ["introduction"]
-    },
-    {
       "group": "Getting Started",
       "pages": [
+        "getting-started/overview",
         "getting-started/quick-start",
         "getting-started/install",
         "getting-started/write",
@@ -91,7 +88,8 @@
       "group": "Registry",
       "pages": [
         "registry/overview",
-        "registry/publishing"
+        "registry/publishing",
+        "registry/api"
       ]
     },
     {
