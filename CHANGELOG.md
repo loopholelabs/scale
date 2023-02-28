@@ -7,6 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Features
+
+- Updating the `Typescript` runtime to function properly with `NextJS`
+- Updating the `Typescript` registry to function properly in Browser environments
+- Adding a `webpack` loader for `Typescript` runtimes that need to import scale functions directly
+- Allowing the `Typescript` scale runtime to be instantiated with Promises of `ScaleFunc` objects
+
+### Changes
+
+- Changing the `registry.New` function for both `Typescript` and `Golang` to `registry.Download`
+
 ### Dependencies
 
 - Bumping `golang.org/x/net` to `v0.7.0`
