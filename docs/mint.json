@@ -51,18 +51,7 @@
       "group": "Getting Started",
       "pages": [
         "getting-started/overview",
-        "getting-started/quick-start",
-        "getting-started/install",
-        "getting-started/write",
-        "getting-started/examples"
-      ]
-    },
-    {
-      "group": "Using Scale Functions",
-      "pages": [
-        "getting-started/run",
-        "getting-started/embedding",
-        "getting-started/publishing"
+        "getting-started/quick-start"
       ]
     },
     {
@@ -88,8 +77,31 @@
       "group": "Registry",
       "pages": [
         "registry/overview",
-        "registry/publishing",
-        "registry/api"
+        {
+          "group": "API Reference",
+          "pages": [
+            "registry/api-reference/userinfo",
+            "registry/api-reference/health",
+            {
+              "group": "Functions",
+              "pages": [
+                "registry/api-reference/functions/upload-function",
+                "registry/api-reference/functions/pull-function",
+                "registry/api-reference/functions/list-functions",
+                "registry/api-reference/functions/delete-function"
+              ]
+            },
+            {
+              "group": "Access",
+              "pages": [
+                "registry/api-reference/access/create-apikey",
+                "registry/api-reference/access/list-apikeys",
+                "registry/api-reference/access/get-apikey",
+                "registry/api-reference/access/delete-apikey"
+              ]
+            }
+          ]
+        }
       ]
     },
     {

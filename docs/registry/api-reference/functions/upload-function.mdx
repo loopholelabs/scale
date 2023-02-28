@@ -1,0 +1,7 @@
+---
+title: Upload a Function
+openapi: "POST /registry/function"
+---
+Uploads a function to the Scale Registry. If the session is scoped to an
+organization, the function will be uploaded to that `organization`, otherwise the
+function will be uploaded to the user's default `organization` (which can be queried from the [UserInfo](/registry/api-reference/userinfo) endpoint).
