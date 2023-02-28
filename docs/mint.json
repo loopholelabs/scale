@@ -105,6 +105,13 @@
       ]
     },
     {
+      "group": "CLI",
+        "pages": [
+            "cli/overview",
+            "cli/install"
+        ]
+    },
+    {
       "group": "Signatures",
       "pages": [
         "signatures/overview",
