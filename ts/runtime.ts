@@ -23,11 +23,12 @@ import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
 import { Cache } from "./cache";
+import {DisabledWASI} from "./wasi";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
 export async function New(functions: (Promise<ScaleFunc>|ScaleFunc|Func<httpSignature.Context>)[]): Promise<Runtime<httpSignature.Context>> {
- return NewFromSignature(httpSignature.New, functions);
+  return NewFromSignature(httpSignature.New, functions);
 }
 
 export async function NewFromSignature<T extends Signature>(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]): Promise<Runtime<T>> {
@@ -52,11 +53,28 @@ export class Runtime<T extends Signature> {
         const fn = functions[i];
         let f: Func<T>;
         if (fn instanceof ScaleFunc) {
-          const mod = await WebAssembly["compile"](fn.Function);
-          f = new Func<T>(fn, mod);
+          const wasi = new DisabledWASI();
+          const instantiatedSource = await WebAssembly.instantiate(fn.Function, {
+            wasi_snapshot_preview1: wasi.GetImports(),
+            env: {
+              next: (ptr: number, len: number): number => {
+                return 0;
+              }
+            },
+          });
+          f = new Func<T>(fn, instantiatedSource.module);
         } else if (fn instanceof Promise<ScaleFunc>) {
-            const mod = await WebAssembly["compile"]((await fn).Function);
-            f = new Func<T>(await fn, mod);
+          const wasi = new DisabledWASI();
+          const resolvedFn = await fn;
+          const instantiatedSource = await WebAssembly.instantiate(resolvedFn.Function, {
+            wasi_snapshot_preview1: wasi.GetImports(),
+            env: {
+              next: (ptr: number, len: number): number => {
+                return 0;
+              }
+            },
+          });
+          f = new Func<T>(resolvedFn, instantiatedSource.module);
         } else {
           f = fn
         }
