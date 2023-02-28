@@ -55,6 +55,7 @@ export class RegistryService {
                 400: `Bad Request`,
                 401: `Unauthorized`,
                 404: `Not Found`,
+                412: `Precondition Failed`,
                 500: `Internal Server Error`,
             },
         });
@@ -129,6 +130,37 @@ export class RegistryService {
     ): CancelablePromise<models_GetFunctionResponse> {
         return __request(OpenAPI, {
             method: 'GET',
+            url: '/registry/function/{organization}/{name}/{tag}',
+            path: {
+                'organization': organization,
+                'name': name,
+                'tag': tag,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+
+    /**
+     * DeleteFunction deletes a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
+     * DeleteFunction retrieves a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
+     * @param organization organization
+     * @param name name
+     * @param tag tag
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static deleteRegistryFunction(
+        organization: string,
+        name: string,
+        tag: string,
+    ): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
             url: '/registry/function/{organization}/{name}/{tag}',
             path: {
                 'organization': organization,

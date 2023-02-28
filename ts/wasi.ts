@@ -66,6 +66,10 @@ export class DisabledWASI {
 
     public SetInstance(instance: WebAssembly.Instance) {
         this.exports = instance.exports;
+        const start = (this.exports._start as Function | undefined);
+        if (start) {
+            start();
+        }
     }
 
     public environ_sizes_get(environCount: number, environBufSize: number): number {
@@ -146,22 +150,22 @@ export class DisabledWASI {
 
     public GetImports(): RequiredFunctions {
         return {
-            environ_sizes_get: this.environ_sizes_get,
-            environ_get: this.environ_get,
-            args_sizes_get: this.args_sizes_get,
-            args_get: this.args_get,
-            fd_prestat_get: this.fd_prestat_get,
-            fd_prestat_dir_name: this.fd_prestat_dir_name,
-            fd_filestat_get: this.fd_filestat_get,
-            fd_fdstat_get: this.fd_fdstat_get,
-            fd_read: this.fd_read,
-            fd_write: this.fd_write,
-            fd_close: this.fd_close,
-            fd_seek: this.fd_seek,
-            poll_oneoff: this.poll_oneoff,
-            proc_exit: this.proc_exit,
-            path_open: this.path_open,
-            clock_time_get: this.clock_time_get,
+            environ_sizes_get: this.environ_sizes_get.bind(this),
+            environ_get: this.environ_get.bind(this),
+            args_sizes_get: this.args_sizes_get.bind(this),
+            args_get: this.args_get.bind(this),
+            fd_prestat_get: this.fd_prestat_get.bind(this),
+            fd_prestat_dir_name: this.fd_prestat_dir_name.bind(this),
+            fd_filestat_get: this.fd_filestat_get.bind(this),
+            fd_fdstat_get: this.fd_fdstat_get.bind(this),
+            fd_read: this.fd_read.bind(this),
+            fd_write: this.fd_write.bind(this),
+            fd_close: this.fd_close.bind(this),
+            fd_seek: this.fd_seek.bind(this),
+            poll_oneoff: this.poll_oneoff.bind(this),
+            proc_exit: this.proc_exit.bind(this),
+            path_open: this.path_open.bind(this),
+            clock_time_get: this.clock_time_get.bind(this),
         }
     }
 }

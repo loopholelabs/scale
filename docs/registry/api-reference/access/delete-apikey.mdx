@@ -1,0 +1,7 @@
+---
+title: Delete API Key
+openapi: "DELETE /access/apikey/{id}"
+---
+Deletes an API Key given its `ID`. The `ID` of an API Key can be retrieved using the
+[Get API Key](/registry/api-reference/access/get-apikey) endpoint. If the user's session is
+tied to an organization, the API Key must be for that organization.

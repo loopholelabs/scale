@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import {DisabledWASI} from "./wasi";
+import { DisabledWASI } from "./wasi";
 
 export class Cache {
   private instance: undefined | WebAssembly.Instance;
@@ -23,13 +23,13 @@ export class Cache {
 
   async Initialize(m: WebAssembly.Module) {
     const wasi = new DisabledWASI();
-    this.instance = await WebAssembly.instantiate(m, {
+    const importsConfig = {
       wasi_snapshot_preview1: wasi.GetImports(),
       env: {
         next: this.next.bind(this),
       },
-    });
-
+    }
+    this.instance = await WebAssembly.instantiate(m, importsConfig);
     wasi.SetInstance(this.instance);
   }
 

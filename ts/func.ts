@@ -15,22 +15,22 @@
 */
 
 import { v4 as uuidv4 } from 'uuid';
-import { ScaleFunc } from "@loopholelabs/scalefile";
 import { Signature } from "@loopholelabs/scale-signature";
 
 import { Instance } from "./instance";
 import { Pool } from "./pool";
+import {ScaleFunc} from "@loopholelabs/scalefile";
 
 export class Func<T extends Signature> {
-  private scalefn: ScaleFunc;
+  public scaleFunc: ScaleFunc;
   public wasmModule: WebAssembly.Module;
   public next: undefined | Func<T>;
   public id: string;
 
   public modulePool: undefined | Pool<T>;
 
-  constructor(scalefn: ScaleFunc, wasmModule: WebAssembly.Module) {
-    this.scalefn = scalefn;
+  constructor(scaleFunc: ScaleFunc, wasmModule: WebAssembly.Module) {
+    this.scaleFunc = scaleFunc;
     this.wasmModule = wasmModule;
     this.id = uuidv4();
   }

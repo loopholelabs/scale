@@ -56,7 +56,7 @@ func TestPulldownCache(t *testing.T) {
 	err = st.Put(function, tag, DefaultOrganization, hash, sf)
 	require.NoError(t, err)
 
-	newsf, err := New(function, tag, WithCacheDirectory(tempDir), WithPullPolicy(NeverPullPolicy))
+	newsf, err := Download(function, tag, WithCacheDirectory(tempDir), WithPullPolicy(NeverPullPolicy))
 
 	require.NoError(t, err)
 
@@ -74,7 +74,7 @@ func TestRegistryDownload(t *testing.T) {
 	if apiKey == "" {
 		t.Skip("Skipping test, SCALE_API_KEY environment variable not set")
 	}
-	sf, err := New("TestRegistryDownload", "1",
+	sf, err := Download("TestRegistryDownload", "1",
 		WithAPIKey(apiKey),
 		WithBaseURL(testingAPIBaseURl),
 		WithOrganization("alex"),

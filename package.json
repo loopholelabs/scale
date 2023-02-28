@@ -1,14 +1,12 @@
 {
   "name": "@loopholelabs/scale",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "Scale is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.",
   "source": "ts/index.ts",
-  "main": "main.js",
-  "module": "module.js",
   "types": "types.d.ts",
   "license": "apache-2.0",
   "scripts": {
-    "build": "openapi -i https://api.scale.sh/v1/swagger.json -o ts/client -c axios && rm -rf dist && tsc --outDir dist && cp package.json dist",
+    "build": "openapi -i https://api.scale.sh/v1/swagger.json -o ts/client && rm -rf dist && tsc --outDir dist && cp package.json dist",
     "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache && rm -rf testDirectory"
   },
   "dependencies": {

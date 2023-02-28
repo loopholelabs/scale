@@ -7,3 +7,4 @@ coverage
 .parcel-cache
 *target
 Cargo.lock
+.DS_Store

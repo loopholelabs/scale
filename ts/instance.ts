@@ -17,7 +17,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Signature, RuntimeContext } from "@loopholelabs/scale-signature";
 import { Cache } from './cache';
-import { Runtime, NextFn } from "./runtime";
+import { NextFn, Runtime } from "./runtime";
 
 const ErrNoCompiledFunctions = new Error("no compiled functions found in runtime");
 const ErrNoCacheID = new Error("no cache id found in instance");
