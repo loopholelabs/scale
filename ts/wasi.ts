@@ -66,6 +66,10 @@ export class DisabledWASI {
 
     public SetInstance(instance: WebAssembly.Instance) {
         this.exports = instance.exports;
+        const start = (this.exports._start as Function | undefined);
+        if (start) {
+            start();
+        }
     }
 
     public environ_sizes_get(environCount: number, environBufSize: number): number {
@@ -111,38 +115,7 @@ export class DisabledWASI {
     }
 
     public fd_write(fd: number, iovs: number, iovsLen: number, nwritten: number): number {
-      let view = this.getDataView();
-      let memData = new Uint8Array(view.buffer);
-
-      // Get the io vectors
-      let bytesWritten = 0;
-      let iovs_ptr = iovs;
-  
-      for (let vec = 0;vec < iovsLen; vec ++) {
-        const v = memData.slice(iovs_ptr, iovs_ptr + 8);
-        const dv = new DataView(v.buffer);
-        const ptr = dv.getUint32(0, true);
-        const len = dv.getUint32(4, true);
-        iovs_ptr += 8;
-        bytesWritten += len;
-  
-        const b = memData.slice(ptr, ptr + len);
-        const dec = new TextDecoder();
-        //const hex = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
-  
-        // TODO: Global config for this...
-
-        // NOTE: The console.log/error functions add a newline at the end.
-        if (fd == 1) {
-          console.log(dec.decode(b));
-        } else if (fd == 2) {
-          console.error(dec.decode(b));
-        }
-      }
-  
-      view.setUint32(nwritten, bytesWritten, true);
-      return DisabledWASI.ESUCCESS;
-      //return DisabledWASI.EBADF;
+        return DisabledWASI.EBADF;
     }
 
     public fd_close(fd: number): number {
