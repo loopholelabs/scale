@@ -1,6 +1,5 @@
 {
-  "include": ["ts/**/*.ts"],
-  "exclude": ["node_modules", "ts/**/*.test.ts", "ts/tests", "ts/compile"],
+  "include": ["src/**/*.ts"],
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
@@ -9,11 +8,9 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "sourceMap": true,
-    "declaration": true,
     "paths": {
-      "scale": ["./ts"]
+      "scale-js": ["."]
     },
     "types": ["node", "jest"]
-  },
+  }
 }

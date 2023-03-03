@@ -6,6 +6,5 @@
   "testEnvironment": "node",
   "testMatch": [
     "**/*.test.ts"
-  ],
-  "testPathIgnorePatterns": ["ts/compile"]
+  ]
 }
