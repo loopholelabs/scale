@@ -73,7 +73,7 @@ export class TextDecoder {
     if (a instanceof Uint8Array) {
       return this.decodeUint8Array(a);
     } else {
-      console.log("TextDecoder called with " + typeof(a), a)
+      console.log("TODO: TextDecoder called with " + typeof(a), a)
       return "";
     }
   }
