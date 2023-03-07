@@ -20,7 +20,7 @@ import { TextEncoder, TextDecoder } from "./text";
 (global as any).TextEncoder = TextEncoder;
 (global as any).TextDecoder = TextDecoder;
 
-import { Resize, GuestContext, HttpContext, HttpRequest, HttpResponse, HttpStringList } from "@loopholelabs/scale-signature-http";
+import { Resize, GuestContext } from "@loopholelabs/scale-signature-http";
 
 export type ScaleFunction = (a: GuestContext) => GuestContext;
 
@@ -30,10 +30,7 @@ function mainFunction() {
 }
 
 // Create a new dummy GuestContext.
-var ctx = new GuestContext(new HttpContext(
-  new HttpRequest("GET", "http://example.com", BigInt(0), "http", "1.2.3.4", new Uint8Array(), new Map<string, HttpStringList>),
-  new HttpResponse(200, new Uint8Array(), new Map<string, HttpStringList>)
-));
+var ctx = new GuestContext();
 
 // Our own run function wrapper
 function runFunction(): bigint {
