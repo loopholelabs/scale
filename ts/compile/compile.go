@@ -21,6 +21,7 @@ import (
 	"text/template"
 
 	"github.com/loopholelabs/scale/ts/compile/templates"
+	"github.com/loopholelabs/scalefile"
 )
 
 type Generator struct {
@@ -32,6 +33,14 @@ func NewGenerator() *Generator {
 	return &Generator{
 		template: templ,
 	}
+}
+
+func (g *Generator) GeneratePackage(writer io.Writer, dependencies []*scalefile.Dependency, signature string, signaturePath string) error {
+	return g.template.ExecuteTemplate(writer, "package.json.templ", map[string]interface{}{
+		"dependencies":   dependencies,
+		"signature":      signature,
+		"signature_path": signaturePath,
+	})
 }
 
 func (g *Generator) GenerateRunner(writer io.Writer, path string, signature string) error {

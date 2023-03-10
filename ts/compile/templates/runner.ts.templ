@@ -11,8 +11,6 @@
 	limitations under the License.
 */
 
-declare var scale: ScaleFunction;     // This should be defined in the global scope.
-
 // First lets setup TextEncode and TextDecoder to ensure they're available for polyglot.
 export class TextEncoder {
   public encoding = "utf-8";
@@ -121,10 +119,10 @@ export class TextDecoder {
 
 import { Resize, GuestContext } from "@loopholelabs/{{ .signature }}";
 
+import { scale } from "./scale";
+
 // Create a new dummy GuestContext.
 var ctx = new GuestContext();
-
-export type ScaleFunction = (a: GuestContext) => GuestContext;
 
 // Any global init can be done here
 function mainFunction() {
