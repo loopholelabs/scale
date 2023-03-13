@@ -13,6 +13,9 @@ install:
 cli: core
 		cd crates/cli && cargo build --release && cd -
 
+cli-mac: core
+		cd crates/cli && cargo build --release --target x86_64-apple-darwin && cd -
+
 core:
 		cd crates/core \
 				&& cargo build --release --target=wasm32-wasi \
