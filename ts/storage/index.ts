@@ -1,4 +1,5 @@
-import {ScaleFunc} from "@loopholelabs/scalefile"
+import { ScaleFunc, ValidString } from "@loopholelabs/scalefile/scalefunc"
+import { Read, Write } from "@loopholelabs/scalefile/scalefunc/helpers"
 import * as fs from "fs";
 import * as os from "os";
 import * as glob from "glob";
@@ -26,15 +27,15 @@ export class Storage{
     }
 
     public Get(name: string, tag: string, org: string, hash: string | undefined): (Entry | undefined) {
-        if (name.length === 0 || !ScaleFunc.ValidString(name)) {
+        if (name.length === 0 || !ValidString(name)) {
             throw ErrInvalidName;
         }
 
-        if (tag.length === 0 || !ScaleFunc.ValidString(tag)) {
+        if (tag.length === 0 || !ValidString(tag)) {
             throw ErrInvalidTag;
         }
 
-        if (org.length === 0 || !ScaleFunc.ValidString(org)) {
+        if (org.length === 0 || !ValidString(org)) {
             throw ErrInvalidOrg;
         }
 
@@ -44,7 +45,7 @@ export class Storage{
             try {
                 return {
                     hash: hash,
-                    scaleFunc: ScaleFunc.Read(p),
+                    scaleFunc: Read(p),
                     organization: org,
                 };
             } catch (error: any) {
@@ -67,7 +68,7 @@ export class Storage{
         }
 
         return {
-            scaleFunc: ScaleFunc.Read(matches[0]),
+            scaleFunc: Read(matches[0]),
             hash: path.basename(matches[0]).split("_")[3],
             organization: path.basename(matches[0]).split("_")[0],
         };
@@ -76,7 +77,7 @@ export class Storage{
     public Put(name: string, tag: string, org: string, hash: string, sf: ScaleFunc): void {
         const f = this.functionName(name, tag, org, hash);
         const p = this.fullPath(f);
-        ScaleFunc.Write(p, sf);
+        Write(p, sf);
     }
 
     public Delete(name: string, tag: string, org: string, hash: string): void {

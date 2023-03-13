@@ -10,8 +10,7 @@ import { request as __request } from '../core/request';
 export class UserinfoService {
 
     /**
-     * UserInfo checks if a user is logged in and returns their info
-     * UserInfo checks if a user is logged in and returns their info
+     * Checks if a user is logged in and returns the user's information.
      * @returns models_UserInfoResponse OK
      * @throws ApiError
      */

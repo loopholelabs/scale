@@ -11,8 +11,7 @@ import { request as __request } from '../core/request';
 export class FunctionService {
 
     /**
-     * ListFunctionsDefaultOrganization lists all the public functions in the default organization.
-     * ListFunctionsDefaultOrganization lists all the public functions in the default organization.
+     * Lists all the functions in the default organization.
      * @returns models_GetFunctionResponse OK
      * @throws ApiError
      */
@@ -30,8 +29,7 @@ export class FunctionService {
     }
 
     /**
-     * UploadFunction uploads a function. If the session is scoped to an organization, the function will be uploaded to that organization.
-     * UploadFunction uploads a function. If the session is scoped to an organization, the function will be uploaded to that organization.
+     * Uploads a function to the Scale Registry. If the session is scoped to an organization, the function will be uploaded to that `organization`, otherwise the function will be uploaded to the user's default `organization`.
      * @param _function function
      * @param _public public
      * @param organization organization
@@ -62,8 +60,7 @@ export class FunctionService {
     }
 
     /**
-     * GetFunctionDefaultOrganization retrieves a public function from the default organization.
-     * GetFunctionDefaultOrganization retrieves a public function from the default organization.
+     * Retrieves a function from the default organization given its `name` and `tag`. If the session is scoped to the same `organization`, functions that are not public will be returned, otherwise only public functions will be returned.
      * @param name name
      * @param tag tag
      * @returns models_GetFunctionResponse OK
@@ -90,8 +87,7 @@ export class FunctionService {
     }
 
     /**
-     * ListFunctions lists all the functions in the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
-     * ListFunction lists all the functions in the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
+     * Lists all the functions in the given `organization`. If the session is scoped to the same `organization`, functions that are not public will be returned, otherwise only public functions from the `organization` will be returned.
      * @param organization organization
      * @returns models_GetFunctionResponse OK
      * @throws ApiError
@@ -115,8 +111,7 @@ export class FunctionService {
     }
 
     /**
-     * GetFunction retrieves a function from the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
-     * GetFunction retrieves a function from the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
+     * Retrieves a function from the given `organization` given its `name` and `tag`. If the session is scoped to the same `organization`, functions that are not public will be returned, otherwise only public functions will be returned.
      * @param organization organization
      * @param name name
      * @param tag tag
@@ -146,8 +141,7 @@ export class FunctionService {
     }
 
     /**
-     * DeleteFunction deletes a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
-     * DeleteFunction retrieves a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
+     * Deletes a function from the given `organization` given its `name` and `tag`. If the session is scoped to an organization it must be the same as the organization of the function.
      * @param organization organization
      * @param name name
      * @param tag tag
