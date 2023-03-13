@@ -22,6 +22,8 @@ import {Default, Storage} from "../storage";
 import {models_GetFunctionResponse, OpenAPI, RegistryService} from "../client";
 import https from "https";
 
+const Buffer = require("buffer/").Buffer;
+
 import {
   ComputeSHA256 as BrowserComputeSHA256,
   DefaultConfig,
