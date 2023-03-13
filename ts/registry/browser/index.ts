@@ -23,6 +23,8 @@ if(global.crypto === undefined || global.crypto.subtle === undefined) {
 
 import { OpenAPI, RegistryService } from "../../client";
 
+const Buffer = require("buffer/").Buffer;
+
 export type PullPolicy = string;
 export const AlwaysPullPolicy: PullPolicy = "always";
 export const IfNotPresentPullPolicy: PullPolicy = "if-not-present";

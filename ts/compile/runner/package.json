@@ -34,9 +34,9 @@
   },
   "dependencies": {
     "@loopholelabs/polyglot-ts": "^0.4.0",
-    "@loopholelabs/scale-signature-http": "^0.3.6",
+    "@loopholelabs/scale-signature-http": "^0.3.7",
     "@loopholelabs/scale": "^0.3.13",
-    "@loopholelabs/scalefile": "^0.1.8"
+    "@loopholelabs/scalefile": "^0.1.9"
   },
   "devDependencies": {
     "@parcel/packager-ts": "^2.7.0",
