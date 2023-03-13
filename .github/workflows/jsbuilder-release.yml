@@ -1,0 +1,83 @@
+name: release-all-JSBuilder
+
+on: [pull_request]
+
+#on:
+#  release:
+#    types: [published]
+#  workflow_dispatch:
+
+jobs:
+#  winbuild:
+#    name: Windows Build
+#    runs-on: windows-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - arch: x64
+#            sys: clang64
+#            env: clang-x86_64
+#          - arch: x86
+#            sys: clang32
+#            env: clang-i686
+#    steps:
+#      - uses: msys2/setup-msys2@v2
+#        with:
+#          install: >-
+#            base-devel
+#            git
+#            mingw-w64-${{ matrix.env }}-ccache
+#            mingw-w64-${{ matrix.env }}-cmake
+#            mingw-w64-${{ matrix.env }}-ninja
+#            mingw-w64-${{ matrix.env }}-toolchain
+#          msystem: ${{ matrix.sys }}
+#          update: true
+#          release: false
+#      - name: Install rust
+#        uses: actions-rs/toolchain@v1
+#        with:
+#            toolchain: nightly
+#            target: wasm32-wasi
+#            override: true
+#            components: rustfmt, clippy
+#      - name: Install wasi
+#        working-directory: ts/compile/builder
+#        run: ./install-wasi-sdk.sh
+#      - name: Build jsbuilder
+#        working-directory: ts/compile/builder
+#        run: make
+
+  release-all:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+#          - os: ubuntu-latest
+          - os: macos-latest
+    steps:
+    - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+      uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
+      if: matrix.config.os == 'windows-latest'
+      with:
+        version: "11.0"
+        directory: ${{ runner.temp }}/llvm
+    - name: Set LIBCLANG_PATH
+      run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+      if: matrix.config.os == 'windows-latest'
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: nightly
+          target: wasm32-wasi
+          override: true
+          components: rustfmt, clippy
+    - name: Install wasi
+      working-directory: ts/compile/builder
+      run: ./install-wasi-sdk.sh
+    - name: Build jsbuilder
+      working-directory: ts/compile/builder
+      run: make
