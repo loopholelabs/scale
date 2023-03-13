@@ -17,7 +17,7 @@
 import { TextEncoder, TextDecoder } from "util";
 import * as fs from "fs";
 
-import {ScaleFunc, V1Alpha, Go, Rust} from "@loopholelabs/scalefile";
+import {ScaleFunc, V1Alpha, Go, Rust} from "@loopholelabs/scalefile/scalefunc";
 
 import * as signature from "./tests/signature" ;
 import * as httpSignature from "@loopholelabs/scale-signature-http";

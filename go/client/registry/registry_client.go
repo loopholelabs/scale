@@ -46,9 +46,7 @@ type ClientService interface {
 }
 
 /*
-	DeleteRegistryFunctionOrganizationNameTag DeleteFunction deletes a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
-
-DeleteFunction retrieves a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
+DeleteRegistryFunctionOrganizationNameTag Deletes a function from the given `organization` given its `name` and `tag`. If the session is scoped to an organization it must be the same as the organization of the function.
 */
 func (a *Client) DeleteRegistryFunctionOrganizationNameTag(params *DeleteRegistryFunctionOrganizationNameTagParams, opts ...ClientOption) (*DeleteRegistryFunctionOrganizationNameTagOK, error) {
 	// TODO: Validate the params before sending
@@ -86,9 +84,7 @@ func (a *Client) DeleteRegistryFunctionOrganizationNameTag(params *DeleteRegistr
 }
 
 /*
-GetRegistryFunction lists functions default organization lists all the public functions in the default organization
-
-ListFunctionsDefaultOrganization lists all the public functions in the default organization.
+GetRegistryFunction Lists all the functions in the default organization.
 */
 func (a *Client) GetRegistryFunction(params *GetRegistryFunctionParams, opts ...ClientOption) (*GetRegistryFunctionOK, error) {
 	// TODO: Validate the params before sending
@@ -126,9 +122,7 @@ func (a *Client) GetRegistryFunction(params *GetRegistryFunctionParams, opts ...
 }
 
 /*
-GetRegistryFunctionNameTag gets function default organization retrieves a public function from the default organization
-
-GetFunctionDefaultOrganization retrieves a public function from the default organization.
+GetRegistryFunctionNameTag Retrieves a function from the default organization given its `name` and `tag`. If the session is scoped to the same `organization`, functions that are not public will be returned, otherwise only public functions will be returned.
 */
 func (a *Client) GetRegistryFunctionNameTag(params *GetRegistryFunctionNameTagParams, opts ...ClientOption) (*GetRegistryFunctionNameTagOK, error) {
 	// TODO: Validate the params before sending
@@ -166,9 +160,7 @@ func (a *Client) GetRegistryFunctionNameTag(params *GetRegistryFunctionNameTagPa
 }
 
 /*
-GetRegistryFunctionOrganization lists functions lists all the functions in the given organization if the session is scoped to the same organization functions that are not public will be returned otherwise only public functions will be returned
-
-ListFunction lists all the functions in the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
+GetRegistryFunctionOrganization Lists all the functions in the given `organization`. If the session is scoped to the same `organization`, functions that are not public will be returned, otherwise only public functions from the `organization` will be returned.
 */
 func (a *Client) GetRegistryFunctionOrganization(params *GetRegistryFunctionOrganizationParams, opts ...ClientOption) (*GetRegistryFunctionOrganizationOK, error) {
 	// TODO: Validate the params before sending
@@ -206,9 +198,7 @@ func (a *Client) GetRegistryFunctionOrganization(params *GetRegistryFunctionOrga
 }
 
 /*
-	GetRegistryFunctionOrganizationNameTag GetFunction retrieves a function from the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
-
-GetFunction retrieves a function from the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
+GetRegistryFunctionOrganizationNameTag Retrieves a function from the given `organization` given its `name` and `tag`. If the session is scoped to the same `organization`, functions that are not public will be returned, otherwise only public functions will be returned.
 */
 func (a *Client) GetRegistryFunctionOrganizationNameTag(params *GetRegistryFunctionOrganizationNameTagParams, opts ...ClientOption) (*GetRegistryFunctionOrganizationNameTagOK, error) {
 	// TODO: Validate the params before sending
@@ -246,9 +236,7 @@ func (a *Client) GetRegistryFunctionOrganizationNameTag(params *GetRegistryFunct
 }
 
 /*
-PostRegistryFunction uploads function uploads a function if the session is scoped to an organization the function will be uploaded to that organization
-
-UploadFunction uploads a function. If the session is scoped to an organization, the function will be uploaded to that organization.
+PostRegistryFunction Uploads a function to the Scale Registry. If the session is scoped to an organization, the function will be uploaded to that `organization`, otherwise the function will be uploaded to the user's default `organization`.
 */
 func (a *Client) PostRegistryFunction(params *PostRegistryFunctionParams, opts ...ClientOption) (*PostRegistryFunctionOK, error) {
 	// TODO: Validate the params before sending

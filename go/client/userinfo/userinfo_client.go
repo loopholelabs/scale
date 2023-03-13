@@ -36,9 +36,7 @@ type ClientService interface {
 }
 
 /*
-PostUserinfo users info checks if a user is logged in and returns their info
-
-UserInfo checks if a user is logged in and returns their info
+PostUserinfo Checks if a user is logged in and returns the user's information.
 */
 func (a *Client) PostUserinfo(params *PostUserinfoParams, opts ...ClientOption) (*PostUserinfoOK, error) {
 	// TODO: Validate the params before sending
