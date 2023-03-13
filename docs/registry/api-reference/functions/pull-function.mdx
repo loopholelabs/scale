@@ -2,10 +2,5 @@
 title: Pull a Function
 openapi: "GET /registry/function/{organization}/{name}/{tag}"
 ---
-Retrieves a function from the given `organization` given its `name` and `tag`. If the
-session is scoped to the same `organization`, functions that are not
-public will be returned, otherwise only public functions will be
-returned.
-
 The actual content of the function will not be returned via this response, and instead the `presigned_url` field
 of the response will contain a URL that can be used to retrieve the function's content via a `GET` request.
