@@ -6,6 +6,7 @@ export { CancelablePromise, CancelError } from './core/CancelablePromise';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
+export type { models_CreateAPIKeyRequest } from './models/models_CreateAPIKeyRequest';
 export type { models_CreateAPIKeyResponse } from './models/models_CreateAPIKeyResponse';
 export type { models_CreateFunctionResponse } from './models/models_CreateFunctionResponse';
 export type { models_GetAPIKeyResponse } from './models/models_GetAPIKeyResponse';

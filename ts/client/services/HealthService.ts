@@ -10,8 +10,7 @@ import { request as __request } from '../core/request';
 export class HealthService {
 
     /**
-     * Health returns the status of the various services
-     * Health returns the status of the various services
+     * Returns the health and status of the various services that make up the API.
      * @returns models_GetHealthResponse OK
      * @throws ApiError
      */

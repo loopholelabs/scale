@@ -1,0 +1,183 @@
+---
+title: Overview
+---
+
+Scale Functions currently support using [TypeScript](https://www.typescriptlang.org/) and
+[JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) as the [Host](#host-support) language.
+
+This means that you can run Functions written in any supported language inside a TypeScript or JavaScript application ([Host Support](#host-support)).
+
+## Host Support
+
+To use a compiled Scale Function (written in any supported language) inside a TypeScript or JavaScript application, there are 3 steps:
+1. Import the Scale Function(s) into the TS/JS application by embedding them (using Webpack) or by using the Registry
+2. Create a new Scale Runtime and pass in the Scale Function(s)
+3. Call the `Run` method on the Scale Runtime with your request
+
+### Importing Scale Functions
+
+Scale Functions can be imported into a TS/JS application in two ways:
+- [Embedding using Webpack](#embedding-scale-functions)
+- [Using the Registry](#using-the-registry)
+
+#### Embedding Scale Functions
+
+Scale Functions can be embedded into a TS/JS application by using our [Webpack](https://webpack.js.org/) loader, after it has been
+exported using the `scale fn export` command (see [Exporting Scale Functions](/cli/exporting)).
+
+<Tabs>
+    <Tab title="TypeScript">
+        ```typescript
+        webpack(config: any, options: any) {
+            config.module.rules.push({
+                test: /\.scale$/,
+                use: [ { loader: '@loopholelabs/scalefile/webpack' }],
+            });
+            return config
+        }
+        ```
+    </Tab>
+    <Tab title="JavaScript">
+        ```javascript
+        webpack(config, options) {
+            config.module.rules.push({
+                test: /\.scale$/,
+                use: [ { loader: '@loopholelabs/scalefile/webpack' }],
+            });
+            return config
+        }
+        ```
+    </Tab>
+</Tabs>
+
+<Note>
+    The Webpack loader will automatically read and decode the exported `.scale` file, and return the decoded Scale Function as a
+    `scale.Func` object.
+</Note>
+
+Once the Webpack loader has been configured, you can import the Scale Function into your TS/JS application by using the
+`import` statement.
+
+```javascript
+import sf from "<path to exported function>"
+```
+
+#### Using the Registry
+
+Scale Functions can also be imported into a TS/JS application by using the Registry.
+
+This has the advantage of allowing you import the function at runtime, rather than at compile time - however it does require your function
+to be available in the [Scale Registry](/registry/overview). Functions will also automatically cached locally based on their
+tags and hashes, so subsequent calls to `Download` will be much faster.
+
+<Info>
+    If you'd like use the registry from a browser environment, you can use the `@loopholelabs/scale/registry/browser` package
+    instead of `@loopholelabs/scale/registry`.
+</Info>
+
+```javascript
+import {
+    Download,
+    WithOrganization,
+    WithAPIKey
+} from '@loopholelabs/scale/registry'
+
+const sf = Download(
+            "<function name>",
+            "<function tag>",
+            WithOrganization("<organization name>"),
+            WithAPIKey("<api key>")
+        );
+```
+
+<Note>
+    If your function is an official Scale Function you can omit the `WithOrganization` option, and if your function
+    is marked as public you can safely omit the `WithAPIKey` option.
+
+    All officially published scale functions are public. If you're interested in publishing your own functions, please join
+    the `#scale` channel on our [discord](https://loopholelabs.io/discord).
+</Note>
+
+### Creating a Scale Runtime
+
+Once you've imported your Scale Function(s) into your TS/JS application, you can create a new instance of the Scale Runtime
+and pass in the Scale Function(s).
+
+```javascript
+import { New } from "@loopholelabs/scale";
+
+const r = New([sf]);
+```
+
+### Running a Scale Function
+
+Once you've created the Scale Runtime, you can call the `Instance` method on it to get a new runtime instance.
+The `Context` method of the `Instance` can then be used to set the request body, and the `Run` method can be used to
+run the Scale Function (or Functions).
+
+```javascript
+const i = r.Instance(null);
+```
+
+It's important to note that an `Instance` can be reused multiple times, but it's not thread-safe. If you need to run
+multiple instances of a Scale Function concurrently, you'll need to create a new `Instance` for each one.
+
+Instances are heavily optimized and will recycle themselves automatically when they're no longer in use. This means that
+creating instances are very cheap and you can create as many as you need as often as you need.
+
+<Info>
+    The `Instance` method itself **is** thread-safe and can be called concurrently.
+</Info>
+
+### Putting it all Together
+
+Here's a complete example of a TS/JS application that imports a Scale Function, creates a new Scale Runtime, and runs
+it.
+
+<Tabs>
+    <Tab title="Embedding the Function">
+        ```javascript
+        import { New } from "@loopholelabs/scale";
+        import sf from "./hello-world.scale";
+
+        const r = New([sf]);
+
+        const i = r.Instance(null);
+        i.Context().Request.Body = "Hello, World!";
+
+        i.Run()
+        console.log(i.Context().Response.Body);
+        ```
+    </Tab>
+    <Tab title="Using the Scale Registry">
+        ```javascript
+        import {
+            Download,
+            WithOrganization,
+            WithAPIKey
+        } from '@loopholelabs/scale/registry'
+
+        import { New } from "@loopholelabs/scale";
+
+        const sf = Download(
+            "<function name>",
+            "<function tag>",
+            WithOrganization("<organization name>"),
+            WithAPIKey("<api key>")
+        );
+
+        const r = New([sf]);
+
+        const i = r.Instance(null);
+        i.Context().Request.Body = "Hello, World!";
+
+        i.Run()
+        console.log(i.Context().Response.Body);
+        ```
+    </Tab>
+</Tabs>
+
+## What's Next?
+
+Now that you've learned how to use Scale Functions inside your TS/JS application, you should check out our pre-made
+adapters for popular frameworks and libraries, such as [NextJS](/languages/javascript-typescript/adapters/nextjs) and [ExpressJS](/languages/javascript-typescript/adapters/expressjs).

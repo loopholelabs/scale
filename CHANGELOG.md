@@ -7,6 +7,31 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.14] - 2023-03-12
+
+### Fixes
+
+- Fix a series of bugs in the JS Compiler that were introduced in `v0.3.13`
+
+### Dependencies
+
+- Bumping `scalefile` to `v0.1.9`
+- Bumping `scale-signature` to `v0.2.11`
+- Bumping `scale-signature-http` to `v0.3.7`
+
+## [v0.3.13] - 2023-03-12
+
+### Changes
+
+- Updating the `typescript` and `golang` API clients from the latest scale API
+- Removing the `webpack` loader (moved to the `scalefile` package)
+
+### Dependencies
+
+- Bumping `scalefile` to `v0.1.8`
+- Bumping `scale-signature` to `v0.2.10`
+- Bumping `scale-signature-http` to `v0.3.6`
+
 ## [v0.3.12] - 2023-02-28
 
 ### Features
@@ -173,7 +198,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.12...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.14...HEAD
+[v0.3.14]: https://github.com/loopholelabs/scale/compare/v0.3.14
+[v0.3.13]: https://github.com/loopholelabs/scale/compare/v0.3.13
 [v0.3.12]: https://github.com/loopholelabs/scale/compare/v0.3.12
 [v0.3.11]: https://github.com/loopholelabs/scale/compare/v0.3.11
 [v0.3.10]: https://github.com/loopholelabs/scale/compare/v0.3.10

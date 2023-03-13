@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-import { ScaleFunc } from "@loopholelabs/scalefile"
+import { ScaleFunc } from "@loopholelabs/scalefile/scalefunc"
 
 let crypto = global.crypto;
 if(global.crypto === undefined || global.crypto.subtle === undefined) {
@@ -22,6 +22,8 @@ if(global.crypto === undefined || global.crypto.subtle === undefined) {
 }
 
 import { OpenAPI, RegistryService } from "../../client";
+
+const Buffer = require("buffer/").Buffer;
 
 export type PullPolicy = string;
 export const AlwaysPullPolicy: PullPolicy = "always";

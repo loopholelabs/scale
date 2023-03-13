@@ -14,13 +14,15 @@
 	limitations under the License.
 */
 
-import {ScaleFunc} from "@loopholelabs/scalefile"
+import {ScaleFunc} from "@loopholelabs/scalefile/scalefunc"
 import {sha256} from "js-sha256";
 import {webcrypto as crypto} from "crypto";
 
 import {Default, Storage} from "../storage";
 import {models_GetFunctionResponse, OpenAPI, RegistryService} from "../client";
 import https from "https";
+
+const Buffer = require("buffer/").Buffer;
 
 import {
   ComputeSHA256 as BrowserComputeSHA256,
