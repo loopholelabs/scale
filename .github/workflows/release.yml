@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install target
+        run: rustup target add wasm32-wasi
+
       - name: Install wasi-sdk
         working-directory: ts/compile/builder
         run: make download-wasi-sdk
@@ -28,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: engine
-          path: target/wasm32-wasi/release/jsbuilder_core.wasm
+          path: ts/compile/builder/target/wasm32-wasi/release/jsbuilder_core.wasm
 
   compile_cli:
     name: compile_cli-${{ matrix.name }}
@@ -39,7 +42,7 @@ jobs:
         include:
           - name: linux
             os: ubuntu-20.04 # Use oldest supported non-deprecated version so we link against older glibc version which allows running binary on a wider set of Linux systems
-            path: target/x86_64-unknown-linux-gnu/release/javy
+            path: target/x86_64-unknown-linux-gnu/release/jsbuilder
             asset_name: jsbuilder-x86_64-linux-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             target: x86_64-unknown-linux-gnu
@@ -83,12 +86,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: engine
-          path: target/wasm32-wasi/release/
-
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: provider
-#          path: target/wasm32-wasi/release/
+          path: ts/compile/builder/target/wasm32-wasi/release/
 
       - name: Build CLI ${{ matrix.os }}
         working-directory: ts/compile/builder
@@ -97,7 +95,7 @@ jobs:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
       - name: Archive assets
-        run: gzip -k -f ${{ matrix.path }} && mv ${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
+        run: gzip -k -f ts/compile/builder/${{ matrix.path }} && mv ts/compile/builder/${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
 
       - name: Upload assets to artifacts
         uses: actions/upload-artifact@v3
