@@ -139,7 +139,7 @@
   ],
   "footerSocials": {
     "discord": "https://loopholelabs.io/discord",
-    "github": "https://github.com/loopholelabs/frpc-go"
+    "github": "https://github.com/loopholelabs/scale"
   },
   "classes": {
     "anchors": "group-hover:bg-gradient-to-tr from-[#7c34ff] to-[#fe9195]",
