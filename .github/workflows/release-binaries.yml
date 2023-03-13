@@ -1,4 +1,4 @@
-name: JSBuilder
+name: release-linux-JSBuilder
 
 on:
   release:
