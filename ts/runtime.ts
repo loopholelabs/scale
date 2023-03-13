@@ -15,7 +15,7 @@
 */
 
 import { Signature, NewSignature } from "@loopholelabs/scale-signature";
-import { ScaleFunc } from "@loopholelabs/scalefile";
+import { ScaleFunc } from "@loopholelabs/scalefile/scalefunc";
 import * as httpSignature  from "@loopholelabs/scale-signature-http";
 
 import { Func } from "./func";

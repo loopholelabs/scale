@@ -1,0 +1,65 @@
+{
+  "name": "@loopholelabs/scale-http-examples",
+  "version": "0.1.0",
+  "description": "TypeScript version of the scale functions.",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "default": "dist/browser.html",
+  "targets": {
+    "module_middleware": {
+      "source": "src/modules/middleware/index.html",
+      "context": "browser",
+      "isLibrary": false,
+      "optimize": true,
+      "includeNodeModules": true
+    },
+    "module_endpoint": {
+      "source": "src/modules/endpoint/index.html",
+      "context": "browser",
+      "isLibrary": false,
+      "optimize": true,
+      "includeNodeModules": true
+    },
+    "module_error": {
+      "source": "src/modules/error/index.html",
+      "context": "browser",
+      "isLibrary": false,
+      "optimize": true,
+      "includeNodeModules": true
+    }
+  },
+  "scripts": {
+    "build": "parcel build --log-level verbose",
+    "start": "parcel",
+    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache"
+  },
+  "dependencies": {
+    "@loopholelabs/polyglot-ts": "^0.4.0",
+    "@loopholelabs/scale-signature-http": "^0.2.8",
+    "@loopholelabs/scale-ts": "^0.2.2",
+    "@loopholelabs/scalefile": "^0.1.5"
+  },
+  "devDependencies": {
+    "@parcel/packager-ts": "^2.7.0",
+    "@parcel/transformer-typescript-types": "^2.7.0",
+    "@parcel/validator-typescript": "^2.7.0",
+    "@types/express": "^4.17.14",
+    "@types/fastestsmallesttextencoderdecoder": "^1.0.0",
+    "@types/jest": "^29.2.0",
+    "@types/node": "^18.11.5",
+    "@types/supertest": "^2.0.12",
+    "@types/text-encoding": "^0.0.36",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "events": "^3.3.0",
+    "jest": "^29.2.2",
+    "jest-environment-jsdom": "^29.2.2",
+    "parcel": "^2.7.0",
+    "parcel-reporter-static-files-copy": "^1.4.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "supertest": "^6.3.1",
+    "ts-jest": "^29.0.3",
+    "tty-browserify": "^0.0.1",
+    "typescript": "^4.7.0"
+  }
+}

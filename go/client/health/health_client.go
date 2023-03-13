@@ -36,9 +36,7 @@ type ClientService interface {
 }
 
 /*
-GetHealth healths returns the status of the various services
-
-Health returns the status of the various services
+GetHealth Returns the health and status of the various services that make up the API.
 */
 func (a *Client) GetHealth(params *GetHealthParams, opts ...ClientOption) (*GetHealthOK, error) {
 	// TODO: Validate the params before sending

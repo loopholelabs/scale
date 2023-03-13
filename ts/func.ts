@@ -19,7 +19,7 @@ import { Signature } from "@loopholelabs/scale-signature";
 
 import { Instance } from "./instance";
 import { Pool } from "./pool";
-import {ScaleFunc} from "@loopholelabs/scalefile";
+import {ScaleFunc} from "@loopholelabs/scalefile/scalefunc";
 
 export class Func<T extends Signature> {
   public scaleFunc: ScaleFunc;

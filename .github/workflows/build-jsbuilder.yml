@@ -1,0 +1,42 @@
+name: JSBuilder
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            target: wasm32-wasi
+            override: true
+            components: rustfmt, clippy
+      - name: Install wasi
+        working-directory: ts/compile/builder
+        run: ./install-wasi-sdk.sh
+      - name: Build jsbuilder
+        working-directory: ts/compile/builder
+        run: make
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache the dependency directories
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ hashFiles('*.json') }}
+      - name: Install dependencies with npm
+        working-directory: ts/compile/runner
+        run: npm install --legacy-peer-deps
+      - name: Build wasm modules
+        working-directory: ts/compile/runner
+        run: ./build_test_modules.sh
+      - name: Test with npm
+        working-directory: ts/compile/runner
+        run: npm run test

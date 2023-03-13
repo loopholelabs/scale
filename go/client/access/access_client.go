@@ -30,36 +30,34 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	DeleteAccessApikeyID(params *DeleteAccessApikeyIDParams, opts ...ClientOption) (*DeleteAccessApikeyIDOK, error)
+	DeleteAccessApikeyNameorid(params *DeleteAccessApikeyNameoridParams, opts ...ClientOption) (*DeleteAccessApikeyNameoridOK, error)
 
 	GetAccessApikey(params *GetAccessApikeyParams, opts ...ClientOption) (*GetAccessApikeyOK, error)
 
-	GetAccessApikeyName(params *GetAccessApikeyNameParams, opts ...ClientOption) (*GetAccessApikeyNameOK, error)
+	GetAccessApikeyNameorid(params *GetAccessApikeyNameoridParams, opts ...ClientOption) (*GetAccessApikeyNameoridOK, error)
 
-	PostAccessApikeyName(params *PostAccessApikeyNameParams, opts ...ClientOption) (*PostAccessApikeyNameOK, error)
+	PostAccessApikey(params *PostAccessApikeyParams, opts ...ClientOption) (*PostAccessApikeyOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
 
 /*
-DeleteAccessApikeyID deletes API key deletes an API key given its ID if the user s session is tied to an organization the API key must be for that organization
-
-DeleteAPIKey deletes an API Key given its ID. If the user's session is tied to an organization, the API Key must be for that organization.
+DeleteAccessApikeyNameorid Deletes an API Key given its `name` or `id`. If the user's session is tied to an organization, the API Key must be for that organization.
 */
-func (a *Client) DeleteAccessApikeyID(params *DeleteAccessApikeyIDParams, opts ...ClientOption) (*DeleteAccessApikeyIDOK, error) {
+func (a *Client) DeleteAccessApikeyNameorid(params *DeleteAccessApikeyNameoridParams, opts ...ClientOption) (*DeleteAccessApikeyNameoridOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewDeleteAccessApikeyIDParams()
+		params = NewDeleteAccessApikeyNameoridParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteAccessApikeyID",
+		ID:                 "DeleteAccessApikeyNameorid",
 		Method:             "DELETE",
-		PathPattern:        "/access/apikey/{id}",
+		PathPattern:        "/access/apikey/{nameorid}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &DeleteAccessApikeyIDReader{formats: a.formats},
+		Reader:             &DeleteAccessApikeyNameoridReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -71,20 +69,18 @@ func (a *Client) DeleteAccessApikeyID(params *DeleteAccessApikeyIDParams, opts .
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteAccessApikeyIDOK)
+	success, ok := result.(*DeleteAccessApikeyNameoridOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteAccessApikeyID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for DeleteAccessApikeyNameorid: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-GetAccessApikey lists API key lists all API keys for a user if the user s session is tied to an organization only API keys for that organization will be returned
-
-ListAPIKey lists all API Keys for a user. If the user's session is tied to an organization, only API Keys for that organization will be returned.
+GetAccessApikey Lists all the API Keys for the authenticated user. If the user's session is tied to an organization, only the API Keys for that organization will be returned.
 */
 func (a *Client) GetAccessApikey(params *GetAccessApikeyParams, opts ...ClientOption) (*GetAccessApikeyOK, error) {
 	// TODO: Validate the params before sending
@@ -122,24 +118,22 @@ func (a *Client) GetAccessApikey(params *GetAccessApikeyParams, opts ...ClientOp
 }
 
 /*
-GetAccessApikeyName gets API key gets information about a specific API key given its name if the user s session is tied to an organization the API key must be for that organization
-
-GetAPIKey gets information about a specific API Key given its name. If the user's session is tied to an organization, the API Key must be for that organization.
+GetAccessApikeyNameorid Gets information about a specific API Key given its `name` or `id`. If the user's session is tied to an organization, the API Key must be for that organization.
 */
-func (a *Client) GetAccessApikeyName(params *GetAccessApikeyNameParams, opts ...ClientOption) (*GetAccessApikeyNameOK, error) {
+func (a *Client) GetAccessApikeyNameorid(params *GetAccessApikeyNameoridParams, opts ...ClientOption) (*GetAccessApikeyNameoridOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetAccessApikeyNameParams()
+		params = NewGetAccessApikeyNameoridParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetAccessApikeyName",
+		ID:                 "GetAccessApikeyNameorid",
 		Method:             "GET",
-		PathPattern:        "/access/apikey/{name}",
+		PathPattern:        "/access/apikey/{nameorid}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &GetAccessApikeyNameReader{formats: a.formats},
+		Reader:             &GetAccessApikeyNameoridReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -151,35 +145,33 @@ func (a *Client) GetAccessApikeyName(params *GetAccessApikeyNameParams, opts ...
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetAccessApikeyNameOK)
+	success, ok := result.(*GetAccessApikeyNameoridOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAccessApikeyName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetAccessApikeyNameorid: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-PostAccessApikeyName creates API key creates a new API key with the given name scoped to all the organizations the user is a member of if the user s session is tied to an organization the API key will be scoped to that organization
-
-CreateAPIKey creates a new API Key with the given name scoped to all the organizations the user is a member of. If the user's session is tied to an organization, the API Key will be scoped to that organization.
+PostAccessApikey Creates a new API Key with the given `name` scoped to all the organizations the user is a member or owner of. If the user's session is already tied to an organization, the new API Key will be scoped to that organization.
 */
-func (a *Client) PostAccessApikeyName(params *PostAccessApikeyNameParams, opts ...ClientOption) (*PostAccessApikeyNameOK, error) {
+func (a *Client) PostAccessApikey(params *PostAccessApikeyParams, opts ...ClientOption) (*PostAccessApikeyOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewPostAccessApikeyNameParams()
+		params = NewPostAccessApikeyParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "PostAccessApikeyName",
+		ID:                 "PostAccessApikey",
 		Method:             "POST",
-		PathPattern:        "/access/apikey/{name}",
+		PathPattern:        "/access/apikey",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &PostAccessApikeyNameReader{formats: a.formats},
+		Reader:             &PostAccessApikeyReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -191,13 +183,13 @@ func (a *Client) PostAccessApikeyName(params *PostAccessApikeyNameParams, opts .
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*PostAccessApikeyNameOK)
+	success, ok := result.(*PostAccessApikeyOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAccessApikeyName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for PostAccessApikey: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

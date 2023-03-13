@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-import { ScaleFunc } from "@loopholelabs/scalefile"
+import { ScaleFunc } from "@loopholelabs/scalefile/scalefunc"
 
 let crypto = global.crypto;
 if(global.crypto === undefined || global.crypto.subtle === undefined) {

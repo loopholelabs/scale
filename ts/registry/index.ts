@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-import {ScaleFunc} from "@loopholelabs/scalefile"
+import {ScaleFunc} from "@loopholelabs/scalefile/scalefunc"
 import {sha256} from "js-sha256";
 import {webcrypto as crypto} from "crypto";
 
