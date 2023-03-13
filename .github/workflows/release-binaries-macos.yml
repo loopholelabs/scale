@@ -11,15 +11,15 @@ jobs:
     steps:
 # Setup Rust, use the x86_64-apple-darwin target but the rest can be customized.
       - uses: ATiltedTree/setup-rust@v1
-      with:
-      targets: x86_64-apple-darwin
-      rust-version: nightly # Works both with 'stable' and 'nightly'
+        with:
+          targets: x86_64-apple-darwin
+          rust-version: nightly # Works both with 'stable' and 'nightly'
 
 # Use the v1 of this action
       - uses: mbround18/setup-osxcross@v1
   # This builds executables & sets env variables for rust to consume.
-      with:
-        osx-version: "12.3"
+        with:
+          osx-version: "12.3"
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install rust
