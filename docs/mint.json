@@ -55,22 +55,40 @@
       ]
     },
     {
-      "group": "Adapters",
+      "group": "Languages",
       "pages": [
         {
           "group": "Golang",
           "pages": [
-            "adapters/golang/net-http",
-            "adapters/golang/fasthttp"
+            "languages/golang/overview",
+            {
+              "group": "Adapters",
+              "pages": [
+                "languages/golang/adapters/net-http",
+                "languages/golang/adapters/fasthttp"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Rust",
+          "pages": [
+            "languages/rust/overview"
           ]
         },
         {
           "group": "JavaScript/TypeScript",
             "pages": [
-              "adapters/javascript-typescript/expressjs"
+              "languages/javascript-typescript/overview",
+              {
+                "group": "Adapters",
+                "pages": [
+                  "languages/javascript-typescript/adapters/nextjs",
+                  "languages/javascript-typescript/adapters/expressjs"
+                ]
+              }
             ]
-        },
-        "adapters/nextjs"
+        }
       ]
     },
     {
