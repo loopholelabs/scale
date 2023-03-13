@@ -1,4 +1,4 @@
-name: JSBuilder
+name: release-macos-JSBuilder
 
 on:
   release:
@@ -9,15 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-# Setup Rust, use the x86_64-apple-darwin target but the rest can be customized.
       - uses: ATiltedTree/setup-rust@v1
         with:
           targets: x86_64-apple-darwin
-          rust-version: nightly # Works both with 'stable' and 'nightly'
-
-# Use the v1 of this action
+          rust-version: nightly
       - uses: mbround18/setup-osxcross@v1
-  # This builds executables & sets env variables for rust to consume.
         with:
           osx-version: "12.3"
       - name: Checkout
@@ -25,10 +21,10 @@ jobs:
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
-            target: wasm32-wasi
-            override: true
-            components: rustfmt, clippy
+          toolchain: nightly
+          target: wasm32-wasi
+          override: true
+          components: rustfmt, clippy
       - name: Install wasi
         working-directory: ts/compile/builder
         run: ./install-wasi-sdk.sh
