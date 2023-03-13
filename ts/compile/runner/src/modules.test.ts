@@ -16,8 +16,8 @@
 
 // import {TextEncoder as te2, TextDecoder as td2} from "fastestsmallesttextencoderdecoder";
 
-import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile";
-import { New } from "@loopholelabs/scale-ts";
+import { ScaleFunc, V1Alpha, Go } from "@loopholelabs/scalefile/scalefunc";
+import { New } from "@loopholelabs/scale";
 import * as fs from "fs";
 
 describe("modules", () => {

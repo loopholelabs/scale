@@ -29,8 +29,8 @@ jobs:
       - name: Cache the dependency directories
         uses: actions/cache@v3
         with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ hashFiles('*.json') }}
+          path: ts/compile/runner/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('ts/compile/runner/*.json') }}
       - name: Install dependencies with npm
         working-directory: ts/compile/runner
         run: npm install --legacy-peer-deps
