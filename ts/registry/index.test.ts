@@ -11,7 +11,10 @@ import {
 import {ScaleFunc, V1Alpha, Go} from "@loopholelabs/scalefile/scalefunc";
 import {Storage} from "../storage";
 
+const Buffer = require("buffer/").Buffer;
+
 const testingApiBaseUrl = "https://api.dev.scale.sh/v1"
+
 
 /**
  * @jest-environment node
