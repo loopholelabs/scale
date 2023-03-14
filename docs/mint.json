@@ -125,12 +125,16 @@
     {
       "group": "CLI",
         "pages": [
-          "cli/overview",
+          "cli/installation",
           {
             "group": "Reference",
             "pages": [
               "cli/reference/flags",
-              "cli/reference/help"
+              "cli/reference/help",
+              "cli/reference/completion",
+              "cli/reference/auth",
+              "cli/reference/function",
+              "cli/reference/registry"
             ]
           }
         ]

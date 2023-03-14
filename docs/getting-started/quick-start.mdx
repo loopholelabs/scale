@@ -275,15 +275,46 @@ scale push hello-world:latest --public
 
 <Note>
     The Scale Registry is currently in beta and may be subject to changes in the future. To learn more about the
-    Scale Registry, you can check out the [Registry](/registry/overview) section of the documentation or [join our Discord](https://loopholelabs.com/discord).
+    Scale Registry, you can check out the [Registry](/registry/overview) section of the documentation or join the `#scale`
+    channel in [our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Pulling a Function
+
+Once you've pushed a function to the Scale Registry, you can pull it and use it in your existing services. To pull a function,
+you can run the following command:
+
+```bash
+scale pull <your organization>/hello-world:latest
+```
+
+<Note>
+    When you [pushed the function](#push-the-function) to the Scale Registry, it was pushed to a specific organization.
+    You can find the name of the organization by running the `scale auth status` command.
+
+    If you pushed the function using the `--public` flag, you can pull it without being authenticated with the Scale API.
+</Note>
+
+This will pull the function from the Scale Registry and save it to the `Cache Directory` (which defaults to `~/.config/scale/functions` on Linux and macOS).
+You can also specify a different directory by passing the `--cache-directory` flag:
+
+```bash
+scale pull <your organization>/hello-world:latest --cache-directory /path/to/directory
+```
+
+<Note>
+    The `scale pull` command only pulls the contents of the scale function from the registry if it's not already present.
+    If the function is already present, it will not be overwritten unless the `--force` flag is passed.
 </Note>
 
 ## Next Steps
 
-Now that you've created and pushed your first function, you can check out the [Embedding Functions](/getting-started/embedding)
-guide to learn how to use your function inside your existing services.
+Now that you've created and pushed your first function, you can check out the
+[Importing Scale Functions](/languages/golang/overview#importing-scale-functions) guide for [Golang](/languages/golang/overview#importing-scale-functions) and
+[Typescript/Javascript](/languages/javascript-typescript/overview#importing-scale-functions) to learn how to use your function inside your existing services.
 
-You can also check out our [Adapter Guides](/languages/golang/adapters/net-http) to learn how to integrate your functions with popular frameworks such as [Next.js](/languages/javascript-typescript/adapters/nextjs).
+You can also check out our [Adapter Guides](/languages/golang/adapters/net-http) to learn how to integrate your functions
+with popular frameworks such as [Next.js](/languages/javascript-typescript/adapters/nextjs).
 
 To learn more about how the Scale Registry works, you can check out the [Registry](/registry/overview) section, or you
 can check out the [Signatures](/signatures/overview) section to learn more about how Scale Signatures work.
