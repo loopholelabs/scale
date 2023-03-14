@@ -12,29 +12,9 @@ We’ll be building a simple `Hello World` function using the [HTTP Signature](/
     Language, and the documentation will always have example implementations in both languages.
 </Tip>
 
-## Install the Scale CLI
+<Snippet file="install-scale-cli.mdx" />
 
-The Scale CLI is the primary tool for interacting with Scale Functions and the Scale Registry. It can be easily installed using the following command:
-
-```bash
-curl -fsSL https://dl.scale.sh | sh
-```
-
-<Info>
-    The CLI attempts to install itself to `/usr/local/bin` by default, but you can also specify a different directory by setting the `INSTALL` environment variable like so:
-
-    ```bash
-    curl -fsSL https://dl.scale.sh | INSTALL=./ sh
-    ```
-</Info>
-
-To verify that the CLI was installed correctly, you can run the following command:
-
-```bash
-scale version
-```
-
-For alternative installation methods or to build the CLI from source, please see the [CLI Installation Guide](/cli/install).
+For alternative installation methods or to build the CLI from source, please see the [CLI Installation Guide](/cli/installation).
 
 ## Install the Toolchain for your Guest Language
 

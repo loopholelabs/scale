@@ -1,0 +1,42 @@
+---
+title: Installation
+description: Learn how to install the Scale CLI.
+---
+
+The Scale CLI is a command line interface for interacting with the Scale API and for working with Scale Functions locally.
+It facilitates interfacing with the [Scale Registry](/registry/overview) as well as building, running, and interacting with Scale Functions locally.
+
+The CLI is written in [Golang](https://golang.org/) and is [Open Source](https://github.com/loopholelabs/scale-cli).
+
+<Snippet file="install-scale-cli.mdx"/>
+
+## Building from Source
+
+To build the CLI from source, you will need to have [Go](https://golang.org/) installed. Then, you can clone the
+source code:
+
+```bash
+git clone https://github.com/loopholelabs/scale-cli
+cd scale-cli
+```
+
+<Note>
+    The minimum supported version of [Go](https://golang.org/) for building the Scale CLI is **1.20**.
+</Note>
+
+Building the CLI can be done with the following command:
+
+```bash
+cd cmd
+go build -o scale .
+```
+
+This will create a binary called `scale` in the `cmd` directory. You can then move this binary to a directory in your
+`PATH` to use it.
+
+## Using the Scale CLI
+
+Once you have the Scale CLI installed, you can use it to interact with the Scale API and to build, run, and interact with
+Scale Functions locally.
+
+Check out the [Scale CLI Reference](/cli/reference) for more information on how to use the CLI.

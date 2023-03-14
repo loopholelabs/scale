@@ -125,8 +125,14 @@
     {
       "group": "CLI",
         "pages": [
-            "cli/overview",
-            "cli/install"
+          "cli/overview",
+          {
+            "group": "Reference",
+            "pages": [
+              "cli/reference/flags",
+              "cli/reference/help"
+            ]
+          }
         ]
     },
     {

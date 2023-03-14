@@ -1,5 +1,6 @@
 ---
 title: Overview
+description: An overview of Javascript and Typescript support in Scale Functions
 ---
 
 Scale Functions currently support using [TypeScript](https://www.typescriptlang.org/) and
@@ -151,21 +152,10 @@ it.
     </Tab>
     <Tab title="Using the Scale Registry">
         ```javascript
-        import {
-            Download,
-            WithOrganization,
-            WithAPIKey
-        } from '@loopholelabs/scale/registry'
-
+        import { Download } from '@loopholelabs/scale/registry'
         import { New } from "@loopholelabs/scale";
 
-        const sf = Download(
-            "<function name>",
-            "<function tag>",
-            WithOrganization("<organization name>"),
-            WithAPIKey("<api key>")
-        );
-
+        const sf = Download("hello-world", "latest");
         const r = New([sf]);
 
         const i = r.Instance(null);

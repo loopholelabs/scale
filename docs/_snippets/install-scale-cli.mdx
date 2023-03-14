@@ -1,0 +1,21 @@
+## Install the Scale CLI
+
+The Scale CLI is the primary tool for interacting with Scale Functions and the Scale Registry. It can be easily installed using the following command:
+
+```bash
+curl -fsSL https://dl.scale.sh | sh
+```
+
+<Info>
+    The CLI attempts to install itself to `/usr/local/bin` by default, but you can also specify a different directory by setting the `INSTALL` environment variable like so:
+
+    ```bash
+    curl -fsSL https://dl.scale.sh | INSTALL=./ sh
+    ```
+</Info>
+
+To verify that the CLI was installed correctly, you can run the following command:
+
+```bash
+scale version
+```
