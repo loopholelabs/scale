@@ -18,10 +18,11 @@ To use a compiled Scale Function (written in any supported language) inside a Ty
 ### Importing Scale Functions
 
 Scale Functions can be imported into a TS/JS application in two ways:
-- [Embedding using Webpack](#embedding-scale-functions)
+- [Embedding with Webpack](#embedding-scale-functions-with-webpack)
+- [Embedding without Webpack](#embedding-scale-functions-without-webpack)
 - [Using the Registry](#using-the-registry)
 
-#### Embedding Scale Functions
+#### Embedding Scale Functions With Webpack
 
 Scale Functions can be embedded into a TS/JS application by using our [Webpack](https://webpack.js.org/) loader, after it has been
 exported using the `scale fn export` command (see [Exporting Scale Functions](/cli/exporting)).
@@ -62,6 +63,8 @@ Once the Webpack loader has been configured, you can import the Scale Function i
 ```javascript
 import sf from "<path to exported function>"
 ```
+
+#### Embedding Scale Functions without Webpack
 
 If you'd prefer to not use Webpack, you can also use the `@loopholelabs/scalefile` package directly.
 
@@ -153,11 +156,26 @@ Here's a complete example of a TS/JS application that imports a Scale Function, 
 it.
 
 <Tabs>
-    <Tab title="Embedding the Function">
+    <Tab title="Embedding the Function With Webpack">
         ```javascript
         import { New } from "@loopholelabs/scale";
         import sf from "./hello-world.scale";
 
+        const r = New([sf]);
+
+        const i = r.Instance(null);
+        i.Context().Request.Body = "Hello, World!";
+
+        i.Run()
+        console.log(i.Context().Response.Body);
+        ```
+    </Tab>
+    <Tab title="Embedding the Function Without Webpack">
+        ```javascript
+        import { New } from "@loopholelabs/scale";
+        import { Read } from "@loopholelabs/scalefile/scalefunc/helpers";
+
+        const sf = Read("./hello-world.scale");
         const r = New([sf]);
 
         const i = r.Instance(null);
