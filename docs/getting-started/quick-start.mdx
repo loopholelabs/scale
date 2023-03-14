@@ -132,7 +132,7 @@ The following files will be created in the directory depending on the language y
 
             pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Error>> {
                 ctx.response().set_body("Hello, World!".to_string());
-                Ok(ctx)
+                ctx.next()
             }
             ```
 
@@ -160,6 +160,16 @@ The following files will be created in the directory depending on the language y
 </Tabs>
 
 <br/>
+
+You'll notice that at the end of the Scale Function we call the `Next()` function. This is because Scale Functions can be
+chained together to form a pipeline. The `Next()` function is used to pass the context to the next function in the chain
+and can be conditionally called based on the logic in your function.
+
+This allows for powerful composability that's completely language agnostic. For example, you can use a rust function to validate the request, a golang function to process the
+request, and a third rust function to generate the response!
+
+If you call the `Next()` field and there is no next function in the chain, the function is a no-op and the context is returned.
+
 <Info>
     When adding new dependencies to your function, you'll need to add references to them in the `scalefile` to make sure
     your function can be built properly.
@@ -231,8 +241,18 @@ scale run hello-world:latest -p 3000
 Now that you've built and tested your function, you can push it to the Scale Registry. Once pushed, the function can be
 pulled and used in your existing Typescript or Golang services, or even by other users for their own applications.
 
+<Note>
+    Using the Scale Registry is completely free during our beta period. To learn more about our future plans for the Scale Registry,
+    please join the `#scale` channel on our [Discord](https://loopholelabs.io/discord).
+</Note>
+
 To use the Scale Registry, you'll first have to authenticate with the Scale API. This process is the same for both new
 and existing users.
+
+<Tip>
+    If you are a new user you can still follow along with this guide. Your account will be created automatically when
+    you first sign in.
+</Tip>
 
 To authenticate with the Scale API, you can run the following command:
 
@@ -311,7 +331,8 @@ scale pull <your organization>/hello-world:latest --cache-directory /path/to/dir
 
 Now that you've created and pushed your first function, you can check out the
 [Importing Scale Functions](/languages/golang/overview#importing-scale-functions) guide for [Golang](/languages/golang/overview#importing-scale-functions) and
-[Typescript/Javascript](/languages/javascript-typescript/overview#importing-scale-functions) to learn how to use your function inside your existing services.
+[Typescript/Javascript](/languages/javascript-typescript/overview#importing-scale-functions) to learn how to use your function inside your existing services (and
+to chain them alongside native functions).
 
 You can also check out our [Adapter Guides](/languages/golang/adapters/net-http) to learn how to integrate your functions
 with popular frameworks such as [Next.js](/languages/javascript-typescript/adapters/nextjs).

@@ -4,3 +4,51 @@ sidebarTitle: Auth Command
 description: How to use the auth command in the Scale CLI.
 ---
 
+The `auth` command is used to authenticate the CLI to the Scale API. This is a required step before using the Scale Registry. It is not required to work with Scale Functions locally.
+
+## Login
+
+To login to the Scale API, run the following command:
+
+```bash
+scale auth login
+```
+
+This command will attempt to open the browser and undergo a [Device Authorization Flow](https://auth0.com/docs/flows/concepts/device-auth) with the Scale API.
+If the browser cannot be opened, the CLI will print a URL and a code that can be used to login to the Scale API.
+
+<Info>
+    The `scale login` command is an alias for `scale auth login`. You can use either command to login to the Scale API.
+</Info>
+
+### Using an API Key
+
+To login to the Scale API using an API Key, run the following command:
+
+```bash
+scale auth login --api-key <API_KEY>
+```
+
+<Tip>
+    You can also use the `SCALE_API_KEY` environment variable to login to the Scale API using an API Key.
+</Tip>
+
+## Logout
+
+To logout of the Scale API, run the following command:
+
+```bash
+scale auth logout
+```
+
+This command will remove the authentication token from the CLI and disable the session.
+
+## Status
+
+To check the current authentication status, run the following command:
+
+```bash
+scale auth status
+```
+
+This command will print the current authentication status, including the user's email address and their organization name.

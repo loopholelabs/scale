@@ -4,3 +4,139 @@ sidebarTitle: Function Command
 description: How to use the function command in the Scale CLI.
 ---
 
+The `function` command is used to interact with Scale Functions locally. `fn` is an alias for `function`.
+
+## New
+
+To create a new Scale Function, run the following command:
+
+```bash
+scale function new <name>
+```
+
+This will create a new scale function in the current directory in the [Go](https://golang.org/) programming language.
+
+<Info>
+    The `scale new` command is an alias for `scale function new`. You can use either command to login to the Scale API.
+</Info>
+
+You can also specify the language of the function you want to create by using the `--language` flag:
+
+```bash
+scale function new <name> --language <language>
+```
+
+The following languages are currently supported:
+
+  * `go` - [Go](/languages/golang/overview)
+  * `rust` - [Rust](/languages/rust/overview)
+
+<Note>
+    We are actively working on adding support for more languages. If you would like to see a specific language supported, please let
+    us know by joining the `#scale` channel in [our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Build
+
+The `build` subcommand is used to build a Scale Function using the toolchain for the Scale Function's source language. It can be
+run from the root of the Scale Function's directory:
+
+```bash
+scale function build
+```
+
+The `--directory` flag can be used to specify the directory of the Scale Function:
+
+```bash
+scale function build --directory <directory>
+```
+
+The compiled Scale Function will be placed in the local Scale Function cache. If you'd like to specify the directory of the Scale Function cache, you can use the `--cache-directory` flag:
+
+```bash
+scale function build --cache-directory <cache-directory>
+```
+
+The `--name`, `--org`, and `--tag` flags can be used to specify the name, organization, and tag of the Scale Function at build time:
+
+```bash
+scale function build --name <name> --org <org> --tag <tag>
+```
+
+Because this command relies on the toolchain for the Scale Function's source language being installed on your machine, it may sometimes
+be necessary to tell the command where it can find the toolchain executables.
+
+The `--cargo`, `--go`, and `--tinygo` flags can be used to specify the path to the `cargo`, `go`, and `tinygo` executables.
+
+<Note>
+    To learn about how to install the toolchain for a specific language, see the documentation for that language:
+
+    * [Go](/languages/golang/overview)
+    * [Rust](/languages/rust/overview)
+</Note>
+
+## List
+
+The `list` subcommand is used to list all the compiled Scale Functions available in the local Scale Function cache.
+
+```bash
+scale function list
+```
+
+If you'd like to specify the directory of the Scale Function cache, you can use the `--cache-directory` flag:
+
+```bash
+scale function list --cache-directory <cache-directory>
+```
+
+## Run
+
+You can run your compiled scale functions locally using the `run` subcommand. This command will start a local HTTP server that will
+execute the Scale Function when it receives an HTTP request.
+
+```bash
+scale function run  [ ...[ <name>:<tag> ] | [ <org>/<name>:<tag> ] ]
+```
+
+The `--listen` flag can be used to specify the address and port that the local HTTP server should listen on (by default it will listen on `:8080`)
+
+It is also possible to provide multiple Scale Functions to the `run` subcommand. If you do, the local HTTP server will execute the
+Scale Functions in a chain, and will only execute the next function in the chain if the previous function calls `.Next()`.
+
+<Tip>
+    Remember that the `--cache-directory` [configuration flag](/cli/reference/flags) can be used to specify the directory of the Scale Function cache.
+</Tip>
+
+If the function is not available locally, the `run` command will attempt to look for it in the [Scale Registry](/registry/overview) (if the CLI is authenticated).
+
+## Export
+
+The `export` subcommand is used to export a Scale Function from the local Scale Function cache to a local `.scale` file.
+
+It's helpful in situations where you want to distribute a Scale Function without using the [Scale Registry](/registry/overview), or
+if you want to embed it inside your Runtime or Application.
+
+```bash
+scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path>
+```
+
+The function will be exported to the specified `<path>` directory as a `.scale` file. The `--output` flag can be used to override
+the name of the exported `.scale` file:
+
+```bash
+scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path> --output <output>
+```
+
+The `--raw` flag can be used to export the raw [WebAssembly](https://webassembly.org) `.wasm` binary instead of the `.scale` file:
+
+```bash
+scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path> --raw
+```
+
+## Delete
+
+To delete a Scale Function from the local Scale Function cache, run the following command:
+
+```bash
+scale function delete [<name>:<tag> | [<org>/<name>:<tag>]
+```

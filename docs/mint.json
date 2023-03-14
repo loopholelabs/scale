@@ -83,8 +83,7 @@
               {
                 "group": "Adapters",
                 "pages": [
-                  "languages/javascript-typescript/adapters/nextjs",
-                  "languages/javascript-typescript/adapters/expressjs"
+                  "languages/javascript-typescript/adapters/nextjs"
                 ]
               }
             ]
