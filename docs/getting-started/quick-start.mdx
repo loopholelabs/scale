@@ -52,87 +52,10 @@ the guides for your Guest Language below to install the toolchain.
 
 <Tabs>
     <Tab title="Golang">
-        To use [Golang](https://go.dev) as the Guest Language, you'll need to install the following:
-        - The [Go](https://go.dev/doc/install) toolchain
-        - The [TinyGo](https://tinygo.org/getting-started/) compiler
-
-        The best way to install [Go](https://go.dev/doc/install) is to follow the official instructions for your
-        operating system and platform at [https://go.dev/doc/install](https://go.dev/doc/install).
-
-        You can verify that Go was installed correctly by running the following command:
-
-        ```bash
-        go version
-        ```
-
-        <Info>
-            The minimum supported version of Go for use with Scale Functions is `1.18`.
-        </Info>
-
-
-        The best way to install [TinyGo](https://tinygo.org/getting-started/) is to follow the official
-        instructions for your operating system and platform at
-        [https://tinygo.org/getting-started/install/](https://tinygo.org/getting-started/install).
-
-        You can verify that TinyGo was installed correctly by running the following command:
-
-        ```bash
-        tinygo version
-        ```
-
-        <Info>
-            The minimum supported version of TinyGo for use with Scale Functions is `0.27.0`.
-        </Info>
+        <Snippet file="install-golang-toolchain.mdx" />
     </Tab>
     <Tab title="Rust">
-        To use [Rust](https://www.rust-lang.org) as the Guest Language, you'll need to install the following:
-        - The [Rust](https://www.rust-lang.org/tools/install) toolchain
-        - The [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager
-        - The [wasm32-unknown-unknown](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#platform-specific-dependencies) build target
-
-        The best way to install [Rust](https://www.rust-lang.org/tools/install) is to follow the official instructions for
-        your operating system and platform at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
-
-        In general, you'll want to install the `rustup` tool, which will allow you to easily install and manage multiple
-        versions of Rust on your machine. This can be done by running the following command:
-
-        ```bash
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        ```
-
-        You can verify that Rust was installed correctly by running the following command:
-
-        ```bash
-        rustc --version
-        ```
-
-        <Info>
-            The minimum supported version of Rust for use with Scale Functions is `1.67.0`.
-        </Info>
-
-        You can verify that Cargo was installed correctly by running the following command:
-
-        ```bash
-        cargo --version
-        ```
-
-        <Info>
-            The minimum supported version of Cargo for use with Scale Functions is `1.67.0`.
-        </Info>
-
-        Next, you'll need to install the `wasm32-unknown-unknown` build target. This can be done by running the following
-        command:
-
-        ```bash
-        rustup target add wasm32-unknown-unknown
-        ```
-
-        You can verify that the build target was installed correctly by running the following command and verifying that
-        `wasm32-unknown-unknown` is listed in the output:
-
-        ```bash
-        rustup target list --installed
-        ```
+        <Snippet file="install-rust-toolchain.mdx" />
     </Tab>
 </Tabs>
 

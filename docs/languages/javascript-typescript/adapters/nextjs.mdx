@@ -54,7 +54,7 @@ scale new hello-world
 </Note>
 
 This will create a new Scale Function in the current directory. You can see the code for the Scale Function in the
-`scale.go` file that gets generated. The Scale Function is a simple HTTP handler that returns a 'Hello World' message:
+`scale.go` file that gets generated. The Scale Function is a simple HTTP handler that returns a `Hello World` message:
 ```go
 //go:build tinygo || js || wasm
 package scale
@@ -71,18 +71,23 @@ func Scale(ctx *signature.Context) (*signature.Context, error) {
 
 Now lets build the Scale Function and export it locally:
 ```bash
-scale build && scale function export example:latest .
+scale build && scale function export hello-world:latest .
 ```
 
 This will create a `hello-world-latest.scale` file in the current directory. Because of the way [Next.js](https://nextjs.org/)
 deploys Edge Functions, we also need to export a raw version of the Scale Function. To do this, we can use the
 `--raw` flag with the previous export command:
 ```bash
-scale function export example:latest . --raw
+scale function export hello-world:latest . --raw
 ```
 
 This will create a `hello-world-latest.wasm` file in the current directory. Now we have everything we need to import
 the Scale Function into our Next.js App.
+
+<Tip>
+    Check out the [Scale CLI](/docs/cli) documentation for more information on how to use the Scale CLI to build and export
+    Scale Functions.
+</Tip>
 
 To import the Scale Function into our Next.js App, it's as simple as using the native `import` statement:
 ```js pages/api/hello.js
