@@ -17,8 +17,8 @@ API Keys can be created, listed, and deleted, but **not edited**. API Keys also 
     If you are interested in this feature, please join the `#scale` channel in [our Discord](https://loopholelabs.io/scale) and let us know!
 </Info>
 
-This reference page assumes you have already [installed the Scale CLI](/docs/cli/installation),
-and are [authenticated](/docs/cli/auth) with your Scale account.
+This reference page assumes you have already [installed the Scale CLI](/cli/installation),
+and are [authenticated](/cli/auth) with your Scale account.
 
 ## Creating an API Key
 
@@ -45,7 +45,7 @@ scale apikey list
 ```
 
 <Tip>
-    Remember that you can change the output format using [the `--format` flag](/docs/cli/flags).
+    Remember that you can change the output format using [the `--format` flag](/cli/flags).
 </Tip>
 
 ## Deleting an API Key
@@ -82,12 +82,12 @@ scale apikey get <id>
 ```
 
 <Tip>
-    Remember that you can change the output format using [the `--format` flag](/docs/cli/flags).
+    Remember that you can change the output format using [the `--format` flag](/cli/flags).
 </Tip>
 
 ## Authenticating with an API Key
 
-To authenticate with an API Key, you can either specify the `--api-key` flag when [authentication with the Scale CLI](/docs/cli/auth),
+To authenticate with an API Key, you can either specify the `--api-key` flag when [authentication with the Scale CLI](/cli/auth),
 or you can set the `SCALE_API_KEY` environment variable to the API Key you want to use when running the same command.
 
 Once you've authenticated with an API Key, you can use the Scale CLI to interact with your Scale account.
