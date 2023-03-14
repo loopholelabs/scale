@@ -133,6 +133,7 @@
               "cli/reference/help",
               "cli/reference/completion",
               "cli/reference/auth",
+              "cli/reference/apikey",
               "cli/reference/function",
               "cli/reference/registry"
             ]
