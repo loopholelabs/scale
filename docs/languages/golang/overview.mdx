@@ -108,13 +108,13 @@ and pass in the Scale Function(s).
 ```go
 import (
 	"context"
-	runtime "github.com/loopholelabs/scale/go"
+	scale "github.com/loopholelabs/scale/go"
 )
 
 func main() {
     // ...
 	ctx := context.Background()
-    r := runtime.New(ctx, sf) // Or runtime.New(ctx, sf1, sf2, sf3, ...)
+    r := scale.New(ctx, sf) // Or scale.New(ctx, sf1, sf2, sf3, ...)
     // ...
 }
 ```
@@ -128,7 +128,6 @@ run the Scale Function (or Functions).
 ```go
 import (
     "context"
-    "github.com/loopholelabs/scale/go"
 )
 
 func main() {
@@ -141,6 +140,18 @@ func main() {
     // ...
 }
 ```
+
+<Note>
+    You'll notice that we're not passing anything into to the `r.Instance` method above. In actually, it is possible to pass in
+    one or multiple native golang functions (with the signature `(ctx *signature.Context) (*signature.Context, error)`) to be run
+    as part of the Scale Function chain.
+
+    The `Instance` method will automatically pass the result of the  previous function to the next one (and pass the
+    responses back up through the chain).
+
+    If you're not using a native handler (or handlers) at the end of the chain, you can don't need to pass anything
+    into the `r.Instance` method.
+</Note>
 
 It's important to note that an `Instance` can be reused multiple times, but it's not thread-safe. If you need to run
 multiple instances of a Scale Function concurrently, you'll need to create a new `Instance` for each one.
@@ -166,7 +177,7 @@ it.
             "context"
             "embed"
             "fmt"
-            "github.com/loopholelabs/scale/go"
+            scale "github.com/loopholelabs/scale/go"
         )
 
         //go:embed hello-world-latest.scale
@@ -177,7 +188,7 @@ it.
             _ = sf.Decode(embeddedFunction)
 
             ctx := context.Background()
-            r := runtime.New(ctx, sf)
+            r := scale.New(ctx, sf)
 
             i, _ := r.Instance()
             i.Context().Request.Body = []byte("Hello, World!")
@@ -195,7 +206,7 @@ it.
         import (
             "context"
             "fmt"
-            "github.com/loopholelabs/scale/go"
+            scale "github.com/loopholelabs/scale/go"
             "github.com/loopholelabs/scale/go/registry"
         )
 
@@ -203,7 +214,7 @@ it.
             sf, _ := registry.Download("hello-world", "latest")
 
             ctx := context.Background()
-            r := runtime.New(ctx, sf)
+            r := scale.New(ctx, sf)
 
             i, _ := r.Instance()
             i.Context().Request.Body = []byte("Hello, World!")

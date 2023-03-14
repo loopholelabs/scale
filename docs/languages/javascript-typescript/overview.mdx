@@ -63,6 +63,15 @@ Once the Webpack loader has been configured, you can import the Scale Function i
 import sf from "<path to exported function>"
 ```
 
+If you'd prefer to not use Webpack, you can also use the `@loopholelabs/scalefile` package directly.
+
+```javascript
+import { Read } from "@loopholelabs/scalefile/scalefunc/helpers";
+
+const sf = Read("<path to exported function>");
+```
+
+
 #### Using the Registry
 
 Scale Functions can also be imported into a TS/JS application by using the Registry.
@@ -119,6 +128,14 @@ run the Scale Function (or Functions).
 ```javascript
 const i = r.Instance(null);
 ```
+
+<Note>
+    You'll notice that we're passing in `null` to the `r.Instance` method above. This is because it's possible to chain
+    native functions alongside Scale Functions, and the `Instance` method will automatically pass the result of the
+    previous function to the next one (and pass the responses back up through the chain).
+
+    If you're not using a native handler at the end of the chain, you can pass in `null` to the `Instance` method.
+</Note>
 
 It's important to note that an `Instance` can be reused multiple times, but it's not thread-safe. If you need to run
 multiple instances of a Scale Function concurrently, you'll need to create a new `Instance` for each one.
