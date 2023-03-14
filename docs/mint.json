@@ -159,8 +159,7 @@
   "backgroundImage": "/images/grid.svg",
   "analytics": {
     "posthog": {
-      "apiKey": "phc_ozdiEGAuVg8Ru1tsyG092ND3oxhMtVewZO6Tg74s8MF",
-      "apiHost": "https://data.scale.sh"
+      "apiKey": "phc_ozdiEGAuVg8Ru1tsyG092ND3oxhMtVewZO6Tg74s8MF"
     }
   },
   "metadata": {
