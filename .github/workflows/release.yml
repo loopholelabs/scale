@@ -108,3 +108,50 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ github.event.release.tag_name }} ${{ matrix.asset_name }}.gz
+
+  pull-request:
+    runs-on: ubuntu-latest
+    needs: compile_cli
+    steps:
+
+    - name: Create dir
+      run: mkdir releases
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: jsbuilder-x86_64-linux-${{ github.event.release.tag_name }}.gz
+        path: releases/
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: jsbuilder-arm-linux-${{ github.event.release.tag_name }}.gz
+        path: releases/
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: jsbuilder-x86_64-macos-${{ github.event.release.tag_name }}.gz
+        path: releases/
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: jsbuilder-arm-macos-${{ github.event.release.tag_name }}.gz
+        path: releases/
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: jsbuilder-x86_64-windows-${{ github.event.release.tag_name }}.gz
+        path: releases/
+
+    - name: Create pull request
+      uses: paygoc6/action-pull-request-another-repo@v1.0.1
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      with:
+        source_folder: 'releases'
+        destination_repo: 'loopholelabs/scale-cli'
+        destination_folder: 'pkg/build'
+        destination_base_branch: 'staging'
+        destination_head_branch: 'jsbuilder-${{ github.event.release.tag_name }}'
+        user_email: 'workflow@loopholelabs.io'
+        user_name: 'workflow'
+        pull_request_reviewers: ''
