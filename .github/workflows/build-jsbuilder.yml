@@ -11,7 +11,7 @@ jobs:
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: stable
             target: wasm32-wasi
             override: true
             components: rustfmt, clippy
