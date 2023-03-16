@@ -43,30 +43,35 @@ jobs:
           - name: linux
             os: ubuntu-20.04 # Use oldest supported non-deprecated version so we link against older glibc version which allows running binary on a wider set of Linux systems
             path: target/x86_64-unknown-linux-gnu/release/jsbuilder
+            artifact_name: jsbuilder-x86_64-linux
             asset_name: jsbuilder-x86_64-linux-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             target: x86_64-unknown-linux-gnu
           - name: linux-arm64
             os: ubuntu-20.04 # Use oldest supported non-deprecated version so we link against older glibc version which allows running binary on a wider set of Linux systems
             path: target/aarch64-unknown-linux-gnu/release/jsbuilder
+            artifact_name: jsbuilder-arm-linux
             asset_name: jsbuilder-arm-linux-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             target: aarch64-unknown-linux-gnu
           - name: macos
             os: macos-latest
             path: target/x86_64-apple-darwin/release/jsbuilder
+            artifact_name: jsbuilder-x86_64-macos
             asset_name: jsbuilder-x86_64-macos-${{ github.event.release.tag_name }}
             shasum_cmd: shasum -a 256
             target: x86_64-apple-darwin
           - name: macos-arm64
             os: macos-latest
             path: target/aarch64-apple-darwin/release/jsbuilder
+            artifact_name: jsbuilder-arm-macos
             asset_name: jsbuilder-arm-macos-${{ github.event.release.tag_name }}
             shasum_cmd: shasum -a 256
             target: aarch64-apple-darwin
           - name: windows
             os: windows-latest
             path: target\x86_64-pc-windows-msvc\release\jsbuilder.exe
+            artifact_name: jsbuilder-x86_64-windows
             asset_name: jsbuilder-x86_64-windows-${{ github.event.release.tag_name }}
             shasum_cmd: sha256sum
             target: x86_64-pc-windows-msvc
@@ -97,11 +102,14 @@ jobs:
       - name: Archive assets
         run: gzip -k -f ts/compile/builder/${{ matrix.path }} && mv ts/compile/builder/${{ matrix.path }}.gz ${{ matrix.asset_name }}.gz
 
+      - name: Copy for artifact
+        run: cp ${{ matrix.asset_name }}.gz ${{ matrix.artifact_name }}.gz
+
       - name: Upload assets to artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.asset_name }}.gz
-          path: ${{ matrix.asset_name }}.gz
+          name: ${{ matrix.artifact_name }}.gz
+          path: ${{ matrix.artifact_name }}.gz
 
       - name: Upload assets to release
         if: github.event_name == 'release'
@@ -119,28 +127,31 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: jsbuilder-x86_64-linux-${{ github.event.release.tag_name }}.gz
+        name: jsbuilder-x86_64-linux.gz
         path: releases/
 
     - uses: actions/download-artifact@v3
       with:
-        name: jsbuilder-arm-linux-${{ github.event.release.tag_name }}.gz
+        name: jsbuilder-arm-linux.gz
         path: releases/
 
     - uses: actions/download-artifact@v3
       with:
-        name: jsbuilder-x86_64-macos-${{ github.event.release.tag_name }}.gz
+        name: jsbuilder-x86_64-macos.gz
         path: releases/
 
     - uses: actions/download-artifact@v3
       with:
-        name: jsbuilder-arm-macos-${{ github.event.release.tag_name }}.gz
+        name: jsbuilder-arm-macos.gz
         path: releases/
 
     - uses: actions/download-artifact@v3
       with:
-        name: jsbuilder-x86_64-windows-${{ github.event.release.tag_name }}.gz
+        name: jsbuilder-x86_64-windows.gz
         path: releases/
+
+    - name: Create version file
+      run: echo ${{ github.event.release.tag_name }} > releases/jsbuilder-version.txt
 
     - name: Create pull request
       uses: paygoc6/action-pull-request-another-repo@v1.0.1
