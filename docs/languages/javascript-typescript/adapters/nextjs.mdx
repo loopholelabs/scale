@@ -2,7 +2,7 @@
 title: Next.js
 ---
 
-To make using Scale Functions with [Next.js](https://nextjs.org/) API Routes and Edge Functions easier, we've created a
+To make using Scale Functions with [Next.js](https://nextjs.org/) Edge Functions easier, we've created a
 [Next.js Adapter](https://github.com/loopholelabs/scale-http-adapters) that allows you to import a Scale Function
 directly into your Next.js App.
 
@@ -17,10 +17,10 @@ simplify your code and make it easier to test.
 
 ## Getting Started
 
-First, you'll need a [Next.js App](https://nextjs.org/docs/getting-started) with [API Routes](https://nextjs.org/docs/api-routes/introduction)
+First, you'll need a [Next.js App](https://nextjs.org/docs/getting-started) with [Vercel Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions/quickstart#create-an-edge-function)
 enabled. If you don't have one, you can create one with the following command:
 ```bash
-npx create-next-app@latest
+npx create-next-app@latest --typescript
 ```
 
 Next, install the Scale Runtime and the Scale HTTP Adapters package:
@@ -91,24 +91,39 @@ the Scale Function into our Next.js App.
 
 To import the Scale Function into our Next.js App, it's as simple as using the native `import` statement:
 ```js pages/api/hello.js
+import { NextRequest } from 'next/server';
 import { NextJS } from '@loopholelabs/scale-http-adapters';
 import { New, Func } from "@loopholelabs/scale";
+// @ts-ignore
 import example from "./hello-world-latest.scale"
+// @ts-ignore
 import exampleModule from "./hello-world-latest.wasm?module"
 
+export const config = {
+  runtime: 'edge',
+};
+
 const fn = new Func(example, exampleModule);
+// @ts-ignore
 const runtime = New([fn]);
 const handler = (new NextJS(runtime)).Handler();
 
-export default async (req) => {
+export default async (req: NextRequest) => {
+    // @ts-ignore
   return await handler(req);
 }
 ```
 
+Remember to add the `export const config = { runtime: 'edge' };` line to your API route. This tells Vercel to deploy
+the API route as an Edge Function, which is required for WebAssembly modules to work.
+
+You'll also need to add the `// @ts-ignore` comments to the `import` statements to tell TypeScript to ignore the
+`.scale` and `.wasm` file imports since webpack will handle them at build time.
+
 <Note>
-    The `?module` query parameter is required when importing a raw Scale Function into a Next.js App. This tells
+    The `?module` query parameter is required when importing a raw Scale Function (WebAssembly Module) into a Next.js App. This tells
     Vercel to treat the file as a WebAssembly module and compile it to WebAssembly before deploying it. Vercel explicitly
-    disables compiling WebAssembly modules at runtime, which is why we need to import the raw Scale Function at build time.
+    disables compiling WebAssembly modules at runtime, which is why we need to import the raw `.wasm` module at build time.
 </Note>
 
 With this, our API route is ready! Now let's modify our home page to call the API route and display the response:
