@@ -13,11 +13,11 @@ info:
 paths:
     /access/apikey:
         get:
+            description: Lists all the API Keys for the authenticated user. If the user's session
+                is tied to an organization, only the API Keys for that organization will
+                be returned.
             tags:
                 - access
-            summary: ListAPIKey lists all API Keys for a user. If the user's session is tied
-                to an organization, only API Keys for that organization will be
-                returned.
             responses:
                 "200":
                     description: OK
@@ -39,22 +39,29 @@ paths:
                         application/json:
                             schema:
                                 type: string
-    "/access/apikey/{id}":
-        delete:
+        post:
+            description: Creates a new API Key with the given `name` scoped to all the
+                organizations the user is a member or owner of. If the user's session is
+                already tied to an organization, the new API Key will be scoped to that
+                organization.
             tags:
                 - access
-            summary: DeleteAPIKey deletes an API Key given its ID. If the user's session is
-                tied to an organization, the API Key must be for that organization.
-            parameters:
-                - description: API Key ID
-                  name: id
-                  in: path
-                  required: true
-                  schema:
-                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/models.CreateAPIKeyRequest"
+                description: Create API Key Request
+                required: true
             responses:
                 "200":
                     description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/models.CreateAPIKeyResponse"
+                "400":
+                    description: Bad Request
                     content:
                         application/json:
                             schema:
@@ -65,28 +72,22 @@ paths:
                         application/json:
                             schema:
                                 type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
                 "500":
                     description: Internal Server Error
                     content:
                         application/json:
                             schema:
                                 type: string
-    "/access/apikey/{name}":
+    "/access/apikey/{nameorid}":
         get:
-            tags:
-                - access
-            summary: GetAPIKey gets information about a specific API Key given its name. If
+            description: Gets information about a specific API Key given its `name` or `id`. If
                 the user's session is tied to an organization, the API Key must be for
                 that organization.
+            tags:
+                - access
             parameters:
-                - description: API Key Name
-                  name: name
+                - description: API Key Name or ID
+                  name: nameorid
                   in: path
                   required: true
                   schema:
@@ -116,15 +117,14 @@ paths:
                         application/json:
                             schema:
                                 type: string
-        post:
+        delete:
+            description: Deletes an API Key given its `name` or `id`. If the user's session is
+                tied to an organization, the API Key must be for that organization.
             tags:
                 - access
-            summary: CreateAPIKey creates a new API Key with the given name scoped to all the
-                organizations the user is a member of. If the user's session is tied to
-                an organization, the API Key will be scoped to that organization.
             parameters:
-                - description: name
-                  name: name
+                - description: API Key Name or ID
+                  name: nameorid
                   in: path
                   required: true
                   schema:
@@ -135,15 +135,15 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/components/schemas/models.CreateAPIKeyResponse"
-                "400":
-                    description: Bad Request
+                                type: string
+                "401":
+                    description: Unauthorized
                     content:
                         application/json:
                             schema:
                                 type: string
-                "401":
-                    description: Unauthorized
+                "404":
+                    description: Not Found
                     content:
                         application/json:
                             schema:
@@ -156,9 +156,10 @@ paths:
                                 type: string
     /health:
         get:
+            description: Returns the health and status of the various services that make up the
+                API.
             tags:
                 - health
-            summary: Health returns the status of the various services
             responses:
                 "200":
                     description: OK
@@ -174,11 +175,10 @@ paths:
                                 type: string
     /registry/function:
         get:
+            description: Lists all the functions in the default organization.
             tags:
                 - registry
                 - function
-            summary: ListFunctionsDefaultOrganization lists all the public functions in the
-                default organization.
             responses:
                 "200":
                     description: OK
@@ -213,11 +213,13 @@ paths:
                             schema:
                                 type: string
         post:
+            description: Uploads a function to the Scale Registry. If the session is scoped to an
+                organization, the function will be uploaded to that `organization`,
+                otherwise the function will be uploaded to the user's default
+                `organization`.
             tags:
                 - registry
                 - function
-            summary: UploadFunction uploads a function. If the session is scoped to an
-                organization, the function will be uploaded to that organization.
             requestBody:
                 content:
                     multipart/form-data:
@@ -275,11 +277,13 @@ paths:
                                 type: string
     "/registry/function/{name}/{tag}":
         get:
+            description: Retrieves a function from the default organization given its `name` and
+                `tag`. If the session is scoped to the same `organization`, functions
+                that are not public will be returned, otherwise only public functions
+                will be returned.
             tags:
                 - registry
                 - function
-            summary: GetFunctionDefaultOrganization retrieves a public function from the
-                default organization.
             parameters:
                 - description: name
                   name: name
@@ -326,13 +330,13 @@ paths:
                                 type: string
     "/registry/function/{organization}":
         get:
+            description: Lists all the functions in the given `organization`. If the session is
+                scoped to the same `organization`, functions that are not public will be
+                returned, otherwise only public functions from the `organization` will
+                be returned.
             tags:
                 - registry
                 - function
-            summary: ListFunctions lists all the functions in the given organization. If the
-                session is scoped to the same organization, functions that are not
-                public will be returned, otherwise only public functions will be
-                returned.
             parameters:
                 - description: organization
                   name: organization
@@ -375,10 +379,13 @@ paths:
                                 type: string
     "/registry/function/{organization}/{name}/{tag}":
         get:
+            description: Retrieves a function from the given `organization` given its `name` and
+                `tag`. If the session is scoped to the same `organization`, functions
+                that are not public will be returned, otherwise only public functions
+                will be returned.
             tags:
                 - registry
                 - function
-            summary: GetFunction retrieves a function from the given organization. If the session is scoped to the same organization, functions that are not public will be returned, otherwise only public functions will be returned.
             parameters:
                 - description: organization
                   name: organization
@@ -430,10 +437,12 @@ paths:
                             schema:
                                 type: string
         delete:
+            description: Deletes a function from the given `organization` given its `name` and
+                `tag`. If the session is scoped to an organization it must be the same
+                as the organization of the function.
             tags:
                 - registry
                 - function
-            summary: DeleteFunction retrieves a function from the given organization. If the session is scoped to an organization it must be the same as the organization of the function.
             parameters:
                 - description: organization
                   name: organization
@@ -486,10 +495,9 @@ paths:
                                 type: string
     /userinfo:
         post:
-            description: UserInfo checks if a user is logged in and returns their info
+            description: Checks if a user is logged in and returns the user's information.
             tags:
                 - userinfo
-            summary: UserInfo checks if a user is logged in and returns their info
             responses:
                 "200":
                     description: OK
@@ -516,9 +524,14 @@ paths:
                             schema:
                                 type: string
 servers:
-    - url: https://api.scale.sh/v1
+    - url: https://localhost:8080/v1
 components:
     schemas:
+        models.CreateAPIKeyRequest:
+            type: object
+            properties:
+                name:
+                    type: string
         models.CreateAPIKeyResponse:
             type: object
             properties:

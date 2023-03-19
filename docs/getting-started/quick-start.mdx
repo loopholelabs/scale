@@ -12,29 +12,9 @@ We’ll be building a simple `Hello World` function using the [HTTP Signature](/
     Language, and the documentation will always have example implementations in both languages.
 </Tip>
 
-## Install the Scale CLI
+<Snippet file="install-scale-cli.mdx" />
 
-The Scale CLI is the primary tool for interacting with Scale Functions and the Scale Registry. It can be easily installed using the following command:
-
-```bash
-curl -fsSL https://dl.scale.sh | sh
-```
-
-<Info>
-    The CLI attempts to install itself to `/usr/local/bin` by default, but you can also specify a different directory by setting the `INSTALL` environment variable like so:
-
-    ```bash
-    curl -fsSL https://dl.scale.sh | INSTALL=./ sh
-    ```
-</Info>
-
-To verify that the CLI was installed correctly, you can run the following command:
-
-```bash
-scale version
-```
-
-For alternative installation methods or to build the CLI from source, please see the [CLI Installation Guide](/cli/install).
+For alternative installation methods or to build the CLI from source, please see the [CLI Installation Guide](/cli/installation).
 
 ## Install the Toolchain for your Guest Language
 
@@ -44,94 +24,18 @@ Guest Languages, but compiling them requires the appropriate toolchain to be ins
 <Note>
     To streamline compiling Scale Functions in the future, we're working on a cloud build service that will allow you to
     compile your functions without having to install the toolchain on your machine. If you're interested in accessing this
-    service as soon as it's available, please [join our discord](https://loopholelabs.io/discord).
+    service as soon as it's available, please join the `#scale` on our [discord](https://loopholelabs.io/discord).
 </Note>
 
-This guide has instructions for installing the toolchain for both languages, but you can skip the one that you don't need.
+If you already have the toolchain for your Guest Language installed, you can skip this step. Otherwise, you can follow
+the guides for your Guest Language below to install the toolchain.
 
 <Tabs>
     <Tab title="Golang">
-        To use [Golang](https://go.dev) as the Guest Language, you'll need to install the following:
-        - The [Go](https://go.dev/doc/install) toolchain
-        - The [TinyGo](https://tinygo.org/getting-started/) compiler
-
-        The best way to install [Go](https://go.dev/doc/install) is to follow the official instructions for your
-        operating system and platform at [https://go.dev/doc/install](https://go.dev/doc/install).
-
-        You can verify that Go was installed correctly by running the following command:
-
-        ```bash
-        go version
-        ```
-
-        <Info>
-            The minimum supported version of Go for use with Scale Functions is `1.18`.
-        </Info>
-
-
-        The best way to install [TinyGo](https://tinygo.org/getting-started/) is to follow the official
-        instructions for your operating system and platform at
-        [https://tinygo.org/getting-started/install/](https://tinygo.org/getting-started/install).
-
-        You can verify that TinyGo was installed correctly by running the following command:
-
-        ```bash
-        tinygo version
-        ```
-
-        <Info>
-            The minimum supported version of TinyGo for use with Scale Functions is `0.27.0`.
-        </Info>
+        <Snippet file="install-golang-toolchain.mdx" />
     </Tab>
     <Tab title="Rust">
-        To use [Rust](https://www.rust-lang.org) as the Guest Language, you'll need to install the following:
-        - The [Rust](https://www.rust-lang.org/tools/install) toolchain
-        - The [Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) package manager
-        - The [wasm32-unknown-unknown](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#platform-specific-dependencies) build target
-
-        The best way to install [Rust](https://www.rust-lang.org/tools/install) is to follow the official instructions for
-        your operating system and platform at [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
-
-        In general, you'll want to install the `rustup` tool, which will allow you to easily install and manage multiple
-        versions of Rust on your machine. This can be done by running the following command:
-
-        ```bash
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        ```
-
-        You can verify that Rust was installed correctly by running the following command:
-
-        ```bash
-        rustc --version
-        ```
-
-        <Info>
-            The minimum supported version of Rust for use with Scale Functions is `1.67.0`.
-        </Info>
-
-        You can verify that Cargo was installed correctly by running the following command:
-
-        ```bash
-        cargo --version
-        ```
-
-        <Info>
-            The minimum supported version of Cargo for use with Scale Functions is `1.67.0`.
-        </Info>
-
-        Next, you'll need to install the `wasm32-unknown-unknown` build target. This can be done by running the following
-        command:
-
-        ```bash
-        rustup target add wasm32-unknown-unknown
-        ```
-
-        You can verify that the build target was installed correctly by running the following command and verifying that
-        `wasm32-unknown-unknown` is listed in the output:
-
-        ```bash
-        rustup target list --installed
-        ```
+        <Snippet file="install-rust-toolchain.mdx" />
     </Tab>
 </Tabs>
 
@@ -228,7 +132,7 @@ The following files will be created in the directory depending on the language y
 
             pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Error>> {
                 ctx.response().set_body("Hello, World!".to_string());
-                Ok(ctx)
+                ctx.next()
             }
             ```
 
@@ -255,7 +159,15 @@ The following files will be created in the directory depending on the language y
     </Tab>
 </Tabs>
 
-<br/>
+You'll notice that at the end of the Scale Function we call the `Next()` function. This is because Scale Functions can be
+chained together to form a pipeline. The `Next()` function is used to pass the context to the next function in the chain
+and can be conditionally called based on the logic in your function.
+
+This allows for powerful composability that's completely language agnostic. For example, you can use a rust function to validate the request, a golang function to process the
+request, and a third rust function to generate the response!
+
+If you call the `Next()` field and there is no next function in the chain, the function is a no-op and the context is returned.
+
 <Info>
     When adding new dependencies to your function, you'll need to add references to them in the `scalefile` to make sure
     your function can be built properly.
@@ -327,8 +239,18 @@ scale run hello-world:latest -p 3000
 Now that you've built and tested your function, you can push it to the Scale Registry. Once pushed, the function can be
 pulled and used in your existing Typescript or Golang services, or even by other users for their own applications.
 
+<Note>
+    Using the Scale Registry is completely free during our beta period. To learn more about our future plans for the Scale Registry,
+    please join the `#scale` channel on our [Discord](https://loopholelabs.io/discord).
+</Note>
+
 To use the Scale Registry, you'll first have to authenticate with the Scale API. This process is the same for both new
 and existing users.
+
+<Tip>
+    If you are a new user you can still follow along with this guide. Your account will be created automatically when
+    you first sign in.
+</Tip>
 
 To authenticate with the Scale API, you can run the following command:
 
@@ -353,7 +275,7 @@ scale auth status
 
 <Note>
     It's also possible to authenticate with the Scale API using an API Key. To learn more about API Keys, you can check
-    out the [API Keys](/api-keys) section of the documentation.
+    out the [API Keys](/cli/reference/apikey) section of the documentation.
 </Note>
 
 Once you've authenticated with the Scale API, you can push your function to the Scale Registry by running the following command:
@@ -371,15 +293,47 @@ scale push hello-world:latest --public
 
 <Note>
     The Scale Registry is currently in beta and may be subject to changes in the future. To learn more about the
-    Scale Registry, you can check out the [Registry](/registry/overview) section of the documentation or [join our Discord](https://loopholelabs.com/discord).
+    Scale Registry, you can check out the [Registry](/registry/overview) section of the documentation or join the `#scale`
+    channel in [our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Pulling a Function
+
+Once you've pushed a function to the Scale Registry, you can pull it and use it in your existing services. To pull a function,
+you can run the following command:
+
+```bash
+scale pull <your organization>/hello-world:latest
+```
+
+<Note>
+    When you [pushed the function](#push-the-function) to the Scale Registry, it was pushed to a specific organization.
+    You can find the name of the organization by running the `scale auth status` command.
+
+    If you pushed the function using the `--public` flag, you can pull it without being authenticated with the Scale API.
+</Note>
+
+This will pull the function from the Scale Registry and save it to the `Cache Directory` (which defaults to `~/.config/scale/functions` on Linux and macOS).
+You can also specify a different directory by passing the `--cache-directory` flag:
+
+```bash
+scale pull <your organization>/hello-world:latest --cache-directory /path/to/directory
+```
+
+<Note>
+    The `scale pull` command only pulls the contents of the scale function from the registry if it's not already present.
+    If the function is already present, it will not be overwritten unless the `--force` flag is passed.
 </Note>
 
 ## Next Steps
 
-Now that you've created and pushed your first function, you can check out the [Embedding Functions](/getting-started/embedding)
-guide to learn how to use your function inside your existing services.
+Now that you've created and pushed your first function, you can check out the
+[Importing Scale Functions](/languages/golang/overview#importing-scale-functions) guide for [Golang](/languages/golang/overview#importing-scale-functions) and
+[Typescript/Javascript](/languages/javascript-typescript/overview#importing-scale-functions) to learn how to use your function inside your existing services (and
+to chain them alongside native functions).
 
-You can also check out our [Adapter Guides](/adapters) to learn how to integrate your functions with popular frameworks such as [Next.js](/adapters/nextjs).
+You can also check out our [Adapter Guides](/languages/golang/adapters/net-http) to learn how to integrate your functions
+with popular frameworks such as [Next.js](/languages/javascript-typescript/adapters/nextjs).
 
 To learn more about how the Scale Registry works, you can check out the [Registry](/registry/overview) section, or you
 can check out the [Signatures](/signatures/overview) section to learn more about how Scale Signatures work.

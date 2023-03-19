@@ -1,0 +1,163 @@
+---
+title: Next.js
+---
+
+To make using Scale Functions with [Next.js](https://nextjs.org/) Edge Functions easier, we've created a
+[Next.js Adapter](https://github.com/loopholelabs/scale-http-adapters) that allows you to import a Scale Function
+directly into your Next.js App.
+
+<Note>
+    It is not currently possible to use the Scale Registry to import a Scale Functions into a Next.js App at runtime because of
+    the way [Vercel](https://vercel.com) deploys Next.js Edge Functions. However, you can still use the Scale Registry to deploy your
+    Scale Functions and use the Next.js Adapter to import them into your Next.js App at build time.
+</Note>
+
+While it is possible to use Scale Functions with Next.js without the adapter, we recommend using the adapter to
+simplify your code and make it easier to test.
+
+## Getting Started
+
+First, you'll need a [Next.js App](https://nextjs.org/docs/getting-started) with [Vercel Edge Functions](https://vercel.com/docs/concepts/functions/edge-functions/quickstart#create-an-edge-function)
+enabled. If you don't have one, you can create one with the following command:
+```bash
+npx create-next-app@latest --typescript
+```
+
+Next, install the Scale Runtime and the Scale HTTP Adapters package:
+```bash
+npm install @loopholelabs/scale @loopholelabs/scale-http-adapters
+```
+
+You'll also need to modify your `next.config.js` file to use the Scale HTTP Adapter Webpack Loader:
+```js
+const nextConfig = {
+  reactStrictMode: true,
+}
+
+const adapter = require('@loopholelabs/scale-http-adapters/nextjs');
+module.exports = adapter.WithScale(nextConfig)
+```
+
+Now you're ready to start using Scale Functions in your Next.js App!
+
+## Embedding a Scale Function
+
+To get started, let's create a Scale Function that returns a simple 'Hello World' message. This is as simple as
+running the following command:
+```bash
+scale new hello-world
+```
+
+<Note>
+    We're implicitly using the [Go](https://golang.org/) Guest Language in this example, but you can use any of the supported
+    Guest Languages. To use a different Guest Language, you can use the `--language` flag when creating a new Scale Function.
+</Note>
+
+This will create a new Scale Function in the current directory. You can see the code for the Scale Function in the
+`scale.go` file that gets generated. The Scale Function is a simple HTTP handler that returns a `Hello World` message:
+```go
+//go:build tinygo || js || wasm
+package scale
+
+import (
+	signature "github.com/loopholelabs/scale-signature-http"
+)
+
+func Scale(ctx *signature.Context) (*signature.Context, error) {
+	ctx.Response().SetBody("Hello, World!")
+	return ctx
+}
+```
+
+Now lets build the Scale Function and export it locally:
+```bash
+scale build && scale function export hello-world:latest .
+```
+
+This will create a `hello-world-latest.scale` file in the current directory. Because of the way [Next.js](https://nextjs.org/)
+deploys Edge Functions, we also need to export a raw version of the Scale Function. To do this, we can use the
+`--raw` flag with the previous export command:
+```bash
+scale function export hello-world:latest . --raw
+```
+
+This will create a `hello-world-latest.wasm` file in the current directory. Now we have everything we need to import
+the Scale Function into our Next.js App.
+
+<Tip>
+    Check out the [Scale CLI](/cli/installation) documentation for more information on how to use the Scale CLI to build and export
+    Scale Functions.
+</Tip>
+
+To import the Scale Function into our Next.js App, it's as simple as using the native `import` statement:
+```js pages/api/hello.js
+import { NextRequest } from 'next/server';
+import { NextJS } from '@loopholelabs/scale-http-adapters';
+import { New, Func } from "@loopholelabs/scale";
+// @ts-ignore
+import example from "./hello-world-latest.scale"
+// @ts-ignore
+import exampleModule from "./hello-world-latest.wasm?module"
+
+export const config = {
+  runtime: 'edge',
+};
+
+const fn = new Func(example, exampleModule);
+// @ts-ignore
+const runtime = New([fn]);
+const handler = (new NextJS(runtime)).Handler();
+
+export default async (req: NextRequest) => {
+    // @ts-ignore
+  return await handler(req);
+}
+```
+
+Remember to add the `export const config = { runtime: 'edge' };` line to your API route. This tells Vercel to deploy
+the API route as an Edge Function, which is required for WebAssembly modules to work.
+
+You'll also need to add the `// @ts-ignore` comments to the `import` statements to tell TypeScript to ignore the
+`.scale` and `.wasm` file imports since webpack will handle them at build time.
+
+<Note>
+    The `?module` query parameter is required when importing a raw Scale Function (WebAssembly Module) into a Next.js App. This tells
+    Vercel to treat the file as a WebAssembly module and compile it to WebAssembly before deploying it. Vercel explicitly
+    disables compiling WebAssembly modules at runtime, which is why we need to import the raw `.wasm` module at build time.
+</Note>
+
+With this, our API route is ready! Now let's modify our home page to call the API route and display the response:
+```js pages/index.js
+import { useState, useEffect } from 'react'
+
+export default function Home() {
+  const [data, setData] = useState(null)
+  const [isLoading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch('/api/hello')
+      .then((res) => res.json())
+      .then((data) => {
+        setData(data)
+        setLoading(false)
+      })
+  }, [])
+
+  if (isLoading) return <p>Loading...</p>
+
+  return (
+    <div>
+      <h1>{data}</h1>
+    </div>
+  )
+}
+```
+
+Now we can run our Next.js App and see the results:
+```bash
+npm run dev
+```
+<Frame caption="Next.js App on http://localhost:3000">
+    <img className="w-full rounded-md" src="/images/nextjs-example.png" alt="NextJS Example" />
+</Frame>

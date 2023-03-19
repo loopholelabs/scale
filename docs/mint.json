@@ -55,22 +55,39 @@
       ]
     },
     {
-      "group": "Adapters",
+      "group": "Languages",
       "pages": [
         {
           "group": "Golang",
           "pages": [
-            "adapters/golang/net-http",
-            "adapters/golang/fasthttp"
+            "languages/golang/overview",
+            {
+              "group": "Adapters",
+              "pages": [
+                "languages/golang/adapters/net-http",
+                "languages/golang/adapters/fasthttp"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Rust",
+          "pages": [
+            "languages/rust/overview"
           ]
         },
         {
           "group": "JavaScript/TypeScript",
             "pages": [
-              "adapters/javascript-typescript/expressjs"
+              "languages/javascript-typescript/overview",
+              {
+                "group": "Adapters",
+                "pages": [
+                  "languages/javascript-typescript/adapters/nextjs"
+                ]
+              }
             ]
-        },
-        "adapters/nextjs"
+        }
       ]
     },
     {
@@ -107,8 +124,19 @@
     {
       "group": "CLI",
         "pages": [
-            "cli/overview",
-            "cli/install"
+          "cli/installation",
+          {
+            "group": "Reference",
+            "pages": [
+              "cli/reference/flags",
+              "cli/reference/help",
+              "cli/reference/completion",
+              "cli/reference/auth",
+              "cli/reference/apikey",
+              "cli/reference/function",
+              "cli/reference/registry"
+            ]
+          }
         ]
     },
     {
@@ -121,7 +149,7 @@
   ],
   "footerSocials": {
     "discord": "https://loopholelabs.io/discord",
-    "github": "https://github.com/loopholelabs/frpc-go"
+    "github": "https://github.com/loopholelabs/scale"
   },
   "classes": {
     "anchors": "group-hover:bg-gradient-to-tr from-[#7c34ff] to-[#fe9195]",
@@ -131,7 +159,7 @@
   "backgroundImage": "/images/grid.svg",
   "analytics": {
     "posthog": {
-      "apiKey": "phc_ozdiEGAuVg8Ru1tsyG092ND3oxhMtVewZO6Tg74s8MF",
+      "apiKey": "phc_4m0hrR8xTk5PtbYNbeCmvqHBHv21kgk7DJjXxZ6Te6p",
       "apiHost": "https://data.scale.sh"
     }
   },
