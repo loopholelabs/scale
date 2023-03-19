@@ -161,9 +161,6 @@
     "posthog": {
       "apiKey": "phc_4m0hrR8xTk5PtbYNbeCmvqHBHv21kgk7DJjXxZ6Te6p",
       "apiHost": "https://data.scale.sh"
-    },
-    "plausible": {
-      "domain": "scale.sh"
     }
   },
   "metadata": {
