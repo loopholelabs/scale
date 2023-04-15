@@ -1,7 +1,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { models_CreateDomainRequest } from '../models/models_CreateDomainRequest';
+import type { models_CreateDomainResponse } from '../models/models_CreateDomainResponse';
 import type { models_CreateFunctionResponse } from '../models/models_CreateFunctionResponse';
+import type { models_DeployFunctionResponse } from '../models/models_DeployFunctionResponse';
 import type { models_GetFunctionResponse } from '../models/models_GetFunctionResponse';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -9,6 +12,80 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 
 export class FunctionService {
+
+    /**
+     * Deploys a scale function
+     * @param functions functions
+     * @param name name
+     * @returns models_DeployFunctionResponse OK
+     * @throws ApiError
+     */
+    public static postDeployFunction(
+        functions: Blob,
+        name?: string,
+    ): CancelablePromise<models_DeployFunctionResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/deploy/function',
+            formData: {
+                'functions': functions,
+                'name': name,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+
+    /**
+     * Removes a deployed function from the servers
+     * @param identifier identifier
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static deleteDeployFunction(
+        identifier: string,
+    ): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/deploy/function/{identifier}',
+            path: {
+                'identifier': identifier,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+
+    /**
+     * Creates a new domain. If the session is scoped to an organization, the domain will be created in that `organization`, otherwise the domain will be created to the user's default `organization`.
+     * @param request Create Domain Request
+     * @returns models_CreateDomainResponse OK
+     * @throws ApiError
+     */
+    public static postDomain(
+        request: models_CreateDomainRequest,
+    ): CancelablePromise<models_CreateDomainResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/domain',
+            body: request,
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                412: `Precondition Failed`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
 
     /**
      * Lists all the functions in the default organization.

@@ -1,6 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { models_CreateDomainRequest } from '../models/models_CreateDomainRequest';
+import type { models_CreateDomainResponse } from '../models/models_CreateDomainResponse';
 import type { models_CreateFunctionResponse } from '../models/models_CreateFunctionResponse';
 import type { models_GetFunctionResponse } from '../models/models_GetFunctionResponse';
 
@@ -9,6 +11,29 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 
 export class RegistryService {
+
+    /**
+     * Creates a new domain. If the session is scoped to an organization, the domain will be created in that `organization`, otherwise the domain will be created to the user's default `organization`.
+     * @param request Create Domain Request
+     * @returns models_CreateDomainResponse OK
+     * @throws ApiError
+     */
+    public static postDomain(
+        request: models_CreateDomainRequest,
+    ): CancelablePromise<models_CreateDomainResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/domain',
+            body: request,
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                412: `Precondition Failed`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
 
     /**
      * Lists all the functions in the default organization.

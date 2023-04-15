@@ -9,7 +9,7 @@ use quickjs_wasm_sys::{
   ext_js_exception, ext_js_undefined, size_t as JS_size_t, JSCFunctionData,
   JSContext, JSValue, JS_Eval, JS_FreeCString, JS_GetGlobalObject,
   JS_Call, JS_NewCFunctionData, JS_NewContext, JS_NewInt32_Ext,
-  JS_NewInt64_Ext, JS_NewObject, JS_NewRuntime, JS_ToCStringLen2, JS_EVAL_TYPE_GLOBAL,
+  JS_NewObject, JS_NewRuntime, JS_ToCStringLen2, JS_EVAL_TYPE_GLOBAL,
   JS_GetPropertyStr, JS_GetPropertyUint32, JS_DefinePropertyValueStr, JS_PROP_C_W_E,
   JS_TAG_EXCEPTION, JS_GetArrayBuffer, JS_BigIntToUint64
 };
@@ -43,7 +43,7 @@ static mut GLOBAL_ERROR: Vec<u8> = Vec::new();
 #[link(wasm_import_module = "env")]
 extern "C" {
     #[link_name = "next"]
-    fn _next(ptr: u32, size: u32) -> u64;
+    fn _next(ptr: u32, size: u32);
 }
 
 // Wrap the exported next function so it can be called from js
@@ -54,8 +54,8 @@ fn nextwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: *mu
     let ptr = JS_GetPropertyUint32(context, *jsval2, 0);    
     let len = JS_GetPropertyUint32(context, *jsval2, 1);    
 
-    let packed = _next(ptr as u32, len as u32);
-    return JS_NewInt64_Ext(context, packed as i64);    
+    _next(ptr as u32, len as u32);
+    return ext_js_undefined
   }
 }
 

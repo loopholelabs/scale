@@ -7,6 +7,20 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.16] - 2023-04-15
+
+### Changes
+
+- Updating the `Golang` and `Typescript` API Clients 
+
+### Features
+
+- Adding `Typescript` Client Support to the Scale Runtime @jimmyaxod
+
+### Dependencies
+
+- Bumping `wazero` to `v1.0.1`
+
 ## [v0.3.15] - 2023-03-19
 
 ### Dependencies
@@ -204,7 +218,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.15...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.16...HEAD
+[v0.3.16]: https://github.com/loopholelabs/scale/compare/v0.3.16
 [v0.3.15]: https://github.com/loopholelabs/scale/compare/v0.3.15
 [v0.3.14]: https://github.com/loopholelabs/scale/compare/v0.3.14
 [v0.3.13]: https://github.com/loopholelabs/scale/compare/v0.3.13

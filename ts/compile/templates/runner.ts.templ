@@ -1,20 +1,17 @@
-// TextEncoder/TextDecoder polyfills for utf-8 - an implementation of TextEncoder/TextDecoder APIs
-// Written in 2013 by Viktor Mukhachev <vic99999@yandex.ru>
-// To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide. This software is distributed without any warranty.
-// You should have received a copy of the CC0 Public Domain Dedication along with this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
+/*
+	Copyright 2022 Loophole Labs
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
+		   http://www.apache.org/licenses/LICENSE-2.0
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
+*/
 
-// Some important notes about the polyfill below:
-// Native TextEncoder/TextDecoder implementation is overwritten
-// String.prototype.codePointAt polyfill not included, as well as String.fromCodePoint
-// TextEncoder.prototype.encode returns a regular array instead of Uint8Array
-// No options (fatal of the TextDecoder constructor and stream of the TextDecoder.prototype.decode method) are supported.
-// TextDecoder.prototype.decode does not valid byte sequences
-// This is a demonstrative implementation not intended to have the best performance
-
-// http://encoding.spec.whatwg.org/#textencoder
-
-// http://encoding.spec.whatwg.org/#textencoder
-
+// First lets setup TextEncode and TextDecoder to ensure they're available for polyglot.
 export class TextEncoder {
   public encoding = "utf-8";
 
@@ -114,4 +111,45 @@ export class TextDecoder {
     }
     return string
   }
+}
+
+
+(global as any).TextEncoder = TextEncoder;
+(global as any).TextDecoder = TextDecoder;
+
+import { Resize, GuestContext } from "@loopholelabs/{{ .signature }}";
+
+import { scale } from "./scale";
+
+// Create a new dummy GuestContext.
+var ctx = new GuestContext();
+
+// Any global init can be done here
+function mainFunction() {
+}
+
+// Our own run function wrapper
+function runFunction(): bigint {
+  ctx.FromReadBuffer();   // Read from the read buffer.
+
+  try {
+    scale(ctx);
+
+    let [ptr, len] = ctx.ToWriteBuffer();
+    return BigInt(ptr) << BigInt(32) | BigInt(len);
+  } catch(e) {
+    let [ptr, len] = ctx.ErrorWriteBuffer(e as Error);
+    return BigInt(ptr) << BigInt(32) | BigInt(len);
+  }
+}
+
+// Route the resize through to the signature
+function resizeFunction(size: number): number {
+  return Resize(size);
+}
+
+(global as any).Exports = {
+  main: mainFunction,
+  run: runFunction,
+  resize: resizeFunction
 }

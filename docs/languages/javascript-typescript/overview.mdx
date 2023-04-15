@@ -159,15 +159,16 @@ it.
     <Tab title="Embedding the Function With Webpack">
         ```javascript
         import { New } from "@loopholelabs/scale";
+        // @ts-ignore
         import sf from "./hello-world.scale";
 
-        const r = New([sf]);
-
-        const i = r.Instance(null);
-        i.Context().Request.Body = "Hello, World!";
-
-        i.Run()
-        console.log(i.Context().Response.Body);
+        (async () => {
+            const r = await New([sf]);
+            const i = await r.Instance(null);
+            i.Context().Request.Body = "Hello, World!";
+            i.Run()
+            console.log(i.Context().Response.Body);
+        })();
         ```
     </Tab>
     <Tab title="Embedding the Function Without Webpack">
@@ -176,13 +177,14 @@ it.
         import { Read } from "@loopholelabs/scalefile/scalefunc/helpers";
 
         const sf = Read("./hello-world.scale");
-        const r = New([sf]);
 
-        const i = r.Instance(null);
-        i.Context().Request.Body = "Hello, World!";
-
-        i.Run()
-        console.log(i.Context().Response.Body);
+        (async () => {
+            const r = await New([sf]);
+            const i = await r.Instance(null);
+            i.Context().Request.Body = "Hello, World!";
+            i.Run()
+            console.log(i.Context().Response.Body);
+        })();
         ```
     </Tab>
     <Tab title="Using the Scale Registry">
@@ -191,13 +193,13 @@ it.
         import { New } from "@loopholelabs/scale";
 
         const sf = Download("hello-world", "latest");
-        const r = New([sf]);
-
-        const i = r.Instance(null);
-        i.Context().Request.Body = "Hello, World!";
-
-        i.Run()
-        console.log(i.Context().Response.Body);
+        (async () => {
+            const r = await New([sf]);
+            const i = await r.Instance(null);
+            i.Context().Request.Body = "Hello, World!";
+            i.Run()
+            console.log(i.Context().Response.Body);
+        })();
         ```
     </Tab>
 </Tabs>
