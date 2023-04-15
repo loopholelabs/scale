@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/strfmt"
 
 	"github.com/loopholelabs/scale/go/client/access"
+	"github.com/loopholelabs/scale/go/client/deploy"
 	"github.com/loopholelabs/scale/go/client/health"
 	"github.com/loopholelabs/scale/go/client/registry"
 	"github.com/loopholelabs/scale/go/client/userinfo"
@@ -59,6 +60,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *ScaleAPIV1
 	cli := new(ScaleAPIV1)
 	cli.Transport = transport
 	cli.Access = access.New(transport, formats)
+	cli.Deploy = deploy.New(transport, formats)
 	cli.Health = health.New(transport, formats)
 	cli.Registry = registry.New(transport, formats)
 	cli.Userinfo = userinfo.New(transport, formats)
@@ -108,6 +110,8 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 type ScaleAPIV1 struct {
 	Access access.ClientService
 
+	Deploy deploy.ClientService
+
 	Health health.ClientService
 
 	Registry registry.ClientService
@@ -121,6 +125,7 @@ type ScaleAPIV1 struct {
 func (c *ScaleAPIV1) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 	c.Access.SetTransport(transport)
+	c.Deploy.SetTransport(transport)
 	c.Health.SetTransport(transport)
 	c.Registry.SetTransport(transport)
 	c.Userinfo.SetTransport(transport)

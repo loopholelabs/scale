@@ -8,13 +8,17 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { models_CreateAPIKeyRequest } from './models/models_CreateAPIKeyRequest';
 export type { models_CreateAPIKeyResponse } from './models/models_CreateAPIKeyResponse';
+export type { models_CreateDomainRequest } from './models/models_CreateDomainRequest';
+export type { models_CreateDomainResponse } from './models/models_CreateDomainResponse';
 export type { models_CreateFunctionResponse } from './models/models_CreateFunctionResponse';
+export type { models_DeployFunctionResponse } from './models/models_DeployFunctionResponse';
 export type { models_GetAPIKeyResponse } from './models/models_GetAPIKeyResponse';
 export type { models_GetFunctionResponse } from './models/models_GetFunctionResponse';
 export type { models_GetHealthResponse } from './models/models_GetHealthResponse';
 export type { models_UserInfoResponse } from './models/models_UserInfoResponse';
 
 export { AccessService } from './services/AccessService';
+export { DeployService } from './services/DeployService';
 export { FunctionService } from './services/FunctionService';
 export { HealthService } from './services/HealthService';
 export { RegistryService } from './services/RegistryService';
