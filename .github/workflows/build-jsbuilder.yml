@@ -1,6 +1,12 @@
 name: JSBuilder
 
-on: [pull_request]
+on:
+  push:
+    paths:
+      - ts/compile/builder/**
+  pull_request:
+    paths:
+      - ts/compile/builder/**
 
 jobs:
   build:
@@ -11,7 +17,7 @@ jobs:
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: stable
             target: wasm32-wasi
             override: true
             components: rustfmt, clippy
