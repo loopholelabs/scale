@@ -40,6 +40,8 @@ type ClientService interface {
 
 	GetRegistryFunctionOrganizationNameTag(params *GetRegistryFunctionOrganizationNameTagParams, opts ...ClientOption) (*GetRegistryFunctionOrganizationNameTagOK, error)
 
+	PostDomain(params *PostDomainParams, opts ...ClientOption) (*PostDomainOK, error)
+
 	PostRegistryFunction(params *PostRegistryFunctionParams, opts ...ClientOption) (*PostRegistryFunctionOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -232,6 +234,44 @@ func (a *Client) GetRegistryFunctionOrganizationNameTag(params *GetRegistryFunct
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetRegistryFunctionOrganizationNameTag: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PostDomain Creates a new domain. If the session is scoped to an organization, the domain will be created in that `organization`, otherwise the domain will be created to the user's default `organization`.
+*/
+func (a *Client) PostDomain(params *PostDomainParams, opts ...ClientOption) (*PostDomainOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostDomainParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostDomain",
+		Method:             "POST",
+		PathPattern:        "/domain",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"https"},
+		Params:             params,
+		Reader:             &PostDomainReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostDomainOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PostDomain: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
