@@ -14,7 +14,7 @@ require (
 	github.com/loopholelabs/scale-signature-http v0.3.8
 	github.com/loopholelabs/scalefile v0.1.9
 	github.com/stretchr/testify v1.8.1
-	github.com/tetratelabs/wazero v1.0.0-rc.2
+	github.com/tetratelabs/wazero v1.0.1
 )
 
 require (
