@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.17] - 2023-04-16
+
+### Changes
+
+- Adding the `random_get` WASI Syscall implementation to the `Typescript` Hosts's `DisabledWASI` Polyfill
+
 ## [v0.3.16] - 2023-04-15
 
 ### Changes
@@ -218,7 +224,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.16...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.17...HEAD
+[v0.3.17]: https://github.com/loopholelabs/scale/compare/v0.3.17
 [v0.3.16]: https://github.com/loopholelabs/scale/compare/v0.3.16
 [v0.3.15]: https://github.com/loopholelabs/scale/compare/v0.3.15
 [v0.3.14]: https://github.com/loopholelabs/scale/compare/v0.3.14
