@@ -34,6 +34,7 @@ export interface RequiredFunctions extends WebAssembly.ModuleImports {
     proc_exit(rval: number): number
     path_open(fd: number, dirflags: number, path_ptr: number, path_len: number, oflags: number, fs_rights_base: number, fs_rights_inheriting: number, fd_flags: number, opened_fd_ptr: number): number
     clock_time_get(id: number, precision: BigInt, time: number): number
+    random_get(buf: number, buf_len: number): void
 }
 
 export class DisabledWASI {
@@ -148,6 +149,13 @@ export class DisabledWASI {
         return DisabledWASI.ESUCCESS;
     }
 
+    public random_get(buf: number, buf_len: number): void {
+        let buffer = this.getDataView();
+        for (let i = 0; i < buf_len; i++) {
+            buffer.setInt8(buf+i, (Math.random() * 256) | 0);
+        }
+    }
+
     public GetImports(): RequiredFunctions {
         return {
             environ_sizes_get: this.environ_sizes_get.bind(this),
@@ -166,6 +174,7 @@ export class DisabledWASI {
             proc_exit: this.proc_exit.bind(this),
             path_open: this.path_open.bind(this),
             clock_time_get: this.clock_time_get.bind(this),
+            random_get: this.random_get.bind(this),
         }
     }
 }
