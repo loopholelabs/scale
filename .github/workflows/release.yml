@@ -186,6 +186,11 @@ jobs:
         name: jsbuilder-x86_64-windows.gz
         path: releases/
 
+    - uses: actions/download-artifact@v3
+      with:
+        name: jslinksource_engine
+        path: releases/
+
     - name: Create version file
       run: echo ${{ github.event.release.tag_name }} > releases/jsbuilder-version.txt
 
