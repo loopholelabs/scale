@@ -23,6 +23,11 @@ jssource:
 				&& cargo build --release --target=wasm32-wasi --no-default-features --features js_source --target-dir target_jssource \
 				&& cd -
 
+jslinksource:
+		cd crates/core \
+				&& cargo build --release --target=wasm32-wasi --no-default-features --features js_link_source --target-dir target_jslinksource \
+				&& cd -
+
 clean: clean-wasi-sdk clean-cargo
 
 clean-cargo:

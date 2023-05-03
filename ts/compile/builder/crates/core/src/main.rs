@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 extern crate quickjs_wasm_sys;
 extern crate once_cell;
 extern crate polyglot_rs;
@@ -16,6 +18,9 @@ use quickjs_wasm_sys::{
 use std::os::raw::{c_int, c_void};
 
 #[cfg(feature = "js_source")]
+use flate2::read::GzDecoder;
+
+#[cfg(feature = "js_link_source")]
 use flate2::read::GzDecoder;
 
 use std::str;
@@ -63,7 +68,7 @@ fn nextwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: *mu
 fn getaddrwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: *mut JSValue, _int2: c_int) -> JSValue {
   unsafe {
     let mut len = 0;    
-    let addr = JS_GetArrayBuffer(context, &mut len, *jsval2) as i32;    
+    let addr = JS_GetArrayBuffer(context, &mut len, *jsval2) as i32;
     return JS_NewInt32_Ext(context, addr);
   }
 }
@@ -73,6 +78,21 @@ fn getaddrwrap(context: *mut JSContext, _jsval1: JSValue, _int1: c_int, jsval2: 
 #[export_name = "wizer.initialize"]
 pub extern "C" fn init() {
   js_init();
+}
+
+// For runtime source / linking
+#[cfg(feature = "js_link_source")]
+#[link(wasm_import_module = "env")]
+extern "C" {
+    #[link_name = "get_source_len"]
+    fn get_source_len() -> u32;
+}
+
+#[cfg(feature = "js_link_source")]
+#[link(wasm_import_module = "env")]
+extern "C" {
+    #[link_name = "get_source"]
+    fn get_source(ptr: *mut u8) -> u32;
 }
 
 fn js_init() {
@@ -86,6 +106,7 @@ fn js_init() {
       panic!("Couldn't create JavaScript context");
     }
 
+    #[allow(unused_assignments)]
     let mut js_contents = String::new();
 
     // If we are building with js_source, we should include the data. If it ends with .gz then unzip it.
@@ -102,8 +123,25 @@ fn js_init() {
       }
     }
 
+    // If we are going to do module linking, or provide the source from host
+    #[cfg(feature = "js_link_source")]
+    {
+
+      let len = get_source_len() as usize;
+      let buff = vec![0; len];
+      let is_gz = get_source(buff.as_ptr() as *mut u8);
+      let data = buff.as_slice();
+
+      if is_gz==1 {
+        let mut gz = GzDecoder::new(&data[..]);
+        gz.read_to_string(&mut js_contents).unwrap();
+      } else {
+        js_contents = str::from_utf8(data).unwrap().to_string();
+      }
+    }
+
     // If we are not building with js_source, we will read the javascript from stdin, which comes from the cli tool
-    #[cfg(not(feature = "js_source"))]
+    #[cfg(all(not(feature = "js_source"), not(feature = "js_link_source")))]
     io::stdin().read_to_string(&mut js_contents).unwrap();
 
     let len = js_contents.len() - 1;

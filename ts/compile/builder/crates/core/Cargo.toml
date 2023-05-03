@@ -18,3 +18,4 @@ flate2 = "1.0.25"
 default = ["wizer_opt"]
 wizer_opt = []
 js_source = []
+js_link_source = []
