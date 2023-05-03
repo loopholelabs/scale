@@ -1,6 +1,6 @@
 {
   "name": "@loopholelabs/scale",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "Scale is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.",
   "source": "ts/index.ts",
   "types": "types.d.ts",

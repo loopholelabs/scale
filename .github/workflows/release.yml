@@ -6,6 +6,42 @@ on:
       - published
 
 jobs:
+  compile_jslinksource:
+    name: compile_jslinksource
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install target
+        run: rustup target add wasm32-wasi
+
+      - name: Install wasi-sdk
+        working-directory: ts/compile/builder
+        run: make download-wasi-sdk
+
+      - name: Install wizer
+        working-directory: ts/compile/builder
+        run: cargo install wizer --all-features
+
+      - name: Make jslinksource
+        working-directory: ts/compile/builder
+        run: make jslinksource
+      
+      - name: Copy wasm
+        run: cp ts/compile/builder/crates/core/target_jslinksource/wasm32-wasi/release/jsbuilder_core.wasm jslinksource.wasm
+
+      - name: Upload core binary to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: jslinksource_engine
+          path: jslinksource.wasm
+
+      - name: Upload assets to release
+        if: github.event_name == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} jslinksource.wasm
+
   compile_core:
     name: compile_core
     runs-on: macos-latest
@@ -148,6 +184,11 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: jsbuilder-x86_64-windows.gz
+        path: releases/
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: jslinksource_engine
         path: releases/
 
     - name: Create version file
