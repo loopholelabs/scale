@@ -223,10 +223,10 @@ scale run hello-world:latest
 ```
 
 This will start a local HTTP server on port `8080` and will run the function whenever you make a request to it. You can
-also specify a different port by passing the `--port` or `-p` flag:
+also specify a different port by passing the `--listen` or `-l` flag:
 
 ```bash
-scale run hello-world:latest -p 3000
+scale run hello-world:latest -l :3000
 ```
 
 <Note>
