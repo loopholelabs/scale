@@ -15,21 +15,24 @@
 */
 
 import { DisabledWASI } from "./wasi";
+import { ScaleMod } from "./scalemod";
 
 export class Cache {
   private instance: undefined | WebAssembly.Instance;
   private nextFunction: undefined | Function;
   constructor() {}
 
-  async Initialize(m: WebAssembly.Module) {
+  async Initialize(m: WebAssembly.Module, scaleMod: ScaleMod) {
     const wasi = new DisabledWASI();
     const importsConfig = {
       wasi_snapshot_preview1: wasi.GetImports(),
       env: {
         next: this.next.bind(this),
       },
+      scale: scaleMod.GetImports(),
     }
     this.instance = await WebAssembly.instantiate(m, importsConfig);
+    scaleMod.SetInstance(this.instance);
     wasi.SetInstance(this.instance);
   }
 

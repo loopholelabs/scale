@@ -18,12 +18,18 @@ import { Signature, NewSignature } from "@loopholelabs/scale-signature";
 import { ScaleFunc } from "@loopholelabs/scalefile/scalefunc";
 import * as httpSignature  from "@loopholelabs/scale-signature-http";
 
+import { randomBytes } from "crypto";
+
+import { ScaleMod } from "./scalemod";
+
 import { Func } from "./func";
 import { Instance } from "./instance";
 import { Pool } from "./pool";
 import { Module } from "./module";
 import { Cache } from "./cache";
 import {DisabledWASI} from "./wasi";
+
+import { TraceCallbackFunc } from "./scalemod";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
@@ -44,9 +50,13 @@ export class Runtime<T extends Signature> {
   public head: undefined | Func<T>;
   public tail: undefined | Func<T>;
 
+  public InvocationId: Buffer;
+  public TraceDataCallback: TraceCallbackFunc | undefined;
+
   constructor(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]) {
     this.NewSignature = newSignature;
     this.functions = [];
+    this.InvocationId = Buffer.alloc(16);
 
     this.ready = new Promise(async (resolve) => {
       for (let i = 0; i < functions.length; i++) {
@@ -54,6 +64,7 @@ export class Runtime<T extends Signature> {
         let f: Func<T>;
         if (fn instanceof ScaleFunc) {
           const wasi = new DisabledWASI();
+          const scaleMod = new ScaleMod("unknown", Buffer.alloc(16), undefined);
           const instantiatedSource = await WebAssembly.instantiate(fn.Function, {
             wasi_snapshot_preview1: wasi.GetImports(),
             env: {
@@ -61,10 +72,12 @@ export class Runtime<T extends Signature> {
                 return 0;
               }
             },
+            scale: scaleMod.GetImports(),
           });
           f = new Func<T>(fn, instantiatedSource.module);
         } else if (fn instanceof Promise<ScaleFunc>) {
           const wasi = new DisabledWASI();
+          const scaleMod = new ScaleMod("unknown", Buffer.alloc(16), undefined);
           const resolvedFn = await fn;
           const instantiatedSource = await WebAssembly.instantiate(resolvedFn.Function, {
             wasi_snapshot_preview1: wasi.GetImports(),
@@ -73,6 +86,7 @@ export class Runtime<T extends Signature> {
                 return 0;
               }
             },
+            scale: scaleMod.GetImports(),
           });
           f = new Func<T>(resolvedFn, instantiatedSource.module);
         } else {
@@ -99,12 +113,18 @@ export class Runtime<T extends Signature> {
   }
 
   async Instance(next: null | NextFn<T>): Promise<Instance<T>> {
+    this.InvocationId = randomBytes(16);
+
     const i = new Instance<T>(this, next);
     for (let a = 0; a < this.functions.length; a++) {
       const module = this.functions[a].wasmModule;
       const id = this.functions[a].id;
       const cache = new Cache();
-      await cache.Initialize(module);
+
+      let serviceName = this.functions[a].scaleFunc.Name + ":" + this.functions[a].scaleFunc.Tag;
+      let scalemod = new ScaleMod(serviceName, this.InvocationId, this.TraceDataCallback);
+
+      await cache.Initialize(module, scalemod);
       i.SetInstance(id, cache);
     }
 

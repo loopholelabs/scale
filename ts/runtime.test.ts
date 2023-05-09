@@ -49,6 +49,35 @@ describe("TestRuntimeTs", () => {
     const modHttpNextGo = fs.readFileSync("./ts/tests/modules/http-next-TestRuntimeHTTPSignatureGo.wasm");
     const modHttpNextRs = fs.readFileSync("./ts/tests/modules/http-next-TestRuntimeHTTPSignatureRs.wasm");
 
+    const modTracingGo = fs.readFileSync("./ts/tests/modules/tracing-TestRuntimeGoTracing.wasm");
+
+    it("Tracing", async () => {
+      const sfn = new ScaleFunc(V1Alpha, `Test.Tracing`, "Test.TestTag", "ExampleName@ExampleVersion", Go, modTracingGo);
+      const r = await NewFromSignature(signature.New, [sfn]);
+
+      let traceData: string[] = []
+
+      r.TraceDataCallback = (s: string) => {
+        traceData.push(s);
+      }
+
+      const i = await r.Instance(null);
+      expect(() => {
+        i.Run();
+      }).not.toThrowError();
+
+      // Check we got some tracing data...
+      expect(traceData.length).toBe(1);
+
+      let d = JSON.parse(traceData[0])
+      expect(d.serviceName).toBe("Test.Tracing:Test.TestTag");
+      let iid = [...r.InvocationId];
+      let hexID = Array.from(iid, function(byte: number) {
+        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+      }).join('');
+      expect(d.invocationID).toBe(hexID);
+    });
+
   const passthrough = [
     { name: "Passthrough", module: modPassthroughGo, language: Go },
     { name: "Passthrough", module: modPassthroughRs, language: Rust },
