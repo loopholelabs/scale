@@ -22,13 +22,14 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/scale-signature"
+	"sync"
+
+	signature "github.com/loopholelabs/scale-signature"
 	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
-	"sync"
 )
 
 var (
@@ -44,6 +45,10 @@ type Next[T signature.Signature] func(ctx T) (T, error)
 type Runtime[T signature.Signature] struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
+
+	InvocationID      []byte
+	ServiceName       string
+	TraceDataCallback func(data string)
 
 	new signature.NewSignature[T]
 
@@ -69,6 +74,7 @@ func NewWithSignature[T signature.Signature](ctx context.Context, sig signature.
 		moduleConfig: wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
 		modules:      make(map[string]*Module[T]),
 		new:          sig,
+		InvocationID: make([]byte, 16),
 	}
 
 	module := r.runtime.NewHostModuleBuilder("env").
@@ -84,6 +90,30 @@ func NewWithSignature[T signature.Signature](ctx context.Context, sig signature.
 	_, err = r.runtime.InstantiateModule(ctx, compiled, r.moduleConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate env: %w", err)
+	}
+
+	// Add scale trace functions
+	scale_builder := r.runtime.NewHostModuleBuilder("scale")
+
+	scale_builder.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.getServiceNameLen), []api.ValueType{}, []api.ValueType{api.ValueTypeI32}).
+		WithParameterNames("pointer").Export("get_service_name_len")
+
+	scale_builder.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.getServiceName), []api.ValueType{api.ValueTypeI32}, []api.ValueType{}).
+		WithParameterNames("pointer").Export("get_service_name")
+
+	scale_builder.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.getInvocationID), []api.ValueType{api.ValueTypeI32}, []api.ValueType{}).
+		WithParameterNames("pointer").Export("get_invocation_id")
+
+	scale_builder.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.sendOtelTraceJson), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
+		WithParameterNames("pointer", "length").Export("send_otel_trace_json")
+
+	_, err = scale_builder.Instantiate(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to instantiate scale: %w", err)
 	}
 
 	_, err = wasi_snapshot_preview1.Instantiate(ctx, r.runtime)
@@ -123,4 +153,43 @@ func (r *Runtime[T]) compileFunction(ctx context.Context, scaleFunc *scalefunc.S
 
 	r.functions = append(r.functions, f)
 	return f, nil
+}
+
+// Host provided function get service name length
+func (r *Runtime[T]) getServiceNameLen(ctx context.Context, mod api.Module, params []uint64) {
+	params[0] = uint64(len([]byte(r.ServiceName)))
+}
+
+// Host provided function get service name
+func (r *Runtime[T]) getServiceName(ctx context.Context, mod api.Module, params []uint64) {
+	ptr := uint32(params[0])
+	mem := mod.Memory()
+	mem.Write(ptr, []byte(r.ServiceName))
+}
+
+// Host provided function to get 16 byte Invocation ID.
+func (r *Runtime[T]) getInvocationID(ctx context.Context, mod api.Module, params []uint64) {
+	ptr := uint32(params[0])
+	mem := mod.Memory()
+	mem.Write(ptr, r.InvocationID)
+}
+
+// Host provided function to receive otel trace data.
+func (r *Runtime[T]) sendOtelTraceJson(ctx context.Context, mod api.Module, params []uint64) {
+	if r.TraceDataCallback == nil {
+		return // Drop it
+	}
+
+	ptr := uint32(params[0])
+	length := uint32(params[1])
+	mem := mod.Memory()
+	data, ok := mem.Read(ptr, length)
+
+	if ok {
+		// Make a copy of the data
+		copied_data := make([]byte, len(data))
+		copy(copied_data, data)
+
+		r.TraceDataCallback(string(copied_data))
+	}
 }

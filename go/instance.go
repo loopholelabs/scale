@@ -18,8 +18,10 @@ package runtime
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
-	"github.com/loopholelabs/scale-signature"
+
+	signature "github.com/loopholelabs/scale-signature"
 )
 
 type Instance[T signature.Signature] struct {
@@ -60,6 +62,10 @@ func (i *Instance[T]) Run(ctx context.Context) error {
 	if i.runtime.head == nil {
 		return errors.New("no compiled functions found in runtime")
 	}
+
+	// Create a random InvocationID for this Run. This will be shared between functions in the chain.
+	rand.Read(i.runtime.InvocationID)
+
 	function := i.runtime.head
 	return function.Run(ctx, i)
 }

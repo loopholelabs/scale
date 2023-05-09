@@ -20,7 +20,12 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"testing"
+
 	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scale/go/tests/harness"
 	signature "github.com/loopholelabs/scale/go/tests/signature/example-signature"
@@ -28,8 +33,6 @@ import (
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 type TestCase struct {
@@ -266,6 +269,64 @@ func TestRuntimeGo(t *testing.T) {
 			testCase.Run(scaleFunc, t)
 		})
 	}
+}
+
+func TestRuntimeGoTracing(t *testing.T) {
+	tracingModule := &harness.Module{
+		Name:      "tracing",
+		Path:      "tests/modules/tracing/tracing.go",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
+	}
+
+	modules := []*harness.Module{tracingModule}
+
+	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
+
+	// Now run it and see...
+	module, err := os.ReadFile(generatedModules[tracingModule])
+	require.NoError(t, err)
+
+	scaleFunc := &scalefunc.ScaleFunc{
+		Version:   scalefunc.V1Alpha,
+		Name:      "TestName",
+		Tag:       "TestTag",
+		Signature: "ExampleName@ExampleVersion",
+		Language:  scalefunc.Go,
+		Function:  module,
+	}
+
+	r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+	require.NoError(t, err)
+
+	traceData := make([]string, 0)
+
+	r.TraceDataCallback = func(data string) {
+		traceData = append(traceData, data)
+	}
+
+	i, err := r.Instance(nil)
+	require.NoError(t, err)
+
+	err = i.Run(context.Background())
+	assert.NoError(t, err)
+
+	// Assert that the trace data is there and as expected...
+	assert.Equal(t, len(traceData), 1)
+
+	data := traceData[0]
+	trace := &TraceData{}
+	err = json.Unmarshal([]byte(data), trace)
+	require.NoError(t, err)
+	// Json decode, and check it
+
+	assert.Equal(t, trace.ServiceName, "TestName:TestTag")
+	assert.Equal(t, trace.InvocationId, fmt.Sprintf("%x", r.InvocationID))
+
+}
+
+type TraceData struct {
+	ServiceName  string `json:"serviceName"`
+	InvocationId string `json:"invocationId"`
 }
 
 func TestRuntimeHTTPSignatureGo(t *testing.T) {
