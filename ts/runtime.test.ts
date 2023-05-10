@@ -85,6 +85,20 @@ describe("TestRuntimeTs", () => {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);
       }).join('');
       expect(d2.invocationID).toBe(hexID2);
+
+      // Run it again and check the invocationID is now changed
+
+      const i2 = await r.Instance(null);
+      expect(() => {
+        i2.Run();
+      }).not.toThrowError();
+
+      // Check we got some tracing data...
+      expect(traceData.length).toBe(4);
+
+      let d3 = JSON.parse(traceData[2])
+      expect(d3.invocationID).not.toBe(d1.invocationID);
+
     });
 
   const passthrough = [

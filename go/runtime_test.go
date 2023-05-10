@@ -339,6 +339,23 @@ func TestRuntimeGoTracing(t *testing.T) {
 	assert.Equal(t, "TestName2:TestTag2", trace2.ServiceName)
 	assert.Equal(t, fmt.Sprintf("%x", r.InvocationID), trace2.InvocationId)
 
+	// Run it again and make sure it's a new invocationID
+	i, err = r.Instance(nil)
+	require.NoError(t, err)
+
+	err = i.Run(context.Background())
+	assert.NoError(t, err)
+
+	// Assert that the trace data is there and as expected but a different invocationID from previous Run
+	assert.Equal(t, 4, len(traceData))
+
+	data3 := traceData[2]
+	trace3 := &TraceData{}
+	err = json.Unmarshal([]byte(data3), trace3)
+	require.NoError(t, err)
+	// Json decode, and check it
+
+	assert.NotEqual(t, trace3.InvocationId, trace2.InvocationId)
 }
 
 type TraceData struct {
