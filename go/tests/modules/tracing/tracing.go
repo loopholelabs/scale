@@ -40,7 +40,7 @@ func Scale(ctx *signature.Context) (*signature.Context, error) {
 	ptr := unsafe.Pointer(unsafe.StringData(data))
 	send_otel_trace_json(uint32(uintptr(ptr)), uint32(len(data)))
 
-	return ctx, nil
+	return ctx.Next()
 }
 
 //go:wasm-module scale

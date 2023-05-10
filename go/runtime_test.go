@@ -279,23 +279,31 @@ func TestRuntimeGoTracing(t *testing.T) {
 	}
 
 	modules := []*harness.Module{tracingModule}
-
 	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
 
 	// Now run it and see...
 	module, err := os.ReadFile(generatedModules[tracingModule])
 	require.NoError(t, err)
 
-	scaleFunc := &scalefunc.ScaleFunc{
+	scaleFunc1 := &scalefunc.ScaleFunc{
 		Version:   scalefunc.V1Alpha,
-		Name:      "TestName",
-		Tag:       "TestTag",
+		Name:      "TestName1",
+		Tag:       "TestTag1",
 		Signature: "ExampleName@ExampleVersion",
 		Language:  scalefunc.Go,
 		Function:  module,
 	}
 
-	r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+	scaleFunc2 := &scalefunc.ScaleFunc{
+		Version:   scalefunc.V1Alpha,
+		Name:      "TestName2",
+		Tag:       "TestTag2",
+		Signature: "ExampleName@ExampleVersion",
+		Language:  scalefunc.Go,
+		Function:  module,
+	}
+
+	r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc1, scaleFunc2})
 	require.NoError(t, err)
 
 	traceData := make([]string, 0)
@@ -311,16 +319,25 @@ func TestRuntimeGoTracing(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert that the trace data is there and as expected...
-	assert.Equal(t, len(traceData), 1)
+	assert.Equal(t, 2, len(traceData))
 
-	data := traceData[0]
-	trace := &TraceData{}
-	err = json.Unmarshal([]byte(data), trace)
+	data1 := traceData[0]
+	trace1 := &TraceData{}
+	err = json.Unmarshal([]byte(data1), trace1)
 	require.NoError(t, err)
 	// Json decode, and check it
 
-	assert.Equal(t, trace.ServiceName, "TestName:TestTag")
-	assert.Equal(t, trace.InvocationId, fmt.Sprintf("%x", r.InvocationID))
+	assert.Equal(t, "TestName1:TestTag1", trace1.ServiceName)
+	assert.Equal(t, fmt.Sprintf("%x", r.InvocationID), trace1.InvocationId)
+
+	data2 := traceData[1]
+	trace2 := &TraceData{}
+	err = json.Unmarshal([]byte(data2), trace2)
+	require.NoError(t, err)
+	// Json decode, and check it
+
+	assert.Equal(t, "TestName2:TestTag2", trace2.ServiceName)
+	assert.Equal(t, fmt.Sprintf("%x", r.InvocationID), trace2.InvocationId)
 
 }
 
