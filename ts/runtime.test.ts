@@ -52,8 +52,9 @@ describe("TestRuntimeTs", () => {
     const modTracingGo = fs.readFileSync("./ts/tests/modules/tracing-TestRuntimeGoTracing.wasm");
 
     it("Tracing", async () => {
-      const sfn = new ScaleFunc(V1Alpha, `Test.Tracing`, "Test.TestTag", "ExampleName@ExampleVersion", Go, modTracingGo);
-      const r = await NewFromSignature(signature.New, [sfn]);
+      const sfn1 = new ScaleFunc(V1Alpha, `Test.Tracing1`, "Test.TestTag1", "ExampleName@ExampleVersion", Go, modTracingGo);
+      const sfn2 = new ScaleFunc(V1Alpha, `Test.Tracing2`, "Test.TestTag2", "ExampleName@ExampleVersion", Go, modTracingGo);
+      const r = await NewFromSignature(signature.New, [sfn1, sfn2]);
 
       let traceData: string[] = []
 
@@ -67,15 +68,23 @@ describe("TestRuntimeTs", () => {
       }).not.toThrowError();
 
       // Check we got some tracing data...
-      expect(traceData.length).toBe(1);
+      expect(traceData.length).toBe(2);
 
-      let d = JSON.parse(traceData[0])
-      expect(d.serviceName).toBe("Test.Tracing:Test.TestTag");
-      let iid = [...r.InvocationId];
-      let hexID = Array.from(iid, function(byte: number) {
+      let d1 = JSON.parse(traceData[0])
+      expect(d1.serviceName).toBe("Test.Tracing1:Test.TestTag1");
+      let iid1 = [...r.InvocationId];
+      let hexID1 = Array.from(iid1, function(byte: number) {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);
       }).join('');
-      expect(d.invocationID).toBe(hexID);
+      expect(d1.invocationID).toBe(hexID1);
+
+      let d2 = JSON.parse(traceData[1])
+      expect(d2.serviceName).toBe("Test.Tracing2:Test.TestTag2");
+      let iid2 = [...r.InvocationId];
+      let hexID2 = Array.from(iid2, function(byte: number) {
+        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+      }).join('');
+      expect(d2.invocationID).toBe(hexID2);
     });
 
   const passthrough = [
