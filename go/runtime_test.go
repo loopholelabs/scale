@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scale/go/tests/harness"
@@ -310,6 +311,17 @@ func TestRuntimeGoTracing(t *testing.T) {
 
 	r.TraceDataCallback = func(data string) {
 		traceData = append(traceData, data)
+
+		// Slightly hacky, but we want to make sure time has moved on
+		t1 := time.Now().UnixNano()
+		t2 := t1
+		for {
+			if t2 > t1 {
+				break
+			}
+			t2 = time.Now().UnixNano()
+		}
+
 	}
 
 	i, err := r.Instance(nil)
@@ -339,6 +351,9 @@ func TestRuntimeGoTracing(t *testing.T) {
 	assert.Equal(t, "TestName2:TestTag2", trace2.ServiceName)
 	assert.Equal(t, fmt.Sprintf("%x", r.InvocationID), trace2.InvocationId)
 
+	// Make sure we can get time
+	assert.True(t, trace2.Timestamp > trace1.Timestamp)
+
 	// Run it again and make sure it's a new invocationID
 	i, err = r.Instance(nil)
 	require.NoError(t, err)
@@ -361,6 +376,7 @@ func TestRuntimeGoTracing(t *testing.T) {
 type TraceData struct {
 	ServiceName  string `json:"serviceName"`
 	InvocationId string `json:"invocationId"`
+	Timestamp    uint64 `json:"timestamp"`
 }
 
 func TestRuntimeHTTPSignatureGo(t *testing.T) {

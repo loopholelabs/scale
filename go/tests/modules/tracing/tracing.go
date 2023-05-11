@@ -19,6 +19,7 @@ package scale
 
 import (
 	"fmt"
+	"time"
 	"unsafe"
 
 	signature "github.com/loopholelabs/scale/go/tests/signature/example-signature"
@@ -34,8 +35,10 @@ func Scale(ctx *signature.Context) (*signature.Context, error) {
 	serviceName := make([]byte, length)
 	get_service_name(uint32(uintptr(unsafe.Pointer(unsafe.SliceData(serviceName)))))
 
+	now := time.Now()
+
 	// Send a single trace item with the invocationID and serviceName provided by the host.
-	data := fmt.Sprintf("{\"invocationID\":\"%x\", \"serviceName\":\"%s\"}", invocationID, serviceName)
+	data := fmt.Sprintf("{\"invocationID\":\"%x\", \"serviceName\":\"%s\", \"timestamp\": %d}", invocationID, serviceName, now.UnixNano())
 
 	ptr := unsafe.Pointer(unsafe.StringData(data))
 	send_otel_trace_json(uint32(uintptr(ptr)), uint32(len(data)))

@@ -58,8 +58,15 @@ describe("TestRuntimeTs", () => {
 
       let traceData: string[] = []
 
-      r.TraceDataCallback = (s: string) => {
+      r.TraceDataCallback = (s: string) => {        
         traceData.push(s);
+
+        // Slightly hacky, but here, we're waiting for javascript to have a different time.
+        let t1 = (new Date()).getTime();
+        let t2 = t1;
+        while(t2==t1) {
+          t2 = (new Date()).getTime();
+        }
       }
 
       const i = await r.Instance(null);
@@ -85,6 +92,9 @@ describe("TestRuntimeTs", () => {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);
       }).join('');
       expect(d2.invocationID).toBe(hexID2);
+
+      // Check we can get time ok
+      expect(d2.timestamp).toBeGreaterThan(d1.timestamp);
 
       // Run it again and check the invocationID is now changed
 
