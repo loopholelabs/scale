@@ -236,7 +236,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.17...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.19...HEAD
+[v0.3.19]: https://github.com/loopholelabs/scale/compare/v0.3.19
+[v0.3.18]: https://github.com/loopholelabs/scale/compare/v0.3.18
 [v0.3.17]: https://github.com/loopholelabs/scale/compare/v0.3.17
 [v0.3.16]: https://github.com/loopholelabs/scale/compare/v0.3.16
 [v0.3.15]: https://github.com/loopholelabs/scale/compare/v0.3.15
