@@ -7,6 +7,18 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.3.19] - 2023-05-15
+
+### Features
+
+- Added basic otel tracing support to `Golang` and `Typescript` runtimes.
+
+## [v0.3.18] - 2023-05-03
+
+### Features
+
+- Added dynamic source linking in jsbuilder
+
 ## [v0.3.17] - 2023-04-16
 
 ### Changes
