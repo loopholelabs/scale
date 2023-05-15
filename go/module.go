@@ -19,6 +19,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
 	signature "github.com/loopholelabs/scale-signature"
 	"github.com/tetratelabs/wazero/api"
@@ -35,6 +36,9 @@ type Module[T signature.Signature] struct {
 }
 
 func NewModule[T signature.Signature](ctx context.Context, f *Function[T], r *Runtime[T]) (*Module[T], error) {
+	// This allows the service name to be set correctly when _start/main etc are called.
+	r.ServiceName = fmt.Sprintf("%s:%s", f.scaleFunc.Name, f.scaleFunc.Tag)
+
 	module, err := r.runtime.InstantiateModule(ctx, f.compiled, r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.scaleFunc.Name, uuid.New().String())))
 	if err != nil {
 		return nil, fmt.Errorf("failed to instantiate function '%s': %w", f.scaleFunc.Name, err)

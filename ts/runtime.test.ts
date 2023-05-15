@@ -49,6 +49,68 @@ describe("TestRuntimeTs", () => {
     const modHttpNextGo = fs.readFileSync("./ts/tests/modules/http-next-TestRuntimeHTTPSignatureGo.wasm");
     const modHttpNextRs = fs.readFileSync("./ts/tests/modules/http-next-TestRuntimeHTTPSignatureRs.wasm");
 
+    const modTracingGo = fs.readFileSync("./ts/tests/modules/tracing-TestRuntimeGoTracing.wasm");
+
+    it("Tracing", async () => {
+      const sfn1 = new ScaleFunc(V1Alpha, `Test.Tracing1`, "Test.TestTag1", "ExampleName@ExampleVersion", Go, modTracingGo);
+      const sfn2 = new ScaleFunc(V1Alpha, `Test.Tracing2`, "Test.TestTag2", "ExampleName@ExampleVersion", Go, modTracingGo);
+      const r = await NewFromSignature(signature.New, [sfn1, sfn2]);
+
+      let traceData: string[] = []
+
+      r.TraceDataCallback = (s: string) => {        
+        traceData.push(s);
+
+        // Slightly hacky, but here, we're waiting for javascript to have a different time.
+        let t1 = (new Date()).getTime();
+        let t2 = t1;
+        while(t2==t1) {
+          t2 = (new Date()).getTime();
+        }
+      }
+
+      const i = await r.Instance(null);
+      expect(() => {
+        i.Run();
+      }).not.toThrowError();
+
+      // Check we got some tracing data...
+      expect(traceData.length).toBe(2);
+
+      let d1 = JSON.parse(traceData[0])
+      expect(d1.serviceName).toBe("Test.Tracing1:Test.TestTag1");
+      let iid1 = [...r.InvocationId];
+      let hexID1 = Array.from(iid1, function(byte: number) {
+        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+      }).join('');
+      expect(d1.invocationID).toBe(hexID1);
+
+      let d2 = JSON.parse(traceData[1])
+      expect(d2.serviceName).toBe("Test.Tracing2:Test.TestTag2");
+      let iid2 = [...r.InvocationId];
+      let hexID2 = Array.from(iid2, function(byte: number) {
+        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+      }).join('');
+      expect(d2.invocationID).toBe(hexID2);
+
+      // Check we can get time ok
+      expect(d2.timestamp).toBeGreaterThan(d1.timestamp);
+
+      // Run it again and check the invocationID is now changed
+
+      const i2 = await r.Instance(null);
+      expect(() => {
+        i2.Run();
+      }).not.toThrowError();
+
+      // Check we got some tracing data...
+      expect(traceData.length).toBe(4);
+
+      let d3 = JSON.parse(traceData[2])
+      expect(d3.invocationID).not.toBe(d1.invocationID);
+
+    });
+
   const passthrough = [
     { name: "Passthrough", module: modPassthroughGo, language: Go },
     { name: "Passthrough", module: modPassthroughRs, language: Rust },

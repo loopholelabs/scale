@@ -20,7 +20,13 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"testing"
+	"time"
+
 	httpSignature "github.com/loopholelabs/scale-signature-http"
 	"github.com/loopholelabs/scale/go/tests/harness"
 	signature "github.com/loopholelabs/scale/go/tests/signature/example-signature"
@@ -28,8 +34,6 @@ import (
 	"github.com/loopholelabs/scalefile/scalefunc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 type TestCase struct {
@@ -266,6 +270,113 @@ func TestRuntimeGo(t *testing.T) {
 			testCase.Run(scaleFunc, t)
 		})
 	}
+}
+
+func TestRuntimeGoTracing(t *testing.T) {
+	tracingModule := &harness.Module{
+		Name:      "tracing",
+		Path:      "tests/modules/tracing/tracing.go",
+		Signature: "github.com/loopholelabs/scale/go/tests/signature/example-signature",
+	}
+
+	modules := []*harness.Module{tracingModule}
+	generatedModules := harness.GoSetup(t, modules, "github.com/loopholelabs/scale/go/tests/modules")
+
+	// Now run it and see...
+	module, err := os.ReadFile(generatedModules[tracingModule])
+	require.NoError(t, err)
+
+	scaleFunc1 := &scalefunc.ScaleFunc{
+		Version:   scalefunc.V1Alpha,
+		Name:      "TestName1",
+		Tag:       "TestTag1",
+		Signature: "ExampleName@ExampleVersion",
+		Language:  scalefunc.Go,
+		Function:  module,
+	}
+
+	scaleFunc2 := &scalefunc.ScaleFunc{
+		Version:   scalefunc.V1Alpha,
+		Name:      "TestName2",
+		Tag:       "TestTag2",
+		Signature: "ExampleName@ExampleVersion",
+		Language:  scalefunc.Go,
+		Function:  module,
+	}
+
+	r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc1, scaleFunc2})
+	require.NoError(t, err)
+
+	traceData := make([]string, 0)
+
+	r.TraceDataCallback = func(data string) {
+		traceData = append(traceData, data)
+
+		// Slightly hacky, but we want to make sure time has moved on
+		t1 := time.Now().UnixNano()
+		t2 := t1
+		for {
+			if t2 > t1 {
+				break
+			}
+			t2 = time.Now().UnixNano()
+		}
+
+	}
+
+	i, err := r.Instance(nil)
+	require.NoError(t, err)
+
+	err = i.Run(context.Background())
+	assert.NoError(t, err)
+
+	// Assert that the trace data is there and as expected...
+	assert.Equal(t, 2, len(traceData))
+
+	data1 := traceData[0]
+	trace1 := &TraceData{}
+	err = json.Unmarshal([]byte(data1), trace1)
+	require.NoError(t, err)
+	// Json decode, and check it
+
+	assert.Equal(t, "TestName1:TestTag1", trace1.ServiceName)
+	assert.Equal(t, fmt.Sprintf("%x", r.InvocationID), trace1.InvocationId)
+
+	data2 := traceData[1]
+	trace2 := &TraceData{}
+	err = json.Unmarshal([]byte(data2), trace2)
+	require.NoError(t, err)
+	// Json decode, and check it
+
+	assert.Equal(t, "TestName2:TestTag2", trace2.ServiceName)
+	assert.Equal(t, fmt.Sprintf("%x", r.InvocationID), trace2.InvocationId)
+
+	// Make sure we can get time
+	assert.True(t, trace2.Timestamp > trace1.Timestamp)
+
+	// Run it again and make sure it's a new invocationID
+	i, err = r.Instance(nil)
+	require.NoError(t, err)
+
+	err = i.Run(context.Background())
+	assert.NoError(t, err)
+
+	// Assert that the trace data is there and as expected but a different invocationID from previous Run
+	assert.Equal(t, 4, len(traceData))
+
+	data3 := traceData[2]
+	trace3 := &TraceData{}
+	err = json.Unmarshal([]byte(data3), trace3)
+	require.NoError(t, err)
+	// Json decode, and check it
+
+	assert.NotEqual(t, trace3.InvocationId, trace2.InvocationId)
+}
+
+type TraceData struct {
+	ServiceName  string `json:"serviceName"`
+	InvocationId string `json:"invocationId"`
+	Timestamp    uint64 `json:"timestamp"`
 }
 
 func TestRuntimeHTTPSignatureGo(t *testing.T) {

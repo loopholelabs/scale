@@ -19,6 +19,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+
 	signature "github.com/loopholelabs/scale-signature"
 	"github.com/loopholelabs/scale/go/utils"
 	"github.com/loopholelabs/scalefile/scalefunc"
@@ -38,6 +39,9 @@ func (f *Function[T]) Run(ctx context.Context, i *Instance[T]) error {
 	if err != nil {
 		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
 	}
+
+	// Make sure ServiceName is set
+	module.runtime.ServiceName = fmt.Sprintf("%s:%s", f.scaleFunc.Name, f.scaleFunc.Tag)
 
 	module.init(i)
 	ctxBuffer := i.runtimeContext().Write()
