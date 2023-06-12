@@ -1,0 +1,233 @@
+---
+title: Overview
+description: An overview of Golang support in Scale Functions
+---
+
+Scale Functions currently support using [Golang](https://go.dev) as both the [Guest](#guest-support) and the [Host](#host-support) language.
+
+This means that you can write your Functions in Golang ([Guest Support](#guest-support)) and you can run Functions written in any supported
+language inside a Golang application ([Host Support](#host-support)).
+
+## Guest Support
+
+A Scale Function written in [Golang](https://go.dev) often looks something like this:
+
+ ```go scale.go
+//go:build tinygo || js || wasm
+package scale
+
+import (
+    signature "github.com/loopholelabs/scale-signature-http"
+)
+
+func Scale(ctx *signature.Context) (*signature.Context, error) {
+    ctx.Response().SetBody("Hello, World!")
+    return ctx.Next()
+}
+```
+
+The above example is a simple HTTP Function that responds with "Hello, World!" to any request.
+
+Compiling these Functions requires the appropriate toolchain to be installed on your machine.
+
+<Note>
+    To streamline compiling Scale Functions in the future, we're working on a cloud build service that will allow you to
+    compile your functions without having to install the toolchain on your machine. If you're interested in accessing this
+    service as soon as it's available, please join the `#scale` on our [discord](https://loopholelabs.io/discord).
+</Note>
+
+<Snippet file="install-golang-toolchain.mdx" />
+
+## Host Support
+
+To use a compiled Scale Function (written in any supported language) inside a Golang application, there are 3 steps:
+1. Import the Scale Function(s) into the Golang application by embedding them or by using the Registry
+2. Create a new Scale Runtime and pass in the Scale Function(s)
+3. Call the `Run` method on the Scale Runtime with your request
+
+### Importing Scale Functions
+
+Scale Functions can be imported into a Golang application in two ways:
+- [Embedding them Directly](#embedding-scale-functions)
+- [Using the Registry](#using-the-registry)
+
+#### Embedding Scale Functions
+
+Scale Functions can be embedded into a Golang application by using the `//go:embed` directive, after it has been
+exported using the `scale fn export` command (see [Exporting Scale Functions](/cli/exporting)).
+
+```go
+import (
+	"embed"
+	"github.com/loopholelabs/scalefile/scalefunc"
+)
+
+//go:embed <path to exported function>
+var embeddedFunction []byte
+
+func main() {
+    // ...
+    sf := new(ScaleFunc)
+	_ = sf.Decode(embeddedFunction)
+    // ...
+}
+```
+
+#### Using the Registry
+
+Scale Functions can also be imported into a Golang application by using the Registry.
+
+This has the advantage of allowing you import the function at runtime, rather than at compile time - however it does require your function
+to be available in the [Scale Registry](/registry/overview). Functions will also automatically cached locally based on their
+tags and hashes, so subsequent calls to `Download` will be much faster.
+
+```go
+import "github.com/loopholelabs/scale/go/registry"
+
+func main() {
+	// ...
+    sf, _ := registry.Download("<function name>", "<function tag>", registry.WithOrganization("<organization name>"), registry.WithAPIKey("<api key>"))
+    // ...
+}
+```
+
+<Note>
+    If your function is an official Scale Function you can omit the `registry.WithOrganization` option, and if your function
+    is marked as public you can safely omit the `registry.WithAPIKey` option.
+
+    All officially published scale functions are public. If you're interested in publishing your own functions, please join
+    the `#scale` channel on our [discord](https://loopholelabs.io/discord).
+</Note>
+
+
+### Creating a Scale Runtime
+
+Once you've imported your Scale Function(s) into your Golang application, you can create a new instance of the Scale Runtime
+and pass in the Scale Function(s).
+
+```go
+import (
+	"context"
+	scale "github.com/loopholelabs/scale/go"
+)
+
+func main() {
+    // ...
+	ctx := context.Background()
+    r := scale.New(ctx, sf) // Or scale.New(ctx, sf1, sf2, sf3, ...)
+    // ...
+}
+```
+
+### Running a Scale Function
+
+Once you've created the Scale Runtime, you can call the `Instance` method on it to get a new runtime instance.
+The `Context` method of the `Instance` can then be used to set the request body, and the `Run` method can be used to
+run the Scale Function (or Functions).
+
+```go
+import (
+    "context"
+)
+
+func main() {
+    // ...
+    i, _ := r.Instance()
+    i.Context().Request.Body = []byte("Hello, World!")
+
+	ctx := context.Background()
+    _ = i.Run(ctx)
+    // ...
+}
+```
+
+<Note>
+    You'll notice that we're not passing anything into to the `r.Instance` method above. In actually, it is possible to pass in
+    one or multiple native golang functions (with the signature `(ctx *signature.Context) (*signature.Context, error)`) to be run
+    as part of the Scale Function chain.
+
+    The `Instance` method will automatically pass the result of the  previous function to the next one (and pass the
+    responses back up through the chain).
+
+    If you're not using a native handler (or handlers) at the end of the chain, you can don't need to pass anything
+    into the `r.Instance` method.
+</Note>
+
+It's important to note that an `Instance` can be reused multiple times, but it's not thread-safe. If you need to run
+multiple instances of a Scale Function concurrently, you'll need to create a new `Instance` for each one.
+
+Instances are heavily optimized and will recycle themselves automatically when they're no longer in use. This means that
+creating instances are very cheap and you can create as many as you need as often as you need.
+
+<Info>
+    The `Instance` method itself **is** thread-safe and can be called concurrently.
+</Info>
+
+### Putting it all Together
+
+Here's a complete example of a Golang application that imports a Scale Function, creates a new Scale Runtime, and runs
+it.
+
+<Tabs>
+    <Tab title="Embedding the Function">
+        ```go scale.go
+        package main
+
+        import (
+            "context"
+            "embed"
+            "fmt"
+            scale "github.com/loopholelabs/scale/go"
+        )
+
+        //go:embed hello-world-latest.scale
+        var embeddedFunction []byte
+
+        func main() {
+            sf := new(scale.ScaleFunc)
+            _ = sf.Decode(embeddedFunction)
+
+            ctx := context.Background()
+            r := scale.New(ctx, sf)
+
+            i, _ := r.Instance()
+            i.Context().Request.Body = []byte("Hello, World!")
+
+            _ = i.Run(ctx)
+
+            fmt.Println(string(i.Context().Response.Body))
+        }
+        ```
+    </Tab>
+    <Tab title="Using the Scale Registry">
+        ```go scale.go
+        package main
+
+        import (
+            "context"
+            "fmt"
+            scale "github.com/loopholelabs/scale/go"
+            "github.com/loopholelabs/scale/go/registry"
+        )
+
+        func main() {
+            sf, _ := registry.Download("hello-world", "latest")
+
+            ctx := context.Background()
+            r := scale.New(ctx, sf)
+
+            i, _ := r.Instance()
+            i.Context().Request.Body = []byte("Hello, World!")
+
+            _ = i.Run(ctx)
+
+            fmt.Println(string(i.Context().Response.Body))
+        }
+        ```
+    </Tab>
+</Tabs>
+
+## What's Next?
+
+Now that you've learned how to use Scale Functions inside your Golang application, you should check out our pre-made
+adapters for popular Golang frameworks and libraries, such as [net/http](/languages/golang/adapters/net-http) and [FastHTTP](/languages/golang/adapters/fasthttp).

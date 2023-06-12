@@ -1,0 +1,169 @@
+{
+  "name": "Scale",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://scale.sh"
+  },
+  "api": {
+    "baseUrl": [
+      "https://api.scale.sh/v1"
+    ],
+    "auth": {
+      "method": "bearer"
+    }
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#7c34ff",
+    "light": "#ae82ff",
+    "dark": "#9015D9",
+    "background": {
+      "light": "#FFFFFF",
+      "dark": "#08111F"
+    }
+  },
+  "topbarLinks": [],
+  "topbarCtaButton": {
+    "type": "github",
+    "url": "https://github.com/loopholelabs/scale"
+  },
+  "anchors": [
+    {
+      "name": "Blog",
+      "icon": "newspaper",
+      "iconType": "solid",
+      "url": "https://loopholelabs.io/blog"
+    },
+    {
+      "name": "Discord",
+      "icon": "discord",
+      "url": "https://loopholelabs.io/discord"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/loopholelabs/scale"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "getting-started/overview",
+        "getting-started/quick-start"
+      ]
+    },
+    {
+      "group": "Languages",
+      "pages": [
+        {
+          "group": "Golang",
+          "pages": [
+            "languages/golang/overview",
+            {
+              "group": "Adapters",
+              "pages": [
+                "languages/golang/adapters/net-http",
+                "languages/golang/adapters/fasthttp"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Rust",
+          "pages": [
+            "languages/rust/overview"
+          ]
+        },
+        {
+          "group": "JavaScript/TypeScript",
+            "pages": [
+              "languages/javascript-typescript/overview",
+              {
+                "group": "Adapters",
+                "pages": [
+                  "languages/javascript-typescript/adapters/nextjs"
+                ]
+              }
+            ]
+        }
+      ]
+    },
+    {
+      "group": "Registry",
+      "pages": [
+        "registry/overview",
+        {
+          "group": "API Reference",
+          "pages": [
+            "registry/api-reference/userinfo",
+            "registry/api-reference/health",
+            {
+              "group": "Functions",
+              "pages": [
+                "registry/api-reference/functions/upload-function",
+                "registry/api-reference/functions/pull-function",
+                "registry/api-reference/functions/list-functions",
+                "registry/api-reference/functions/delete-function"
+              ]
+            },
+            {
+              "group": "Access",
+              "pages": [
+                "registry/api-reference/access/create-apikey",
+                "registry/api-reference/access/list-apikeys",
+                "registry/api-reference/access/get-apikey",
+                "registry/api-reference/access/delete-apikey"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "CLI",
+        "pages": [
+          "cli/installation",
+          {
+            "group": "Reference",
+            "pages": [
+              "cli/reference/flags",
+              "cli/reference/help",
+              "cli/reference/completion",
+              "cli/reference/auth",
+              "cli/reference/apikey",
+              "cli/reference/function",
+              "cli/reference/registry"
+            ]
+          }
+        ]
+    },
+    {
+      "group": "Signatures",
+      "pages": [
+        "signatures/overview",
+        "signatures/http"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "discord": "https://loopholelabs.io/discord",
+    "github": "https://github.com/loopholelabs/scale"
+  },
+  "classes": {
+    "anchors": "group-hover:bg-gradient-to-tr from-[#7c34ff] to-[#fe9195]",
+    "activeAnchors": "bg-gradient-to-tr",
+    "navigationItem": "duration-100"
+  },
+  "backgroundImage": "/images/grid.svg",
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_4m0hrR8xTk5PtbYNbeCmvqHBHv21kgk7DJjXxZ6Te6p",
+      "apiHost": "https://data.scale.sh"
+    }
+  },
+  "metadata": {
+    "og:image": "https://scale.sh/images/og-image.png"
+  }
+}
