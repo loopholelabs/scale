@@ -1,3 +1,5 @@
+//go:build !integration
+
 /*
 	Copyright 2022 Loophole Labs
 
