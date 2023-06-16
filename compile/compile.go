@@ -15,8 +15,8 @@ package compile
 
 type Manifest interface {
 	AddRequire(dependency string, version string) error
-	HasRequire(dependency string, version string) bool
+	HasRequire(dependency string, version string, lax bool) bool
 	AddReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string) error
-	HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string) bool
+	HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string, lax bool) bool
 	Write() ([]byte, error)
 }

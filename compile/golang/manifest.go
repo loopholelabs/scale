@@ -42,10 +42,10 @@ func (m *Manifest) AddRequire(dependency string, version string) error {
 	return m.modfile.AddRequire(dependency, version)
 }
 
-func (m *Manifest) HasRequire(dependency string, version string) bool {
+func (m *Manifest) HasRequire(dependency string, version string, lax bool) bool {
 	if m.modfile.Require != nil {
 		for _, v := range m.modfile.Require {
-			if v.Mod.Version == version && v.Mod.Path == dependency {
+			if v.Mod.Path == dependency && (lax || v.Mod.Version == version) {
 				return true
 			}
 		}
@@ -54,10 +54,10 @@ func (m *Manifest) HasRequire(dependency string, version string) bool {
 	return false
 }
 
-func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string) bool {
+func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string, lax bool) bool {
 	if m.modfile.Replace != nil {
 		for _, v := range m.modfile.Replace {
-			if v.Old.Version == oldVersion && v.Old.Path == oldDependency && v.New.Version == newVersion && v.New.Path == newDependency {
+			if v.Old.Path == oldDependency && v.New.Path == newDependency && (lax || (v.Old.Version == oldVersion && v.New.Version == newVersion)) {
 				return true
 			}
 		}
