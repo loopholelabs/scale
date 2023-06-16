@@ -65,8 +65,8 @@ func ReadSchema(path string) (*Schema, error) {
 		return nil, fmt.Errorf("failed to read schema file: %w", err)
 	}
 
-	schema := new(Schema)
-	return schema, schema.Decode(data)
+	s := new(Schema)
+	return s, s.Decode(data)
 }
 
 func (s *Schema) Decode(data []byte) error {

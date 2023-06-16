@@ -20,126 +20,95 @@ package scalefile
 
 import (
 	"errors"
+	"fmt"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/loopholelabs/scale/scalefunc"
-	"gopkg.in/yaml.v3"
-	"io"
+	"github.com/loopholelabs/scale/signature/schema"
 	"os"
 )
 
-var (
-	VersionErr  = errors.New("unknown or invalid version")
-	LanguageErr = errors.New("unknown or invalid language")
-)
-
-// Version is the Version of the ScaleFile definition
-type Version string
-
 const (
-	// V1Alpha is the V1 Alpha definition of a ScaleFile
-	V1Alpha Version = "v1alpha"
+	V1AlphaVersion = "v1alpha"
 )
 
 var (
-	// AcceptedVersions is an array of acceptable Versions
-	AcceptedVersions = []Version{V1Alpha}
+	ErrInvalidName = errors.New("invalid name")
+	ErrInvalidTag  = errors.New("invalid tag")
 )
 
-// ScaleFile describes the Scale Function and its dependencies
-type ScaleFile struct {
-	Version   Version            `json:"version" yaml:"version"`
-	Name      string             `json:"name" yaml:"name"`
-	Tag       string             `json:"tag" yaml:"tag"`
-	Signature string             `json:"signature" yaml:"signature"`
-	Function  string             `json:"function" yaml:"function"`
-	Language  scalefunc.Language `json:"language" yaml:"language"`
-	Source    string             `json:"source" yaml:"source"`
+type SignatureSchema struct {
+	Organization string `hcl:"organization,optional"`
+	Name         string `hcl:"name,attr"`
+	Tag          string `hcl:"tag,attr"`
 }
 
-// Read opens a file at the given path and returns a *ScaleFile
-func Read(path string) (*ScaleFile, error) {
-	file, err := os.Open(path)
+type Schema struct {
+	Version     string          `hcl:"version,attr"`
+	Name        string          `hcl:"name,attr"`
+	Tag         string          `hcl:"tag,attr"`
+	Language    string          `hcl:"language,attr"`
+	Signature   SignatureSchema `hcl:"signature,block"`
+	Function    string          `hcl:"function,attr"`
+	Description string          `hcl:"description,optional"`
+}
+
+func ReadSchema(path string) (*Schema, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read schema file: %w", err)
 	}
-	defer func() {
-		_ = file.Close()
-	}()
 
-	return Decode(file)
+	s := new(Schema)
+	return s, s.Decode(data)
 }
 
-// Write opens a file at the given path and writes the given scalefile to it
-func Write(path string, scalefile *ScaleFile) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return err
+func (s *Schema) Decode(data []byte) error {
+	file, diag := hclsyntax.ParseConfig(data, "", hcl.Pos{Line: 1, Column: 1})
+	if diag.HasErrors() {
+		return diag.Errs()[0]
 	}
-	defer func() {
-		_ = file.Close()
-	}()
 
-	return Encode(file, scalefile)
+	diag = gohcl.DecodeBody(file.Body, nil, s)
+	if diag.HasErrors() {
+		return diag.Errs()[0]
+	}
+
+	return nil
 }
 
-// Decode reads the data stored in the given io.Reader and returns a *ScaleFile
-func Decode(reader io.Reader) (*ScaleFile, error) {
-	decoder := yaml.NewDecoder(reader)
-	scalefile := new(ScaleFile)
-	err := decoder.Decode(scalefile)
-	if err != nil {
-		return nil, err
-	}
-
-	invalid := true
-	for _, v := range AcceptedVersions {
-		if scalefile.Version == v {
-			invalid = false
-			break
+func (s *Schema) Validate() error {
+	switch s.Version {
+	case V1AlphaVersion:
+		if !scalefunc.ValidString(s.Name) {
+			return ErrInvalidName
 		}
-	}
-	if invalid {
-		return nil, VersionErr
-	}
 
-	invalid = true
-	for _, l := range scalefunc.AcceptedLanguages {
-		if scalefile.Language == l {
-			invalid = false
-			break
+		if scalefunc.ValidString(s.Tag) {
+			return ErrInvalidTag
 		}
-	}
-	if invalid {
-		return nil, LanguageErr
-	}
 
-	return scalefile, nil
-}
-
-// Encode writes the given scalefile to the given io.Writer
-func Encode(writer io.Writer, scalefile *ScaleFile) error {
-	invalid := true
-	for _, v := range AcceptedVersions {
-		if scalefile.Version == v {
-			invalid = false
-			break
+		switch scalefunc.Language(s.Language) {
+		case scalefunc.Go, scalefunc.Rust, scalefunc.TypeScript:
+		default:
+			return fmt.Errorf("unknown or invalid language: %s", s.Language)
 		}
-	}
-	if invalid {
-		return VersionErr
-	}
 
-	invalid = true
-	for _, l := range scalefunc.AcceptedLanguages {
-		if scalefile.Language == l {
-			invalid = false
-			break
+		if !scalefunc.ValidString(s.Signature.Organization) {
+			return fmt.Errorf("invalid organization: %s", s.Signature.Organization)
 		}
-	}
-	if invalid {
-		return LanguageErr
-	}
 
-	encoder := yaml.NewEncoder(writer)
-	encoder.SetIndent(2)
-	return encoder.Encode(scalefile)
+		if !schema.ValidLabel.MatchString(s.Signature.Name) {
+			return fmt.Errorf("invalid name: %s", s.Signature.Name)
+		}
+
+		if schema.InvalidString.MatchString(s.Signature.Tag) {
+			return fmt.Errorf("invalid tag: %s", s.Signature.Tag)
+		}
+
+		return nil
+	default:
+		return fmt.Errorf("unknown schema version: %s", s.Version)
+	}
 }
