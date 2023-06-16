@@ -10,4 +10,4 @@ path = "lib.rs"
 [dependencies]
 num_enum = "0.6.1"
 polyglot_rs = "1.1.1"
-regex = "1.8.3"
+regex = "1.8.4"
