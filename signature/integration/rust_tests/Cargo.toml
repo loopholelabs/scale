@@ -1,0 +1,13 @@
+[package]
+name = "rust_tests"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rust_tests"
+path = "lib.rs"
+
+[dependencies]
+num_enum = "0.6.1"
+polyglot_rs = "1.1.1"
+regex = "1.8.3"
