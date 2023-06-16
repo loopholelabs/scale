@@ -43,12 +43,38 @@ func TestEncodeDecode(t *testing.T) {
 	masterTestingSchema := new(schema.Schema)
 	err = masterTestingSchema.Decode([]byte(schema.MasterTestingSchema))
 
+	dependencies := make([]Dependency, 3)
+	dependencies[0] = Dependency{
+		Name:     "Test Dependency 1",
+		Version:  "1.0.0",
+		Metadata: make(map[string]string),
+	}
+
+	dependencies[0].Metadata["test0"] = "test1"
+
+	dependencies[1] = Dependency{
+		Name:     "Test Dependency 2",
+		Version:  "2.0.0",
+		Metadata: make(map[string]string),
+	}
+
+	dependencies[1].Metadata["test2"] = "test3"
+
+	dependencies[2] = Dependency{
+		Name:     "Test Dependency 3",
+		Version:  "3.0.0",
+		Metadata: make(map[string]string),
+	}
+
+	dependencies[2].Metadata["test4"] = "test5"
+
 	s = &ScaleFunc{
 		Version:         V1Alpha,
 		Name:            "Test Name",
 		Tag:             "Test Tag",
 		Signature:       "Test Signature",
 		SignatureSchema: *masterTestingSchema,
+		Dependencies:    dependencies,
 		Language:        Go,
 		Function:        []byte("Test Function Contents"),
 	}

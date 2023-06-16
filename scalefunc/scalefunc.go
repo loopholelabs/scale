@@ -75,6 +75,13 @@ func ValidString(str string) bool {
 	return !InvalidStringRegex.MatchString(str)
 }
 
+// Dependency is a dependency of a compiled Scale Function
+type Dependency struct {
+	Name     string            `json:"name" yaml:"name"`
+	Version  string            `json:"version" yaml:"version"`
+	Metadata map[string]string `json:"metadata" yaml:"metadata"`
+}
+
 // ScaleFunc is the type used to define the requirements of a
 // scale function for a Scale Runtime
 type ScaleFunc struct {
@@ -84,6 +91,7 @@ type ScaleFunc struct {
 	Signature       string                 `json:"signature" yaml:"signature"`
 	SignatureSchema signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
 	Language        Language               `json:"language" yaml:"language"`
+	Dependencies    []Dependency           `json:"dependencies" yaml:"dependencies"`
 	Function        []byte                 `json:"function" yaml:"function"`
 	Size            uint32                 `json:"size" yaml:"size"`
 	Checksum        string                 `json:"checksum" yaml:"checksum"`
@@ -107,6 +115,17 @@ func (s *ScaleFunc) Encode() []byte {
 	e.Bytes(f.Bytes())
 
 	e.String(string(s.Language))
+
+	e.Slice(uint32(len(s.Dependencies)), polyglot.AnyKind)
+	for _, d := range s.Dependencies {
+		e.String(d.Name)
+		e.String(d.Version)
+		e.Map(uint32(len(d.Metadata)), polyglot.StringKind, polyglot.StringKind)
+		for k, v := range d.Metadata {
+			e.String(k)
+			e.String(v)
+		}
+	}
 
 	e.Bytes(s.Function)
 
@@ -183,6 +202,39 @@ func (s *ScaleFunc) Decode(data []byte) error {
 	}
 	if invalid {
 		return LanguageErr
+	}
+
+	dependenciesSize, err := d.Slice(polyglot.AnyKind)
+	if err != nil {
+		return err
+	}
+	s.Dependencies = make([]Dependency, dependenciesSize)
+	for i := uint32(0); i < dependenciesSize; i++ {
+		s.Dependencies[i].Name, err = d.String()
+		if err != nil {
+			return err
+		}
+		s.Dependencies[i].Version, err = d.String()
+		if err != nil {
+			return err
+		}
+
+		metadataSize, err := d.Map(polyglot.StringKind, polyglot.StringKind)
+		if err != nil {
+			return err
+		}
+		s.Dependencies[i].Metadata = make(map[string]string, metadataSize)
+		for j := uint32(0); j < metadataSize; j++ {
+			key, err := d.String()
+			if err != nil {
+				return err
+			}
+			value, err := d.String()
+			if err != nil {
+				return err
+			}
+			s.Dependencies[i].Metadata[key] = value
+		}
 	}
 
 	s.Function, err = d.Bytes(nil)

@@ -58,9 +58,16 @@ func _Resize(size uint32) uint32 {
     return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
 }
 
-// Identifier returns the identifier of the Scale Signature
-func Identifier() string {
-    return identifier
+// _Identifier returns the identifier of the Scale Signature
+//
+// Users should not use this method.
+func _Identifier() (uint32, uint32) {
+    writeBuffer.Reset()
+    polyglot.Encoder(writeBuffer).String(identifier)
+    underlying := writeBuffer.Bytes()
+    ptr := &underlying[0]
+    unsafePtr := uintptr(unsafe.Pointer(ptr))
+    return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
 
 // Next calls the next function in the Scale Function Chain
