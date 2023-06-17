@@ -15,12 +15,12 @@ package golang
 
 import (
 	"bytes"
+	"github.com/loopholelabs/scale/signature"
 	"go/format"
 	"text/template"
 
 	"github.com/loopholelabs/scale/signature/generator/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
-	"github.com/loopholelabs/scale/signature/schema"
 )
 
 const (
@@ -45,7 +45,7 @@ func New() (*Generator, error) {
 }
 
 // Generate generates the go code
-func (g *Generator) Generate(schema *schema.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
@@ -64,7 +64,7 @@ func (g *Generator) Generate(schema *schema.Schema, packageName string, version 
 }
 
 // GenerateGuest generates the guest bindings
-func (g *Generator) GenerateGuest(schema *schema.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateGuest(schema *signature.Schema, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
@@ -82,8 +82,22 @@ func (g *Generator) GenerateGuest(schema *schema.Schema, packageName string, ver
 	return format.Source(buf.Bytes())
 }
 
+// GenerateModfile generates the modfile for the signature
+func (g *Generator) GenerateModfile(packageName string, polyglotVersion string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "mod.go.templ", map[string]any{
+		"polyglot_version": polyglotVersion,
+		"package":          packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
 // GenerateHost generates the host bindings
-func (g *Generator) GenerateHost(schema *schema.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateHost(schema *signature.Schema, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
@@ -104,7 +118,7 @@ func (g *Generator) GenerateHost(schema *schema.Schema, packageName string, vers
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
 		"Primitive":               primitive,
-		"IsPrimitive":             schema.ValidPrimitiveType,
+		"IsPrimitive":             signature.ValidPrimitiveType,
 		"PolyglotPrimitive":       polyglotPrimitive,
 		"PolyglotPrimitiveEncode": polyglotPrimitiveEncode,
 		"PolyglotPrimitiveDecode": polyglotPrimitiveDecode,

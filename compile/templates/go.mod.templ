@@ -1,9 +1,0 @@
-module compile
-
-go 1.20
-
-replace {{ .old_dependency }} {{ .old_version }} => {{ .new_dependency }} {{ .new_version }}
-
-{{ range $dependency := .dependencies -}}
-    require {{ $dependency.Name }} {{ $dependency.Version }}
-{{end -}}

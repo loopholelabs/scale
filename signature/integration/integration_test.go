@@ -16,10 +16,10 @@
 package integration
 
 import (
+	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
 	"github.com/loopholelabs/scale/signature/generator/rust"
 	"github.com/loopholelabs/scale/signature/generator/typescript"
-	"github.com/loopholelabs/scale/signature/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -51,7 +51,7 @@ func TestSimpleSchema(t *testing.T) {
 	g, err := golang.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
+	s := new(signature.Schema)
 	err = s.Decode([]byte(simpleSchema))
 	require.NoError(t, err)
 
@@ -69,8 +69,8 @@ func TestGolangToGolang(t *testing.T) {
 	g, err := golang.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -106,8 +106,8 @@ func TestRustToRust(t *testing.T) {
 	r, err := rust.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -137,8 +137,8 @@ func TestTypescriptToTypescript(t *testing.T) {
 	ts, err := typescript.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -171,8 +171,8 @@ func TestGolangToRust(t *testing.T) {
 	r, err := rust.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -213,8 +213,8 @@ func TestGolangToTypescript(t *testing.T) {
 	ts, err := typescript.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -255,8 +255,8 @@ func TestRustToGolang(t *testing.T) {
 	r, err := rust.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -297,8 +297,8 @@ func TestRustToTypescript(t *testing.T) {
 	r, err := rust.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -339,8 +339,8 @@ func TestTypescriptToGolang(t *testing.T) {
 	ts, err := typescript.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
@@ -381,8 +381,8 @@ func TestTypescriptToRust(t *testing.T) {
 	ts, err := typescript.New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())

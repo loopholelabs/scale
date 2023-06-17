@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package schema
+package signature
 
 import "fmt"
 

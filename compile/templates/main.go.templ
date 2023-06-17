@@ -6,9 +6,7 @@ package main
 
 import (
     "signature"
-    "scale"
-    "github.com/loopholelabs/polyglot"
-    "github.com/loopholelabs/scale"
+    scale "{{ .schema.Name }}"
 )
 
 // needed to satisfy compiler
@@ -16,26 +14,27 @@ func main() {}
 
 //export run
 func run() uint64 {
-    ctx := signature.New({{ .signature.Context }})()
-    err := signature._Read(ctx)
+    var err error
+    ctx := signature.New{{ .signature.Context }}()
+    ctx, err = signature.Read(ctx)
     if err != nil {
-        return packUint32(signature._Error(err))
+        return packUint32(signature.Error(err))
     }
     ctx, err = scale.{{ .schema.Function }}(ctx)
     if err != nil {
-        return packUint32(signature._Error(err))
+        return packUint32(signature.Error(err))
     }
-    return packUint32(signature._Write(ctx))
+    return packUint32(signature.Write(ctx))
 }
 
 //export resize
 func resize(size uint32) uint32 {
-    return signature._Resize(size)
+    return signature.Resize(size)
 }
 
 //export identifier
 func identifier() uint64 {
-    return packUint32(signature._Identifier())
+    return packUint32(signature.Identifier())
 }
 
 func packUint32(offset uint32, length uint32) uint64 {

@@ -15,13 +15,13 @@ package rust
 
 import (
 	"bytes"
+	"github.com/loopholelabs/scale/signature"
 	"os/exec"
 	"text/template"
 
 	polyglotUtils "github.com/loopholelabs/polyglot/utils"
 	"github.com/loopholelabs/scale/signature/generator/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
-	"github.com/loopholelabs/scale/signature/schema"
 )
 
 const (
@@ -46,7 +46,7 @@ func New() (*Generator, error) {
 }
 
 // Generate generates the rust code for the given schema
-func (g *Generator) Generate(schema *schema.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
@@ -72,7 +72,7 @@ func (g *Generator) Generate(schema *schema.Schema, packageName string, version 
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
 		"Primitive":               primitive,
-		"IsPrimitive":             schema.ValidPrimitiveType,
+		"IsPrimitive":             signature.ValidPrimitiveType,
 		"PolyglotPrimitive":       polyglotPrimitive,
 		"PolyglotPrimitiveEncode": polyglotPrimitiveEncode,
 		"PolyglotPrimitiveDecode": polyglotPrimitiveDecode,

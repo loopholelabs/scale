@@ -19,7 +19,7 @@
 package scalefunc
 
 import (
-	"github.com/loopholelabs/scale/signature/schema"
+	"github.com/loopholelabs/scale/signature"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -42,8 +42,8 @@ func TestEncodeDecode(t *testing.T) {
 	err = decoded.Decode(encoded)
 	assert.ErrorIs(t, err, LanguageErr)
 
-	masterTestingSchema := new(schema.Schema)
-	err = masterTestingSchema.Decode([]byte(schema.MasterTestingSchema))
+	masterTestingSchema := new(signature.Schema)
+	err = masterTestingSchema.Decode([]byte(signature.MasterTestingSchema))
 
 	dependencies := make([]Dependency, 3)
 	dependencies[0] = Dependency{

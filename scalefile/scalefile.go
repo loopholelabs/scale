@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature/schema"
+	"github.com/loopholelabs/scale/signature"
 	"os"
 )
 
@@ -99,11 +99,11 @@ func (s *Schema) Validate() error {
 			return fmt.Errorf("invalid organization: %s", s.Signature.Organization)
 		}
 
-		if !schema.ValidLabel.MatchString(s.Signature.Name) {
+		if !signature.ValidLabel.MatchString(s.Signature.Name) {
 			return fmt.Errorf("invalid name: %s", s.Signature.Name)
 		}
 
-		if schema.InvalidString.MatchString(s.Signature.Tag) {
+		if signature.InvalidString.MatchString(s.Signature.Tag) {
 			return fmt.Errorf("invalid tag: %s", s.Signature.Tag)
 		}
 

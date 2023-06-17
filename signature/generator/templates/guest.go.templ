@@ -16,10 +16,10 @@ var (
     readBuffer  []byte
 )
 
-// _Write serializes the signature into the global writeBuffer and returns the pointer to the buffer and its size
+// Write serializes the signature into the global writeBuffer and returns the pointer to the buffer and its size
 //
 // Users should not use this method.
-func _Write(ctx *{{ .schema.Context }}) (uint32, uint32) {
+func Write(ctx *{{ .schema.Context }}) (uint32, uint32) {
     writeBuffer.Reset()
     ctx.Encode(writeBuffer)
     underlying := writeBuffer.Bytes()
@@ -28,17 +28,17 @@ func _Write(ctx *{{ .schema.Context }}) (uint32, uint32) {
     return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
 
-// _Read deserializes signature from the global readBuffer
+// Read deserializes signature from the global readBuffer
 //
 // Users should not use this method.
-func _Read(ctx *{{ .schema.Context }}) (*{{ .schema.Context }}, error) {
+func Read(ctx *{{ .schema.Context }}) (*{{ .schema.Context }}, error) {
     return Decode{{ .schema.Context }}(ctx, readBuffer)
 }
 
-// _Error serializes an error into the global writeBuffer and returns a pointer to the buffer and its size
+// Error serializes an error into the global writeBuffer and returns a pointer to the buffer and its size
 //
 // Users should not use this method.
-func _Error(err error) (uint32, uint32) {
+func Error(err error) (uint32, uint32) {
     writeBuffer.Reset()
     polyglot.Encoder(writeBuffer).Error(err)
     underlying := writeBuffer.Bytes()
@@ -47,10 +47,10 @@ func _Error(err error) (uint32, uint32) {
     return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
 
-// _Resize resizes the global readBuffer to the given size and returns the pointer to the buffer
+// Resize resizes the global readBuffer to the given size and returns the pointer to the buffer
 //
 // Users should not use this method.
-func _Resize(size uint32) uint32 {
+func Resize(size uint32) uint32 {
     if uint32(cap(readBuffer)) < size {
         readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
     }
@@ -58,10 +58,10 @@ func _Resize(size uint32) uint32 {
     return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
 }
 
-// _Identifier returns the identifier of the Scale Signature
+// Identifier returns the identifier of the Scale Signature
 //
 // Users should not use this method.
-func _Identifier() (uint32, uint32) {
+func Identifier() (uint32, uint32) {
     writeBuffer.Reset()
     polyglot.Encoder(writeBuffer).String(identifier)
     underlying := writeBuffer.Bytes()
@@ -72,8 +72,8 @@ func _Identifier() (uint32, uint32) {
 
 // Next calls the next function in the Scale Function Chain
 func Next(ctx *{{ .schema.Context }}) (*{{ .schema.Context }}, error) {
-    next(_Write(ctx))
-    return _Read(ctx)
+    next(Write(ctx))
+    return Read(ctx)
 }
 
 //export next

@@ -2,7 +2,7 @@ import { ScaleFunc, ValidString } from "@loopholelabs/scalefile/scalefunc"
 import { Read, Write } from "@loopholelabs/scalefile/scalefunc/helpers"
 import * as fs from "fs";
 import * as os from "os";
-import * as glob from "glob";
+import * as glob from "glob3";
 import path from "path";
 
 export const ErrInvalidName = new Error("invalid name");

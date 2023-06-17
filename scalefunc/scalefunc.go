@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/loopholelabs/polyglot"
-	signatureSchema "github.com/loopholelabs/scale/signature/schema"
+	signatureSchema "github.com/loopholelabs/scale/signature"
 	"os"
 	"regexp"
 )

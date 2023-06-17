@@ -16,10 +16,10 @@
 package typescript
 
 import (
+	"github.com/loopholelabs/scale/signature"
 	"os"
 	"testing"
 
-	"github.com/loopholelabs/scale/signature/schema"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,8 +27,8 @@ func TestGenerator(t *testing.T) {
 	g, err := New()
 	require.NoError(t, err)
 
-	s := new(schema.Schema)
-	err = s.Decode([]byte(schema.MasterTestingSchema))
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())

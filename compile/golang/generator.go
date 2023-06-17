@@ -14,10 +14,12 @@
 package golang
 
 import (
+	"bytes"
 	"github.com/loopholelabs/scale/compile/templates"
+	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature/schema"
-	"io"
+	"github.com/loopholelabs/scale/signature"
+	"go/format"
 	"text/template"
 )
 
@@ -31,21 +33,38 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(writer io.Writer, signatureImport string, signatureVersion string, dependencies []*scalefunc.Dependency, version string) error {
-	return g.template.ExecuteTemplate(writer, "go.mod.templ", map[string]interface{}{
-		"version":        version,
-		"dependencies":   dependencies,
-		"old_dependency": "signature",
-		"old_version":    "v0.1.0",
-		"new_dependency": signatureImport,
-		"new_version":    signatureVersion,
+func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string, version string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
+		"version":                  version,
+		"package":                  packageName,
+		"dependencies":             dependencies,
+		"old_signature_dependency": "signature",
+		"old_signature_version":    "v0.1.0",
+		"old_function_dependency":  schema.Name,
+		"old_function_version":     "v0.1.0",
+		"new_signature_dependency": signatureImport,
+		"new_signature_version":    signatureVersion,
+		"new_function_dependency":  functionImport,
+		"new_function_version":     "",
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateGoMain(writer io.Writer, signature *schema.Schema, schema *scalefunc.ScaleFunc, version string) error {
-	return g.template.ExecuteTemplate(writer, "main.go.templ", map[string]interface{}{
+func (g *Generator) GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := g.template.ExecuteTemplate(buf, "main.go.templ", map[string]interface{}{
 		"version":   version,
 		"signature": signature,
 		"schema":    schema,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return format.Source(buf.Bytes())
 }

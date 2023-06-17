@@ -14,33 +14,35 @@
 	limitations under the License.
 */
 
-package schema
+package signature
 
-import "fmt"
+import (
+	"fmt"
+)
 
-type BytesSchema struct {
-	Name        string `hcl:"name,label"`
-	InitialSize uint32 `hcl:"initial_size,attr"`
-	Accessor    bool   `hcl:"accessor,optional"`
+type BoolSchema struct {
+	Name     string `hcl:"name,label"`
+	Default  bool   `hcl:"default,attr"`
+	Accessor bool   `hcl:"accessor,optional"`
 }
 
-func (s *BytesSchema) Validate(model *ModelSchema) error {
+func (s *BoolSchema) Validate(model *ModelSchema) error {
 	if !ValidLabel.MatchString(s.Name) {
-		return fmt.Errorf("invalid %s.bytes name: %s", model.Name, s.Name)
+		return fmt.Errorf("invalid %s.bool name: %s", model.Name, s.Name)
 	}
 
 	return nil
 }
 
-type BytesArraySchema struct {
+type BoolArraySchema struct {
 	Name        string `hcl:"name,label"`
 	InitialSize uint32 `hcl:"initial_size,attr"`
 	Accessor    bool   `hcl:"accessor,optional"`
 }
 
-func (s *BytesArraySchema) Validate(model *ModelSchema) error {
+func (s *BoolArraySchema) Validate(model *ModelSchema) error {
 	if !ValidLabel.MatchString(s.Name) {
-		return fmt.Errorf("invalid %s.bytes_array name: %s", model.Name, s.Name)
+		return fmt.Errorf("invalid %s.bool_array name: %s", model.Name, s.Name)
 	}
 
 	return nil
