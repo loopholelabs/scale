@@ -84,7 +84,6 @@ func TestExampleSignature(t *testing.T) {
 	err = os.WriteFile(golangCompileDir+"/main.go", mainFile, 0644)
 	require.NoError(t, err)
 
-	//signatureImport string, signatureVersion string, dependencies []*scalefunc.Dependency, version string
 	dependencies := []*scalefunc.Dependency{
 		{
 			Name:     "signature",
