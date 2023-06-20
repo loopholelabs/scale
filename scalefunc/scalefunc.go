@@ -14,8 +14,8 @@
 	limitations under the License.
 */
 
-// Package scalefunc implements the ScaleFunc type, as well as any helper functions
-// for interacting with ScaleFunc types
+// Package scalefunc implements the Schema type, as well as any helper functions
+// for interacting with Schema types
 package scalefunc
 
 import (
@@ -40,11 +40,11 @@ var (
 	InvalidStringRegex = regexp.MustCompile(`[^A-Za-z0-9-.]`)
 )
 
-// Version is the Version of the ScaleFunc definition
+// Version is the Version of the Schema definition
 type Version string
 
 const (
-	// V1Alpha is the V1 Alpha definition of a ScaleFunc
+	// V1Alpha is the V1 Alpha definition of a Schema
 	V1Alpha Version = "v1alpha"
 )
 
@@ -82,9 +82,9 @@ type Dependency struct {
 	Metadata map[string]string `json:"metadata" yaml:"metadata"`
 }
 
-// ScaleFunc is the type used to define the requirements of a
+// Schema is the type used to define the requirements of a
 // scale function for a Scale Runtime
-type ScaleFunc struct {
+type Schema struct {
 	Version         Version                `json:"version" yaml:"version"`
 	Name            string                 `json:"name" yaml:"name"`
 	Tag             string                 `json:"tag" yaml:"tag"`
@@ -100,8 +100,8 @@ type ScaleFunc struct {
 	env map[string]string
 }
 
-// Encode encodes the ScaleFunc into a byte array
-func (s *ScaleFunc) Encode() []byte {
+// Encode encodes the Schema into a byte array
+func (s *Schema) Encode() []byte {
 	b := polyglot.GetBuffer()
 	defer polyglot.PutBuffer(b)
 	e := polyglot.Encoder(b)
@@ -140,8 +140,8 @@ func (s *ScaleFunc) Encode() []byte {
 	return b.Bytes()
 }
 
-// Decode decodes the ScaleFunc from a byte array
-func (s *ScaleFunc) Decode(data []byte) error {
+// Decode decodes the Schema from a byte array
+func (s *Schema) Decode(data []byte) error {
 	d := polyglot.GetDecoder(data)
 	defer d.Return()
 
@@ -262,28 +262,28 @@ func (s *ScaleFunc) Decode(data []byte) error {
 	return nil
 }
 
-// SetEnv sets the environment variables for the ScaleFunc
-func (s *ScaleFunc) SetEnv(env map[string]string) {
+// SetEnv sets the environment variables for the Schema
+func (s *Schema) SetEnv(env map[string]string) {
 	s.env = env
 }
 
-// GetEnv returns the environment variables for the ScaleFunc
-func (s *ScaleFunc) GetEnv() map[string]string {
+// GetEnv returns the environment variables for the Schema
+func (s *Schema) GetEnv() map[string]string {
 	return s.env
 }
 
 // Read opens a file at the given path and returns a *ScaleFile
-func Read(path string) (*ScaleFunc, error) {
+func Read(path string) (*Schema, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	scaleFunc := new(ScaleFunc)
+	scaleFunc := new(Schema)
 	return scaleFunc, scaleFunc.Decode(data)
 }
 
 // Write opens a file at the given path and writes the given scalefile to it
-func Write(path string, scaleFunc *ScaleFunc) error {
+func Write(path string, scaleFunc *Schema) error {
 	data := scaleFunc.Encode()
 	return os.WriteFile(path, data, 0644)
 }

@@ -28,6 +28,20 @@ const (
 	defaultPackageName = "types"
 )
 
+var generator *Generator
+
+func Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
+	return generator.Generate(schema, packageName, version)
+}
+
+func init() {
+	var err error
+	generator, err = New()
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Generator is the rust generator
 type Generator struct {
 	templ *template.Template

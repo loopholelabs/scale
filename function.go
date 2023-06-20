@@ -29,7 +29,7 @@ import (
 type Function[T signature.Signature] struct {
 	identifier string
 	compiled   wazero.CompiledModule
-	scaleFunc  *scalefunc.ScaleFunc
+	scaleFunc  *scalefunc.Schema
 	next       *Function[T]
 	modulePool *Pool[T]
 }

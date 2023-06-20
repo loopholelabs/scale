@@ -32,10 +32,10 @@ const testingAPIBaseURl = "https://api.dev.scale.sh/v1"
 
 func TestPulldownCache(t *testing.T) {
 	tempDir := t.TempDir()
-	st, err := storage.New(tempDir)
+	st, err := storage.NewFunction(tempDir)
 	require.NoError(t, err)
 
-	sf := &scalefunc.ScaleFunc{
+	sf := &scalefunc.Schema{
 		Version:   scalefunc.V1Alpha,
 		Name:      "Test1",
 		Signature: "signature1",

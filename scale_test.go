@@ -39,7 +39,7 @@ package scale
 //type TestCase struct {
 //	Name   string
 //	Module *harness.Module
-//	Run    func(*scalefunc.ScaleFunc, *testing.T)
+//	Run    func(*scalefunc.Schema, *testing.T)
 //}
 //
 //func TestRuntimeGo(t *testing.T) {
@@ -99,8 +99,8 @@ package scale
 //		{
 //			Name:   "Passthrough",
 //			Module: passthroughModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -117,8 +117,8 @@ package scale
 //		{
 //			Name:   "Modify",
 //			Module: modifyModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -135,13 +135,13 @@ package scale
 //		{
 //			Name:   "Next",
 //			Module: nextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
 //				next := func(ctx *signature.Context) (*signature.Context, error) {
 //					ctx.Data = "Hello, World!"
 //					return ctx, nil
 //				}
 //
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(next)
@@ -158,13 +158,13 @@ package scale
 //		{
 //			Name:   "ModifyNext",
 //			Module: modifyNextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
 //				next := func(ctx *signature.Context) (*signature.Context, error) {
 //					ctx.Data = ctx.Data + "-next"
 //					return ctx, nil
 //				}
 //
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(next)
@@ -181,12 +181,12 @@ package scale
 //		{
 //			Name:   "NextError",
 //			Module: nextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
 //				next := func(ctx *signature.Context) (*signature.Context, error) {
 //					return nil, errors.New("next error")
 //				}
 //
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(next)
@@ -199,8 +199,8 @@ package scale
 //		{
 //			Name:   "File",
 //			Module: fileModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -213,8 +213,8 @@ package scale
 //		{
 //			Name:   "Network",
 //			Module: networkModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -227,8 +227,8 @@ package scale
 //		{
 //			Name:   "Panic",
 //			Module: panicModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -241,8 +241,8 @@ package scale
 //		{
 //			Name:   "BadSignature",
 //			Module: badSignatureModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -259,7 +259,7 @@ package scale
 //			module, err := os.ReadFile(generatedModules[testCase.Module])
 //			require.NoError(t, err)
 //
-//			scaleFunc := &scalefunc.ScaleFunc{
+//			scaleFunc := &scalefunc.Schema{
 //				Version:   scalefunc.V1Alpha,
 //				Name:      "TestName",
 //				Tag:       "TestTag",
@@ -286,7 +286,7 @@ package scale
 //	module, err := os.ReadFile(generatedModules[tracingModule])
 //	require.NoError(t, err)
 //
-//	scaleFunc1 := &scalefunc.ScaleFunc{
+//	scaleFunc1 := &scalefunc.Schema{
 //		Version:   scalefunc.V1Alpha,
 //		Name:      "TestName1",
 //		Tag:       "TestTag1",
@@ -295,7 +295,7 @@ package scale
 //		Function:  module,
 //	}
 //
-//	scaleFunc2 := &scalefunc.ScaleFunc{
+//	scaleFunc2 := &scalefunc.Schema{
 //		Version:   scalefunc.V1Alpha,
 //		Name:      "TestName2",
 //		Tag:       "TestTag2",
@@ -304,7 +304,7 @@ package scale
 //		Function:  module,
 //	}
 //
-//	r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc1, scaleFunc2})
+//	r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc1, scaleFunc2})
 //	require.NoError(t, err)
 //
 //	traceData := make([]string, 0)
@@ -406,8 +406,8 @@ package scale
 //		{
 //			Name:   "Passthrough",
 //			Module: passthroughModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := New(context.Background(), []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -423,8 +423,8 @@ package scale
 //		{
 //			Name:   "Handler",
 //			Module: handlerModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := New(context.Background(), []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -440,8 +440,8 @@ package scale
 //		{
 //			Name:   "Next",
 //			Module: nextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := New(context.Background(), []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
@@ -464,7 +464,7 @@ package scale
 //			module, err := os.ReadFile(generatedModules[testCase.Module])
 //			require.NoError(t, err)
 //
-//			scaleFunc := &scalefunc.ScaleFunc{
+//			scaleFunc := &scalefunc.Schema{
 //				Version:   scalefunc.V1Alpha,
 //				Name:      "TestName",
 //				Tag:       "TestTag",
@@ -549,8 +549,8 @@ package scale
 //		{
 //			Name:   "Passthrough",
 //			Module: passthroughModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -567,8 +567,8 @@ package scale
 //		{
 //			Name:   "Modify",
 //			Module: modifyModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -585,13 +585,13 @@ package scale
 //		{
 //			Name:   "Next",
 //			Module: nextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
 //				next := func(ctx *signature.Context) (*signature.Context, error) {
 //					ctx.Data = "Hello, World!"
 //					return ctx, nil
 //				}
 //
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(next)
@@ -608,13 +608,13 @@ package scale
 //		{
 //			Name:   "ModifyNext",
 //			Module: modifyNextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
 //				next := func(ctx *signature.Context) (*signature.Context, error) {
 //					ctx.Data = ctx.Data + "-next"
 //					return ctx, nil
 //				}
 //
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(next)
@@ -631,12 +631,12 @@ package scale
 //		{
 //			Name:   "NextError",
 //			Module: nextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
 //				next := func(ctx *signature.Context) (*signature.Context, error) {
 //					return nil, errors.New("next error")
 //				}
 //
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(next)
@@ -649,8 +649,8 @@ package scale
 //		{
 //			Name:   "File",
 //			Module: fileModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -663,8 +663,8 @@ package scale
 //		{
 //			Name:   "Network",
 //			Module: networkModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -677,8 +677,8 @@ package scale
 //		{
 //			Name:   "Panic",
 //			Module: panicModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -691,8 +691,8 @@ package scale
 //		{
 //			Name:   "BadSignature",
 //			Module: badSignatureModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := NewWithSignature(context.Background(), signature.New, []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(nil)
@@ -709,7 +709,7 @@ package scale
 //			module, err := os.ReadFile(generatedModules[testCase.Module])
 //			require.NoError(t, err)
 //
-//			scaleFunc := &scalefunc.ScaleFunc{
+//			scaleFunc := &scalefunc.Schema{
 //				Version:   scalefunc.V1Alpha,
 //				Name:      "TestName",
 //				Tag:       "TestTag",
@@ -760,8 +760,8 @@ package scale
 //		{
 //			Name:   "Passthrough",
 //			Module: passthroughModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := New(context.Background(), []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -777,8 +777,8 @@ package scale
 //		{
 //			Name:   "Handler",
 //			Module: handlerModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := New(context.Background(), []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance()
@@ -794,8 +794,8 @@ package scale
 //		{
 //			Name:   "Next",
 //			Module: nextModule,
-//			Run: func(scaleFunc *scalefunc.ScaleFunc, t *testing.T) {
-//				r, err := New(context.Background(), []*scalefunc.ScaleFunc{scaleFunc})
+//			Run: func(scaleFunc *scalefunc.Schema, t *testing.T) {
+//				r, err := New(context.Background(), []*scalefunc.Schema{scaleFunc})
 //				require.NoError(t, err)
 //
 //				i, err := r.Instance(func(ctx *httpSignature.Context) (*httpSignature.Context, error) {
@@ -818,7 +818,7 @@ package scale
 //			module, err := os.ReadFile(generatedModules[testCase.Module])
 //			require.NoError(t, err)
 //
-//			scaleFunc := &scalefunc.ScaleFunc{
+//			scaleFunc := &scalefunc.Schema{
 //				Version:   scalefunc.V1Alpha,
 //				Name:      "TestName",
 //				Tag:       "TestTag",

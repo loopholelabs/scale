@@ -23,6 +23,20 @@ import (
 	"text/template"
 )
 
+var generator *Generator
+
+func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string, version string) ([]byte, error) {
+	return generator.GenerateGoModfile(schema, signatureImport, signatureVersion, functionImport, dependencies, packageName, version)
+}
+
+func GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
+	return generator.GenerateGoMain(signature, schema, version)
+}
+
+func init() {
+	generator = New()
+}
+
 type Generator struct {
 	template *template.Template
 }

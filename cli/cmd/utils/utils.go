@@ -52,7 +52,7 @@ type ScaleFunctionNamedReadCloser struct {
 	name   string
 }
 
-func NewScaleFunctionNamedReadCloser(sf *scalefunc.ScaleFunc) *ScaleFunctionNamedReadCloser {
+func NewScaleFunctionNamedReadCloser(sf *scalefunc.Schema) *ScaleFunctionNamedReadCloser {
 	return &ScaleFunctionNamedReadCloser{
 		reader: io.NopCloser(bytes.NewReader(sf.Encode())),
 		name:   sf.Name,

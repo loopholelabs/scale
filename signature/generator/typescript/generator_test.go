@@ -24,16 +24,13 @@ import (
 )
 
 func TestGenerator(t *testing.T) {
-	g, err := New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
-	formatted, err := g.Generate(s, "types", "v0.1.0")
+	formatted, err := Generate(s, "types", "v0.1.0")
 	require.NoError(t, err)
 
 	//os.WriteFile("./generated.txt", formatted, 0644)

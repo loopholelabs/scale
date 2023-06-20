@@ -48,17 +48,14 @@ model Context {
 `
 
 func TestSimpleSchema(t *testing.T) {
-	g, err := golang.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(simpleSchema))
+	err := s.Decode([]byte(simpleSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const golangDir = "./golang_tests"
-	formatted, err := g.Generate(s, "golang_tests", "v0.1.0")
+	formatted, err := golang.Generate(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangDir+"/generated.go", formatted, 0644)
@@ -66,21 +63,18 @@ func TestSimpleSchema(t *testing.T) {
 }
 
 func TestGolangToGolang(t *testing.T) {
-	g, err := golang.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const golangDir = "./golang_tests"
 
-	formatted, err := g.Generate(s, "golang_tests", "v0.1.0")
+	formatted, err := golang.Generate(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
-	guest, err := g.GenerateGuest(s, "golang_tests", "v0.1.0")
+	guest, err := golang.GenerateGuest(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangDir+"/generated.go", formatted, 0644)
@@ -103,18 +97,15 @@ func TestGolangToGolang(t *testing.T) {
 }
 
 func TestRustToRust(t *testing.T) {
-	r, err := rust.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const rustDir = "./rust_tests"
 
-	formatted, err := r.Generate(s, "rust_tests", "v0.1.0")
+	formatted, err := rust.Generate(s, "rust_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
@@ -134,18 +125,15 @@ func TestRustToRust(t *testing.T) {
 }
 
 func TestTypescriptToTypescript(t *testing.T) {
-	ts, err := typescript.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const typescriptDir = "./typescript_tests"
 
-	formatted, err := ts.Generate(s, "typescript_tests", "v0.1.0")
+	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
@@ -165,21 +153,15 @@ func TestTypescriptToTypescript(t *testing.T) {
 }
 
 func TestGolangToRust(t *testing.T) {
-	g, err := golang.New()
-	require.NoError(t, err)
-
-	r, err := rust.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const golangDir = "./golang_tests"
 
-	formatted, err := g.Generate(s, "golang_tests", "v0.1.0")
+	formatted, err := golang.Generate(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangDir+"/generated.go", formatted, 0644)
@@ -187,7 +169,7 @@ func TestGolangToRust(t *testing.T) {
 
 	const rustDir = "./rust_tests"
 
-	formatted, err = r.Generate(s, "rust_tests", "v0.1.0")
+	formatted, err = rust.Generate(s, "rust_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
@@ -207,21 +189,15 @@ func TestGolangToRust(t *testing.T) {
 }
 
 func TestGolangToTypescript(t *testing.T) {
-	g, err := golang.New()
-	require.NoError(t, err)
-
-	ts, err := typescript.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const golangDir = "./golang_tests"
 
-	formatted, err := g.Generate(s, "golang_tests", "v0.1.0")
+	formatted, err := golang.Generate(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangDir+"/generated.go", formatted, 0644)
@@ -229,7 +205,7 @@ func TestGolangToTypescript(t *testing.T) {
 
 	const typescriptDir = "./typescript_tests"
 
-	formatted, err = ts.Generate(s, "typescript_tests", "v0.1.0")
+	formatted, err = typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
@@ -249,21 +225,15 @@ func TestGolangToTypescript(t *testing.T) {
 }
 
 func TestRustToGolang(t *testing.T) {
-	g, err := golang.New()
-	require.NoError(t, err)
-
-	r, err := rust.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const golangDir = "./golang_tests"
 
-	formatted, err := g.Generate(s, "golang_tests", "v0.1.0")
+	formatted, err := golang.Generate(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangDir+"/generated.go", formatted, 0644)
@@ -271,7 +241,7 @@ func TestRustToGolang(t *testing.T) {
 
 	const rustDir = "./rust_tests"
 
-	formatted, err = r.Generate(s, "rust_tests", "v0.1.0")
+	formatted, err = rust.Generate(s, "rust_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
@@ -291,21 +261,15 @@ func TestRustToGolang(t *testing.T) {
 }
 
 func TestRustToTypescript(t *testing.T) {
-	ts, err := typescript.New()
-	require.NoError(t, err)
-
-	r, err := rust.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const typescriptDir = "./typescript_tests"
 
-	formatted, err := ts.Generate(s, "typescript_tests", "v0.1.0")
+	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
@@ -313,7 +277,7 @@ func TestRustToTypescript(t *testing.T) {
 
 	const rustDir = "./rust_tests"
 
-	formatted, err = r.Generate(s, "rust_tests", "v0.1.0")
+	formatted, err = rust.Generate(s, "rust_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
@@ -333,21 +297,15 @@ func TestRustToTypescript(t *testing.T) {
 }
 
 func TestTypescriptToGolang(t *testing.T) {
-	g, err := golang.New()
-	require.NoError(t, err)
-
-	ts, err := typescript.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const typescriptDir = "./typescript_tests"
 
-	formatted, err := ts.Generate(s, "typescript_tests", "v0.1.0")
+	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
@@ -355,7 +313,7 @@ func TestTypescriptToGolang(t *testing.T) {
 
 	const golangDir = "./golang_tests"
 
-	formatted, err = g.Generate(s, "golang_tests", "v0.1.0")
+	formatted, err = golang.Generate(s, "golang_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangDir+"/generated.go", formatted, 0644)
@@ -375,21 +333,15 @@ func TestTypescriptToGolang(t *testing.T) {
 }
 
 func TestTypescriptToRust(t *testing.T) {
-	r, err := rust.New()
-	require.NoError(t, err)
-
-	ts, err := typescript.New()
-	require.NoError(t, err)
-
 	s := new(signature.Schema)
-	err = s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
 	require.NoError(t, s.Validate())
 
 	const typescriptDir = "./typescript_tests"
 
-	formatted, err := ts.Generate(s, "typescript_tests", "v0.1.0")
+	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
@@ -397,7 +349,7 @@ func TestTypescriptToRust(t *testing.T) {
 
 	const rustDir = "./rust_tests"
 
-	formatted, err = r.Generate(s, "rust_tests", "v0.1.0")
+	formatted, err = rust.Generate(s, "rust_tests", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)

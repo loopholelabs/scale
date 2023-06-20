@@ -57,7 +57,7 @@ type Scale[T signature.Signature] struct {
 	TraceDataCallback func(data string)
 }
 
-func New[T signature.Signature](ctx context.Context, sig signature.New[T], functions []*scalefunc.ScaleFunc) (*Scale[T], error) {
+func New[T signature.Signature](ctx context.Context, sig signature.New[T], functions []*scalefunc.Schema) (*Scale[T], error) {
 	if len(functions) == 0 {
 		return nil, NoFunctionsError
 	}
@@ -126,7 +126,7 @@ func New[T signature.Signature](ctx context.Context, sig signature.New[T], funct
 	return r, nil
 }
 
-func (r *Scale[T]) CompileFunction(ctx context.Context, scaleFunc *scalefunc.ScaleFunc) (*Function[T], error) {
+func (r *Scale[T]) CompileFunction(ctx context.Context, scaleFunc *scalefunc.Schema) (*Function[T], error) {
 	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile module '%s': %w", scaleFunc.Name, err)

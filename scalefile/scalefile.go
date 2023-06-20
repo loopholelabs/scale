@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"os"
@@ -76,6 +77,12 @@ func (s *Schema) Decode(data []byte) error {
 	}
 
 	return nil
+}
+
+func (s *Schema) Encode() ([]byte, error) {
+	f := hclwrite.NewEmptyFile()
+	gohcl.EncodeIntoBody(s, f.Body())
+	return f.Bytes(), nil
 }
 
 func (s *Schema) Validate() error {

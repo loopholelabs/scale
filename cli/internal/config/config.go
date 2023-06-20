@@ -76,7 +76,7 @@ type Config struct {
 	UpdateEndpoint    string                `yaml:"update_endpoint"`
 	DisableAutoUpdate bool                  `yaml:"disable_auto_update"`
 	NoTelemetry       bool                  `yaml:"no_telemetry"`
-	CacheDirectory    string                `yaml:"cache_directory"`
+	StorageDirectory  string                `yaml:"storage_directory"`
 	Session           *session.Session      `yaml:"-"`
 	authClient        *authClient.AuthAPIV1 `yaml:"-"`
 	apiClient         *apiClient.ScaleAPIV1 `yaml:"-"`
@@ -96,7 +96,7 @@ func (c *Config) RootPersistentFlags(flags *pflag.FlagSet) {
 	flags.StringVar(&c.UpdateEndpoint, "update-endpoint", DefaultUpdateEndpoint, "The Scale Update API endpoint")
 	flags.BoolVar(&c.DisableAutoUpdate, "disable-auto-update", false, "Disable automatic update checks")
 	flags.BoolVar(&c.NoTelemetry, "no-telemetry", false, "Opt out of telemetry tracking")
-	flags.StringVar(&c.CacheDirectory, "cache-directory", "", "The (optional) directory to store compiled scale functions")
+	flags.StringVar(&c.StorageDirectory, "storage-directory", "", "The (optional) directory to store compiled scale functions and generated signatures")
 }
 
 func (c *Config) GlobalRequiredFlags(_ *cobra.Command) error {

@@ -14,17 +14,14 @@ require (
 	github.com/loopholelabs/cmdutils v0.1.2
 	github.com/loopholelabs/polyglot v1.1.1
 	github.com/loopholelabs/releaser v0.1.1
-	github.com/loopholelabs/scale-signature v0.2.11
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
-	github.com/pkg/errors v0.9.1
 	github.com/posthog/posthog-go v0.0.0-20221221115252-24dfed35d71a
 	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
 	github.com/tetratelabs/wazero v1.2.1
-	github.com/valyala/fasthttp v1.47.0
 	golang.org/x/mod v0.8.0
 	golang.org/x/text v0.10.0
 )
@@ -62,8 +59,6 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/lensesio/tableprinter v0.0.0-20201125135848-89e81fc956e7 // indirect
-	github.com/loopholelabs/polyglot-go v0.5.1 // indirect
-	github.com/loopholelabs/scalefile v0.1.9 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -77,6 +72,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/philhofer/fwd v1.1.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/savsgio/dictpool v0.0.0-20221023140959-7bf2e61cea94 // indirect
@@ -88,10 +84,10 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/tinylib/msgp v1.1.6 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasthttp v1.47.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	github.com/yalue/merged_fs v1.2.2 // indirect
 	github.com/zclconf/go-cty v1.13.2 // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.opentelemetry.io/otel v1.14.0 // indirect

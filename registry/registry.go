@@ -69,7 +69,7 @@ type config struct {
 	baseURL        string
 	organization   string
 	client         *client.ScaleAPIV1
-	storage        *storage.Storage
+	storage        *storage.FunctionStorage
 }
 
 type Option func(config *config)
@@ -86,7 +86,7 @@ func WithCacheDirectory(cacheDirectory string) Option {
 	}
 }
 
-func WithStorage(st *storage.Storage) Option {
+func WithStorage(st *storage.FunctionStorage) Option {
 	return func(config *config) {
 		config.storage = st
 	}
@@ -122,7 +122,7 @@ func WithClient(client *client.ScaleAPIV1) Option {
 	}
 }
 
-func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, error) {
+func Download(name string, tag string, opts ...Option) (*scalefunc.Schema, error) {
 	conf := &config{
 		pullPolicy:   IfNotPresentPullPolicy,
 		baseURL:      client.DefaultHost,
@@ -147,9 +147,9 @@ func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, er
 
 	var err error
 	if conf.storage == nil {
-		conf.storage = storage.Default
+		conf.storage = storage.DefaultFunction
 		if conf.cacheDirectory != "" {
-			conf.storage, err = storage.New(conf.cacheDirectory)
+			conf.storage, err = storage.NewFunction(conf.cacheDirectory)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create storage for directory %s: %w", conf.cacheDirectory, err)
 			}
@@ -180,7 +180,7 @@ func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, er
 			return nil, err
 		}
 		if entry != nil {
-			return entry.ScaleFunc, nil
+			return entry.Schema, nil
 		}
 		return nil, ErrNoFunction
 	case IfNotPresentPullPolicy:
@@ -189,7 +189,7 @@ func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, er
 			return nil, err
 		}
 		if entry != nil {
-			return entry.ScaleFunc, nil
+			return entry.Schema, nil
 		}
 		var fn *models.ModelsGetFunctionResponse
 		if conf.organization == DefaultOrganization {
@@ -230,7 +230,7 @@ func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, er
 			return nil, ErrHashMismatch
 		}
 
-		sf := new(scalefunc.ScaleFunc)
+		sf := new(scalefunc.Schema)
 		err = sf.Decode(data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)
@@ -263,7 +263,7 @@ func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, er
 		}
 		if entry != nil {
 			if fn.Hash == entry.Hash {
-				return entry.ScaleFunc, nil
+				return entry.Schema, nil
 			}
 		}
 
@@ -292,7 +292,7 @@ func Download(name string, tag string, opts ...Option) (*scalefunc.ScaleFunc, er
 			return nil, ErrHashMismatch
 		}
 
-		sf := new(scalefunc.ScaleFunc)
+		sf := new(scalefunc.Schema)
 		err = sf.Decode(data)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode retrieved scale function %s/%s:%s: %w", conf.organization, name, tag, err)

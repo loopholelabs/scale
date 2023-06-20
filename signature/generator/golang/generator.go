@@ -27,6 +27,32 @@ const (
 	defaultPackageName = "types"
 )
 
+var generator *Generator
+
+func Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
+	return generator.Generate(schema, packageName, version)
+}
+
+func GenerateGuest(schema *signature.Schema, packageName string, version string) ([]byte, error) {
+	return generator.GenerateGuest(schema, packageName, version)
+}
+
+func GenerateModfile(packageName string, polyglotVersion string) ([]byte, error) {
+	return generator.GenerateModfile(packageName, polyglotVersion)
+}
+
+func GenerateHost(schema *signature.Schema, packageName string, version string) ([]byte, error) {
+	return generator.GenerateHost(schema, packageName, version)
+}
+
+func init() {
+	var err error
+	generator, err = New()
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Generator is the go generator
 type Generator struct {
 	templ *template.Template

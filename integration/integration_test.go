@@ -39,16 +39,13 @@ func TestExampleSignature(t *testing.T) {
 	assert.Equal(t, 1, len(s.Models))
 	assert.Equal(t, "Example", s.Models[0].Name)
 
-	g, err := golangSignature.New()
+	formatted, err := golangSignature.Generate(s, "signature", "v0.1.0")
 	require.NoError(t, err)
 
-	formatted, err := g.Generate(s, "signature", "v0.1.0")
+	guest, err := golangSignature.GenerateGuest(s, "signature", "v0.1.0")
 	require.NoError(t, err)
 
-	guest, err := g.GenerateGuest(s, "signature", "v0.1.0")
-	require.NoError(t, err)
-
-	signatureModfile, err := g.GenerateModfile("signature", "v1.1.1")
+	signatureModfile, err := golangSignature.GenerateModfile("signature", "v1.1.1")
 	require.NoError(t, err)
 
 	const golangSignatureDir = "golang_tests/signature"
@@ -62,7 +59,6 @@ func TestExampleSignature(t *testing.T) {
 	err = os.WriteFile(golangSignatureDir+"/go.mod", signatureModfile, 0644)
 	require.NoError(t, err)
 
-	gc := golangCompile.New()
 	scf := &scalefile.Schema{
 		Version:  scalefile.V1AlphaVersion,
 		Name:     "example",
@@ -76,7 +72,7 @@ func TestExampleSignature(t *testing.T) {
 		Function: "Example",
 	}
 
-	mainFile, err := gc.GenerateGoMain(s, scf, "v0.1.0")
+	mainFile, err := golangCompile.GenerateGoMain(s, scf, "v0.1.0")
 	require.NoError(t, err)
 
 	const golangCompileDir = "golang_tests/compile"
@@ -96,7 +92,7 @@ func TestExampleSignature(t *testing.T) {
 			Metadata: nil,
 		},
 	}
-	modfile, err := gc.GenerateGoModfile(scf, "../signature", "", "../function", dependencies, "compile", "v0.1.0")
+	modfile, err := golangCompile.GenerateGoModfile(scf, "../signature", "", "../function", dependencies, "compile", "v0.1.0")
 	require.NoError(t, err)
 
 	err = os.WriteFile(golangCompileDir+"/go.mod", modfile, 0644)

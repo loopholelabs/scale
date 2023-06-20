@@ -25,11 +25,11 @@ import (
 )
 
 func TestEncodeDecode(t *testing.T) {
-	s := &ScaleFunc{
+	s := &Schema{
 		Version:  "invalid",
 		Language: Go,
 	}
-	decoded := new(ScaleFunc)
+	decoded := new(Schema)
 
 	encoded := s.Encode()
 	err := decoded.Decode(encoded)
@@ -70,7 +70,7 @@ func TestEncodeDecode(t *testing.T) {
 
 	dependencies[2].Metadata["test4"] = "test5"
 
-	s = &ScaleFunc{
+	s = &Schema{
 		Version:         V1Alpha,
 		Name:            "Test Name",
 		Tag:             "Test Tag",
