@@ -68,9 +68,6 @@ func ListCmd(hidden bool) command.SetupCommand[*config.Config] {
 
 				sigs := make([]signatureModel, len(signatureEntries))
 				for i, entry := range signatureEntries {
-					if entry.Organization == utils.DefaultOrganization {
-						entry.Organization = ""
-					}
 					sigs[i] = signatureModel{
 						Name:    entry.Schema.Name,
 						Tag:     entry.Schema.Tag,

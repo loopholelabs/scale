@@ -97,7 +97,7 @@ func GenerateCmd(hidden bool) command.SetupCommand[*config.Config] {
 					})
 				}
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Generating scale signature %s:%s...", signatureFile.Name, signatureFile.Tag))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Generating scale signature %s/%s:%s...", org, signatureFile.Name, signatureFile.Tag))
 				hash := sha256.New()
 				hashData, err := signatureFile.Encode()
 				if err != nil {
@@ -136,18 +136,10 @@ func GenerateCmd(hidden bool) command.SetupCommand[*config.Config] {
 					return fmt.Errorf("failed to store scale signature: %w", err)
 				}
 
-				if org == utils.DefaultOrganization {
-					org = ""
-				}
-
 				end()
 
 				if ch.Printer.Format() == printer.Human {
-					if org != "" {
-						ch.Printer.Printf("Successfully generated scale signature %s\n", printer.BoldGreen(fmt.Sprintf("%s/%s:%s", org, signatureFile.Name, signatureFile.Tag)))
-					} else {
-						ch.Printer.Printf("Successfully generated scale signature %s\n", printer.BoldGreen(fmt.Sprintf("%s:%s", signatureFile.Name, signatureFile.Tag)))
-					}
+					ch.Printer.Printf("Successfully generated scale signature %s\n", printer.BoldGreen(fmt.Sprintf("%s/%s:%s", org, signatureFile.Name, signatureFile.Tag)))
 					return nil
 				}
 
@@ -163,7 +155,7 @@ func GenerateCmd(hidden bool) command.SetupCommand[*config.Config] {
 		generateCmd.Flags().StringVarP(&directory, "directory", "d", ".", "the directory containing the signature file")
 		generateCmd.Flags().StringVarP(&name, "name", "n", "", "the (optional) name of this scale signature")
 		generateCmd.Flags().StringVarP(&tag, "tag", "t", "", "the (optional) tag of this scale signature")
-		generateCmd.Flags().StringVarP(&org, "org", "o", "", "the (optional) organization of this scale signature")
+		generateCmd.Flags().StringVarP(&org, "org", "o", utils.DefaultOrganization, "the (optional) organization of this scale signature")
 
 		cmd.AddCommand(generateCmd)
 	}

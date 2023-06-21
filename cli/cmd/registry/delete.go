@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package signature
+package registry
 
 import (
 	"fmt"
@@ -24,32 +24,24 @@ import (
 	"github.com/loopholelabs/scale/cli/analytics"
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
+	"github.com/loopholelabs/scale/client/registry"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/storage"
 	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
 	"time"
 )
 
 // DeleteCmd encapsulates the commands for deleting Functions
-func DeleteCmd(hidden bool) command.SetupCommand[*config.Config] {
+func DeleteCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		deleteCmd := &cobra.Command{
-			Use:     "delete [<org>/<name>:<tag>] [flags]",
-			Args:    cobra.ExactArgs(1),
-			Short:   "delete a generated scale signature",
-			Hidden:  hidden,
-			PreRunE: utils.PreRunUpdateCheck(ch),
+			Use:      "delete <org>/<name>:<tag> [flags]",
+			Short:    "delete a scale function from the scale registry ",
+			Long:     "Delete a scale functions from an organization in the registry.",
+			Args:     cobra.ExactArgs(1),
+			PreRunE:  utils.PreRunAuthenticatedAPI(ch),
+			PostRunE: utils.PostRunAuthenticatedAPI(ch),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				st := storage.DefaultSignature
-				if ch.Config.StorageDirectory != "" {
-					var err error
-					st, err = storage.NewSignature(ch.Config.StorageDirectory)
-					if err != nil {
-						return fmt.Errorf("failed to instantiate signature storage for %s: %w", ch.Config.StorageDirectory, err)
-					}
-				}
-
 				parsed := utils.ParseFunction(args[0])
 				if parsed.Organization != "" && !scalefunc.ValidString(parsed.Organization) {
 					return utils.InvalidStringError("organization name", parsed.Organization)
@@ -63,45 +55,35 @@ func DeleteCmd(hidden bool) command.SetupCommand[*config.Config] {
 					return utils.InvalidStringError("function tag", parsed.Tag)
 				}
 
-				e, err := st.Get(parsed.Name, parsed.Tag, parsed.Organization, "")
+				ctx := cmd.Context()
+				client := ch.Config.APIClient()
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting %s/%s:%s from the Scale Registry...", parsed.Organization, parsed.Name, parsed.Tag))
+
+				_, err := client.Registry.DeleteRegistryFunctionOrganizationNameTag(registry.NewDeleteRegistryFunctionOrganizationNameTagParamsWithContext(ctx).WithOrganization(parsed.Organization).WithName(parsed.Name).WithTag(parsed.Tag))
+				end()
 				if err != nil {
-					return fmt.Errorf("failed to delete function %s/%s:%s: %w", parsed.Organization, parsed.Name, parsed.Tag, err)
-				}
-				if e == nil {
-					return fmt.Errorf("function %s/%s:%s does not exist", parsed.Organization, parsed.Name, parsed.Tag)
+					return err
 				}
 
 				if analytics.Client != nil {
 					_ = analytics.Client.Enqueue(posthog.Capture{
 						DistinctId: analytics.MachineID,
-						Event:      "delete-signature",
+						Event:      "delete-registry",
 						Timestamp:  time.Now(),
 					})
 				}
 
-				err = st.Delete(parsed.Name, parsed.Tag, parsed.Organization, e.Hash)
-				if err != nil {
-					return fmt.Errorf("failed to delete signature %s: %w", parsed.Name, err)
-				}
-
-				if parsed.Organization == utils.DefaultOrganization {
-					parsed.Organization = ""
-				}
-
 				if ch.Printer.Format() == printer.Human {
-					if parsed.Organization != "" {
-						ch.Printer.Printf("Successfully deleted scale signature %s\n", printer.BoldRed(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)))
-					} else {
-						ch.Printer.Printf("Successfully deleted scale signature %s\n", printer.BoldRed(fmt.Sprintf("%s:%s", parsed.Name, parsed.Tag)))
-					}
+					ch.Printer.Printf("Deleted %s from the Scale Registry\n", printer.BoldGreen(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)))
 					return nil
 				}
 
 				return ch.Printer.PrintResource(map[string]string{
 					"name": parsed.Name,
-					"org":  parsed.Organization,
 					"tag":  parsed.Tag,
+					"org":  parsed.Organization,
 				})
+
 			},
 		}
 
