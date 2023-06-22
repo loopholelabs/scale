@@ -23,6 +23,10 @@ import (
 	"text/template"
 )
 
+const (
+	DefaultVersion = "v0.1.0"
+)
+
 var generator *Generator
 
 func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string, version string) ([]byte, error) {
@@ -54,9 +58,9 @@ func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport 
 		"package":                  packageName,
 		"dependencies":             dependencies,
 		"old_signature_dependency": "signature",
-		"old_signature_version":    "v0.1.0",
+		"old_signature_version":    DefaultVersion,
 		"old_function_dependency":  schema.Name,
-		"old_function_version":     "v0.1.0",
+		"old_function_version":     DefaultVersion,
 		"new_signature_dependency": signatureImport,
 		"new_signature_version":    signatureVersion,
 		"new_function_dependency":  functionImport,

@@ -151,6 +151,63 @@ func (s *SignatureStorage) Get(name string, tag string, org string, hash string)
 	}, nil
 }
 
+func (s *SignatureStorage) Path(name string, tag string, org string, hash string) (string, error) {
+	if name == "" || !scalefunc.ValidString(name) {
+		return "", ErrInvalidName
+	}
+
+	if tag == "" || !scalefunc.ValidString(tag) {
+		return "", ErrInvalidTag
+	}
+
+	if org == "" || !scalefunc.ValidString(org) {
+		return "", ErrInvalidOrganization
+	}
+
+	if hash != "" {
+		f := s.signatureName(name, tag, org, hash)
+		p := s.fullPath(f)
+
+		stat, err := os.Stat(p)
+		if err != nil {
+			return "", err
+		}
+
+		if !stat.IsDir() {
+			return "", fmt.Errorf("found signature is a file not a directory %s/%s:%s", org, name, tag)
+		}
+
+		return p, nil
+	}
+
+	f := s.signatureSearch(name, tag, org)
+	p := s.fullPath(f)
+
+	matches, err := filepath.Glob(p)
+	if err != nil {
+		return "", err
+	}
+
+	if len(matches) == 0 {
+		return "", nil
+	}
+
+	if len(matches) > 1 {
+		return "", fmt.Errorf("multiple matches found for %s/%s:%s", org, name, tag)
+	}
+
+	stat, err := os.Stat(matches[0])
+	if err != nil {
+		return "", err
+	}
+
+	if !stat.IsDir() {
+		return "", fmt.Errorf("found signature is a file not a directory %s/%s:%s", org, name, tag)
+	}
+
+	return matches[0], nil
+}
+
 // Put stores the Scale Signature with the given name, tag, organization, and hash
 func (s *SignatureStorage) Put(name string, tag string, org string, hash string, sig *signature.Schema) error {
 	f := s.signatureName(name, tag, org, hash)
@@ -175,7 +232,7 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 		return err
 	}
 
-	types, err := golangSignature.Generate(sig, name, version.Version)
+	types, err := golangSignature.Generate(sig, "signature", version.Version)
 	if err != nil {
 		return err
 	}
@@ -183,7 +240,7 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 	if err != nil {
 		return err
 	}
-	guest, err := golangSignature.GenerateGuest(sig, name, version.Version)
+	guest, err := golangSignature.GenerateGuest(sig, "signature", version.Version)
 	if err != nil {
 		return err
 	}
@@ -191,7 +248,7 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 	if err != nil {
 		return err
 	}
-	modfile, err := golangSignature.GenerateModfile(name, PolyglotVersion)
+	modfile, err := golangSignature.GenerateModfile("signature", PolyglotVersion)
 	if err != nil {
 		return err
 	}
@@ -208,7 +265,7 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 	if err != nil {
 		return err
 	}
-	host, err := golangSignature.GenerateHost(sig, name, version.Version)
+	host, err := golangSignature.GenerateHost(sig, "signature", version.Version)
 	if err != nil {
 		return err
 	}

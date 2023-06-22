@@ -25,7 +25,7 @@ type Manifest struct {
 }
 
 func ParseManifest(data []byte) (*Manifest, error) {
-	file, err := modfile.ParseLax("go.mod", data, nil)
+	file, err := modfile.Parse("go.mod", data, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +64,14 @@ func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDe
 	}
 
 	return false
+}
+
+func (m *Manifest) RemoveRequire(dependency string) error {
+	return m.modfile.DropRequire(dependency)
+}
+
+func (m *Manifest) RemoveReplacement(dependency string, version string) error {
+	return m.modfile.DropReplace(dependency, version)
 }
 
 func (m *Manifest) Write() ([]byte, error) {

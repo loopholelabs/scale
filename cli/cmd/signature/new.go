@@ -33,10 +33,6 @@ import (
 	"time"
 )
 
-const (
-	defaultTag = "latest"
-)
-
 // NewCmd encapsulates the commands for creating new Signatures
 func NewCmd(hidden bool) command.SetupCommand[*config.Config] {
 	var directory string
@@ -61,7 +57,7 @@ func NewCmd(hidden bool) command.SetupCommand[*config.Config] {
 					})
 				}
 
-				b, err := boilerplate.Generate(name, defaultTag)
+				b, err := boilerplate.Generate(name, utils.DefaultTag)
 				if err != nil {
 					return fmt.Errorf("error generating signature boilerplate: %w", err)
 				}
@@ -79,7 +75,7 @@ func NewCmd(hidden bool) command.SetupCommand[*config.Config] {
 				return ch.Printer.PrintResource(map[string]string{
 					"path": path.Join(directory, fmt.Sprintf("scale.signature")),
 					"name": name,
-					"tag":  defaultTag,
+					"tag":  utils.DefaultTag,
 				})
 			},
 		}

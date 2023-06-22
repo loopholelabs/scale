@@ -54,6 +54,9 @@ func Cmd() command.SetupCommand[*config.Config] {
 		deleteSetup := DeleteCmd(false)
 		deleteSetup(signatureCmd, ch)
 
+		useSetup := UseCmd(false)
+		useSetup(signatureCmd, ch)
+
 		cmd.AddCommand(signatureCmd)
 	}
 }
