@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package signature
+package function
 
 import (
 	"fmt"
@@ -32,21 +32,21 @@ import (
 )
 
 // DeleteCmd encapsulates the commands for deleting Functions
-func DeleteCmd(hidden bool) command.SetupCommand[*config.Config] {
+func DeleteCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		deleteCmd := &cobra.Command{
 			Use:     "delete <org>/<name>:<tag> [flags]",
 			Args:    cobra.ExactArgs(1),
-			Short:   "delete a generated scale signature",
-			Hidden:  hidden,
+			Short:   "delete a compiled scale function",
+			Long:    "Delete a compiled scale function.",
 			PreRunE: utils.PreRunUpdateCheck(ch),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				st := storage.DefaultSignature
+				st := storage.DefaultFunction
 				if ch.Config.StorageDirectory != "" {
 					var err error
-					st, err = storage.NewSignature(ch.Config.StorageDirectory)
+					st, err = storage.NewFunction(ch.Config.StorageDirectory)
 					if err != nil {
-						return fmt.Errorf("failed to instantiate signature storage for %s: %w", ch.Config.StorageDirectory, err)
+						return fmt.Errorf("failed to instantiate function storage for %s: %w", ch.Config.StorageDirectory, err)
 					}
 				}
 
@@ -74,18 +74,19 @@ func DeleteCmd(hidden bool) command.SetupCommand[*config.Config] {
 				if analytics.Client != nil {
 					_ = analytics.Client.Enqueue(posthog.Capture{
 						DistinctId: analytics.MachineID,
-						Event:      "delete-signature",
+						Event:      "delete-function",
 						Timestamp:  time.Now(),
+						Properties: posthog.NewProperties().Set("language", e.Schema.Language),
 					})
 				}
 
 				err = st.Delete(parsed.Name, parsed.Tag, parsed.Organization, e.Hash)
 				if err != nil {
-					return fmt.Errorf("failed to delete signature %s: %w", parsed.Name, err)
+					return fmt.Errorf("failed to delete function %s: %w", parsed.Name, err)
 				}
 
 				if ch.Printer.Format() == printer.Human {
-					ch.Printer.Printf("Successfully deleted scale signature %s\n", printer.BoldRed(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)))
+					ch.Printer.Printf("Successfully deleted scale function %s\n", printer.BoldRed(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)))
 					return nil
 				}
 

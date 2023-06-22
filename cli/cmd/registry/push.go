@@ -41,9 +41,9 @@ func PushCmd(hidden bool) command.SetupCommand[*config.Config] {
 		var org string
 		var public bool
 		pushCmd := &cobra.Command{
-			Use:      "push [<name>:<tag> | [<org>/<name>:<tag>]",
+			Use:      "push <org>/<name>:<tag>",
 			Short:    "push a locally available scale function to the registry",
-			Long:     "Push a locally available scale function to the registry. The function must be available in the local storage directory. If no storage directory is specified, the default storage directory will be used. If the org is not specified, it will default to the user's default organization.",
+			Long:     "Push a locally available scale function to the registry. The function must be available in the local storage directory. If no storage directory is specified, the default storage directory will be used. If the org is `local`, it will default to the user's default organization.",
 			Hidden:   hidden,
 			Args:     cobra.ExactArgs(1),
 			PreRunE:  utils.PreRunAuthenticatedAPI(ch),
@@ -59,10 +59,6 @@ func PushCmd(hidden bool) command.SetupCommand[*config.Config] {
 				}
 
 				parsed := utils.ParseFunction(args[0])
-				if parsed.Organization == "" {
-					parsed.Organization = utils.DefaultOrganization
-				}
-
 				if parsed.Organization != "" && !scalefunc.ValidString(parsed.Organization) {
 					return utils.InvalidStringError("organization name", parsed.Organization)
 				}

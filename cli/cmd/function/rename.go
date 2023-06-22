@@ -14,42 +14,37 @@
 	limitations under the License.
 */
 
-package signature
+package function
 
 import (
 	"fmt"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/cmdutils/pkg/printer"
-	"github.com/loopholelabs/scale/cli/analytics"
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
-	"time"
 )
 
-// DeleteCmd encapsulates the commands for deleting Functions
-func DeleteCmd(hidden bool) command.SetupCommand[*config.Config] {
+// RenameCmd encapsulates the commands for renaming Scale Functions
+func RenameCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
-		deleteCmd := &cobra.Command{
-			Use:     "delete <org>/<name>:<tag> [flags]",
-			Args:    cobra.ExactArgs(1),
-			Short:   "delete a generated scale signature",
-			Hidden:  hidden,
+		renameCmd := &cobra.Command{
+			Use:     "rename or retag <current_org>/<current_name>:<current_tag> <new_org>/<new_name>:<new_tag>",
+			Short:   "rename or retag a locally available Scale Function",
+			Args:    cobra.ExactArgs(2),
 			PreRunE: utils.PreRunUpdateCheck(ch),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				st := storage.DefaultSignature
+				st := storage.DefaultFunction
 				if ch.Config.StorageDirectory != "" {
 					var err error
-					st, err = storage.NewSignature(ch.Config.StorageDirectory)
+					st, err = storage.NewFunction(ch.Config.StorageDirectory)
 					if err != nil {
-						return fmt.Errorf("failed to instantiate signature storage for %s: %w", ch.Config.StorageDirectory, err)
+						return fmt.Errorf("failed to instantiate function storage for %s: %w", ch.Config.StorageDirectory, err)
 					}
 				}
-
 				parsed := utils.ParseFunction(args[0])
 				if parsed.Organization != "" && !scalefunc.ValidString(parsed.Organization) {
 					return utils.InvalidStringError("organization name", parsed.Organization)
@@ -65,38 +60,48 @@ func DeleteCmd(hidden bool) command.SetupCommand[*config.Config] {
 
 				e, err := st.Get(parsed.Name, parsed.Tag, parsed.Organization, "")
 				if err != nil {
-					return fmt.Errorf("failed to delete function %s/%s:%s: %w", parsed.Organization, parsed.Name, parsed.Tag, err)
+					return fmt.Errorf("failed to tag function %s/%s:%s: %w", parsed.Organization, parsed.Name, parsed.Tag, err)
 				}
 				if e == nil {
 					return fmt.Errorf("function %s/%s:%s does not exist", parsed.Organization, parsed.Name, parsed.Tag)
 				}
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "delete-signature",
-						Timestamp:  time.Now(),
-					})
+				newParsed := utils.ParseFunction(args[1])
+				if newParsed.Organization != "" && !scalefunc.ValidString(newParsed.Organization) {
+					return utils.InvalidStringError("organization name", newParsed.Organization)
 				}
 
-				err = st.Delete(parsed.Name, parsed.Tag, parsed.Organization, e.Hash)
+				if newParsed.Name == "" || !scalefunc.ValidString(newParsed.Name) {
+					return utils.InvalidStringError("function name", newParsed.Name)
+				}
+
+				if newParsed.Tag == "" || !scalefunc.ValidString(newParsed.Tag) {
+					return utils.InvalidStringError("function tag", newParsed.Tag)
+				}
+
+				e.Schema.Name = newParsed.Name
+				e.Schema.Tag = newParsed.Tag
+				e.Organization = newParsed.Organization
+
+				err = st.Put(e.Schema.Name, e.Schema.Tag, e.Organization, e.Hash, e.Schema)
 				if err != nil {
-					return fmt.Errorf("failed to delete signature %s: %w", parsed.Name, err)
+					return fmt.Errorf("failed to tag function %s/%s:%s: %w", parsed.Organization, parsed.Name, parsed.Tag, err)
 				}
 
 				if ch.Printer.Format() == printer.Human {
-					ch.Printer.Printf("Successfully deleted scale signature %s\n", printer.BoldRed(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)))
+					ch.Printer.Printf("Renamed scale function %s to %s\n", printer.BoldGreen(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)), printer.BoldBlue(fmt.Sprintf("%s/%s:%s", newParsed.Organization, newParsed.Name, newParsed.Tag)))
 					return nil
 				}
 
 				return ch.Printer.PrintResource(map[string]string{
-					"name": parsed.Name,
-					"org":  parsed.Organization,
-					"tag":  parsed.Tag,
+					"org":  newParsed.Organization,
+					"name": newParsed.Name,
+					"tag":  newParsed.Tag,
+					"hash": e.Hash,
 				})
 			},
 		}
 
-		cmd.AddCommand(deleteCmd)
+		cmd.AddCommand(renameCmd)
 	}
 }

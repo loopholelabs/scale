@@ -37,7 +37,7 @@ func PullCmd(hidden bool) command.SetupCommand[*config.Config] {
 	var force bool
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		pullCmd := &cobra.Command{
-			Use:      "pull [<name>:<tag> | [<org>/<name>:<tag>]",
+			Use:      "pull [<name>:<tag> | <org>/<name>:<tag>]",
 			Short:    "pull a scale function from the registry",
 			Long:     "Pull a scale function from the registry. If the org is not specified, it will default to the official `scale` organization.",
 			Hidden:   hidden,

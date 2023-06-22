@@ -20,6 +20,7 @@ import (
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/scale/cli/cmd/apikey"
 	"github.com/loopholelabs/scale/cli/cmd/auth"
+	"github.com/loopholelabs/scale/cli/cmd/function"
 	"github.com/loopholelabs/scale/cli/cmd/registry"
 	"github.com/loopholelabs/scale/cli/cmd/signature"
 	"github.com/loopholelabs/scale/cli/cmd/update"
@@ -34,5 +35,5 @@ var Cmd = command.New[*config.Config](
 	true,
 	version.V,
 	config.New,
-	[]command.SetupCommand[*config.Config]{signature.Cmd(), auth.Cmd(), apikey.Cmd(), registry.Cmd(), update.Cmd()},
+	[]command.SetupCommand[*config.Config]{signature.Cmd(), function.Cmd(), auth.Cmd(), apikey.Cmd(), registry.Cmd(), update.Cmd()},
 )
