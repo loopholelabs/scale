@@ -12,6 +12,17 @@ import (
 // needed to satisfy compiler
 func main() {}
 
+//export initialize
+func initialize() uint64 {
+    {{ if .schema.Initialize }}
+    err := scale.{{ .schema.Initialize }}()
+    if err != nil {
+        return packUint32(signature.Error(err))
+    }
+    {{ end }}
+    return 0
+}
+
 //export run
 func run() uint64 {
     var err error

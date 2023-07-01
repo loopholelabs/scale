@@ -52,6 +52,7 @@ type Schema struct {
 	Language    string          `hcl:"language,attr"`
 	Signature   SignatureSchema `hcl:"signature,block"`
 	Function    string          `hcl:"function,attr"`
+	Initialize  string          `hcl:"initialize,attr"`
 	Description string          `hcl:"description,optional"`
 }
 
@@ -112,6 +113,10 @@ func (s *Schema) Validate() error {
 
 		if signature.InvalidString.MatchString(s.Signature.Tag) {
 			return fmt.Errorf("invalid tag: %s", s.Signature.Tag)
+		}
+
+		if len(s.Function) == 0 {
+			return fmt.Errorf("function must be defined")
 		}
 
 		return nil
