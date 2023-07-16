@@ -28,6 +28,7 @@ import (
 	signatureSchema "github.com/loopholelabs/scale/signature"
 	"os"
 	"regexp"
+	"strings"
 )
 
 var (
@@ -286,4 +287,18 @@ func Read(path string) (*Schema, error) {
 func Write(path string, scaleFunc *Schema) error {
 	data := scaleFunc.Encode()
 	return os.WriteFile(path, data, 0644)
+}
+
+// ParseFunctionName parses a function name of the form <org>/<name>:<tag> into its organization, name, and tag
+func ParseFunctionName(fn string) (string, string, string) {
+	orgSplit := strings.Split(fn, "/")
+	if len(orgSplit) == 1 {
+		orgSplit = []string{"", fn}
+	}
+	tagSplit := strings.Split(orgSplit[1], ":")
+	if len(tagSplit) == 1 {
+		tagSplit = []string{tagSplit[0], ""}
+	}
+
+	return orgSplit[0], tagSplit[0], tagSplit[1]
 }

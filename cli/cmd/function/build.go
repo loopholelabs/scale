@@ -40,10 +40,10 @@ package function
 //			Hidden:  hidden,
 //			PreRunE: utils.PreRunUpdateCheck(ch),
 //			RunE: func(cmd *cobra.Command, args []string) error {
-//				scaleFilePath := path.Join(directory, "scalefile")
-//				scaleFile, err := scalefile.Read(scaleFilePath)
+//				sfPath := path.Join(directory, "scalefile")
+//				sf, err := scalefile.ReadSchema(sfPath)
 //				if err != nil {
-//					return fmt.Errorf("failed to read scalefile at %s: %w", scaleFilePath, err)
+//					return fmt.Errorf("failed to read scalefile at %s: %w", sfPath, err)
 //				}
 //
 //				if org == "" {
@@ -51,27 +51,40 @@ package function
 //				}
 //
 //				if name == "" {
-//					name = scaleFile.Name
+//					name = sf.Name
 //				} else {
-//					scaleFile.Name = name
+//					sf.Name = name
 //				}
 //
 //				if tag == "" {
-//					tag = scaleFile.Tag
+//					tag = sf.Tag
 //				} else {
-//					scaleFile.Tag = tag
+//					sf.Tag = tag
 //				}
 //
 //				if !scalefunc.ValidString(org) {
 //					return utils.InvalidStringError("organization", org)
 //				}
 //
-//				if scaleFile.Name == "" || !scalefunc.ValidString(scaleFile.Name) {
-//					return utils.InvalidStringError("name", scaleFile.Name)
+//				if sf.Name == "" || !scalefunc.ValidString(sf.Name) {
+//					return utils.InvalidStringError("name", sf.Name)
 //				}
 //
-//				if scaleFile.Tag == "" || !scalefunc.ValidString(scaleFile.Tag) {
-//					return utils.InvalidStringError("tag", scaleFile.Tag)
+//				if sf.Tag == "" || !scalefunc.ValidString(sf.Tag) {
+//					return utils.InvalidStringError("tag", sf.Tag)
+//				}
+//
+//				signatureStorage := storage.DefaultSignature
+//				if ch.Config.StorageDirectory != "" {
+//					signatureStorage, err = storage.NewSignature(ch.Config.StorageDirectory)
+//					if err != nil {
+//						return fmt.Errorf("failed to instantiate signature storage for %s: %w", ch.Config.StorageDirectory, err)
+//					}
+//				}
+//
+//				sig, err := signatureStorage.Get(sf.Signature.Name, sf.Signature.Tag, sf.Signature.Organization, "")
+//				if err != nil {
+//					return fmt.Errorf("failed to get signature %s/%s:%s %w", err, sf.Signature.Organization, sf.Signature.Name, sf.Signature.Tag)
 //				}
 //
 //				if analytics.Client != nil {
@@ -79,12 +92,22 @@ package function
 //						DistinctId: analytics.MachineID,
 //						Event:      "build-function",
 //						Timestamp:  time.Now(),
-//						Properties: posthog.NewProperties().Set("language", scaleFile.Language),
+//						Properties: posthog.NewProperties().Set("language", sf.Language),
 //					})
 //				}
 //
-//				end := ch.Printer.PrintProgress(fmt.Sprintf("Building scale function %s:%s...", scaleFile.Name, scaleFile.Tag))
-//				scaleFunc, err := build.LocalBuild(scaleFile, goBin, tinygoBin, cargoBin, npmBin, directory, tinygoArgs, cargoArgs)
+//				end := ch.Printer.PrintProgress(fmt.Sprintf("Building scale function %s/%s:%s...", org, sf.Name, sf.Tag))
+//
+//				opts := &build.Options{
+//					Scalefile:  sf,
+//					Signature:  sig.Schema,
+//					BaseDir:    "",
+//					Golang:     nil,
+//					Rust:       nil,
+//					Typescript: nil,
+//				}
+//
+//				scaleFunc, err := build.LocalBuild(sf, goBin, tinygoBin, cargoBin, npmBin, directory, tinygoArgs, cargoArgs)
 //				end()
 //				if err != nil {
 //					return fmt.Errorf("failed to build scale function: %w", err)
@@ -94,11 +117,11 @@ package function
 //				hash.Write(scaleFunc.Encode())
 //				checksum := hex.EncodeToString(hash.Sum(nil))
 //
-//				st := storage.Default
-//				if ch.Config.CacheDirectory != "" {
-//					st, err = storage.New(ch.Config.CacheDirectory)
+//				functionStorage := storage.DefaultFunction
+//				if ch.Config.StorageDirectory != "" {
+//					functionStorage, err = storage.NewFunction(ch.Config.StorageDirectory)
 //					if err != nil {
-//						return fmt.Errorf("failed to instantiate function storage for %s: %w", ch.Config.CacheDirectory, err)
+//						return fmt.Errorf("failed to instantiate function storage for %s: %w", ch.Config.StorageDirectory, err)
 //					}
 //				}
 //
