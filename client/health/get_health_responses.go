@@ -36,7 +36,7 @@ func (o *GetHealthReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /health] GetHealth", response, response.Code())
 	}
 }
 
@@ -51,7 +51,7 @@ GetHealthOK describes a response with status code 200, with default header value
 OK
 */
 type GetHealthOK struct {
-	Payload *models.ModelsGetHealthResponse
+	Payload *models.ModelsHealthResponse
 }
 
 // IsSuccess returns true when this get health o k response has a 2xx status code
@@ -92,13 +92,13 @@ func (o *GetHealthOK) String() string {
 	return fmt.Sprintf("[GET /health][%d] getHealthOK  %+v", 200, o.Payload)
 }
 
-func (o *GetHealthOK) GetPayload() *models.ModelsGetHealthResponse {
+func (o *GetHealthOK) GetPayload() *models.ModelsHealthResponse {
 	return o.Payload
 }
 
 func (o *GetHealthOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ModelsGetHealthResponse)
+	o.Payload = new(models.ModelsHealthResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

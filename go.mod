@@ -10,7 +10,7 @@ require (
 	github.com/go-openapi/swag v0.22.4
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/hcl/v2 v2.17.0
-	github.com/loopholelabs/auth v0.2.26
+	github.com/loopholelabs/auth v0.2.46
 	github.com/loopholelabs/cmdutils v0.1.2
 	github.com/loopholelabs/polyglot v1.1.1
 	github.com/loopholelabs/releaser v0.1.1

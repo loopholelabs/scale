@@ -60,7 +60,7 @@ func (o *PostRegistryFunctionReader) ReadResponse(response runtime.ClientRespons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /registry/function] PostRegistryFunction", response, response.Code())
 	}
 }
 
@@ -75,7 +75,7 @@ PostRegistryFunctionOK describes a response with status code 200, with default h
 OK
 */
 type PostRegistryFunctionOK struct {
-	Payload *models.ModelsCreateFunctionResponse
+	Payload *models.ModelsFunctionResponse
 }
 
 // IsSuccess returns true when this post registry function o k response has a 2xx status code
@@ -116,13 +116,13 @@ func (o *PostRegistryFunctionOK) String() string {
 	return fmt.Sprintf("[POST /registry/function][%d] postRegistryFunctionOK  %+v", 200, o.Payload)
 }
 
-func (o *PostRegistryFunctionOK) GetPayload() *models.ModelsCreateFunctionResponse {
+func (o *PostRegistryFunctionOK) GetPayload() *models.ModelsFunctionResponse {
 	return o.Payload
 }
 
 func (o *PostRegistryFunctionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ModelsCreateFunctionResponse)
+	o.Payload = new(models.ModelsFunctionResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

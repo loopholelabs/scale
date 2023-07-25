@@ -20,14 +20,11 @@ type ModelsUserInfoResponse struct {
 	// email
 	Email string `json:"email,omitempty"`
 
-	// member organizations
-	MemberOrganizations []string `json:"member_organizations"`
-
 	// organization
 	Organization string `json:"organization,omitempty"`
 
-	// owned organizations
-	OwnedOrganizations []string `json:"owned_organizations"`
+	// organizations
+	Organizations []string `json:"organizations"`
 }
 
 // Validate validates this models user info response

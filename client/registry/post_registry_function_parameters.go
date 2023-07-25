@@ -68,12 +68,6 @@ type PostRegistryFunctionParams struct {
 	*/
 	Function runtime.NamedReadCloser
 
-	/* Organization.
-
-	   organization
-	*/
-	Organization *string
-
 	/* Public.
 
 	   public
@@ -144,17 +138,6 @@ func (o *PostRegistryFunctionParams) SetFunction(function runtime.NamedReadClose
 	o.Function = function
 }
 
-// WithOrganization adds the organization to the post registry function params
-func (o *PostRegistryFunctionParams) WithOrganization(organization *string) *PostRegistryFunctionParams {
-	o.SetOrganization(organization)
-	return o
-}
-
-// SetOrganization adds the organization to the post registry function params
-func (o *PostRegistryFunctionParams) SetOrganization(organization *string) {
-	o.Organization = organization
-}
-
 // WithPublic adds the public to the post registry function params
 func (o *PostRegistryFunctionParams) WithPublic(public *bool) *PostRegistryFunctionParams {
 	o.SetPublic(public)
@@ -176,21 +159,6 @@ func (o *PostRegistryFunctionParams) WriteToRequest(r runtime.ClientRequest, reg
 	// form file param function
 	if err := r.SetFileParam("function", o.Function); err != nil {
 		return err
-	}
-
-	if o.Organization != nil {
-
-		// form param organization
-		var frOrganization string
-		if o.Organization != nil {
-			frOrganization = *o.Organization
-		}
-		fOrganization := frOrganization
-		if fOrganization != "" {
-			if err := r.SetFormParam("organization", fOrganization); err != nil {
-				return err
-			}
-		}
 	}
 
 	if o.Public != nil {
