@@ -19,10 +19,10 @@ package auth
 import (
 	"fmt"
 	"github.com/go-openapi/runtime/client"
-	"github.com/loopholelabs/auth"
 	"github.com/loopholelabs/auth/pkg/client/device"
 	"github.com/loopholelabs/auth/pkg/client/session"
 	"github.com/loopholelabs/auth/pkg/client/userinfo"
+	"github.com/loopholelabs/auth/pkg/kind"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/cmdutils/pkg/printer"
@@ -73,7 +73,7 @@ func LoginCmd(hidden bool) command.SetupCommand[*config.Config] {
 						}
 						os.Exit(0)
 					}()
-					ch.Config.Session = session.New(auth.KindAPIKey, apiKey, time.Time{})
+					ch.Config.Session = session.New(kind.APIKey, apiKey, time.Time{})
 				} else {
 					flow, err := c.Device.PostDeviceFlow(device.NewPostDeviceFlowParamsWithContext(ctx))
 					if err != nil {
@@ -122,11 +122,11 @@ func LoginCmd(hidden bool) command.SetupCommand[*config.Config] {
 								}
 								return fmt.Errorf("error polling for confirmation: %w", err)
 							}
-							cookies := c.Transport.(*client.Runtime).Jar.Cookies(config.DefaultCookieURL)
+							cookies := c.Transport.(*client.Runtime).Jar.Cookies(ch.Config.SessionCookieURL())
 							if len(cookies) == 0 {
 								return ErrNoSession
 							}
-							ch.Config.Session = session.New(auth.KindSession, cookies[0].Value, cookies[0].Expires)
+							ch.Config.Session = session.New(kind.Session, cookies[0].Value, cookies[0].Expires)
 							goto DONE
 						}
 					}
@@ -149,7 +149,7 @@ func LoginCmd(hidden bool) command.SetupCommand[*config.Config] {
 						Timestamp:  time.Now(),
 						Properties: map[string]interface{}{
 							"$set": map[string]interface{}{
-								"user": info.GetPayload().Email,
+								"user": info.GetPayload().Identifier,
 								"org":  info.GetPayload().Organization,
 							},
 						},
@@ -169,12 +169,12 @@ func LoginCmd(hidden bool) command.SetupCommand[*config.Config] {
 				switch ch.Printer.Format() {
 				case printer.JSON, printer.CSV:
 					return ch.Printer.PrintJSON(map[string]string{
-						"email":        info.GetPayload().Email,
-						"session":      string(info.GetPayload().Session),
+						"email":        info.GetPayload().Identifier,
+						"kind":         string(info.GetPayload().Kind),
 						"organization": info.GetPayload().Organization,
 					})
 				case printer.Human:
-					ch.Printer.Printf("Logged in as %s\n", printer.Bold(info.GetPayload().Email))
+					ch.Printer.Printf("Logged in as %s (using organization %s)\n", printer.Bold(info.GetPayload().Identifier), printer.Bold(info.GetPayload().Organization))
 				}
 				return nil
 			},

@@ -56,10 +56,9 @@ func StatusCmd() command.SetupCommand[*config.Config] {
 				}
 
 				return ch.Printer.PrintResource(map[string]string{
-					"email":       res.GetPayload().Email,
-					"org":         res.GetPayload().Organization,
-					"member_orgs": fmt.Sprintf("%s", res.GetPayload().MemberOrganizations),
-					"owned_orgs":  fmt.Sprintf("%s", res.GetPayload().OwnedOrganizations),
+					"email":         res.GetPayload().Email,
+					"org":           res.GetPayload().Organization,
+					"organizations": fmt.Sprintf("%s", res.GetPayload().Organizations),
 				})
 			},
 		}

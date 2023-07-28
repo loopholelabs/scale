@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package registry
+package function
 
 import (
 	"fmt"
@@ -60,7 +60,7 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				}
 
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Scale Functions for the '%s' organization from the Registry...", org))
-				res, err := client.Registry.GetRegistryFunctionOrganization(registry.NewGetRegistryFunctionOrganizationParamsWithContext(ctx).WithOrganization(org))
+				res, err := client.Registry.GetRegistryFunctionOrg(registry.NewGetRegistryFunctionOrgParamsWithContext(ctx).WithOrg(org))
 				end()
 				if err != nil {
 					return err
@@ -79,9 +79,9 @@ func ListCmd() command.SetupCommand[*config.Config] {
 					return nil
 				}
 
-				ret := make([]scaleFunction, 0, len(res.GetPayload()))
+				ret := make([]functionModel, 0, len(res.GetPayload()))
 				for _, fn := range res.GetPayload() {
-					ret = append(ret, scaleFunction{
+					ret = append(ret, functionModel{
 						Name:   fn.Name,
 						Tag:    fn.Tag,
 						Hash:   fn.Hash,

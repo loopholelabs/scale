@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime"
 	runtimeClient "github.com/go-openapi/runtime/client"
-	"github.com/loopholelabs/auth"
 	"github.com/loopholelabs/auth/pkg/client/session"
+	"github.com/loopholelabs/auth/pkg/kind"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/releaser/pkg/client"
 	"github.com/loopholelabs/scale/cli/analytics"
@@ -172,11 +172,11 @@ func PostRunAuthenticatedAPI(ch *cmdutils.Helper[*config.Config]) func(cmd *cobr
 	return func(cmd *cobra.Command, args []string) error {
 		c := ch.Config.APIClient()
 		if c != nil && c.Transport != nil {
-			cookies := c.Transport.(*runtimeClient.Runtime).Jar.Cookies(config.DefaultCookieURL)
+			cookies := c.Transport.(*runtimeClient.Runtime).Jar.Cookies(ch.Config.SessionCookieURL())
 			if len(cookies) == 0 {
 				return nil
 			}
-			ch.Config.Session = session.New(auth.KindSession, cookies[0].Value, cookies[0].Expires)
+			ch.Config.Session = session.New(kind.Session, cookies[0].Value, cookies[0].Expires)
 
 			err := ch.Config.WriteSession()
 			if err != nil {

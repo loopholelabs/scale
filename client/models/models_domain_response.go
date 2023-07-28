@@ -7,12 +7,10 @@ package models
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // ModelsDomainResponse models domain response
@@ -30,10 +28,7 @@ type ModelsDomainResponse struct {
 	Domain string `json:"domain,omitempty"`
 
 	// state
-	// Enum: [pending issuing ready attached]
-	State struct {
-		ModelsDomainVerificationState
-	} `json:"state,omitempty"`
+	State ModelsDomainVerificationState `json:"state,omitempty"`
 
 	// txt cname
 	TxtCname string `json:"txt_cname,omitempty"`
@@ -76,33 +71,18 @@ func (m *ModelsDomainResponse) validateDeployment(formats strfmt.Registry) error
 	return nil
 }
 
-var modelsDomainResponseTypeStatePropEnum []interface{}
-
-func init() {
-	var res []struct {
-		ModelsDomainVerificationState
-	}
-	if err := json.Unmarshal([]byte(`["pending","issuing","ready","attached"]`), &res); err != nil {
-		panic(err)
-	}
-	for _, v := range res {
-		modelsDomainResponseTypeStatePropEnum = append(modelsDomainResponseTypeStatePropEnum, v)
-	}
-}
-
-// prop value enum
-func (m *ModelsDomainResponse) validateStateEnum(path, location string, value *struct {
-	ModelsDomainVerificationState
-}) error {
-	if err := validate.EnumCase(path, location, value, modelsDomainResponseTypeStatePropEnum, true); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (m *ModelsDomainResponse) validateState(formats strfmt.Registry) error {
 	if swag.IsZero(m.State) { // not required
 		return nil
+	}
+
+	if err := m.State.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("state")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("state")
+		}
+		return err
 	}
 
 	return nil
@@ -148,6 +128,19 @@ func (m *ModelsDomainResponse) contextValidateDeployment(ctx context.Context, fo
 }
 
 func (m *ModelsDomainResponse) contextValidateState(ctx context.Context, formats strfmt.Registry) error {
+
+	if swag.IsZero(m.State) { // not required
+		return nil
+	}
+
+	if err := m.State.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("state")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("state")
+		}
+		return err
+	}
 
 	return nil
 }

@@ -14,26 +14,30 @@
 	limitations under the License.
 */
 
-package main
+package access
 
 import (
+	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/scale/cli/cmd/access/apikey"
-	"github.com/loopholelabs/scale/cli/cmd/auth"
-	"github.com/loopholelabs/scale/cli/cmd/function"
-	"github.com/loopholelabs/scale/cli/cmd/registry"
-	"github.com/loopholelabs/scale/cli/cmd/signature"
-	"github.com/loopholelabs/scale/cli/cmd/update"
+	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
-	"github.com/loopholelabs/scale/cli/version"
+	"github.com/spf13/cobra"
 )
 
-var Cmd = command.New[*config.Config](
-	"scale",
-	"A CLI for working with Scale Functions and communicating with the Scale API.",
-	"scale is a CLI Library for working with Scale Functions and communicating with the Scale API.",
-	true,
-	version.V,
-	config.New,
-	[]command.SetupCommand[*config.Config]{signature.Cmd(), function.Cmd(), auth.Cmd(), apikey.Cmd(), registry.Cmd(), update.Cmd()},
-)
+// Cmd encapsulates the commands for access.
+func Cmd() command.SetupCommand[*config.Config] {
+	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
+		accessCmd := &cobra.Command{
+			Use:                "access",
+			Short:              "Commands for managing access to the Scale API",
+			PersistentPreRunE:  utils.PreRunAuthenticatedAPI(ch),
+			PersistentPostRunE: utils.PostRunAuthenticatedAPI(ch),
+		}
+
+		apikeySetup := apikey.Cmd()
+		apikeySetup(accessCmd, ch)
+
+		cmd.AddCommand(accessCmd)
+	}
+}

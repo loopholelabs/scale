@@ -14,34 +14,37 @@
 	limitations under the License.
 */
 
-package registry
+package signature
 
 import (
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
-	"github.com/loopholelabs/scale/cli/cmd/registry/function"
-	"github.com/loopholelabs/scale/cli/cmd/registry/signature"
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
-// Cmd encapsulates the commands for registry.
+type signatureModel struct {
+	Name    string `header:"name" json:"name"`
+	Tag     string `header:"tag" json:"tag"`
+	Org     string `header:"org" json:"org"`
+	Hash    string `header:"hash" json:"hash"`
+	Version string `header:"version" json:"version"`
+}
+
+// Cmd encapsulates the commands for signatures.
 func Cmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
-		registryCmd := &cobra.Command{
-			Use:                "registry <command>",
-			Aliases:            []string{"reg"},
-			Short:              "Create, list, and manage Scale Functions in the registry",
+		signatureCmd := &cobra.Command{
+			Use:                "signature <command>",
+			Aliases:            []string{"sig"},
+			Short:              "Commands for managing Scale Signatures in the Scale Registry",
 			PersistentPostRunE: utils.PostRunAnalytics(ch),
 		}
 
-		functionSetup := function.Cmd()
-		functionSetup(registryCmd, ch)
+		pushSetup := PushCmd()
+		pushSetup(signatureCmd, ch)
 
-		signatureSetup := signature.Cmd()
-		signatureSetup(registryCmd, ch)
-
-		cmd.AddCommand(registryCmd)
+		cmd.AddCommand(signatureCmd)
 	}
 }

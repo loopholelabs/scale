@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package registry
+package function
 
 import (
 	"fmt"
@@ -59,7 +59,7 @@ func DeleteCmd() command.SetupCommand[*config.Config] {
 				client := ch.Config.APIClient()
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting %s/%s:%s from the Scale Registry...", parsed.Organization, parsed.Name, parsed.Tag))
 
-				_, err := client.Registry.DeleteRegistryFunctionOrganizationNameTag(registry.NewDeleteRegistryFunctionOrganizationNameTagParamsWithContext(ctx).WithOrganization(parsed.Organization).WithName(parsed.Name).WithTag(parsed.Tag))
+				_, err := client.Registry.DeleteRegistryFunctionNameTag(registry.NewDeleteRegistryFunctionNameTagParamsWithContext(ctx).WithName(parsed.Name).WithTag(parsed.Tag))
 				end()
 				if err != nil {
 					return err

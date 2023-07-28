@@ -75,7 +75,7 @@ PostRegistrySignatureOK describes a response with status code 200, with default 
 OK
 */
 type PostRegistrySignatureOK struct {
-	Payload *models.ModelsCreateSignatureResponse
+	Payload *models.ModelsSignatureResponse
 }
 
 // IsSuccess returns true when this post registry signature o k response has a 2xx status code
@@ -116,13 +116,13 @@ func (o *PostRegistrySignatureOK) String() string {
 	return fmt.Sprintf("[POST /registry/signature][%d] postRegistrySignatureOK  %+v", 200, o.Payload)
 }
 
-func (o *PostRegistrySignatureOK) GetPayload() *models.ModelsCreateSignatureResponse {
+func (o *PostRegistrySignatureOK) GetPayload() *models.ModelsSignatureResponse {
 	return o.Payload
 }
 
 func (o *PostRegistrySignatureOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ModelsCreateSignatureResponse)
+	o.Payload = new(models.ModelsSignatureResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
