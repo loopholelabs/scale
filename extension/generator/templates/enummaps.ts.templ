@@ -1,0 +1,41 @@
+{{ define "ts_enummaps_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .EnumMaps }}
+        {{- if and (Deref .Accessor) (IsPrimitive .Value) }}
+            #{{ CamelCase .Name }}: Map<{{ .Reference }}, {{ Primitive .Value }}>;
+        {{- end }}
+
+        {{- if and (Deref .Accessor) (not (IsPrimitive .Value)) }}
+            #{{ CamelCase .Name }}: Map<{{ .Reference }}, {{ .Value }}>;
+        {{- end }}
+
+        {{- if and (not (Deref .Accessor)) (IsPrimitive .Value) }}
+            {{ CamelCase .Name }}: Map<{{ .Reference }}, {{ Primitive .Value }}>;
+        {{- end }}
+
+        {{- if and (not (Deref .Accessor)) (not (IsPrimitive .Value)) }}
+            {{ CamelCase .Name }}: Map<{{ .Reference }}, {{ .Value }}>;
+        {{- end }}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_enummaps_new_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .EnumMaps }}
+        {{- if and (Deref .Accessor) (IsPrimitive .Value) }}
+            this.#{{ CamelCase .Name }} = new Map<{{ .Reference }}, {{ Primitive .Value }}>();
+        {{- end }}
+
+        {{- if and (Deref .Accessor) (not (IsPrimitive .Value)) }}
+            this.#{{ CamelCase .Name }} = new Map<{{ .Reference }}, {{ .Value }}>();
+        {{- end }}
+
+        {{- if and (not (Deref .Accessor)) (IsPrimitive .Value) }}
+            this.{{ CamelCase .Name }} = new Map<{{ .Reference }}, {{ Primitive .Value }}>();
+        {{- end }}
+
+        {{- if and (not (Deref .Accessor)) (not (IsPrimitive .Value)) }}
+            this.{{ CamelCase .Name }} = new Map<{{ .Reference }}, {{ .Value }}>();
+        {{- end }}
+    {{ end }}
+{{ end }}

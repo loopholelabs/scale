@@ -300,6 +300,31 @@ func (s *Schema) Validate() error {
 
 }
 
+func (s *Schema) HasLimitValidator() bool {
+	return s.hasLimitValidator
+}
+
+func (s *Schema) HasLengthValidator() bool {
+	return s.hasLengthValidator
+}
+
+func (s *Schema) HasRegexValidator() bool {
+	return s.hasRegexValidator
+}
+
+func (s *Schema) HasCaseModifier() bool {
+	return s.hasCaseModifier
+}
+
+func ValidPrimitiveType(t string) bool {
+	switch t {
+	case "string", "int32", "int64", "uint32", "uint64", "float32", "float64", "bool", "bytes":
+		return true
+	default:
+		return false
+	}
+}
+
 const MasterTestingSchema = `
 version = "v1alpha"
 name = "HttpFetch"

@@ -1,0 +1,61 @@
+{{ define "go_models_struct_reference" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            {{ LowerFirst .Name }} *{{ .Reference }}
+        {{- else }}
+            {{ .Name }} *{{ .Reference }}
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_models_new_struct_reference" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            {{ LowerFirst .Name }}: New{{ .Reference }}(),
+        {{- else }}
+            {{ .Name }}: New{{ .Reference }}(),
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_models_encode" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            x.{{ LowerFirst .Name }}.Encode(b)
+        {{- else }}
+            x.{{ .Name }}.Encode(b)
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_models_decode" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            x.{{ LowerFirst .Name }}, err = _decode{{ .Reference }}(nil, d)
+            if err != nil {
+                return nil, err
+            }
+        {{- else }}
+            x.{{ .Name }}, err = _decode{{ .Reference }}(nil, d)
+            if err != nil {
+                return nil, err
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_models_accessor" }}
+    {{ $current_model := . }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            func (x *{{ $current_model.Name }}) Get{{ .Name }}() (*{{ .Reference }}, error) {
+                return x.{{ LowerFirst .Name }}, nil
+            }
+
+            func (x *{{ $current_model.Name }}) Set{{ .Name }}(v *{{ .Reference }}) error {
+                x.{{ LowerFirst .Name }} = v
+                return nil
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}

@@ -1,0 +1,37 @@
+{{ define "rs_arrays_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            {{ SnakeCase .Name }}: Vec<{{ Primitive $type }}>,
+        {{- else }}
+            pub {{ SnakeCase .Name }}: Vec<{{ Primitive $type }}>,
+        {{- end -}}
+    {{- end }}
+{{ end }}
+
+{{ define "rs_arrays_new_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{ SnakeCase .Name }}: Vec::with_capacity({{ .InitialSize }}),
+    {{- end }}
+{{ end }}
+
+{{ define "rs_arrays_encode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        e.encode_array(self.{{ SnakeCase .Name }}.len(), {{ PolyglotPrimitive $type }})?;
+        for a in &self.{{ SnakeCase .Name }} {
+            e.{{ PolyglotPrimitiveEncode $type }}(*a)?;
+        }
+    {{- end }}
+{{ end }}
+
+{{ define "rs_arrays_decode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        let size_{{ SnakeCase .Name }} = d.decode_array({{ PolyglotPrimitive $type }})?;
+        for _ in 0..size_{{ SnakeCase .Name }} {
+            x.{{ SnakeCase .Name }}.push(d.{{ PolyglotPrimitiveDecode $type }}()?);
+        }
+    {{- end }}
+{{ end }}

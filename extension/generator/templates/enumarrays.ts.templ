@@ -1,0 +1,21 @@
+{{ define "ts_enumarrays_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .EnumArrays }}
+        {{- if (Deref .Accessor) }}
+            #{{ CamelCase .Name }}: {{ .Reference }}[];
+        {{- else }}
+            {{ CamelCase .Name }}: {{ .Reference }}[];
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_enumarrays_new_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .EnumArrays }}
+        {{- if .Accessor }}
+            this.#{{ CamelCase .Name }} = [];
+        {{- else }}
+            this.{{ CamelCase .Name }} = [];
+        {{- end -}}
+    {{ end }}
+{{ end }}

@@ -1,0 +1,58 @@
+{{ define "rs_enums_definition" }}
+    #[derive(Debug, Eq, PartialEq, TryFromPrimitive, Copy, Clone, Hash)]
+    #[repr(u32)]
+    pub enum {{ .Name }} {
+    {{- range $index, $value := .Values }}
+        {{ $value }} = {{ $index }},
+    {{- end }}
+    }
+{{ end }}
+
+{{ define "rs_enums_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .Enums }}
+        {{- if (Deref .Accessor) }}
+            {{ SnakeCase .Name }}: {{ .Reference }},
+        {{- else }}
+            pub {{ SnakeCase .Name }}: {{ .Reference }},
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "rs_enums_new_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .Enums }}
+        {{ SnakeCase .Name }}: {{ .Reference }}::{{ .Default }},
+    {{ end }}
+{{ end }}
+
+{{ define "rs_enums_encode" }}
+    {{ $current_model := . }}
+    {{- range .Enums }}
+        e.encode_u32(self.{{ SnakeCase .Name }} as u32)?;
+    {{- end }}
+{{ end }}
+
+{{ define "rs_enums_decode" }}
+    {{ $current_model := . }}
+    {{- range .Enums }}
+        x.{{ SnakeCase .Name }} = {{ .Reference }}::try_from(d.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
+    {{- end }}
+{{ end }}
+
+{{ define "rs_enums_accessor" }}
+    {{ $current_model := . }}
+    {{- range .Enums }}
+        {{- if .Accessor }}
+            impl {{ $current_model.Name }} {
+                pub fn get_{{ SnakeCase .Name }}(&self) -> &{{ .Reference }} {
+                    &self.{{ SnakeCase .Name }}
+                }
+
+                pub fn set_{{ SnakeCase .Name }}(&mut self, v: {{ .Reference }}) {
+                    self.{{ SnakeCase .Name }} = v;
+                }
+            }
+        {{- end -}}
+    {{- end }}
+{{ end }}
