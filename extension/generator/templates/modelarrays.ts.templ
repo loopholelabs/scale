@@ -1,0 +1,80 @@
+{{ define "ts_modelarrays_struct_reference" }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            #{{ CamelCase .Name }}: Array<{{ .Reference }}>;
+        {{- else }}
+            {{ CamelCase .Name }}: Array<{{ .Reference }}>;
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_modelarrays_new_struct_reference" }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            this.#{{ CamelCase .Name }} = [];
+        {{- else }}
+            this.{{ CamelCase .Name }} = [];
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_modelarrays_encode" }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            const {{ CamelCase .Name }}Length = this.#{{ CamelCase .Name }}.length;
+            encoder.array({{ CamelCase .Name }}Length, Kind.Any);
+            for (let i = 0; i < {{ CamelCase .Name }}Length; i += 1) {
+                let el = this.#{{ CamelCase .Name }}[i];
+                el.encode(encoder);
+            }
+        {{- else }}
+            const {{ CamelCase .Name }}Length = this.{{ CamelCase .Name }}.length;
+            encoder.array({{ CamelCase .Name }}Length, Kind.Any);
+            for (let i = 0; i < {{ CamelCase .Name }}Length; i += 1) {
+                let el = this.{{ CamelCase .Name }}[i];
+                el.encode(encoder);
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_modelarrays_decode" }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            const {{ CamelCase .Name }}Size = decoder.array(Kind.Any);
+            this.#{{ CamelCase .Name }} = new Array({{ CamelCase .Name }}Size);
+
+            for (let i = 0; i < {{ CamelCase .Name }}Size; i += 1) {
+                const x = {{ .Reference }}.decode(decoder);
+                if (x !== undefined) {
+                    this.#{{ CamelCase .Name }}[i] = x;
+                }
+            }
+        {{- else }}
+            const {{ CamelCase .Name }}Size = decoder.array(Kind.Any);
+            this.{{ CamelCase .Name }} = new Array({{ CamelCase .Name }}Size);
+
+            for (let i = 0; i < {{ CamelCase .Name }}Size; i += 1) {
+                const x = {{ .Reference }}.decode(decoder);
+                if (x !== undefined) {
+                    this.{{ CamelCase .Name }}[i] = x;
+                }
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_modelarrays_accessor" }}
+    {{ $current_model := . }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            get {{ CamelCase .Name }}(): Array<{{ .Reference }}> {
+                return this.#{{ CamelCase .Name }};
+            }
+
+            set {{.Name }}(val: Array<{{ .Reference }}>) {
+                this.#{{ CamelCase .Name }} = val;
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}

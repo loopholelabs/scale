@@ -1,0 +1,50 @@
+{{ define "rs_modelarrays_struct_reference" }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            {{ SnakeCase .Name }}: Vec<{{ .Reference }}>,
+        {{- else }}
+            pub {{ SnakeCase .Name }}: Vec<{{ .Reference }}>,
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "rs_modelarrays_new_struct_reference" }}
+    {{- range .ModelArrays }}
+        {{ SnakeCase .Name }}: Vec::with_capacity({{ .InitialSize }}),
+    {{- end }}
+{{ end }}
+
+{{ define "rs_modelarrays_encode" }}
+    {{- range .ModelArrays }}
+        e.encode_array(self.{{ SnakeCase .Name }}.len(), Kind::Any)?;
+        for a in &self.{{ SnakeCase .Name }} {
+            a.encode_self(e)?;
+        }
+    {{- end }}
+{{ end }}
+
+{{ define "rs_modelarrays_decode" }}
+    {{- range .ModelArrays }}
+        let size_{{ SnakeCase .Name }} = d.decode_array(Kind::Any)?;
+        for _ in 0..size_{{ SnakeCase .Name }} {
+            x.{{ SnakeCase .Name }}.push({{ .Reference }}::decode(d)?.ok_or(DecodingError::InvalidArray)?);
+        }
+    {{- end }}
+{{ end }}
+
+{{ define "rs_modelarrays_accessor" }}
+    {{ $current_model := . }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            impl {{ $current_model.Name }} {
+                pub fn get_{{ SnakeCase .Name }} (&self) -> Option<&Vec<{{ .Reference }}>> {
+                    Some(&self.{{ SnakeCase .Name }})
+                }
+
+                pub fn set_{{ SnakeCase .Name }} (&mut self, v: Vec<{{ .Reference }}>) {
+                    self.{{ SnakeCase .Name }} = v;
+                }
+            }
+        {{- end -}}
+    {{- end }}
+{{ end }}
