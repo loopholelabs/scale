@@ -41,4 +41,14 @@ func TestGenerator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(master), string(formatted))
 
+	f_host, err := GenerateHost(s, "host", "v0.1.0")
+	require.NoError(t, err)
+
+	os.WriteFile("./host.txt", f_host, 0644)
+
+	f_guest, err := GenerateGuest(s, "guest", "v0.1.0")
+	require.NoError(t, err)
+
+	os.WriteFile("./guest.txt", f_guest, 0644)
+
 }

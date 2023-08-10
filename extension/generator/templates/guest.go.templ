@@ -9,8 +9,6 @@ import (
     "unsafe"
 )
 
-const identifier = "{{ .schema.Name }}:{{ .schema.Tag }}"
-
 var (
     writeBuffer = polyglot.NewBuffer()
     readBuffer  []byte
@@ -19,7 +17,7 @@ var (
 // Write serializes the signature into the global writeBuffer and returns the pointer to the buffer and its size
 //
 // Users should not use this method.
-func Write(ctx *{{ .schema.Context }}) (uint32, uint32) {
+func Write(ctx *{{ .schema.Params }}) (uint32, uint32) {
     writeBuffer.Reset()
     ctx.Encode(writeBuffer)
     underlying := writeBuffer.Bytes()
@@ -31,8 +29,8 @@ func Write(ctx *{{ .schema.Context }}) (uint32, uint32) {
 // Read deserializes signature from the global readBuffer
 //
 // Users should not use this method.
-func Read(ctx *{{ .schema.Context }}) (*{{ .schema.Context }}, error) {
-    return Decode{{ .schema.Context }}(ctx, readBuffer)
+func Read(ctx *{{ .schema.Return }}) (*{{ .schema.Return }}, error) {
+    return Decode{{ .schema.Return }}(ctx, readBuffer)
 }
 
 // Error serializes an error into the global writeBuffer and returns a pointer to the buffer and its size
@@ -47,35 +45,12 @@ func Error(err error) (uint32, uint32) {
     return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
 
-// Resize resizes the global readBuffer to the given size and returns the pointer to the buffer
-//
-// Users should not use this method.
-func Resize(size uint32) uint32 {
-    if uint32(cap(readBuffer)) < size {
-        readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
-    }
-    readBuffer = readBuffer[:size]
-    return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
+// Create a new instance of the extension.
+func New(ctx *{{ .schema.Params }}) (*{{ .schema.Return }}, error) {
+  ext_new_{{ .schema.Name}}(Write(ctx))
+  return Read(ctx)
 }
 
-// Identifier returns the identifier of the Scale Signature
-//
-// Users should not use this method.
-func Identifier() (uint32, uint32) {
-    writeBuffer.Reset()
-    polyglot.Encoder(writeBuffer).String(identifier)
-    underlying := writeBuffer.Bytes()
-    ptr := &underlying[0]
-    unsafePtr := uintptr(unsafe.Pointer(ptr))
-    return uint32(unsafePtr), uint32(writeBuffer.Len())
-}
-
-// Next calls the next function in the Scale Function Chain
-func Next(ctx *{{ .schema.Context }}) (*{{ .schema.Context }}, error) {
-    next(Write(ctx))
-    return Read(ctx)
-}
-
-//export next
-//go:linkname next
-func next(offset uint32, length uint32)
+//export ext_new_{{ .schema.Name }}
+//go:linkname ext_new_{{ .schema.Name }}
+func ext_new_{{ .schema.Name }}(offset uint32, length uint32)
