@@ -35,7 +35,7 @@ func Signature() signature.Signature {
 // This method is meant to be used by the Scale Runtime to deserialize the Signature
 func (x *sig) Read(b []byte) error {
     var err error
-    x.ctx, err = Decode{{ .schema.Context }}(x.ctx, b)
+    x.ctx, err = Decode{{ .schema.Params }}(x.ctx, b)
     return err
 }
 
