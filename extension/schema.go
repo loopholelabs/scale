@@ -39,6 +39,7 @@ var (
 	ErrInvalidName         = errors.New("invalid name")
 	ErrInvalidFunctionName = errors.New("invalid function name")
 	ErrInvalidTag          = errors.New("invalid tag")
+	ErrNoInstanceId        = errors.New("Extension has no int32 InstanceId defined")
 )
 
 var (
@@ -271,6 +272,23 @@ func (s *Schema) Validate() error {
 			return fmt.Errorf("unknown return: %s", s.Return)
 		}
 
+		// Make sure the return model has an 'int32 InstanceId' field.
+		hasInstanceId := false
+		for _, m := range s.Models {
+			if m.Name == s.Return {
+				// Make sure there's a field
+				for _, i := range m.Int32s {
+					if i.Name == "InstanceId" {
+						hasInstanceId = true
+						break
+					}
+				}
+			}
+		}
+		if !hasInstanceId {
+			return ErrNoInstanceId
+		}
+
 		for _, f := range s.Functions {
 			// Make sure the function name is ok
 			if !ValidLabel.MatchString(f.Name) {
@@ -339,6 +357,9 @@ model HttpConfig {
 }
 
 model HttpConnector {
+	int32 InstanceId {
+		default = 0
+	}
 }
 
 function Fetch {
