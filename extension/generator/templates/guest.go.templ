@@ -46,11 +46,27 @@ func Error(err error) (uint32, uint32) {
 }
 
 // Create a new instance of the extension.
-func New(ctx *{{ .schema.Params }}) (*{{ .schema.Return }}, error) {
-  ext_new_{{ .schema.Name}}(Write(ctx))
+func New(params *{{ .schema.Params }}) (*{{ .schema.Return }}, error) {
+  ext_new_{{ .schema.Name}}(Write(params))
   return Read(ctx)
 }
 
 //export ext_new_{{ .schema.Name }}
 //go:linkname ext_new_{{ .schema.Name }}
 func ext_new_{{ .schema.Name }}(offset uint32, length uint32)
+
+// Create the functions that are defined in the schema.
+{{ $ext_return := .schema.Return }}
+{{ $ext_name := .schema.Name }}
+
+{{- range .schema.Functions -}}
+func (e *{{ $ext_return }}) {{ .Name }}(params *{{ .Params}}) (*{{ .Return }}, error) {
+  off, l := Write(params)
+  ext_fn_{{ $ext_name }}_{{ .Name }}(e.InstanceId, off, l)
+  return Read(ctx)
+}
+
+//export ext_func_{{ $ext_name }}_{{ .Name }}
+//go:linkname ext_func_{{ $ext_name }}_{{ .Name }}
+func ext_func_{{ $ext_name }}_{{ .Name }}(instance uint32, offset uint32, length uint32)
+{{- end }}
