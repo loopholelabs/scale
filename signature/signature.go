@@ -295,7 +295,7 @@ func (s *Schema) Hash() ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func (s *Schema) DisableAccessorsValidatorsModifiers() error {
+func (s *Schema) DisableAccessorsValidatorsModifiers() {
 	for _, model := range s.Models {
 		for _, modelReference := range model.Models {
 			modelReference.Accessor = false
@@ -438,8 +438,18 @@ func (s *Schema) DisableAccessorsValidatorsModifiers() error {
 			enumReferenceMap.Accessor = false
 		}
 	}
+}
 
-	return nil
+func (s *Schema) Clone() (*Schema, error) {
+	clone := new(Schema)
+	encoded, err := s.Encode()
+	if err != nil {
+		return nil, err
+	}
+	if err = clone.Decode(encoded); err != nil {
+		return nil, err
+	}
+	return clone, nil
 }
 
 func (s *Schema) HasLimitValidator() bool {
