@@ -26,9 +26,7 @@ import (
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // DeleteCmd encapsulates the commands for deleting Functions
@@ -71,14 +69,9 @@ func DeleteCmd() command.SetupCommand[*config.Config] {
 					return fmt.Errorf("function %s/%s:%s does not exist", parsed.Organization, parsed.Name, parsed.Tag)
 				}
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "delete-function",
-						Timestamp:  time.Now(),
-						Properties: posthog.NewProperties().Set("language", e.Schema.Language),
-					})
-				}
+				analytics.Event("delete-function", map[string]string{
+					"language": string(e.Schema.Language),
+				})
 
 				err = st.Delete(parsed.Name, parsed.Tag, parsed.Organization, e.Hash)
 				if err != nil {

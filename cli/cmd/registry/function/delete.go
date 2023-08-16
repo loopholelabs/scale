@@ -26,9 +26,7 @@ import (
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // DeleteCmd encapsulates the commands for deleting Functions
@@ -65,13 +63,7 @@ func DeleteCmd() command.SetupCommand[*config.Config] {
 					return err
 				}
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "delete-registry",
-						Timestamp:  time.Now(),
-					})
-				}
+				analytics.Event("delete-registry")
 
 				if ch.Printer.Format() == printer.Human {
 					ch.Printer.Printf("Deleted %s from the Scale Registry\n", printer.BoldGreen(fmt.Sprintf("%s/%s:%s", parsed.Organization, parsed.Name, parsed.Tag)))

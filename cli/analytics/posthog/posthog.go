@@ -86,3 +86,7 @@ func (p *PostHog) AssociateUser(user string, organization string) {
 		},
 	})
 }
+
+func (p *PostHog) Cleanup() {
+	_ = p.client.Close()
+}

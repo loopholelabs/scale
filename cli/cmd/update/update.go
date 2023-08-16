@@ -29,13 +29,11 @@ import (
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/cli/internal/log"
 	"github.com/loopholelabs/scale/cli/version"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 )
 
 // Cmd encapsulates the commands for updating the CLI.
@@ -134,13 +132,7 @@ func Cmd() command.SetupCommand[*config.Config] {
 				_ = os.Remove(previousExecutable)
 				end()
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "update",
-						Timestamp:  time.Now(),
-					})
-				}
+				analytics.Event("update")
 
 				ch.Printer.Printf("Scale CLI updated to version %s\n", printer.BoldGreen(latest))
 				return nil

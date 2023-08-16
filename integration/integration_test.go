@@ -31,8 +31,6 @@ func TestExampleSignature(t *testing.T) {
 	s, err := signatureSchema.ReadSchema("signatures/example.signature")
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
 	assert.Equal(t, "example", s.Name)
 	assert.Equal(t, "latest", s.Tag)
 	assert.Equal(t, "Example", s.Context)

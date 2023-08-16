@@ -10,6 +10,7 @@ import (
 )
 
 const identifier = "{{ .schema.Name }}:{{ .schema.Tag }}"
+const hash = "{{ .hash }}"
 
 var (
     writeBuffer = polyglot.NewBuffer()

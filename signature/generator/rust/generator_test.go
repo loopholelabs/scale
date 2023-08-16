@@ -27,8 +27,6 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
 	formatted, err := Generate(s, "types", "v0.1.0")
 	require.NoError(t, err)
 

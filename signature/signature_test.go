@@ -29,8 +29,6 @@ func TestSchema(t *testing.T) {
 	err := s.Decode([]byte(MasterTestingSchema))
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
 	assert.Equal(t, V1AlphaVersion, s.Version)
 	assert.Equal(t, "MasterSchema", s.Name)
 	assert.Equal(t, "MasterSchemaTag", s.Tag)

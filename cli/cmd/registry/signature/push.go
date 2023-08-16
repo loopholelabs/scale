@@ -29,9 +29,7 @@ import (
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // PushCmd encapsulates the commands for pushing Signatures
@@ -79,13 +77,7 @@ func PushCmd() command.SetupCommand[*config.Config] {
 					return fmt.Errorf("signature %s/%s:%s does not exist", parsed.Organization, parsed.Name, parsed.Tag)
 				}
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "push-signature",
-						Timestamp:  time.Now(),
-					})
-				}
+				analytics.Event("push-signature")
 
 				encodedSchemaReader, err := e.Schema.Encode()
 				if err != nil {

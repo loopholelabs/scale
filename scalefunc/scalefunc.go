@@ -87,17 +87,17 @@ type Dependency struct {
 // Schema is the type used to define the requirements of a
 // scale function for a Scale Runtime
 type Schema struct {
-	Version           Version                `json:"version" yaml:"version"`
-	Name              string                 `json:"name" yaml:"name"`
-	Tag               string                 `json:"tag" yaml:"tag"`
-	Signature         string                 `json:"signature" yaml:"signature"`
-	SignatureSchema   signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
-	SignatureChecksum []byte                 `json:"signature_checksum" yaml:"signature_checksum"`
-	Language          Language               `json:"language" yaml:"language"`
-	Dependencies      []Dependency           `json:"dependencies" yaml:"dependencies"`
-	Function          []byte                 `json:"function" yaml:"function"`
-	Size              uint32                 `json:"size" yaml:"size"`
-	Checksum          []byte                 `json:"checksum" yaml:"checksum"`
+	Version         Version                `json:"version" yaml:"version"`
+	Name            string                 `json:"name" yaml:"name"`
+	Tag             string                 `json:"tag" yaml:"tag"`
+	Signature       string                 `json:"signature" yaml:"signature"`
+	SignatureSchema signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
+	SignatureHash   []byte                 `json:"signature_hash" yaml:"signature_hash"`
+	Language        Language               `json:"language" yaml:"language"`
+	Dependencies    []Dependency           `json:"dependencies" yaml:"dependencies"`
+	Function        []byte                 `json:"function" yaml:"function"`
+	Size            uint32                 `json:"size" yaml:"size"`
+	Hash            []byte                 `json:"hash" yaml:"hash"`
 
 	// env is used by the host at runtime to specify environment variables for the function
 	env map[string]string
@@ -117,7 +117,7 @@ func (s *Schema) Encode() []byte {
 	gohcl.EncodeIntoBody(s.SignatureSchema, f.Body())
 	e.Bytes(f.Bytes())
 
-	e.Bytes(s.SignatureChecksum)
+	e.Bytes(s.SignatureHash)
 
 	e.String(string(s.Language))
 
@@ -137,10 +137,9 @@ func (s *Schema) Encode() []byte {
 	size := uint32(len(b.Bytes()))
 	hash := sha256.New()
 	hash.Write(b.Bytes())
-	checksum := hex.EncodeToString(hash.Sum(nil))
 
 	e.Uint32(size)
-	e.String(checksum)
+	e.String(hex.EncodeToString(hash.Sum(nil)))
 
 	return b.Bytes()
 }
@@ -192,7 +191,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.SignatureChecksum, err = d.Bytes(nil)
+	s.SignatureHash, err = d.Bytes(nil)
 	if err != nil {
 		return err
 	}
@@ -257,7 +256,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.Checksum, err = d.Bytes(nil)
+	s.Hash, err = d.Bytes(nil)
 	if err != nil {
 		return err
 	}
@@ -265,7 +264,7 @@ func (s *Schema) Decode(data []byte) error {
 	hash := sha256.New()
 	hash.Write(data[:s.Size])
 
-	if !bytes.Equal(hash.Sum(nil), s.Checksum) {
+	if !bytes.Equal(hash.Sum(nil), s.Hash) {
 		return ChecksumErr
 	}
 

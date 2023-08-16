@@ -62,6 +62,7 @@ type Signature interface {
 	Identifier() string     // Identifier returns the identifier of the Signature
 }
 
+// Schema is the top-level structure of a Scale Signature schema
 type Schema struct {
 	Version            string         `hcl:"version,attr"`
 	Name               string         `hcl:"name,attr"`
@@ -75,6 +76,7 @@ type Schema struct {
 	hasCaseModifier    bool
 }
 
+// ReadSchema reads a Scale Signature schema from a file at the given path
 func ReadSchema(path string) (*Schema, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -85,6 +87,9 @@ func ReadSchema(path string) (*Schema, error) {
 	return s, s.Decode(data)
 }
 
+// Decode decodes the given byte slice into the Schema
+//
+// Note: This function modifies the Schema in-place and validates/normalizes it as well.
 func (s *Schema) Decode(data []byte) error {
 	file, diag := hclsyntax.ParseConfig(data, "", hcl.Pos{Line: 1, Column: 1})
 	if diag.HasErrors() {
@@ -96,16 +101,25 @@ func (s *Schema) Decode(data []byte) error {
 		return diag.Errs()[0]
 	}
 
+	err := s.validateAndNormalize()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
+// Encode encodes the Schema into a byte slice
 func (s *Schema) Encode() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	gohcl.EncodeIntoBody(s, f.Body())
 	return f.Bytes(), nil
 }
 
-func (s *Schema) Validate() error {
+// validateAndNormalize validates the Schema and normalizes it
+//
+// Note: This function modifies the Schema in-place
+func (s *Schema) validateAndNormalize() error {
 	switch s.Version {
 	case V1AlphaVersion:
 		if !ValidLabel.MatchString(s.Name) {
@@ -282,6 +296,7 @@ func (s *Schema) Validate() error {
 	}
 }
 
+// Hash returns the SHA256 hash of the schema
 func (s *Schema) Hash() ([]byte, error) {
 	d, err := s.Encode()
 	if err != nil {
@@ -295,8 +310,27 @@ func (s *Schema) Hash() ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func (s *Schema) DisableAccessorsValidatorsModifiers() {
-	for _, model := range s.Models {
+// Clone returns a deep copy of the schema
+func (s *Schema) Clone() (*Schema, error) {
+	clone := new(Schema)
+	encoded, err := s.Encode()
+	if err != nil {
+		return nil, err
+	}
+	if err = clone.Decode(encoded); err != nil {
+		return nil, err
+	}
+	return clone, nil
+}
+
+// CloneWithDisabledAccessorsValidatorsAndModifiers returns a clone of the
+// schema with all accessors, validators, and modifiers disabled
+func (s *Schema) CloneWithDisabledAccessorsValidatorsAndModifiers() (*Schema, error) {
+	clone, err := s.Clone()
+	if err != nil {
+		return nil, err
+	}
+	for _, model := range clone.Models {
 		for _, modelReference := range model.Models {
 			modelReference.Accessor = false
 		}
@@ -438,32 +472,26 @@ func (s *Schema) DisableAccessorsValidatorsModifiers() {
 			enumReferenceMap.Accessor = false
 		}
 	}
-}
 
-func (s *Schema) Clone() (*Schema, error) {
-	clone := new(Schema)
-	encoded, err := s.Encode()
-	if err != nil {
-		return nil, err
-	}
-	if err = clone.Decode(encoded); err != nil {
-		return nil, err
-	}
 	return clone, nil
 }
 
+// HasLimitValidator returns true if the schema has a limit validator
 func (s *Schema) HasLimitValidator() bool {
 	return s.hasLimitValidator
 }
 
+// HasLengthValidator returns true if the schema has a length validator
 func (s *Schema) HasLengthValidator() bool {
 	return s.hasLengthValidator
 }
 
+// HasRegexValidator returns true if the schema has a regex validator
 func (s *Schema) HasRegexValidator() bool {
 	return s.hasRegexValidator
 }
 
+// HasCaseModifier returns true if the schema has a case modifier
 func (s *Schema) HasCaseModifier() bool {
 	return s.hasCaseModifier
 }

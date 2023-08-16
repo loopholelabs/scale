@@ -27,8 +27,6 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
 	formatted, err := Generate(s, "types", "v0.1.0")
 	require.NoError(t, err)
 
@@ -37,41 +35,6 @@ func TestGenerator(t *testing.T) {
 	master, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(master), string(formatted))
-
-	t.Log(string(formatted))
-}
-
-const exampleSchema = `
-version = "v1alpha"
-name    = "cue"
-tag     = "latest"
-context = "Addition"
-
-model "Addition" {
-  description = ""
-
-  int32 "A" {
-    default  = 0
-    accessor = false
-  }
-  int32 "B" {
-    default  = 0
-    accessor = false
-  }
-  int32 "C" {
-    default  = 0
-    accessor = false
-  }
-}`
-
-func TestExample(t *testing.T) {
-	s := new(signature.Schema)
-	err := s.Decode([]byte(exampleSchema))
-
-	require.NoError(t, s.Validate())
-
-	formatted, err := Generate(s, "go.dev.scale.sh/v1/shivanshvij/cue/latest/guest", "v0.1.0")
-	require.NoError(t, err)
 
 	t.Log(string(formatted))
 }

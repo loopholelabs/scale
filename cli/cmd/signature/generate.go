@@ -23,16 +23,13 @@ import (
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/cmdutils/pkg/printer"
-	"github.com/loopholelabs/scale/cli/analytics"
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
 	"path"
-	"time"
 )
 
 // GenerateCmd encapsulates the commands for generating a Signature from a Signature File
@@ -54,11 +51,6 @@ func GenerateCmd(hidden bool) command.SetupCommand[*config.Config] {
 				signatureFile, err := signature.ReadSchema(signaturePath)
 				if err != nil {
 					return fmt.Errorf("failed to read signature file at %s: %w", signaturePath, err)
-				}
-
-				err = signatureFile.Validate()
-				if err != nil {
-					return fmt.Errorf("failed to validate signature file: %w", err)
 				}
 
 				if org == "" {
@@ -87,14 +79,6 @@ func GenerateCmd(hidden bool) command.SetupCommand[*config.Config] {
 
 				if signatureFile.Tag == "" || !scalefunc.ValidString(signatureFile.Tag) {
 					return utils.InvalidStringError("tag", signatureFile.Tag)
-				}
-
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "generate-signature",
-						Timestamp:  time.Now(),
-					})
 				}
 
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Generating scale signature %s/%s:%s...", org, signatureFile.Name, signatureFile.Tag))

@@ -41,22 +41,12 @@ type Options struct {
 }
 
 func GenerateGuest(options *Options) (*GuestPackage, error) {
-	err := options.Signature.Validate()
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	sig, err := options.Signature.Clone()
-	if err != nil {
-		return nil, err
-	}
-
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.GolangPackageVersion)
-	if err != nil {
-		return nil, err
-	}
-
-	guest, err := golang.GenerateGuest(sig, options.GolangPackageName, options.GolangPackageVersion)
+	guest, err := golang.GenerateGuest(options.Signature, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -88,17 +78,10 @@ func GenerateGuest(options *Options) (*GuestPackage, error) {
 }
 
 func GenerateHost(options *Options) (*HostPackage, error) {
-	err := options.Signature.Validate()
+	sig, err := options.Signature.CloneWithDisabledAccessorsValidatorsAndModifiers()
 	if err != nil {
 		return nil, err
 	}
-
-	sig, err := options.Signature.Clone()
-	if err != nil {
-		return nil, err
-	}
-
-	sig.DisableAccessorsValidatorsModifiers()
 
 	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {

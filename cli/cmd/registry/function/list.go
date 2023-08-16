@@ -27,9 +27,7 @@ import (
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // ListCmd encapsulates the commands for listing Functions
@@ -66,13 +64,7 @@ func ListCmd() command.SetupCommand[*config.Config] {
 					return err
 				}
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "list-registry",
-						Timestamp:  time.Now(),
-					})
-				}
+				analytics.Event("list-registry")
 
 				if len(res.GetPayload()) == 0 && ch.Printer.Format() == printer.Human {
 					ch.Printer.Println("No functions available in this organization yet.")

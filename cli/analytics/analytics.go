@@ -23,6 +23,7 @@ var (
 type Handler interface {
 	Event(name string, properties map[string]string)
 	AssociateUser(user string, organization string)
+	Cleanup()
 }
 
 func Event(name string, properties ...map[string]string) {
@@ -42,4 +43,11 @@ func AssociateUser(user string, organization string) {
 
 func Init(h Handler) {
 	handler = h
+}
+
+func Cleanup() {
+	if handler != nil {
+		handler.Cleanup()
+		handler = nil
+	}
 }

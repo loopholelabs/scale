@@ -184,20 +184,14 @@ func PostRunAuthenticatedAPI(ch *cmdutils.Helper[*config.Config]) func(cmd *cobr
 			}
 
 		}
-		if analytics.Client != nil {
-			_ = analytics.Client.Close()
-			analytics.Client = nil
-		}
+		analytics.Cleanup()
 		return nil
 	}
 }
 
 func PostRunAnalytics(_ *cmdutils.Helper[*config.Config]) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if analytics.Client != nil {
-			_ = analytics.Client.Close()
-			analytics.Client = nil
-		}
+		analytics.Cleanup()
 		return nil
 	}
 }

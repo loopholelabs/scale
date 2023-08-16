@@ -25,9 +25,7 @@ import (
 	"github.com/loopholelabs/scale/cli/cmd/utils"
 	"github.com/loopholelabs/scale/cli/internal/config"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/posthog/posthog-go"
 	"github.com/spf13/cobra"
-	"time"
 )
 
 // ListCmd encapsulates the commands for listing the available Signatures
@@ -48,13 +46,7 @@ func ListCmd(hidden bool) command.SetupCommand[*config.Config] {
 					}
 				}
 
-				if analytics.Client != nil {
-					_ = analytics.Client.Enqueue(posthog.Capture{
-						DistinctId: analytics.MachineID,
-						Event:      "list-signature",
-						Timestamp:  time.Now(),
-					})
-				}
+				analytics.Event("list-signature")
 
 				signatureEntries, err := st.List()
 				if err != nil {

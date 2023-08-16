@@ -92,7 +92,7 @@ func TestEncodeDecode(t *testing.T) {
 	assert.Equal(t, s.Function, decoded.Function)
 	assert.Equal(t, s.Signature, decoded.Signature)
 
-	encoded[decoded.Size+uint32(len(s.Checksum))-1] = 0
+	encoded[decoded.Size+uint32(len(s.Hash))-1] = 0
 	err = decoded.Decode(encoded)
 	assert.ErrorIs(t, err, ChecksumErr)
 }
