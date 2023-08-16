@@ -277,7 +277,7 @@ func (s *Schema) Validate() error {
 		for _, m := range s.Models {
 			if m.Name == s.Return {
 				// Make sure there's a field
-				for _, i := range m.Int32s {
+				for _, i := range m.Uint32s {
 					if i.Name == "InstanceId" {
 						hasInstanceId = true
 						break
@@ -357,7 +357,7 @@ model HttpConfig {
 }
 
 model HttpConnector {
-	int32 InstanceId {
+	uint32 InstanceId {
 		default = 0
 	}
 }
