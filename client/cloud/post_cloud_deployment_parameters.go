@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/loopholelabs/scale/cli/client/models"
+	"github.com/loopholelabs/scale/client/models"
 )
 
 // NewPostCloudDeploymentParams creates a new PostCloudDeploymentParams object,

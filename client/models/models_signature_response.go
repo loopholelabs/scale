@@ -23,6 +23,9 @@ type ModelsSignatureResponse struct {
 	// golang import path host
 	GolangImportPathHost string `json:"golang_import_path_host,omitempty"`
 
+	// hash
+	Hash string `json:"hash,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 
@@ -34,6 +37,9 @@ type ModelsSignatureResponse struct {
 
 	// tag
 	Tag string `json:"tag,omitempty"`
+
+	// version
+	Version string `json:"version,omitempty"`
 }
 
 // Validate validates this models signature response

@@ -53,3 +53,14 @@ func (x *sig) Error(err error) []byte {
     polyglot.Encoder(x.buf).Error(err)
     return x.buf.Bytes()
 }
+
+
+// Identifier returns the identifier of the signature
+func (x *sig) Identifier() string {
+    return identifier
+}
+
+// Hash returns the hash of the signature
+func (x *sig) Hash() string {
+    return hash
+}

@@ -60,6 +60,7 @@ type Signature interface {
 	Write() []byte          // Write writes the signature into a byte slice and returns it
 	Error(err error) []byte // Error writes the error into a byte slice and returns it
 	Identifier() string     // Identifier returns the identifier of the Signature
+	Hash() string           // Hash returns the SHA256 hash of the Signature
 }
 
 // Schema is the top-level structure of a Scale Signature schema

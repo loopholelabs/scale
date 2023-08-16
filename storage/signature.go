@@ -232,6 +232,11 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 		return err
 	}
 
+	signatureHash, err := sig.Hash()
+	if err != nil {
+		return err
+	}
+
 	types, err := golangSignature.Generate(sig, "signature", version.Version)
 	if err != nil {
 		return err

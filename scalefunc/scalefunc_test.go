@@ -28,6 +28,19 @@ func TestEncodeDecode(t *testing.T) {
 	s := &Schema{
 		Version:  "invalid",
 		Language: Go,
+		SignatureSchema: signature.Schema{
+			Version: signature.V1AlphaVersion,
+			Name:    "test",
+			Tag:     "tag",
+			Context: "ctx",
+			Enums:   nil,
+			Models: []*signature.ModelSchema{
+				{
+					Name:        "ctx",
+					Description: "test",
+				},
+			},
+		},
 	}
 	decoded := new(Schema)
 
@@ -94,7 +107,7 @@ func TestEncodeDecode(t *testing.T) {
 
 	encoded[decoded.Size+uint32(len(s.Hash))-1] = 0
 	err = decoded.Decode(encoded)
-	assert.ErrorIs(t, err, ChecksumErr)
+	assert.ErrorIs(t, err, HashErr)
 }
 
 func TestValidName(t *testing.T) {

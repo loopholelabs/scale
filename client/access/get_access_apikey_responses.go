@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/loopholelabs/scale/cli/client/models"
+	"github.com/loopholelabs/scale/client/models"
 )
 
 // GetAccessApikeyReader is a Reader for the GetAccessApikey structure.

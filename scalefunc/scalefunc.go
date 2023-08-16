@@ -19,7 +19,6 @@
 package scalefunc
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -35,7 +34,7 @@ import (
 var (
 	VersionErr  = errors.New("unknown or invalid version")
 	LanguageErr = errors.New("unknown or invalid language")
-	ChecksumErr = errors.New("error while verifying checksum")
+	HashErr     = errors.New("error while verifying hash")
 )
 
 var (
@@ -92,12 +91,12 @@ type Schema struct {
 	Tag             string                 `json:"tag" yaml:"tag"`
 	Signature       string                 `json:"signature" yaml:"signature"`
 	SignatureSchema signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
-	SignatureHash   []byte                 `json:"signature_hash" yaml:"signature_hash"`
+	SignatureHash   string                 `json:"signature_hash" yaml:"signature_hash"`
 	Language        Language               `json:"language" yaml:"language"`
 	Dependencies    []Dependency           `json:"dependencies" yaml:"dependencies"`
 	Function        []byte                 `json:"function" yaml:"function"`
 	Size            uint32                 `json:"size" yaml:"size"`
-	Hash            []byte                 `json:"hash" yaml:"hash"`
+	Hash            string                 `json:"hash" yaml:"hash"`
 
 	// env is used by the host at runtime to specify environment variables for the function
 	env map[string]string
@@ -117,7 +116,7 @@ func (s *Schema) Encode() []byte {
 	gohcl.EncodeIntoBody(s.SignatureSchema, f.Body())
 	e.Bytes(f.Bytes())
 
-	e.Bytes(s.SignatureHash)
+	e.String(s.SignatureHash)
 
 	e.String(string(s.Language))
 
@@ -191,7 +190,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.SignatureHash, err = d.Bytes(nil)
+	s.SignatureHash, err = d.String()
 	if err != nil {
 		return err
 	}
@@ -256,7 +255,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.Hash, err = d.Bytes(nil)
+	s.Hash, err = d.String()
 	if err != nil {
 		return err
 	}
@@ -264,8 +263,8 @@ func (s *Schema) Decode(data []byte) error {
 	hash := sha256.New()
 	hash.Write(data[:s.Size])
 
-	if !bytes.Equal(hash.Sum(nil), s.Hash) {
-		return ChecksumErr
+	if hex.EncodeToString(hash.Sum(nil)) != s.Hash {
+		return HashErr
 	}
 
 	return nil

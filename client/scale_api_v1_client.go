@@ -10,11 +10,11 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/loopholelabs/scale/cli/client/access"
-	"github.com/loopholelabs/scale/cli/client/cloud"
-	"github.com/loopholelabs/scale/cli/client/health"
-	"github.com/loopholelabs/scale/cli/client/registry"
-	"github.com/loopholelabs/scale/cli/client/userinfo"
+	"github.com/loopholelabs/scale/client/access"
+	"github.com/loopholelabs/scale/client/cloud"
+	"github.com/loopholelabs/scale/client/health"
+	"github.com/loopholelabs/scale/client/registry"
+	"github.com/loopholelabs/scale/client/userinfo"
 )
 
 // Default scale API v1 HTTP client.

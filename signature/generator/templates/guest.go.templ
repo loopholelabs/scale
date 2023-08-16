@@ -71,6 +71,19 @@ func Identifier() (uint32, uint32) {
     return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
 
+// Hash returns the hash of the Scale Signature
+//
+// Users should not use this method.
+func Hash() (uint32, uint32) {
+    writeBuffer.Reset()
+    polyglot.Encoder(writeBuffer).String(hash)
+    underlying := writeBuffer.Bytes()
+    ptr := &underlying[0]
+    unsafePtr := uintptr(unsafe.Pointer(ptr))
+    return uint32(unsafePtr), uint32(writeBuffer.Len())
+}
+
+
 // Next calls the next function in the Scale Function Chain
 func Next(ctx *{{ .schema.Context }}) (*{{ .schema.Context }}, error) {
     next(Write(ctx))
