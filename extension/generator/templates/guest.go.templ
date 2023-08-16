@@ -48,6 +48,7 @@ func Error(err error) (uint32, uint32) {
 // Create a new instance of the extension.
 func New(params *{{ .schema.Params }}) (*{{ .schema.Return }}, error) {
   ext_new_{{ .schema.Name}}(Write(params))
+  ctx := &{{ .schema.Return }}{}
   return Read(ctx)
 }
 
@@ -61,9 +62,17 @@ func ext_new_{{ .schema.Name }}(offset uint32, length uint32)
 
 {{- range .schema.Functions -}}
 func (e *{{ $ext_return }}) {{ .Name }}(params *{{ .Params}}) (*{{ .Return }}, error) {
-  off, l := Write(params)
-  ext_fn_{{ $ext_name }}_{{ .Name }}(e.InstanceId, off, l)
-  return Read(ctx)
+  writeBuffer.Reset()
+  params.Encode(writeBuffer)
+  underlying := writeBuffer.Bytes()
+  ptr := &underlying[0]
+  unsafePtr := uintptr(unsafe.Pointer(ptr))
+  off := uint32(unsafePtr)
+  l := uint32(writeBuffer.Len())
+
+  ext_func_{{ $ext_name }}_{{ .Name }}(e.InstanceId, off, l)
+  ctx := &{{ .Return }}{}
+  return Decode{{ .Return }}(ctx, readBuffer)
 }
 
 //export ext_func_{{ $ext_name }}_{{ .Name }}
