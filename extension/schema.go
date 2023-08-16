@@ -57,7 +57,7 @@ type Schema struct {
 	Tag                string                   `hcl:"tag,attr"`
 	Params             string                   `hcl:"params,attr"`
 	Return             string                   `hcl:"return,attr"`
-	Functions          []*FunctionSchema        `hcl:"function,block"`
+	Interfaces         []*InterfaceSchema       `hcl:"interface,block"`
 	Enums              []*signature.EnumSchema  `hcl:"enum,block"`
 	Models             []*signature.ModelSchema `hcl:"model,block"`
 	hasLimitValidator  bool
@@ -262,51 +262,55 @@ func (s *Schema) Validate() error {
 			}
 		}
 
+		// Map of interfaces, and check for name collisions.
+		knownInterfaces := make(map[string]struct{})
+		for _, inter := range s.Interfaces {
+			_, dupe := knownModels[inter.Name]
+			if dupe {
+				return fmt.Errorf("interface name collides with a model %s", inter.Name)
+			}
+			_, dupe = knownInterfaces[inter.Name]
+			if dupe {
+				return fmt.Errorf("interface name collides with an interface %s", inter.Name)
+			}
+			knownInterfaces[inter.Name] = struct{}{}
+		}
+
 		s.Params = TitleCaser.String(s.Params)
 		if _, ok := knownModels[s.Params]; !ok {
 			return fmt.Errorf("unknown params: %s", s.Params)
 		}
 
 		s.Return = TitleCaser.String(s.Return)
-		if _, ok := knownModels[s.Return]; !ok {
+		_, foundModel := knownModels[s.Return]
+		_, foundInterface := knownInterfaces[s.Return]
+		if !foundModel && !foundInterface {
 			return fmt.Errorf("unknown return: %s", s.Return)
 		}
 
-		// Make sure the return model has an 'int32 InstanceId' field.
-		hasInstanceId := false
-		for _, m := range s.Models {
-			if m.Name == s.Return {
-				// Make sure there's a field
-				for _, i := range m.Uint32s {
-					if i.Name == "InstanceId" {
-						hasInstanceId = true
-						break
+		for _, inter := range s.Interfaces {
+			for _, f := range inter.Functions {
+				// Make sure the function name is ok
+				if !ValidLabel.MatchString(f.Name) {
+					return ErrInvalidFunctionName
+				}
+
+				// Make sure the params exist as model.
+				if f.Params != "" {
+					f.Params = TitleCaser.String(f.Params)
+					if _, ok := knownModels[f.Params]; !ok {
+						return fmt.Errorf("unknown params in function %s: %s", f.Name, f.Params)
 					}
 				}
-			}
-		}
-		if !hasInstanceId {
-			return ErrNoInstanceId
-		}
 
-		for _, f := range s.Functions {
-			// Make sure the function name is ok
-			if !ValidLabel.MatchString(f.Name) {
-				return ErrInvalidFunctionName
-			}
-
-			// Make sure the params and return exist as models.
-			if f.Params != "" {
-				f.Params = TitleCaser.String(f.Params)
-				if _, ok := knownModels[f.Params]; !ok {
-					return fmt.Errorf("unknown params in function %s: %s", f.Name, f.Params)
-				}
-			}
-
-			if f.Return != "" {
-				f.Return = TitleCaser.String(f.Return)
-				if _, ok := knownModels[f.Return]; !ok {
-					return fmt.Errorf("unknown return in function %s: %s", f.Name, f.Return)
+				// Return can either be a model or interface
+				if f.Return != "" {
+					f.Return = TitleCaser.String(f.Return)
+					_, foundModel := knownModels[f.Return]
+					_, foundInterface := knownInterfaces[f.Return]
+					if !foundModel && !foundInterface {
+						return fmt.Errorf("unknown return in function %s: %s", f.Name, f.Return)
+					}
 				}
 			}
 		}
@@ -356,15 +360,11 @@ model HttpConfig {
 	}
 }
 
-model HttpConnector {
-	uint32 InstanceId {
-		default = 0
+interface HttpConnector {
+	function Fetch {
+		params = "ConnectionDetails"
+		return = "HttpResponse"
 	}
-}
-
-function Fetch {
-	params = "ConnectionDetails"
-	return = "HttpResponse"
 }
 
 model ConnectionDetails {
