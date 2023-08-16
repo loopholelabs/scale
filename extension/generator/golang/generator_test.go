@@ -35,20 +35,27 @@ func TestGenerator(t *testing.T) {
 
 	// Check things...
 
+	packageName := "extfetch"
+
 	os.WriteFile("./generated.txt", formatted, 0644)
 
 	master, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(master), string(formatted))
 
-	f_host, err := GenerateHost(s, "host", "v0.1.0")
+	f_host, err := GenerateHost(s, packageName, "v0.1.0")
 	require.NoError(t, err)
 
 	os.WriteFile("./host.txt", f_host, 0644)
 
-	f_guest, err := GenerateGuest(s, "guest", "v0.1.0")
+	f_guest, err := GenerateGuest(s, packageName, "v0.1.0")
 	require.NoError(t, err)
 
 	os.WriteFile("./guest.txt", f_guest, 0644)
+
+	modf, err := GenerateModfile(packageName, "v0.1.0")
+	require.NoError(t, err)
+
+	os.WriteFile("./modfile.txt", modf, 0644)
 
 }
