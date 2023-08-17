@@ -15,7 +15,7 @@ package golang
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/compile/templates"
+	"github.com/loopholelabs/scale/compile/golang/templates"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"

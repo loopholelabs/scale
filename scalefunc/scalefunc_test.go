@@ -30,8 +30,6 @@ func TestEncodeDecode(t *testing.T) {
 		Language: Go,
 		SignatureSchema: signature.Schema{
 			Version: signature.V1AlphaVersion,
-			Name:    "test",
-			Tag:     "tag",
 			Context: "ctx",
 			Enums:   nil,
 			Models: []*signature.ModelSchema{
@@ -87,7 +85,7 @@ func TestEncodeDecode(t *testing.T) {
 		Version:         V1Alpha,
 		Name:            "Test Name",
 		Tag:             "Test Tag",
-		Signature:       "Test Signature",
+		SignatureName:   "Test Signature",
 		SignatureSchema: *masterTestingSchema,
 		Dependencies:    dependencies,
 		Language:        Go,
@@ -103,7 +101,7 @@ func TestEncodeDecode(t *testing.T) {
 	assert.Equal(t, s.Tag, decoded.Tag)
 	assert.Equal(t, s.Language, decoded.Language)
 	assert.Equal(t, s.Function, decoded.Function)
-	assert.Equal(t, s.Signature, decoded.Signature)
+	assert.Equal(t, s.SignatureName, decoded.SignatureName)
 
 	encoded[decoded.Size+uint32(len(s.Hash))-1] = 0
 	err = decoded.Decode(encoded)

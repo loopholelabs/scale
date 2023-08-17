@@ -30,8 +30,6 @@ func TestSchema(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, V1AlphaVersion, s.Version)
-	assert.Equal(t, "MasterSchema", s.Name)
-	assert.Equal(t, "MasterSchemaTag", s.Tag)
 	assert.Equal(t, "ModelWithAllFieldTypes", s.Context)
 
 	assert.Equal(t, "EmptyModel", s.Models[0].Name)

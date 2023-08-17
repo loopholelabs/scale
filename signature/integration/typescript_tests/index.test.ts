@@ -5,24 +5,24 @@ import * as fs from 'fs';
 test('test-output', () => {
     const nilModelEncoder = new polyglot.Encoder();
    generated.EmptyModel.encode_undefined(nilModelEncoder);
-    fs.writeFileSync('../binaries/nil_model.bin', nilModelEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/nil_model.bin', nilModelEncoder.bytes, 'binary');
 
     const emptyModelEncoder = new polyglot.Encoder();
     const emptyModel = new generated.EmptyModel();
     emptyModel.encode(emptyModelEncoder);
-    fs.writeFileSync('../binaries/empty_model.bin', emptyModelEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/empty_model.bin', emptyModelEncoder.bytes, 'binary');
 
     const emptyModelWithDescriptionEncoder = new polyglot.Encoder();
     const emptyModelWithDescription = new generated.EmptyModelWithDescription();
     emptyModelWithDescription.encode(emptyModelWithDescriptionEncoder);
-    fs.writeFileSync('../binaries/empty_model_with_description.bin', emptyModelWithDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/empty_model_with_description.bin', emptyModelWithDescriptionEncoder.bytes, 'binary');
 
     const modelWithSingleStringFieldEncoder = new polyglot.Encoder();
     const modelWithSingleStringField = new generated.ModelWithSingleStringField();
     expect(modelWithSingleStringField.stringField).toEqual('DefaultValue');
     modelWithSingleStringField.stringField = 'hello world';
     modelWithSingleStringField.encode(modelWithSingleStringFieldEncoder);
-    fs.writeFileSync('../binaries/model_with_single_string_field.bin', modelWithSingleStringFieldEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_single_string_field.bin', modelWithSingleStringFieldEncoder.bytes, 'binary');
 
     const modelWithSingleStringFieldAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithSingleStringFieldAndDescription = new generated.ModelWithSingleStringFieldAndDescription();
@@ -30,7 +30,7 @@ test('test-output', () => {
     modelWithSingleStringFieldAndDescription.stringField = 'hello world';
     modelWithSingleStringFieldAndDescription.encode(modelWithSingleStringFieldAndDescriptionEncoder);
     fs.writeFileSync(
-        '../binaries/model_with_single_string_field_and_description.bin',
+        '../test_data/model_with_single_string_field_and_description.bin',
         modelWithSingleStringFieldAndDescriptionEncoder.bytes,
         'binary'
     );
@@ -40,14 +40,14 @@ test('test-output', () => {
     expect(modelWithSingleInt32Field.int32Field).toEqual(32);
     modelWithSingleInt32Field.int32Field = 42;
     modelWithSingleInt32Field.encode(modelWithSingleInt32FieldEncoder);
-    fs.writeFileSync('../binaries/model_with_single_int32_field.bin', modelWithSingleInt32FieldEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_single_int32_field.bin', modelWithSingleInt32FieldEncoder.bytes, 'binary');
 
     const modelWithSingleInt32FieldAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithSingleInt32FieldAndDescription = new generated.ModelWithSingleInt32FieldAndDescription();
     expect(modelWithSingleInt32FieldAndDescription.int32Field).toEqual(32);
     modelWithSingleInt32FieldAndDescription.int32Field = 42;
     modelWithSingleInt32FieldAndDescription.encode(modelWithSingleInt32FieldAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_single_int32_field_and_description.bin', modelWithSingleInt32FieldAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_single_int32_field_and_description.bin', modelWithSingleInt32FieldAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithMultipleFieldsEncoder = new polyglot.Encoder();
     const modelWithMultipleFields = new generated.ModelWithMultipleFields();
@@ -56,7 +56,7 @@ test('test-output', () => {
     modelWithMultipleFields.stringField = 'hello world';
     modelWithMultipleFields.int32Field = 42;
     modelWithMultipleFields.encode(modelWithMultipleFieldsEncoder);
-    fs.writeFileSync('../binaries/model_with_multiple_fields.bin', modelWithMultipleFieldsEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_multiple_fields.bin', modelWithMultipleFieldsEncoder.bytes, 'binary');
 
     const modelWithMultipleFieldsAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithMultipleFieldsAndDescription = new generated.ModelWithMultipleFieldsAndDescription();
@@ -65,21 +65,21 @@ test('test-output', () => {
     modelWithMultipleFieldsAndDescription.stringField = 'hello world';
     modelWithMultipleFieldsAndDescription.int32Field = 42;
     modelWithMultipleFieldsAndDescription.encode(modelWithMultipleFieldsAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_multiple_fields_and_description.bin', modelWithMultipleFieldsAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_multiple_fields_and_description.bin', modelWithMultipleFieldsAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithEnumEncoder = new polyglot.Encoder();
     const modelWithEnum = new generated.ModelWithEnum();
     expect(modelWithEnum.enumField).toEqual(generated.GenericEnum.DefaultValue);
     modelWithEnum.enumField = generated.GenericEnum.SecondValue;
     modelWithEnum.encode(modelWithEnumEncoder);
-    fs.writeFileSync('../binaries/model_with_enum.bin', modelWithEnumEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_enum.bin', modelWithEnumEncoder.bytes, 'binary');
 
     const modelWithEnumAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithEnumAndDescription = new generated.ModelWithEnumAndDescription();
     expect(modelWithEnumAndDescription.enumField).toEqual(generated.GenericEnum.DefaultValue);
     modelWithEnumAndDescription.enumField = generated.GenericEnum.SecondValue;
     modelWithEnumAndDescription.encode(modelWithEnumAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_enum_and_description.bin', modelWithEnumAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_enum_and_description.bin', modelWithEnumAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithEnumAccessorEncoder = new polyglot.Encoder();
     const modelWithEnumAccessor = new generated.ModelWithEnumAccessor();
@@ -87,7 +87,7 @@ test('test-output', () => {
     expect(enumValue).toEqual(generated.GenericEnum.DefaultValue);
     modelWithEnumAccessor.enumField = generated.GenericEnum.SecondValue;
     modelWithEnumAccessor.encode(modelWithEnumAccessorEncoder);
-    fs.writeFileSync('../binaries/model_with_enum_accessor.bin', modelWithEnumAccessorEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_enum_accessor.bin', modelWithEnumAccessorEncoder.bytes, 'binary');
 
     const modelWithEnumAccessorAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithEnumAccessorAndDescription = new generated.ModelWithEnumAccessorAndDescription();
@@ -95,7 +95,7 @@ test('test-output', () => {
     expect(enumValue).toEqual(generated.GenericEnum.DefaultValue);
     modelWithEnumAccessorAndDescription.enumField = generated.GenericEnum.SecondValue;
     modelWithEnumAccessorAndDescription.encode(modelWithEnumAccessorAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_enum_accessor_and_description.bin', modelWithEnumAccessorAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_enum_accessor_and_description.bin', modelWithEnumAccessorAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithMultipleFieldsAccessorEncoder = new polyglot.Encoder();
     const modelWithMultipleFieldsAccessor = new generated.ModelWithMultipleFieldsAccessor();
@@ -136,7 +136,7 @@ test('test-output', () => {
     }
     modelWithMultipleFieldsAccessor.int32Field = 42;
     modelWithMultipleFieldsAccessor.encode(modelWithMultipleFieldsAccessorEncoder);
-    fs.writeFileSync('../binaries/model_with_multiple_fields_accessor.bin', modelWithMultipleFieldsAccessorEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_multiple_fields_accessor.bin', modelWithMultipleFieldsAccessorEncoder.bytes, 'binary');
 
     const modelWithMultipleFieldsAccessorAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithMultipleFieldsAccessorAndDescription = new generated.ModelWithMultipleFieldsAccessorAndDescription();
@@ -147,7 +147,7 @@ test('test-output', () => {
     expect(int32FieldValue).toEqual(32);
     modelWithMultipleFieldsAccessorAndDescription.int32Field = 42;
     modelWithMultipleFieldsAccessorAndDescription.encode(modelWithMultipleFieldsAccessorAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_multiple_fields_accessor_and_description.bin', modelWithMultipleFieldsAccessorAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_multiple_fields_accessor_and_description.bin', modelWithMultipleFieldsAccessorAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithEmbeddedModelsEncoder = new polyglot.Encoder();
     const modelWithEmbeddedModels = new generated.ModelWithEmbeddedModels();
@@ -158,7 +158,7 @@ test('test-output', () => {
     expect(modelWithEmbeddedModels.embeddedModelArrayWithMultipleFieldsAccessor.length).toEqual(0);
     modelWithEmbeddedModels.embeddedModelArrayWithMultipleFieldsAccessor.push(modelWithMultipleFieldsAccessor);
     modelWithEmbeddedModels.encode(modelWithEmbeddedModelsEncoder);
-    fs.writeFileSync('../binaries/model_with_embedded_models.bin', modelWithEmbeddedModelsEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_embedded_models.bin', modelWithEmbeddedModelsEncoder.bytes, 'binary');
 
     const modelWithEmbeddedModelsAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithEmbeddedModelsAndDescription = new generated.ModelWithEmbeddedModelsAndDescription();
@@ -169,7 +169,7 @@ test('test-output', () => {
     expect(modelWithEmbeddedModelsAndDescription.embeddedModelArrayWithMultipleFieldsAccessor.length).toEqual(0);
     modelWithEmbeddedModelsAndDescription.embeddedModelArrayWithMultipleFieldsAccessor.push(modelWithMultipleFieldsAccessor);
     modelWithEmbeddedModelsAndDescription.encode(modelWithEmbeddedModelsAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_embedded_models_and_description.bin', modelWithEmbeddedModelsAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_embedded_models_and_description.bin', modelWithEmbeddedModelsAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithEmbeddedModelsAccessorEncoder = new polyglot.Encoder();
     const modelWithEmbeddedModelsAccessor = new generated.ModelWithEmbeddedModelsAccessor();
@@ -182,7 +182,7 @@ test('test-output', () => {
     expect(embeddedModelArray.length).toEqual(0);
     modelWithEmbeddedModelsAccessor.embeddedModelArrayWithMultipleFieldsAccessor.push(modelWithMultipleFieldsAccessor);
     modelWithEmbeddedModelsAccessor.encode(modelWithEmbeddedModelsAccessorEncoder);
-    fs.writeFileSync('../binaries/model_with_embedded_models_accessor.bin', modelWithEmbeddedModelsAccessorEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_embedded_models_accessor.bin', modelWithEmbeddedModelsAccessorEncoder.bytes, 'binary');
 
     const modelWithEmbeddedModelsAccessorAndDescriptionEncoder = new polyglot.Encoder();
     const modelWithEmbeddedModelsAccessorAndDescription = new generated.ModelWithEmbeddedModelsAccessorAndDescription();
@@ -195,7 +195,7 @@ test('test-output', () => {
     expect(embeddedModelArray.length).toEqual(0);
     modelWithEmbeddedModelsAccessorAndDescription.embeddedModelArrayWithMultipleFieldsAccessor.push(modelWithMultipleFieldsAccessor);
     modelWithEmbeddedModelsAccessorAndDescription.encode(modelWithEmbeddedModelsAccessorAndDescriptionEncoder);
-    fs.writeFileSync('../binaries/model_with_embedded_models_accessor_and_description.bin', modelWithEmbeddedModelsAccessorAndDescriptionEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_embedded_models_accessor_and_description.bin', modelWithEmbeddedModelsAccessorAndDescriptionEncoder.bytes, 'binary');
 
     const modelWithAllFieldTypesEncoder = new polyglot.Encoder();
     const modelWithAllFieldTypes = new generated.ModelWithAllFieldTypes();
@@ -279,101 +279,101 @@ test('test-output', () => {
     modelWithAllFieldTypes.modelArrayField.push(emptyModel, emptyModel);
 
     modelWithAllFieldTypes.encode(modelWithAllFieldTypesEncoder);
-    fs.writeFileSync('../binaries/model_with_all_field_types.bin', modelWithAllFieldTypesEncoder.bytes, 'binary');
+    fs.writeFileSync('../test_data/model_with_all_field_types.bin', modelWithAllFieldTypesEncoder.bytes, 'binary');
 });
 
 test('test-input', () => {
-    const nilModelData = fs.readFileSync("../binaries/nil_model.bin")
+    const nilModelData = fs.readFileSync("../test_data/nil_model.bin")
     const nilModel = generated.EmptyModel.decode(new polyglot.Decoder(nilModelData));
     expect(nilModel).toBeUndefined();
 
-    const emptyModelData = fs.readFileSync("../binaries/empty_model.bin")
+    const emptyModelData = fs.readFileSync("../test_data/empty_model.bin")
     const emptyModel = generated.EmptyModel.decode(new polyglot.Decoder(emptyModelData));
     expect(emptyModel).not.toBeNull();
     expect(emptyModel).not.toBeUndefined();
 
-    const emptyModelWithDescriptionData = fs.readFileSync("../binaries/empty_model_with_description.bin")
+    const emptyModelWithDescriptionData = fs.readFileSync("../test_data/empty_model_with_description.bin")
     const emptyModelWithDescription = generated.EmptyModelWithDescription.decode(new polyglot.Decoder(emptyModelWithDescriptionData));
     expect(emptyModelWithDescription).not.toBeNull();
     expect(emptyModelWithDescription).not.toBeUndefined();
 
-    const modelWithSingleStringFieldData = fs.readFileSync("../binaries/model_with_single_string_field.bin")
+    const modelWithSingleStringFieldData = fs.readFileSync("../test_data/model_with_single_string_field.bin")
     const modelWithSingleStringField = generated.ModelWithSingleStringField.decode(new polyglot.Decoder(modelWithSingleStringFieldData));
     expect(modelWithSingleStringField).not.toBeNull();
     expect(modelWithSingleStringField).not.toBeUndefined();
     expect(modelWithSingleStringField?.stringField).toEqual("hello world");
 
-    const modelWithSingleStringFieldAndDescriptionData = fs.readFileSync("../binaries/model_with_single_string_field_and_description.bin")
+    const modelWithSingleStringFieldAndDescriptionData = fs.readFileSync("../test_data/model_with_single_string_field_and_description.bin")
     const modelWithSingleStringFieldAndDescription = generated.ModelWithSingleStringFieldAndDescription.decode(new polyglot.Decoder(modelWithSingleStringFieldAndDescriptionData));
     expect(modelWithSingleStringFieldAndDescription).not.toBeNull();
     expect(modelWithSingleStringFieldAndDescription).not.toBeUndefined();
     expect(modelWithSingleStringFieldAndDescription?.stringField).toEqual("hello world");
 
-    const modelWithSingleInt32FieldData = fs.readFileSync("../binaries/model_with_single_int32_field.bin")
+    const modelWithSingleInt32FieldData = fs.readFileSync("../test_data/model_with_single_int32_field.bin")
     const modelWithSingleInt32Field = generated.ModelWithSingleInt32Field.decode(new polyglot.Decoder(modelWithSingleInt32FieldData));
     expect(modelWithSingleInt32Field).not.toBeNull();
     expect(modelWithSingleInt32Field).not.toBeUndefined();
     expect(modelWithSingleInt32Field?.int32Field).toEqual(42);
 
-    const modelWithSingleInt32FieldAndDescriptionData = fs.readFileSync("../binaries/model_with_single_int32_field_and_description.bin")
+    const modelWithSingleInt32FieldAndDescriptionData = fs.readFileSync("../test_data/model_with_single_int32_field_and_description.bin")
     const modelWithSingleInt32FieldAndDescription = generated.ModelWithSingleInt32FieldAndDescription.decode(new polyglot.Decoder(modelWithSingleInt32FieldAndDescriptionData));
     expect(modelWithSingleInt32FieldAndDescription).not.toBeNull();
     expect(modelWithSingleInt32FieldAndDescription).not.toBeUndefined();
     expect(modelWithSingleInt32FieldAndDescription?.int32Field).toEqual(42);
 
-    const modelWithMultipleFieldsData = fs.readFileSync("../binaries/model_with_multiple_fields.bin")
+    const modelWithMultipleFieldsData = fs.readFileSync("../test_data/model_with_multiple_fields.bin")
     const modelWithMultipleFields = generated.ModelWithMultipleFields.decode(new polyglot.Decoder(modelWithMultipleFieldsData));
     expect(modelWithMultipleFields).not.toBeNull();
     expect(modelWithMultipleFields).not.toBeUndefined();
     expect(modelWithMultipleFields?.stringField).toEqual("hello world");
     expect(modelWithMultipleFields?.int32Field).toEqual(42);
 
-    const modelWithMultipleFieldsAndDescriptionData = fs.readFileSync("../binaries/model_with_multiple_fields_and_description.bin")
+    const modelWithMultipleFieldsAndDescriptionData = fs.readFileSync("../test_data/model_with_multiple_fields_and_description.bin")
     const modelWithMultipleFieldsAndDescription = generated.ModelWithMultipleFieldsAndDescription.decode(new polyglot.Decoder(modelWithMultipleFieldsAndDescriptionData));
     expect(modelWithMultipleFieldsAndDescription).not.toBeNull();
     expect(modelWithMultipleFieldsAndDescription).not.toBeUndefined();
     expect(modelWithMultipleFieldsAndDescription?.stringField).toEqual("hello world");
     expect(modelWithMultipleFieldsAndDescription?.int32Field).toEqual(42);
 
-    const modelWithEnumData = fs.readFileSync("../binaries/model_with_enum.bin")
+    const modelWithEnumData = fs.readFileSync("../test_data/model_with_enum.bin")
     const modelWithEnum = generated.ModelWithEnum.decode(new polyglot.Decoder(modelWithEnumData));
     expect(modelWithEnum).not.toBeNull();
     expect(modelWithEnum).not.toBeUndefined();
     expect(modelWithEnum?.enumField).toEqual(generated.GenericEnum.SecondValue);
 
-    const modelWithEnumAndDescriptionData = fs.readFileSync("../binaries/model_with_enum_and_description.bin")
+    const modelWithEnumAndDescriptionData = fs.readFileSync("../test_data/model_with_enum_and_description.bin")
     const modelWithEnumAndDescription = generated.ModelWithEnumAndDescription.decode(new polyglot.Decoder(modelWithEnumAndDescriptionData));
     expect(modelWithEnumAndDescription).not.toBeNull();
     expect(modelWithEnumAndDescription).not.toBeUndefined();
     expect(modelWithEnumAndDescription?.enumField).toEqual(generated.GenericEnum.SecondValue);
 
-    const modelWithEnumAccessorData = fs.readFileSync("../binaries/model_with_enum_accessor.bin")
+    const modelWithEnumAccessorData = fs.readFileSync("../test_data/model_with_enum_accessor.bin")
     const modelWithEnumAccessor = generated.ModelWithEnumAccessor.decode(new polyglot.Decoder(modelWithEnumAccessorData));
     expect(modelWithEnumAccessor).not.toBeNull();
     expect(modelWithEnumAccessor).not.toBeUndefined();
     expect(modelWithEnumAccessor?.enumField).toEqual(generated.GenericEnum.SecondValue);
 
-    const modelWithEnumAccessorAndDescriptionData = fs.readFileSync("../binaries/model_with_enum_accessor_and_description.bin")
+    const modelWithEnumAccessorAndDescriptionData = fs.readFileSync("../test_data/model_with_enum_accessor_and_description.bin")
     const modelWithEnumAccessorAndDescription = generated.ModelWithEnumAccessorAndDescription.decode(new polyglot.Decoder(modelWithEnumAccessorAndDescriptionData));
     expect(modelWithEnumAccessorAndDescription).not.toBeNull();
     expect(modelWithEnumAccessorAndDescription).not.toBeUndefined();
     expect(modelWithEnumAccessorAndDescription?.enumField).toEqual(generated.GenericEnum.SecondValue);
 
-    const modelWithMultipleFieldsAccessorData = fs.readFileSync("../binaries/model_with_multiple_fields_accessor.bin")
+    const modelWithMultipleFieldsAccessorData = fs.readFileSync("../test_data/model_with_multiple_fields_accessor.bin")
     const modelWithMultipleFieldsAccessor = generated.ModelWithMultipleFieldsAccessor.decode(new polyglot.Decoder(modelWithMultipleFieldsAccessorData));
     expect(modelWithMultipleFieldsAccessor).not.toBeNull();
     expect(modelWithMultipleFieldsAccessor).not.toBeUndefined();
     expect(modelWithMultipleFieldsAccessor?.stringField).toEqual("HELLO");
     expect(modelWithMultipleFieldsAccessor?.int32Field).toEqual(42);
 
-    const modelWithMultipleFieldsAccessorAndDescriptionData = fs.readFileSync("../binaries/model_with_multiple_fields_accessor_and_description.bin")
+    const modelWithMultipleFieldsAccessorAndDescriptionData = fs.readFileSync("../test_data/model_with_multiple_fields_accessor_and_description.bin")
     const modelWithMultipleFieldsAccessorAndDescription = generated.ModelWithMultipleFieldsAccessorAndDescription.decode(new polyglot.Decoder(modelWithMultipleFieldsAccessorAndDescriptionData));
     expect(modelWithMultipleFieldsAccessorAndDescription).not.toBeNull();
     expect(modelWithMultipleFieldsAccessorAndDescription).not.toBeUndefined();
     expect(modelWithMultipleFieldsAccessorAndDescription?.stringField).toEqual("hello world");
     expect(modelWithMultipleFieldsAccessorAndDescription?.int32Field).toEqual(42);
 
-    const modelWithEmbeddedModelsData = fs.readFileSync("../binaries/model_with_embedded_models.bin")
+    const modelWithEmbeddedModelsData = fs.readFileSync("../test_data/model_with_embedded_models.bin")
     const modelWithEmbeddedModels = generated.ModelWithEmbeddedModels.decode(new polyglot.Decoder(modelWithEmbeddedModelsData));
     expect(modelWithEmbeddedModels).not.toBeNull();
     expect(modelWithEmbeddedModels).not.toBeUndefined();
@@ -383,7 +383,7 @@ test('test-input', () => {
     expect(modelWithEmbeddedModels?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.int32Field).toEqual(42);
     expect(modelWithEmbeddedModels?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.stringField).toEqual("HELLO");
 
-    const modelWithEmbeddedModelsAndDescriptionData = fs.readFileSync("../binaries/model_with_embedded_models_and_description.bin")
+    const modelWithEmbeddedModelsAndDescriptionData = fs.readFileSync("../test_data/model_with_embedded_models_and_description.bin")
     const modelWithEmbeddedModelsAndDescription = generated.ModelWithEmbeddedModelsAndDescription.decode(new polyglot.Decoder(modelWithEmbeddedModelsAndDescriptionData));
     expect(modelWithEmbeddedModelsAndDescription).not.toBeNull();
     expect(modelWithEmbeddedModelsAndDescription).not.toBeUndefined();
@@ -393,7 +393,7 @@ test('test-input', () => {
     expect(modelWithEmbeddedModelsAndDescription?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.int32Field).toEqual(42);
     expect(modelWithEmbeddedModelsAndDescription?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.stringField).toEqual("HELLO");
 
-    const modelWithEmbeddedModelsAccessorData = fs.readFileSync("../binaries/model_with_embedded_models_accessor.bin")
+    const modelWithEmbeddedModelsAccessorData = fs.readFileSync("../test_data/model_with_embedded_models_accessor.bin")
     const modelWithEmbeddedModelsAccessor = generated.ModelWithEmbeddedModelsAccessor.decode(new polyglot.Decoder(modelWithEmbeddedModelsAccessorData));
     expect(modelWithEmbeddedModelsAccessor).not.toBeNull();
     expect(modelWithEmbeddedModelsAccessor).not.toBeUndefined();
@@ -403,7 +403,7 @@ test('test-input', () => {
     expect(modelWithEmbeddedModelsAccessor?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.int32Field).toEqual(42);
     expect(modelWithEmbeddedModelsAccessor?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.stringField).toEqual("HELLO");
 
-    const modelWithEmbeddedModelsAccessorAndDescriptionData = fs.readFileSync("../binaries/model_with_embedded_models_accessor_and_description.bin")
+    const modelWithEmbeddedModelsAccessorAndDescriptionData = fs.readFileSync("../test_data/model_with_embedded_models_accessor_and_description.bin")
     const modelWithEmbeddedModelsAccessorAndDescription = generated.ModelWithEmbeddedModelsAccessorAndDescription.decode(new polyglot.Decoder(modelWithEmbeddedModelsAccessorAndDescriptionData));
     expect(modelWithEmbeddedModelsAccessorAndDescription).not.toBeNull();
     expect(modelWithEmbeddedModelsAccessorAndDescription).not.toBeUndefined();
@@ -413,7 +413,7 @@ test('test-input', () => {
     expect(modelWithEmbeddedModelsAccessorAndDescription?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.int32Field).toEqual(42);
     expect(modelWithEmbeddedModelsAccessorAndDescription?.embeddedModelArrayWithMultipleFieldsAccessor[0]?.stringField).toEqual("HELLO");
 
-    const modelWithAllFieldTypesData = fs.readFileSync("../binaries/model_with_all_field_types.bin")
+    const modelWithAllFieldTypesData = fs.readFileSync("../test_data/model_with_all_field_types.bin")
     const modelWithAllFieldTypes = generated.ModelWithAllFieldTypes.decode(new polyglot.Decoder(modelWithAllFieldTypesData));
     expect(modelWithAllFieldTypes).not.toBeNull();
     expect(modelWithAllFieldTypes).not.toBeUndefined();

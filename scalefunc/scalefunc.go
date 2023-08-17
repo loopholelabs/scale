@@ -89,7 +89,7 @@ type Schema struct {
 	Version         Version                `json:"version" yaml:"version"`
 	Name            string                 `json:"name" yaml:"name"`
 	Tag             string                 `json:"tag" yaml:"tag"`
-	Signature       string                 `json:"signature" yaml:"signature"`
+	SignatureName   string                 `json:"signature_name" yaml:"signature_name"`
 	SignatureSchema signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
 	SignatureHash   string                 `json:"signature_hash" yaml:"signature_hash"`
 	Language        Language               `json:"language" yaml:"language"`
@@ -110,7 +110,7 @@ func (s *Schema) Encode() []byte {
 	e.String(string(s.Version))
 	e.String(s.Name)
 	e.String(s.Tag)
-	e.String(s.Signature)
+	e.String(s.SignatureName)
 
 	f := hclwrite.NewEmptyFile()
 	gohcl.EncodeIntoBody(s.SignatureSchema, f.Body())
@@ -175,7 +175,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.Signature, err = d.String()
+	s.SignatureName, err = d.String()
 	if err != nil {
 		return err
 	}

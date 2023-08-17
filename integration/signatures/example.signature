@@ -1,6 +1,4 @@
 version = "v1alpha"
-name = "example"
-tag = "latest"
 context = "example"
 
 model example {

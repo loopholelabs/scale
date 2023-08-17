@@ -20,7 +20,6 @@ package signature
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -34,11 +33,6 @@ import (
 
 const (
 	V1AlphaVersion = "v1alpha"
-)
-
-var (
-	ErrInvalidName = errors.New("invalid name")
-	ErrInvalidTag  = errors.New("invalid tag")
 )
 
 var (
@@ -66,8 +60,6 @@ type Signature interface {
 // Schema is the top-level structure of a Scale Signature schema
 type Schema struct {
 	Version            string         `hcl:"version,attr"`
-	Name               string         `hcl:"name,attr"`
-	Tag                string         `hcl:"tag,attr"`
 	Context            string         `hcl:"context,attr"`
 	Enums              []*EnumSchema  `hcl:"enum,block"`
 	Models             []*ModelSchema `hcl:"model,block"`
@@ -123,14 +115,6 @@ func (s *Schema) Encode() ([]byte, error) {
 func (s *Schema) validateAndNormalize() error {
 	switch s.Version {
 	case V1AlphaVersion:
-		if !ValidLabel.MatchString(s.Name) {
-			return ErrInvalidName
-		}
-
-		if InvalidString.MatchString(s.Tag) {
-			return ErrInvalidTag
-		}
-
 		// Transform all model names and references to TitleCase (e.g. "myModel" -> "MyModel")
 		for _, model := range s.Models {
 			model.Normalize()
@@ -508,8 +492,6 @@ func ValidPrimitiveType(t string) bool {
 
 const MasterTestingSchema = `
 version = "v1alpha"
-name = "MasterSchema"
-tag = "MasterSchemaTag"
 context = "ModelWithAllFieldTypes"
 
 model EmptyModel {}

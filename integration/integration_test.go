@@ -16,6 +16,7 @@
 package integration
 
 import (
+	"encoding/hex"
 	golangCompile "github.com/loopholelabs/scale/compile/golang"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
@@ -31,16 +32,17 @@ func TestExampleSignature(t *testing.T) {
 	s, err := signatureSchema.ReadSchema("signatures/example.signature")
 	require.NoError(t, err)
 
-	assert.Equal(t, "example", s.Name)
-	assert.Equal(t, "latest", s.Tag)
 	assert.Equal(t, "Example", s.Context)
 	assert.Equal(t, 1, len(s.Models))
 	assert.Equal(t, "Example", s.Models[0].Name)
 
+	hash, err := s.Hash()
+	require.NoError(t, err)
+
 	formatted, err := golangSignature.Generate(s, "signature", "v0.1.0")
 	require.NoError(t, err)
 
-	guest, err := golangSignature.GenerateGuest(s, "signature", "v0.1.0")
+	guest, err := golangSignature.GenerateGuest(s, hex.EncodeToString(hash), "signature", "v0.1.0")
 	require.NoError(t, err)
 
 	signatureModfile, err := golangSignature.GenerateModfile("signature", "v1.1.1")

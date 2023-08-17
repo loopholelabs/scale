@@ -16,10 +16,10 @@ package typescript
 import (
 	"bytes"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/typescript/templates"
 	"strings"
 	"text/template"
 
-	"github.com/loopholelabs/scale/signature/generator/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
 

@@ -5,5 +5,6 @@ import (
 )
 
 func Example(ctx *signature.Example) (*signature.Example, error) {
-	return ctx, nil
+	ctx.Data = "Hello World!"
+	return signature.Next(ctx)
 }

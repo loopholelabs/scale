@@ -15,6 +15,7 @@ package generator
 
 import (
 	"bytes"
+	"encoding/hex"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
 	"golang.org/x/mod/module"
@@ -41,12 +42,18 @@ type Options struct {
 }
 
 func GenerateGuest(options *Options) (*GuestPackage, error) {
+	hash, err := options.Signature.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hashString := hex.EncodeToString(hash)
+
 	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, options.GolangPackageName, options.GolangPackageVersion)
+	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +85,12 @@ func GenerateGuest(options *Options) (*GuestPackage, error) {
 }
 
 func GenerateHost(options *Options) (*HostPackage, error) {
+	hash, err := options.Signature.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hashString := hex.EncodeToString(hash)
+
 	sig, err := options.Signature.CloneWithDisabledAccessorsValidatorsAndModifiers()
 	if err != nil {
 		return nil, err
@@ -88,7 +101,7 @@ func GenerateHost(options *Options) (*HostPackage, error) {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, options.GolangPackageName, options.GolangPackageVersion)
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}

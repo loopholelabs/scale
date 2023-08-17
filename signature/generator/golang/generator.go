@@ -16,10 +16,10 @@ package golang
 import (
 	"bytes"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/golang/templates"
 	"go/format"
 	"text/template"
 
-	"github.com/loopholelabs/scale/signature/generator/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
 
@@ -29,10 +29,12 @@ const (
 
 var generator *Generator
 
+// Generate generates the types for the signature
 func Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
 	return generator.Generate(schema, packageName, version)
 }
 
+// GenerateModfile generates the go.mod file for the signature
 func GenerateModfile(packageName string, polyglotVersion string) ([]byte, error) {
 	return generator.GenerateModfile(packageName, polyglotVersion)
 }
@@ -70,7 +72,7 @@ func New() (*Generator, error) {
 	}, nil
 }
 
-// Generate generates the go code
+// Generate generates the types for the signature
 func (g *Generator) Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName

@@ -18,6 +18,7 @@
 package storage
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/loopholelabs/scale/cli/version"
 	"github.com/loopholelabs/scale/scalefunc"
@@ -208,11 +209,18 @@ func (s *SignatureStorage) Path(name string, tag string, org string, hash string
 	return matches[0], nil
 }
 
-// Put stores the Scale Signature with the given name, tag, organization, and hash
-func (s *SignatureStorage) Put(name string, tag string, org string, hash string, sig *signature.Schema) error {
-	f := s.signatureName(name, tag, org, hash)
+// Put stores the Scale Signature with the given name, tag, organization
+func (s *SignatureStorage) Put(name string, tag string, org string, sig *signature.Schema) error {
+	hash, err := sig.Hash()
+	if err != nil {
+		return err
+	}
+
+	hashString := hex.EncodeToString(hash)
+
+	f := s.signatureName(name, tag, org, hashString)
 	p := s.fullPath(f)
-	err := os.MkdirAll(p, 0755)
+	err = os.MkdirAll(p, 0755)
 	if err != nil {
 		return err
 	}
@@ -232,11 +240,6 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 		return err
 	}
 
-	signatureHash, err := sig.Hash()
-	if err != nil {
-		return err
-	}
-
 	types, err := golangSignature.Generate(sig, "signature", version.Version)
 	if err != nil {
 		return err
@@ -245,7 +248,7 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 	if err != nil {
 		return err
 	}
-	guest, err := golangSignature.GenerateGuest(sig, "signature", version.Version)
+	guest, err := golangSignature.GenerateGuest(sig, "signature", hashString, version.Version)
 	if err != nil {
 		return err
 	}
@@ -270,7 +273,7 @@ func (s *SignatureStorage) Put(name string, tag string, org string, hash string,
 	if err != nil {
 		return err
 	}
-	host, err := golangSignature.GenerateHost(sig, "signature", version.Version)
+	host, err := golangSignature.GenerateHost(sig, "signature", hashString, version.Version)
 	if err != nil {
 		return err
 	}

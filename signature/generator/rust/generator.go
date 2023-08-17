@@ -16,11 +16,11 @@ package rust
 import (
 	"bytes"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/rust/templates"
 	"os/exec"
 	"text/template"
 
 	polyglotUtils "github.com/loopholelabs/polyglot/utils"
-	"github.com/loopholelabs/scale/signature/generator/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
 
