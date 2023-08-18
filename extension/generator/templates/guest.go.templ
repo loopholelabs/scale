@@ -14,24 +14,115 @@ var (
     readBuffer  []byte
 )
 
-// Write serializes the signature into the global writeBuffer and returns the pointer to the buffer and its size
-//
-// Users should not use this method.
-func Write(ctx *{{ .schema.Params }}) (uint32, uint32) {
-    writeBuffer.Reset()
-    ctx.Encode(writeBuffer)
-    underlying := writeBuffer.Bytes()
-    ptr := &underlying[0]
-    unsafePtr := uintptr(unsafe.Pointer(ptr))
-    return uint32(unsafePtr), uint32(writeBuffer.Len())
+{{ $schema := .schema }}
+
+// Define any interfaces we need here...
+// Also define structs we can use to hold instanceId
+
+{{ range $ifc := .schema.Interfaces }}
+
+type {{ $ifc.Name }} interface {
+
+{{ range $fn := $ifc.Functions }}
+
+  {{ $fn.Name }}(*{{ $fn.Params }}) ({{ $fn.Return }}, error)
+
+{{ end }}
+
 }
 
-// Read deserializes signature from the global readBuffer
-//
-// Users should not use this method.
-func Read(ctx *{{ .schema.Return }}) (*{{ .schema.Return }}, error) {
-    return Decode{{ .schema.Return }}(ctx, readBuffer)
+// Define concrete types with a hidden instanceId
+
+type _{{ $ifc.Name }} struct {
+  instanceId uint64
 }
+
+{{ range $fn := $ifc.Functions }}
+func (d *_{{ $ifc.Name }}) {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error) {
+
+  // First we take the params, serialize them.
+  writeBuffer.Reset()
+  params.Encode(writeBuffer)
+  underlying := writeBuffer.Bytes()
+  ptr := &underlying[0]
+  unsafePtr := uintptr(unsafe.Pointer(ptr))
+  off := uint32(unsafePtr)
+  l := uint32(writeBuffer.Len())
+
+  // Now make the call to the host.
+
+  {{- if (IsInterface $schema $fn.Return) }}
+    v := ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(d.instanceId, off, l)
+    // IF the return type is an interface return ifc, which contains hidden instanceId.
+
+    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
+
+    ret := &_{{ $fn.Return }}{
+      instanceId: v,
+    }
+
+    return ret, nil
+  {{ else }}
+    ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(d.instanceId, off, l)
+    // IF the return type is a model, we should read the data from the read buffer.
+
+    ret := &{{ $fn.Return }}{}
+    r, err := Decode{{ $fn.Return }}(ret, readBuffer)
+    return *r, err
+  {{ end }}
+}
+
+//export ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
+//go:linkname ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
+func ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(instance uint64, offset uint32, length uint32) uint64
+
+{{ end }}
+
+{{ end }}
+
+// Define any global functions here...
+
+{{ range $fn := .schema.Functions }}
+
+//export ext_{{ $schema.Name }}_{{ $fn.Name }}
+//go:linkname ext_{{ $schema.Name }}_{{ $fn.Name }}
+func ext_{{ $schema.Name }}_{{ $fn.Name }}(offset uint32, length uint32) uint64
+
+func {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error) {
+  // First we take the params, serialize them.
+  writeBuffer.Reset()
+  params.Encode(writeBuffer)
+  underlying := writeBuffer.Bytes()
+  ptr := &underlying[0]
+  unsafePtr := uintptr(unsafe.Pointer(ptr))
+  off := uint32(unsafePtr)
+  l := uint32(writeBuffer.Len())
+
+  // Now make the call to the host.
+
+  {{- if (IsInterface $schema $fn.Return) }}
+    v := ext_{{ $schema.Name }}_{{ $fn.Name }}(off, l)
+    // IF the return type is an interface return ifc, which contains hidden instanceId.
+
+    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
+
+    ret := &_{{ $fn.Return }}{
+      instanceId: v,
+    }
+
+    return ret, nil
+  {{ else }}
+    ext_{{ $schema.Name }}_{{ $fn.Name }}(off, l)
+    // IF the return type is a model, we should read the data from the read buffer.
+
+    ret := &{{ $fn.Return }}{}
+    r, err := Decode{{ $fn.Return }}(ret, readBuffer)
+    return *r, err
+  {{ end }}
+
+}
+
+{{ end }}
 
 // Error serializes an error into the global writeBuffer and returns a pointer to the buffer and its size
 //
@@ -44,38 +135,3 @@ func Error(err error) (uint32, uint32) {
     unsafePtr := uintptr(unsafe.Pointer(ptr))
     return uint32(unsafePtr), uint32(writeBuffer.Len())
 }
-
-// Create a new instance of the extension.
-func New(params *{{ .schema.Params }}) (*{{ .schema.Return }}, error) {
-  ext_new_{{ .schema.Name}}(Write(params))
-  ctx := &{{ .schema.Return }}{}
-  return Read(ctx)
-}
-
-//export ext_new_{{ .schema.Name }}
-//go:linkname ext_new_{{ .schema.Name }}
-func ext_new_{{ .schema.Name }}(offset uint32, length uint32)
-
-// Create the functions that are defined in the schema.
-{{ $ext_return := .schema.Return }}
-{{ $ext_name := .schema.Name }}
-
-{{- range .schema.Functions -}}
-func (e *{{ $ext_return }}) {{ .Name }}(params *{{ .Params}}) (*{{ .Return }}, error) {
-  writeBuffer.Reset()
-  params.Encode(writeBuffer)
-  underlying := writeBuffer.Bytes()
-  ptr := &underlying[0]
-  unsafePtr := uintptr(unsafe.Pointer(ptr))
-  off := uint32(unsafePtr)
-  l := uint32(writeBuffer.Len())
-
-  ext_func_{{ $ext_name }}_{{ .Name }}(e.InstanceId, off, l)
-  ctx := &{{ .Return }}{}
-  return Decode{{ .Return }}(ctx, readBuffer)
-}
-
-//export ext_func_{{ $ext_name }}_{{ .Name }}
-//go:linkname ext_func_{{ $ext_name }}_{{ .Name }}
-func ext_func_{{ $ext_name }}_{{ .Name }}(instance uint32, offset uint32, length uint32)
-{{- end }}
