@@ -35,8 +35,13 @@ func TestSchema(t *testing.T) {
 	assert.Equal(t, V1AlphaVersion, s.Version)
 	assert.Equal(t, "HttpFetch", s.Name)
 	assert.Equal(t, "alpha", s.Tag)
-	assert.Equal(t, "HttpConfig", s.Params)
-	assert.Equal(t, "HttpConnector", s.Return)
+
+	// Make sure there's a global function defined...
+	assert.Equal(t, 1, len(s.Functions))
+
+	assert.Equal(t, "new", s.Functions[0].Name)
+	assert.Equal(t, "HttpConfig", s.Functions[0].Params)
+	assert.Equal(t, "HttpConnector", s.Functions[0].Return)
 
 	// NB You could test the models, but that should be done in signature already.
 
