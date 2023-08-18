@@ -55,9 +55,8 @@ type Schema struct {
 	Version            string                   `hcl:"version,attr"`
 	Name               string                   `hcl:"name,attr"`
 	Tag                string                   `hcl:"tag,attr"`
-	Params             string                   `hcl:"params,attr"`
-	Return             string                   `hcl:"return,attr"`
 	Interfaces         []*InterfaceSchema       `hcl:"interface,block"`
+	Functions          []*FunctionSchema        `hcl:"function,block"`
 	Enums              []*signature.EnumSchema  `hcl:"enum,block"`
 	Models             []*signature.ModelSchema `hcl:"model,block"`
 	hasLimitValidator  bool
@@ -276,18 +275,6 @@ func (s *Schema) Validate() error {
 			knownInterfaces[inter.Name] = struct{}{}
 		}
 
-		s.Params = TitleCaser.String(s.Params)
-		if _, ok := knownModels[s.Params]; !ok {
-			return fmt.Errorf("unknown params: %s", s.Params)
-		}
-
-		s.Return = TitleCaser.String(s.Return)
-		_, foundModel := knownModels[s.Return]
-		_, foundInterface := knownInterfaces[s.Return]
-		if !foundModel && !foundInterface {
-			return fmt.Errorf("unknown return: %s", s.Return)
-		}
-
 		for _, inter := range s.Interfaces {
 			for _, f := range inter.Functions {
 				// Make sure the function name is ok
@@ -311,6 +298,32 @@ func (s *Schema) Validate() error {
 					if !foundModel && !foundInterface {
 						return fmt.Errorf("unknown return in function %s: %s", f.Name, f.Return)
 					}
+				}
+			}
+		}
+
+		// Check any global functions
+		for _, f := range s.Functions {
+			// Make sure the function name is ok
+			if !ValidLabel.MatchString(f.Name) {
+				return ErrInvalidFunctionName
+			}
+
+			// Make sure the params exist as model.
+			if f.Params != "" {
+				f.Params = TitleCaser.String(f.Params)
+				if _, ok := knownModels[f.Params]; !ok {
+					return fmt.Errorf("unknown params in function %s: %s", f.Name, f.Params)
+				}
+			}
+
+			// Return can either be a model or interface
+			if f.Return != "" {
+				f.Return = TitleCaser.String(f.Return)
+				_, foundModel := knownModels[f.Return]
+				_, foundInterface := knownInterfaces[f.Return]
+				if !foundModel && !foundInterface {
+					return fmt.Errorf("unknown return in function %s: %s", f.Name, f.Return)
 				}
 			}
 		}
@@ -351,25 +364,15 @@ const MasterTestingSchema = `
 version = "v1alpha"
 name = "HttpFetch"
 tag = "alpha"
-params = "HttpConfig"
-return = "HttpConnector"
+
+function new {
+	params = "HttpConfig"
+	return = "HttpConnector"	
+}
 
 model HttpConfig {
 	int32 timeout {
 		default = 60
-	}
-}
-
-interface HttpConnector {
-	function Fetch {
-		params = "ConnectionDetails"
-		return = "HttpResponse"
-	}
-}
-
-model ConnectionDetails {
-	string url {
-		default = "https://google.com"
 	}
 }
 
@@ -389,6 +392,19 @@ model StringList {
   string_array Values {
     initial_size = 0
   }
+}
+
+model ConnectionDetails {
+	string url {
+		default = "https://google.com"
+	}
+}
+
+interface HttpConnector {
+	function Fetch {
+		params = "ConnectionDetails"
+		return = "HttpResponse"
+	}
 }
 
 `
