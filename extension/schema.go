@@ -365,7 +365,7 @@ version = "v1alpha"
 name = "HttpFetch"
 tag = "alpha"
 
-function new {
+function New {
 	params = "HttpConfig"
 	return = "HttpConnector"	
 }

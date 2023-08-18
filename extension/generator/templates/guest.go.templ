@@ -14,6 +14,16 @@ var (
     readBuffer  []byte
 )
 
+//export ext_{{ .schema.Name }}_Resize
+//go:linkname ext_{{ .schema.Name }}_Resize
+func ext_{{ .schema.Name }}_Resize(size uint32) uint32 {
+	if uint32(cap(readBuffer)) < size {
+		readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
+	}
+	readBuffer = readBuffer[:size]
+	return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
+}
+
 {{ $schema := .schema }}
 
 // Define any interfaces we need here...
