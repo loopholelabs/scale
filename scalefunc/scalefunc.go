@@ -86,17 +86,17 @@ type Dependency struct {
 // Schema is the type used to define the requirements of a
 // scale function for a Scale Runtime
 type Schema struct {
-	Version         Version                `json:"version" yaml:"version"`
-	Name            string                 `json:"name" yaml:"name"`
-	Tag             string                 `json:"tag" yaml:"tag"`
-	SignatureName   string                 `json:"signature_name" yaml:"signature_name"`
-	SignatureSchema signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
-	SignatureHash   string                 `json:"signature_hash" yaml:"signature_hash"`
-	Language        Language               `json:"language" yaml:"language"`
-	Dependencies    []Dependency           `json:"dependencies" yaml:"dependencies"`
-	Function        []byte                 `json:"function" yaml:"function"`
-	Size            uint32                 `json:"size" yaml:"size"`
-	Hash            string                 `json:"hash" yaml:"hash"`
+	Version         Version                 `json:"version" yaml:"version"`
+	Name            string                  `json:"name" yaml:"name"`
+	Tag             string                  `json:"tag" yaml:"tag"`
+	SignatureName   string                  `json:"signature_name" yaml:"signature_name"`
+	SignatureSchema *signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
+	SignatureHash   string                  `json:"signature_hash" yaml:"signature_hash"`
+	Language        Language                `json:"language" yaml:"language"`
+	Dependencies    []Dependency            `json:"dependencies" yaml:"dependencies"`
+	Function        []byte                  `json:"function" yaml:"function"`
+	Size            uint32                  `json:"size" yaml:"size"`
+	Hash            string                  `json:"hash" yaml:"hash"`
 
 	// env is used by the host at runtime to specify environment variables for the function
 	env map[string]string

@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package generator
+package golang
 
 import (
 	"bytes"
@@ -25,10 +25,10 @@ import (
 	"time"
 )
 
-var _ zip.File = (*GolangFile)(nil)
-var _ os.FileInfo = (*GolangFile)(nil)
+var _ zip.File = (*File)(nil)
+var _ os.FileInfo = (*File)(nil)
 
-type GolangFile struct {
+type File struct {
 	name    string
 	path    string
 	content []byte
@@ -36,8 +36,8 @@ type GolangFile struct {
 	size    int64
 }
 
-func NewGolangFile(name string, path string, content []byte) GolangFile {
-	return GolangFile{
+func NewFile(name string, path string, content []byte) File {
+	return File{
 		name:    name,
 		path:    path,
 		content: content,
@@ -46,38 +46,42 @@ func NewGolangFile(name string, path string, content []byte) GolangFile {
 	}
 }
 
-func (g GolangFile) Name() string {
+func (g File) Name() string {
 	return g.name
 }
 
-func (g GolangFile) Size() int64 {
+func (g File) Size() int64 {
 	return g.size
 }
 
-func (g GolangFile) Mode() fs.FileMode {
+func (g File) Mode() fs.FileMode {
 	return 0700
 }
 
-func (g GolangFile) ModTime() time.Time {
+func (g File) ModTime() time.Time {
 	return time.Now()
 }
 
-func (g GolangFile) IsDir() bool {
+func (g File) IsDir() bool {
 	return false
 }
 
-func (g GolangFile) Sys() any {
+func (g File) Sys() any {
 	return g.content
 }
 
-func (g GolangFile) Path() string {
+func (g File) Path() string {
 	return g.path
 }
 
-func (g GolangFile) Lstat() (os.FileInfo, error) {
+func (g File) Lstat() (os.FileInfo, error) {
 	return g, nil
 }
 
-func (g GolangFile) Open() (io.ReadCloser, error) {
+func (g File) Open() (io.ReadCloser, error) {
 	return io.NopCloser(g.reader), nil
+}
+
+func (g File) Data() []byte {
+	return g.content
 }

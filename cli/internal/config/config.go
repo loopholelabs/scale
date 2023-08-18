@@ -26,7 +26,7 @@ import (
 	"github.com/loopholelabs/auth/pkg/client/session"
 	"github.com/loopholelabs/auth/pkg/kind"
 	"github.com/loopholelabs/cmdutils/pkg/config"
-	apiClient "github.com/loopholelabs/scale/cli/client"
+	apiClient "github.com/loopholelabs/scale/client"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

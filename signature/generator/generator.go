@@ -16,44 +16,52 @@ package generator
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/loopholelabs/scale/cli/version"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/zip"
 )
 
-type GuestPackage struct {
+type GuestRegistryPackage struct {
 	GolangModule  *bytes.Buffer
 	GolangModfile []byte
 }
 
-type HostPackage struct {
+type GuestLocalPackage struct {
+	GolangFiles []golang.File
+}
+
+type HostRegistryPackage struct {
 	GolangModule  *bytes.Buffer
 	GolangModfile []byte
 }
 
-type Options struct {
-	Signature *signature.Schema
+type HostLocalPackage struct {
+	GolangFiles []golang.File
+}
 
+type GeneratorOptions struct {
+	Signature             *signature.Schema
 	GolangImportPath      string
 	GolangPackageName     string
 	GolangPackageVersion  string
 	GolangPolyglotVersion string
 }
 
-func GenerateGuest(options *Options) (*GuestPackage, error) {
+func GenerateGuestRegistry(options *GeneratorOptions) (*GuestRegistryPackage, error) {
 	hash, err := options.Signature.Hash()
 	if err != nil {
 		return nil, err
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.GolangPackageVersion)
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, version.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.GolangPackageVersion)
+	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, version.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +72,9 @@ func GenerateGuest(options *Options) (*GuestPackage, error) {
 	}
 
 	files := []zip.File{
-		NewGolangFile("types.go", "types.go", golangTypes),
-		NewGolangFile("guest.go", "guest.go", guest),
-		NewGolangFile("go.mod", "go.mod", modfile),
+		golang.NewFile("types.go", "types.go", golangTypes),
+		golang.NewFile("guest.go", "guest.go", guest),
+		golang.NewFile("go.mod", "go.mod", modfile),
 	}
 
 	buffer := new(bytes.Buffer)
@@ -78,13 +86,46 @@ func GenerateGuest(options *Options) (*GuestPackage, error) {
 		return nil, err
 	}
 
-	return &GuestPackage{
+	return &GuestRegistryPackage{
 		GolangModule:  buffer,
 		GolangModfile: modfile,
 	}, nil
 }
 
-func GenerateHost(options *Options) (*HostPackage, error) {
+func GenerateGuestLocal(options *GeneratorOptions) (*GuestLocalPackage, error) {
+	hash, err := options.Signature.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hashString := hex.EncodeToString(hash)
+
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, version.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, version.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangPolyglotVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	files := []golang.File{
+		golang.NewFile("types.go", "types.go", golangTypes),
+		golang.NewFile("guest.go", "guest.go", guest),
+		golang.NewFile("go.mod", "go.mod", modfile),
+	}
+
+	return &GuestLocalPackage{
+		GolangFiles: files,
+	}, nil
+}
+
+func GenerateHostRegistry(options *GeneratorOptions) (*HostRegistryPackage, error) {
 	hash, err := options.Signature.Hash()
 	if err != nil {
 		return nil, err
@@ -96,12 +137,12 @@ func GenerateHost(options *Options) (*HostPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.GolangPackageVersion)
+	golangTypes, err := golang.Generate(sig, options.GolangPackageName, version.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.GolangPackageVersion)
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, version.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +153,9 @@ func GenerateHost(options *Options) (*HostPackage, error) {
 	}
 
 	files := []zip.File{
-		NewGolangFile("types.go", "types.go", golangTypes),
-		NewGolangFile("host.go", "host.go", host),
-		NewGolangFile("go.mod", "go.mod", modfile),
+		golang.NewFile("types.go", "types.go", golangTypes),
+		golang.NewFile("host.go", "host.go", host),
+		golang.NewFile("go.mod", "go.mod", modfile),
 	}
 
 	buffer := new(bytes.Buffer)
@@ -126,8 +167,46 @@ func GenerateHost(options *Options) (*HostPackage, error) {
 		return nil, err
 	}
 
-	return &HostPackage{
+	return &HostRegistryPackage{
 		GolangModule:  buffer,
 		GolangModfile: modfile,
+	}, nil
+}
+
+func GenerateHostLocal(options *GeneratorOptions) (*HostLocalPackage, error) {
+	hash, err := options.Signature.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hashString := hex.EncodeToString(hash)
+
+	sig, err := options.Signature.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
+	golangTypes, err := golang.Generate(sig, options.GolangPackageName, version.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, version.Version)
+	if err != nil {
+		return nil, err
+	}
+
+	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangPolyglotVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	files := []golang.File{
+		golang.NewFile("types.go", "types.go", golangTypes),
+		golang.NewFile("host.go", "host.go", host),
+		golang.NewFile("go.mod", "go.mod", modfile),
+	}
+
+	return &HostLocalPackage{
+		GolangFiles: files,
 	}, nil
 }

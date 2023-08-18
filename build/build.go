@@ -17,11 +17,18 @@
 package build
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/loopholelabs/scale/cli/version"
+	"github.com/loopholelabs/scale/compile/golang"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/storage"
+	"os"
+	"os/exec"
+	"path"
 )
 
 var (
@@ -31,216 +38,216 @@ var (
 	ErrNoNpm    = errors.New("npm not found in PATH. Please install npm: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm")
 )
 
-type Module struct {
-	Source    string
-	Name      string
-	Signature string
+type LocalGolangOptions struct {
+	Scalefile        *scalefile.Schema
+	Signature        *signature.Schema
+	SourceDirectory  string
+	StorageDirectory string
+	GoBin            string
+	TinyGoBin        string
+	Args             []string
 }
 
 type RustOptions struct {
 	CargoBin string
 	Args     []string
 }
-
-type GolangOptions struct {
-	GoBin     string
-	TinygoBin string
-	Args      []string
-}
-
 type TypescriptOptions struct {
 	NpmBin string
+	Args   []string
 }
 
-type Options struct {
-	Scalefile  *scalefile.Schema
-	Signature  *signature.Schema
-	BaseDir    string
-	Golang     *GolangOptions
-	Rust       *RustOptions
-	Typescript *TypescriptOptions
-}
+func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
+	stb := storage.DefaultBuild
+	sts := storage.DefaultSignature
+	if options.StorageDirectory != "" {
+		var err error
+		stb, err = storage.NewBuild(options.StorageDirectory)
+		if err != nil {
+			return nil, fmt.Errorf("failed to instantiate builds storage for %s: %w", options.StorageDirectory, err)
+		}
 
-func LocalBuild(options *Options) (*scalefunc.Schema, error) {
-	//scaleFunc := &scalefunc.Schema{
-	//	Version:   scalefunc.V1Alpha,
-	//	Name:      options.Scalefile.Name,
-	//	Tag:       options.Scalefile.Tag,
-	//	Signature: fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Name, options.Scalefile.Tag),
-	//}
-
-	switch scalefunc.Language(options.Scalefile.Language) {
-	//case scalefunc.Go:
-	//	scaleFunc.Language = scalefunc.Go
-	//	return GolangBuild(scaleFile, scaleFunc, goBin, tinygoBin, tinygoArgs, baseDir)
-	//case scalefunc.Rust:
-	//	scaleFunc.Language = scalefunc.Rust
-	//	return RustBuild(scaleFile, scaleFunc, cargoBin, cargoArgs, baseDir)
-	//case scalefunc.TypeScript:
-	//	scaleFunc.Language = scalefunc.TypeScript
-	//	return TypeScriptBuild(scaleFile, scaleFunc, npmBin, baseDir)
-	default:
-		return nil, fmt.Errorf("%s support not implemented", options.Scalefile.Language)
+		sts, err = storage.NewSignature(options.StorageDirectory)
+		if err != nil {
+			return nil, fmt.Errorf("failed to instantiate signatures storage for %s: %w", options.StorageDirectory, err)
+		}
 	}
-}
 
-//func GolangBuild() (*scalefunc.Schema, error) {
-//	module := &Module{
-//		Name:      scaleFile.Name,
-//		Source:    scaleFile.Source,
-//		Signature: "github.com/loopholelabs/scale-signature-http",
-//	}
-//
-//	if goBin != "" {
-//		stat, err := os.Stat(goBin)
-//		if err != nil {
-//			return nil, fmt.Errorf("unable to find go binary %s: %w", goBin, err)
-//		}
-//		if !(stat.Mode()&0111 != 0) {
-//			return nil, fmt.Errorf("go binary %s is not executable", goBin)
-//		}
-//	} else {
-//		var err error
-//		goBin, err = exec.LookPath("go")
-//		if err != nil {
-//			return nil, ErrNoGo
-//		}
-//	}
-//
-//	if tinygoBin != "" {
-//		stat, err := os.Stat(tinygoBin)
-//		if err != nil {
-//			return nil, fmt.Errorf("unable to find tinygo binary %s: %w", tinygoBin, err)
-//		}
-//		if !(stat.Mode()&0111 != 0) {
-//			return nil, fmt.Errorf("tinygo binary %s is not executable", tinygoBin)
-//		}
-//	} else {
-//		var err error
-//		tinygoBin, err = exec.LookPath("tinygo")
-//		if err != nil {
-//			return nil, ErrNoTinyGo
-//		}
-//	}
-//
-//	g := compile.NewGenerator()
-//
-//	moduleSourcePath := path.Join(baseDir, module.Source)
-//	_, err := os.Stat(moduleSourcePath)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to find module %s: %w", moduleSourcePath, err)
-//	}
-//
-//	buildDir := path.Join(baseDir, "build")
-//	defer func() {
-//		_ = os.RemoveAll(buildDir)
-//	}()
-//
-//	err = os.Mkdir(buildDir, 0755)
-//	if !os.IsExist(err) && err != nil {
-//		return nil, fmt.Errorf("unable to create build %s directory: %w", buildDir, err)
-//	}
-//
-//	file, err := os.OpenFile(path.Join(buildDir, "main.go"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to create main.go file: %w", err)
-//	}
-//
-//	err = g.GenerateGoMain(file, "compile/scale", module.Signature)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
-//	}
-//
-//	err = file.Close()
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to close main.go file: %w", err)
-//	}
-//
-//	file, err = os.OpenFile(path.Join(buildDir, "go.mod"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to create go.mod file: %w", err)
-//	}
-//
-//	deps := make([]*scalefile.Dependency, 0, len(scaleFile.Dependencies))
-//	for _, dep := range scaleFile.Dependencies {
-//		var d = dep
-//		deps = append(deps, &d)
-//	}
-//	err = g.GenerateGoModfile(file, deps)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
-//	}
-//
-//	err = file.Close()
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to close go.mod file: %w", err)
-//	}
-//
-//	scalePath := path.Join(buildDir, "scale")
-//	err = os.Mkdir(scalePath, 0755)
-//	if !os.IsExist(err) && err != nil {
-//		return nil, fmt.Errorf("unable to create scale source directory %s: %w", scalePath, err)
-//	}
-//
-//	scale, err := os.OpenFile(path.Join(scalePath, "scale.go"), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to create scale.go file: %w", err)
-//	}
-//
-//	file, err = os.Open(moduleSourcePath)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to open scale source file: %w", err)
-//	}
-//
-//	_, err = io.Copy(scale, file)
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to copy scale source file: %w", err)
-//	}
-//
-//	err = scale.Close()
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to close scale.go file: %w", err)
-//	}
-//
-//	err = file.Close()
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to close scale source file: %w", err)
-//	}
-//
-//	wd, err := os.Getwd()
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to get working directory: %w", err)
-//	}
-//
-//	cmd := exec.Command(goBin, "mod", "tidy")
-//	cmd.Dir = path.Join(wd, buildDir)
-//	output, err := cmd.CombinedOutput()
-//	if err != nil {
-//		if _, ok := err.(*exec.ExitError); ok {
-//			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-//		}
-//		return nil, fmt.Errorf("unable to compile scale function: %w", err)
-//	}
-//
-//	tinygoArgs = append([]string{"build", "-o", "scale.wasm", "-target=wasi"}, tinygoArgs...)
-//	tinygoArgs = append(tinygoArgs, "main.go")
-//
-//	cmd = exec.Command(tinygoBin, tinygoArgs...)
-//	cmd.Dir = path.Join(wd, buildDir)
-//
-//	output, err = cmd.CombinedOutput()
-//	if err != nil {
-//		if _, ok := err.(*exec.ExitError); ok {
-//			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-//		}
-//		return nil, fmt.Errorf("unable to compile scale function: %w", err)
-//	}
-//
-//	data, err := os.ReadFile(path.Join(cmd.Dir, "scale.wasm"))
-//	if err != nil {
-//		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
-//	}
-//	scaleFunc.Function = data
-//
-//	return scaleFunc, nil
-//}
+	if options.GoBin != "" {
+		stat, err := os.Stat(options.GoBin)
+		if err != nil {
+			return nil, fmt.Errorf("unable to find go binary %s: %w", options.GoBin, err)
+		}
+		if !(stat.Mode()&0111 != 0) {
+			return nil, fmt.Errorf("go binary %s is not executable", options.GoBin)
+		}
+	} else {
+		var err error
+		options.GoBin, err = exec.LookPath("go")
+		if err != nil {
+			return nil, ErrNoGo
+		}
+	}
+
+	if options.TinyGoBin != "" {
+		stat, err := os.Stat(options.TinyGoBin)
+		if err != nil {
+			return nil, fmt.Errorf("unable to find tinygo binary %s: %w", options.TinyGoBin, err)
+		}
+		if !(stat.Mode()&0111 != 0) {
+			return nil, fmt.Errorf("tinygo binary %s is not executable", options.TinyGoBin)
+		}
+	} else {
+		var err error
+		options.TinyGoBin, err = exec.LookPath("tinygo")
+		if err != nil {
+			return nil, ErrNoTinyGo
+		}
+	}
+
+	_, err := os.Stat(options.SourceDirectory)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find source directory %s: %w", options.SourceDirectory, err)
+	}
+
+	build, err := stb.Mkdir()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create build directory: %w", err)
+	}
+	defer func() {
+		_ = stb.Delete(build)
+	}()
+
+	var signatureImportPath string
+	var signatureImportVersion string
+	var sig *storage.Signature
+	if options.Signature != nil {
+		hash, err := options.Signature.Hash()
+		if err != nil {
+			return nil, fmt.Errorf("unable to hash signature: %w", err)
+		}
+		sig = &storage.Signature{
+			Schema:       options.Signature,
+			Hash:         hex.EncodeToString(hash),
+			Organization: "local",
+		}
+
+		signaturePath := path.Join(build.Path, "signature")
+		err = os.MkdirAll(signaturePath, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create local signature directory: %w", err)
+		}
+		err = storage.GenerateSignature(sig.Schema, signaturePath)
+		if err != nil {
+			return nil, fmt.Errorf("unable to generate local signature: %w", err)
+		}
+
+		signatureImportPath = path.Join(signaturePath, "golang", "guest")
+	} else {
+		switch options.Scalefile.Signature.Organization {
+		case "local":
+			sig, err = sts.Get(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
+			if err != nil {
+				return nil, fmt.Errorf("unable to get local signature: %w", err)
+			}
+			if sig == nil {
+				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
+			}
+
+			signaturePath := path.Join(build.Path, "signature")
+			err = os.MkdirAll(signaturePath, 0755)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
+			}
+			err = storage.GenerateSignature(sig.Schema, signaturePath)
+			if err != nil {
+				return nil, fmt.Errorf("unable to generate local signature: %w", err)
+			}
+
+			signatureImportPath = path.Join(signaturePath, "golang", "guest")
+		default:
+			return nil, fmt.Errorf("unknown signature organization %s", options.Scalefile.Signature.Organization)
+		}
+	}
+
+	dependencies := []*scalefunc.Dependency{
+		{
+			Name:     "signature",
+			Version:  "v0.1.0",
+			Metadata: nil,
+		},
+		{
+			Name:     options.Scalefile.Name,
+			Version:  "v0.1.0",
+			Metadata: nil,
+		},
+	}
+
+	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureImportPath, signatureImportVersion, options.SourceDirectory, dependencies, "compile", version.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
+	}
+
+	mainFile, err := golang.GenerateGoMain(sig.Schema, options.Scalefile, version.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
+	}
+
+	compilePath := path.Join(build.Path, "compile")
+
+	err = os.MkdirAll(compilePath, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create compile directory: %w", err)
+	}
+
+	err = os.WriteFile(path.Join(compilePath, "go.mod"), modfile, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create go.mod file: %w", err)
+	}
+
+	err = os.WriteFile(path.Join(compilePath, "main.go"), mainFile, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create main.go file: %w", err)
+	}
+
+	cmd := exec.Command(options.GoBin, "mod", "tidy")
+	cmd.Dir = compilePath
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("unable to compile scale function: %s", output)
+		}
+		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+	}
+
+	tinygoArgs := append([]string{"build", "-o", "scale.wasm", "-target=wasi"}, options.Args...)
+	tinygoArgs = append(tinygoArgs, "main.go")
+
+	cmd = exec.Command(options.TinyGoBin, tinygoArgs...)
+	cmd.Dir = compilePath
+
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("unable to compile scale function: %s", output)
+		}
+		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+	}
+
+	data, err := os.ReadFile(path.Join(compilePath, "scale.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
+	}
+
+	return &scalefunc.Schema{
+		Version:         scalefunc.V1Alpha,
+		Name:            options.Scalefile.Name,
+		Tag:             options.Scalefile.Tag,
+		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
+		SignatureSchema: sig.Schema,
+		SignatureHash:   sig.Hash,
+		Language:        scalefunc.Go,
+		Dependencies:    nil,
+		Function:        data,
+	}, nil
+}

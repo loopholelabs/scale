@@ -20,6 +20,7 @@ import (
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"go/format"
+	"strings"
 	"text/template"
 )
 
@@ -52,6 +53,14 @@ func New() *Generator {
 }
 
 func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string, version string) ([]byte, error) {
+	if !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
+		signatureImport = "./" + signatureImport
+	}
+
+	if !strings.HasPrefix(functionImport, "/") && !strings.HasPrefix(functionImport, "./") && !strings.HasPrefix(functionImport, "../") {
+		functionImport = "./" + functionImport
+	}
+
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
 		"version":                  version,

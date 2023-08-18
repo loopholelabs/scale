@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	DefaultFunctionDirectory = ".config/scale/functions"
+	FunctionDirectory = "functions"
 )
 
 var (
@@ -44,7 +44,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	DefaultFunction, err = NewFunction(path.Join(homeDir, DefaultFunctionDirectory))
+	DefaultFunction, err = NewFunction(path.Join(homeDir, DefaultDirectory, FunctionDirectory))
 	if err != nil {
 		panic(err)
 	}
@@ -52,11 +52,12 @@ func init() {
 
 // FunctionStorage is used to store and retrieve built Scale Functions
 type FunctionStorage struct {
-	BaseDirectory string
+	Directory string
 }
 
 func NewFunction(baseDirectory string) (*FunctionStorage, error) {
-	err := os.MkdirAll(baseDirectory, 0755)
+	dir := path.Join(baseDirectory, FunctionDirectory)
+	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		if !os.IsExist(err) {
 			return nil, err
@@ -64,7 +65,7 @@ func NewFunction(baseDirectory string) (*FunctionStorage, error) {
 	}
 
 	return &FunctionStorage{
-		BaseDirectory: baseDirectory,
+		Directory: dir,
 	}, nil
 }
 
@@ -145,8 +146,8 @@ func (s *FunctionStorage) Get(name string, tag string, org string, hash string) 
 }
 
 // Put stores the Scale Function with the given name, tag, organization, and hash
-func (s *FunctionStorage) Put(name string, tag string, org string, hash string, sf *scalefunc.Schema) error {
-	f := s.functionName(name, tag, org, hash)
+func (s *FunctionStorage) Put(name string, tag string, org string, sf *scalefunc.Schema) error {
+	f := s.functionName(name, tag, org, sf.Hash)
 	p := s.fullPath(f)
 	return os.WriteFile(p, sf.Encode(), 0644)
 }
@@ -158,9 +159,9 @@ func (s *FunctionStorage) Delete(name string, tag string, org string, hash strin
 
 // List returns all the Scale Functions stored in the storage
 func (s *FunctionStorage) List() ([]Function, error) {
-	entries, err := os.ReadDir(s.BaseDirectory)
+	entries, err := os.ReadDir(s.Directory)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read storage directory %s: %w", s.BaseDirectory, err)
+		return nil, fmt.Errorf("failed to read storage directory %s: %w", s.Directory, err)
 	}
 	var scaleFuncEntries []Function
 	for _, entry := range entries {
@@ -181,7 +182,7 @@ func (s *FunctionStorage) List() ([]Function, error) {
 }
 
 func (s *FunctionStorage) fullPath(p string) string {
-	return path.Join(s.BaseDirectory, p)
+	return path.Join(s.Directory, p)
 }
 
 func (s *FunctionStorage) functionName(name string, tag string, org string, hash string) string {

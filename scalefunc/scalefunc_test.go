@@ -28,7 +28,7 @@ func TestEncodeDecode(t *testing.T) {
 	s := &Schema{
 		Version:  "invalid",
 		Language: Go,
-		SignatureSchema: signature.Schema{
+		SignatureSchema: &signature.Schema{
 			Version: signature.V1AlphaVersion,
 			Context: "ctx",
 			Enums:   nil,
@@ -86,7 +86,7 @@ func TestEncodeDecode(t *testing.T) {
 		Name:            "Test Name",
 		Tag:             "Test Tag",
 		SignatureName:   "Test Signature",
-		SignatureSchema: *masterTestingSchema,
+		SignatureSchema: masterTestingSchema,
 		Dependencies:    dependencies,
 		Language:        Go,
 		Function:        []byte("Test Function Contents"),
