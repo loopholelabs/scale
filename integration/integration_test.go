@@ -16,6 +16,8 @@
 package integration
 
 import (
+	"encoding/hex"
+	"fmt"
 	"github.com/loopholelabs/scale/build"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
@@ -28,7 +30,12 @@ import (
 )
 
 func TestExampleSignature(t *testing.T) {
-	s, err := signature.ReadSchema("signatures/example.signature")
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s, err := signature.ReadSchema(wd + "/signatures/example.signature")
+	require.NoError(t, err)
+	hash, err := s.Hash()
 	require.NoError(t, err)
 
 	assert.Equal(t, "Example", s.Context)
@@ -42,9 +49,6 @@ func TestExampleSignature(t *testing.T) {
 		GolangPackageVersion:  "v0.1.0",
 		GolangPolyglotVersion: "v1.1.1",
 	})
-	require.NoError(t, err)
-
-	wd, err := os.Getwd()
 	require.NoError(t, err)
 
 	golangSignatureDir := wd + "/golang_tests/signature"
@@ -74,9 +78,15 @@ func TestExampleSignature(t *testing.T) {
 		Signature:        s,
 		SourceDirectory:  golangFunctionDir,
 		StorageDirectory: golangCompileDir,
-		GoBin:            "/Users/shivanshvij/sdk/go1.20.5/bin/go",
 	})
 	require.NoError(t, err)
 
-	t.Logf("Schema: %v", schema)
+	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
+	assert.Equal(t, scf.Name, schema.Name)
+	assert.Equal(t, scf.Tag, schema.Tag)
+	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
+	assert.Equal(t, s, schema.SignatureSchema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scalefunc.Go, schema.Language)
+	assert.Equal(t, 0, len(schema.Dependencies))
 }
