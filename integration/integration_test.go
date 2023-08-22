@@ -42,7 +42,7 @@ func TestExampleSignature(t *testing.T) {
 	assert.Equal(t, 1, len(s.Models))
 	assert.Equal(t, "Example", s.Models[0].Name)
 
-	guest, err := generator.GenerateGuestLocal(&generator.GeneratorOptions{
+	guest, err := generator.GenerateGuestLocal(&generator.Options{
 		Signature:             s,
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",

@@ -31,7 +31,6 @@ func TestEncodeDecode(t *testing.T) {
 		SignatureSchema: &signature.Schema{
 			Version: signature.V1AlphaVersion,
 			Context: "ctx",
-			Enums:   nil,
 			Models: []*signature.ModelSchema{
 				{
 					Name:        "ctx",
@@ -40,6 +39,7 @@ func TestEncodeDecode(t *testing.T) {
 			},
 		},
 	}
+
 	decoded := new(Schema)
 
 	encoded := s.Encode()

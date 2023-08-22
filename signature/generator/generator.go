@@ -16,7 +16,6 @@ package generator
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/loopholelabs/scale/cli/version"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
 	"golang.org/x/mod/module"
@@ -41,7 +40,8 @@ type HostLocalPackage struct {
 	GolangFiles []golang.File
 }
 
-type GeneratorOptions struct {
+type Options struct {
+	Version               string
 	Signature             *signature.Schema
 	GolangImportPath      string
 	GolangPackageName     string
@@ -49,19 +49,19 @@ type GeneratorOptions struct {
 	GolangPolyglotVersion string
 }
 
-func GenerateGuestRegistry(options *GeneratorOptions) (*GuestRegistryPackage, error) {
+func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 	hash, err := options.Signature.Hash()
 	if err != nil {
 		return nil, err
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, version.Version)
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, version.Version)
+	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -92,19 +92,19 @@ func GenerateGuestRegistry(options *GeneratorOptions) (*GuestRegistryPackage, er
 	}, nil
 }
 
-func GenerateGuestLocal(options *GeneratorOptions) (*GuestLocalPackage, error) {
+func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 	hash, err := options.Signature.Hash()
 	if err != nil {
 		return nil, err
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, version.Version)
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, version.Version)
+	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func GenerateGuestLocal(options *GeneratorOptions) (*GuestLocalPackage, error) {
 	}, nil
 }
 
-func GenerateHostRegistry(options *GeneratorOptions) (*HostRegistryPackage, error) {
+func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 	hash, err := options.Signature.Hash()
 	if err != nil {
 		return nil, err
@@ -137,12 +137,13 @@ func GenerateHostRegistry(options *GeneratorOptions) (*HostRegistryPackage, erro
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName, version.Version)
+	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, version.Version)
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.Version)
+
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +174,7 @@ func GenerateHostRegistry(options *GeneratorOptions) (*HostRegistryPackage, erro
 	}, nil
 }
 
-func GenerateHostLocal(options *GeneratorOptions) (*HostLocalPackage, error) {
+func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 	hash, err := options.Signature.Hash()
 	if err != nil {
 		return nil, err
@@ -185,12 +186,12 @@ func GenerateHostLocal(options *GeneratorOptions) (*HostLocalPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName, version.Version)
+	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, version.Version)
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.Version)
 	if err != nil {
 		return nil, err
 	}

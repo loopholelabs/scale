@@ -292,7 +292,7 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		return err
 	}
 
-	guestPackage, err := generator.GenerateGuestLocal(&generator.GeneratorOptions{
+	guestPackage, err := generator.GenerateGuestLocal(&generator.Options{
 		Signature:             sig,
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",
@@ -315,7 +315,7 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		return err
 	}
 
-	hostPackage, err := generator.GenerateHostLocal(&generator.GeneratorOptions{
+	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
 		Signature:             sig,
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",

@@ -185,6 +185,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
+	s.SignatureSchema = new(signatureSchema.Schema)
 	err = s.SignatureSchema.Decode(signatureSchemaBytes)
 	if err != nil {
 		return err
