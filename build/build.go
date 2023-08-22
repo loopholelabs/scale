@@ -20,7 +20,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/scale/cli/version"
 	"github.com/loopholelabs/scale/compile/golang"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
@@ -39,6 +38,7 @@ var (
 )
 
 type LocalGolangOptions struct {
+	Version          string
 	Scalefile        *scalefile.Schema
 	Signature        *signature.Schema
 	SourceDirectory  string
@@ -183,12 +183,12 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		},
 	}
 
-	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureImportPath, signatureImportVersion, options.SourceDirectory, dependencies, "compile", version.Version)
+	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureImportPath, signatureImportVersion, options.SourceDirectory, dependencies, "compile", options.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}
 
-	mainFile, err := golang.GenerateGoMain(sig.Schema, options.Scalefile, version.Version)
+	mainFile, err := golang.GenerateGoMain(sig.Schema, options.Scalefile, options.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
 	}
