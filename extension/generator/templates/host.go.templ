@@ -5,8 +5,196 @@
 package {{ .package }}
 
 import (
-    "github.com/loopholelabs/scale/signature"
-    "github.com/loopholelabs/polyglot"
+	"context"
+	"errors"
+	"sync/atomic"
+	"sync"
+
+	"github.com/tetratelabs/wazero"
+	"github.com/tetratelabs/wazero/api"
+
+  "github.com/loopholelabs/polyglot"
 )
 
 const identifier = "{{ .schema.Name }}:{{ .schema.Tag }}"
+
+// Interface to the extension impl. This is what the implementor should create
+
+type {{ .schema.Name }}Ifc interface {
+{{ range $fn := .schema.Functions }}
+  {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error)
+{{ end }}
+}
+
+// TODO: Atm the interfaces are defined in guest. They should be pulled out somewhere prolly.
+
+// Write an error to the scale function guest buffer.
+func hostError(ctx context.Context, mod api.Module, err error) {
+	b := polyglot.NewBuffer()
+	polyglot.Encoder(b).Error(err)
+
+	writeBuffer, err := mod.ExportedFunction("ext_HttpFetch_Resize").Call(ctx, uint64(b.Len()))
+
+	if err != nil {
+		panic(err)
+	}
+
+	if !mod.Memory().Write(uint32(writeBuffer[0]), b.Bytes()) {
+		panic(err)
+	}
+}
+
+{{ $schema := .schema }}
+
+func InstallExtension(module wazero.HostModuleBuilder, impl {{ .schema.Name }}Ifc) {
+
+  hostWrapper := &{{ .schema.Name }}Host{ impl: impl }
+
+// Add global functions to the runtime
+{{ range $fn := .schema.Functions }}
+  fn := hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }}
+
+	module.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(fn), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
+		WithParameterNames("instance", "pointer", "length").Export("ext_{{ $schema.Name }}_{{ $fn.Name }}")
+{{ end }}
+
+{{ range $ifc := .schema.Interfaces }}
+	hostWrapper.instances_{{ $ifc.Name }} = make(map[uint64]{{ $ifc.Name }})
+
+  {{ range $fn := $ifc.Functions }}
+
+  fn = hostWrapper.host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
+
+	module.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(fn), []api.ValueType{api.ValueTypeI64, api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
+		WithParameterNames("instance", "pointer", "length").Export("ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}")
+
+  {{ end }}
+{{ end }}
+
+}
+
+type {{ .schema.Name }}Host struct {
+  impl {{ .schema.Name }}Ifc
+{{ range $ifc := .schema.Interfaces }}
+
+  gid_{{ $ifc.Name }} uint64
+  instancesLock_{{ $ifc.Name }} sync.Mutex
+  instances_{{ $ifc.Name }} map[uint64]{{ $ifc.Name }}
+
+{{ end }}
+
+}
+
+// Global functions
+{{ range $fn := .schema.Functions }}
+
+func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(ctx context.Context, mod api.Module, params []uint64) {
+	ptr := uint32(params[0])
+	length := uint32(params[1])
+	mem := mod.Memory()
+	data, _ := mem.Read(ptr, length)
+
+	cd := &{{ $fn.Params }}{}
+	cd, err := Decode{{ $fn.Params }}(cd, data)
+	if err != nil {
+		hostError(ctx, mod, err)
+	}
+
+  // Call the implementation
+	r, err := h.impl.{{ $fn.Name }}(cd)
+	if err!=nil {
+		hostError(ctx, mod, err)
+	}
+
+{{- if (IsInterface $schema $fn.Return) }}
+
+	id := atomic.AddUint64(&h.gid_{{ $fn.Return }}, 1)
+	h.instancesLock_{{ $fn.Return }}.Lock()
+	h.instances_{{ $fn.Return }}[id] = r
+	h.instancesLock_{{ $fn.Return }}.Unlock()
+
+	// Return the ID
+	params[0] = id
+
+{{ else }}
+
+	b := polyglot.NewBuffer()
+	r.Encode(b)
+
+	writeBuffer, err := mod.ExportedFunction("ext_{{ $schema.Name }}_Resize").Call(ctx, uint64(b.Len()))
+
+	if err != nil {
+		hostError(ctx, mod, err)
+	}
+
+	if !mod.Memory().Write(uint32(writeBuffer[0]), b.Bytes()) {
+		hostError(ctx, mod, err)
+	}
+
+{{ end }}
+}
+
+{{ end }}
+
+
+{{ range $ifc := .schema.Interfaces }}
+
+{{ range $fn := $ifc.Functions }}
+
+func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(ctx context.Context, mod api.Module, params []uint64) {
+	h.instancesLock_{{ $ifc.Name }}.Lock()
+  r, ok := h.instances_{{ $ifc.Name }}[params[0]]
+	h.instancesLock_{{ $ifc.Name }}.Unlock()
+	if !ok {
+		hostError(ctx, mod, errors.New("Instance ID not found!"))
+	}
+
+	ptr := uint32(params[1])
+	length := uint32(params[2])
+	mem := mod.Memory()
+	data, _ := mem.Read(ptr, length)
+
+	cd := &{{ $fn.Params }}{}
+	cd, err := Decode{{ $fn.Params }}(cd, data)
+	if err != nil {
+		hostError(ctx, mod, err)
+	}
+
+	resp, err := r.{{ $fn.Name }}(cd)
+	if err != nil {
+		hostError(ctx, mod, err)
+	}
+
+
+{{- if (IsInterface $schema $fn.Return) }}
+
+	id := atomic.AddUint64(&h.gid_{{ $fn.Return }}, 1)
+	h.instancesLock_{{ $fn.Return }}.Lock()
+	h.instances_{{ $fn.Return }}[id] = resp
+	h.instancesLock_{{ $fn.Return }}.Unlock()
+
+	// Return the ID
+	params[0] = id
+
+{{ else }}
+
+	b := polyglot.NewBuffer()
+	resp.Encode(b)
+
+	writeBuffer, err := mod.ExportedFunction("ext_{{ $schema.Name }}_Resize").Call(ctx, uint64(b.Len()))
+
+	if err != nil {
+		hostError(ctx, mod, err)
+	}
+
+	if !mod.Memory().Write(uint32(writeBuffer[0]), b.Bytes()) {
+		hostError(ctx, mod, err)
+	}
+
+{{ end }}
+}
+
+  {{ end }}
+{{ end }}
