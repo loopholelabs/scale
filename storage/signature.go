@@ -41,6 +41,8 @@ var (
 )
 
 type Signature struct {
+	Name         string
+	Tag          string
 	Schema       *signature.Schema
 	Hash         string
 	Organization string
@@ -109,6 +111,8 @@ func (s *SignatureStorage) Get(name string, tag string, org string, hash string)
 		}
 
 		return &Signature{
+			Name:         name,
+			Tag:          tag,
 			Schema:       sig,
 			Hash:         hash,
 			Organization: org,
@@ -146,6 +150,8 @@ func (s *SignatureStorage) Get(name string, tag string, org string, hash string)
 	}
 
 	return &Signature{
+		Name:         name,
+		Tag:          tag,
 		Schema:       sig,
 		Hash:         getHashFromName(matches[0]),
 		Organization: getOrgFromName(matches[0]),
@@ -249,11 +255,14 @@ func (s *SignatureStorage) List() ([]Signature, error) {
 		if !entry.IsDir() {
 			continue
 		}
+
 		sig, err := signature.ReadSchema(path.Join(s.fullPath(entry.Name()), "signature"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode scale signature %s: %w", s.fullPath(entry.Name()), err)
 		}
 		scaleSignatureEntries = append(scaleSignatureEntries, Signature{
+			Name:         getNameFromName(entry.Name()),
+			Tag:          getTagFromName(entry.Name()),
 			Schema:       sig,
 			Hash:         getHashFromName(entry.Name()),
 			Organization: getOrgFromName(entry.Name()),
