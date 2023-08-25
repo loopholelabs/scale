@@ -13,6 +13,7 @@
 	limitations under the License.
 */
 
+// package integration holds integration tests for Scale
 package integration
 
 import (
