@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-const hash = "7df3324ab7c6510d6aa94c51ca465befaf906547dd044b5446a0ab90721de50a"
+const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5"
 
 var (
 	writeBuffer = polyglot.NewBuffer()
@@ -18,7 +18,7 @@ var (
 // Write serializes the signature into the global writeBuffer and returns the pointer to the buffer and its size
 //
 // Users should not use this method.
-func Write(ctx *Example) (uint32, uint32) {
+func Write(ctx *ModelWithAllFieldTypes) (uint32, uint32) {
 	writeBuffer.Reset()
 	ctx.Encode(writeBuffer)
 	underlying := writeBuffer.Bytes()
@@ -30,8 +30,8 @@ func Write(ctx *Example) (uint32, uint32) {
 // Read deserializes signature from the global readBuffer
 //
 // Users should not use this method.
-func Read(ctx *Example) (*Example, error) {
-	return DecodeExample(ctx, readBuffer)
+func Read(ctx *ModelWithAllFieldTypes) (*ModelWithAllFieldTypes, error) {
+	return DecodeModelWithAllFieldTypes(ctx, readBuffer)
 }
 
 // Error serializes an error into the global writeBuffer and returns a pointer to the buffer and its size
@@ -70,7 +70,7 @@ func Hash() (uint32, uint32) {
 }
 
 // Next calls the next function in the Scale Function Chain
-func Next(ctx *Example) (*Example, error) {
+func Next(ctx *ModelWithAllFieldTypes) (*ModelWithAllFieldTypes, error) {
 	next(Write(ctx))
 	return Read(ctx)
 }

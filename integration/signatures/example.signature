@@ -1,8 +1,0 @@
-version = "v1alpha"
-context = "example"
-
-model example {
-    string data {
-        default = ""
-    }
-}
