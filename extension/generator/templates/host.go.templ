@@ -5,58 +5,45 @@
 package {{ .package }}
 
 import (
-	"context"
 	"errors"
 	"sync/atomic"
 	"sync"
 
-	"github.com/tetratelabs/wazero"
-	"github.com/tetratelabs/wazero/api"
-
   "github.com/loopholelabs/polyglot"
+
+  "github.com/loopholelabs/scale/extension"
 )
 
 const identifier = "{{ .schema.Name }}:{{ .schema.Tag }}"
 
-// Interface to the extension impl. This is what the implementor should create
-
-type {{ .schema.Name }}Ifc interface {
-{{ range $fn := .schema.Functions }}
-  {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error)
-{{ end }}
-}
-
-// TODO: Atm the interfaces are defined in guest. They should be pulled out somewhere prolly.
-
 // Write an error to the scale function guest buffer.
-func hostError(ctx context.Context, mod api.Module, err error) {
+func hostError(mem extension.ModuleMemory, resize extension.Resizer, err error) {
 	b := polyglot.NewBuffer()
 	polyglot.Encoder(b).Error(err)
 
-	writeBuffer, err := mod.ExportedFunction("ext_HttpFetch_Resize").Call(ctx, uint64(b.Len()))
+	writeBuffer, err := resize("ext_HttpFetch_Resize", uint64(b.Len()))
 
 	if err != nil {
 		panic(err)
 	}
 
-	if !mod.Memory().Write(uint32(writeBuffer[0]), b.Bytes()) {
+	if !mem.Write(uint32(writeBuffer), b.Bytes()) {
 		panic(err)
 	}
 }
 
 {{ $schema := .schema }}
 
-func InstallExtension(module wazero.HostModuleBuilder, impl {{ .schema.Name }}Ifc) {
+func InstallExtension(impl {{ .schema.Name }}Ifc) map[string]extension.InstallableFunc {
 
   hostWrapper := &{{ .schema.Name }}Host{ impl: impl }
 
+  fns := make(map[string]extension.InstallableFunc)
+
 // Add global functions to the runtime
 {{ range $fn := .schema.Functions }}
-  fn := hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }}
+  fns["ext_{{ $schema.Name }}_{{ $fn.Name }}"] = hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }}
 
-	module.NewFunctionBuilder().
-		WithGoModuleFunction(api.GoModuleFunc(fn), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
-		WithParameterNames("instance", "pointer", "length").Export("ext_{{ $schema.Name }}_{{ $fn.Name }}")
 {{ end }}
 
 {{ range $ifc := .schema.Interfaces }}
@@ -64,15 +51,12 @@ func InstallExtension(module wazero.HostModuleBuilder, impl {{ .schema.Name }}If
 
   {{ range $fn := $ifc.Functions }}
 
-  fn = hostWrapper.host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
-
-	module.NewFunctionBuilder().
-		WithGoModuleFunction(api.GoModuleFunc(fn), []api.ValueType{api.ValueTypeI64, api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
-		WithParameterNames("instance", "pointer", "length").Export("ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}")
+  fns["ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}"] = hostWrapper.host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
 
   {{ end }}
 {{ end }}
 
+  return fns
 }
 
 type {{ .schema.Name }}Host struct {
@@ -90,22 +74,21 @@ type {{ .schema.Name }}Host struct {
 // Global functions
 {{ range $fn := .schema.Functions }}
 
-func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(ctx context.Context, mod api.Module, params []uint64) {
+func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem extension.ModuleMemory, resize extension.Resizer, params []uint64) {
 	ptr := uint32(params[0])
 	length := uint32(params[1])
-	mem := mod.Memory()
 	data, _ := mem.Read(ptr, length)
 
 	cd := &{{ $fn.Params }}{}
 	cd, err := Decode{{ $fn.Params }}(cd, data)
 	if err != nil {
-		hostError(ctx, mod, err)
+		hostError(mem, resize, err)
 	}
 
   // Call the implementation
 	r, err := h.impl.{{ $fn.Name }}(cd)
 	if err!=nil {
-		hostError(ctx, mod, err)
+		hostError(mem, resize, err)
 	}
 
 {{- if (IsInterface $schema $fn.Return) }}
@@ -123,14 +106,14 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(ctx c
 	b := polyglot.NewBuffer()
 	r.Encode(b)
 
-	writeBuffer, err := mod.ExportedFunction("ext_{{ $schema.Name }}_Resize").Call(ctx, uint64(b.Len()))
+	writeBuffer, err := resize("ext_{{ $schema.Name }}_Resize", uint64(b.Len()))
 
 	if err != nil {
-		hostError(ctx, mod, err)
+		hostError(mem, resize, err)
 	}
 
-	if !mod.Memory().Write(uint32(writeBuffer[0]), b.Bytes()) {
-		hostError(ctx, mod, err)
+	if !mem.Write(uint32(writeBuffer), b.Bytes()) {
+		hostError(mem, resize, err)
 	}
 
 {{ end }}
@@ -143,28 +126,27 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(ctx c
 
 {{ range $fn := $ifc.Functions }}
 
-func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(ctx context.Context, mod api.Module, params []uint64) {
+func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(mem extension.ModuleMemory, resize extension.Resizer, params []uint64) {
 	h.instancesLock_{{ $ifc.Name }}.Lock()
   r, ok := h.instances_{{ $ifc.Name }}[params[0]]
 	h.instancesLock_{{ $ifc.Name }}.Unlock()
 	if !ok {
-		hostError(ctx, mod, errors.New("Instance ID not found!"))
+		hostError(mem, resize, errors.New("Instance ID not found!"))
 	}
 
 	ptr := uint32(params[1])
 	length := uint32(params[2])
-	mem := mod.Memory()
 	data, _ := mem.Read(ptr, length)
 
 	cd := &{{ $fn.Params }}{}
 	cd, err := Decode{{ $fn.Params }}(cd, data)
 	if err != nil {
-		hostError(ctx, mod, err)
+		hostError(mem, resize, err)
 	}
 
 	resp, err := r.{{ $fn.Name }}(cd)
 	if err != nil {
-		hostError(ctx, mod, err)
+		hostError(mem, resize, err)
 	}
 
 
@@ -183,14 +165,14 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ 
 	b := polyglot.NewBuffer()
 	resp.Encode(b)
 
-	writeBuffer, err := mod.ExportedFunction("ext_{{ $schema.Name }}_Resize").Call(ctx, uint64(b.Len()))
+	writeBuffer, err := resize("ext_{{ $schema.Name }}_Resize", uint64(b.Len()))
 
 	if err != nil {
-		hostError(ctx, mod, err)
+		hostError(mem, resize, err)
 	}
 
-	if !mod.Memory().Write(uint32(writeBuffer[0]), b.Bytes()) {
-		hostError(ctx, mod, err)
+	if !mem.Write(uint32(writeBuffer), b.Bytes()) {
+		hostError(mem, resize, err)
 	}
 
 {{ end }}
