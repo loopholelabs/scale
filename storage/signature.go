@@ -20,6 +20,7 @@ package storage
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/loopholelabs/polyglot/version"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator"
@@ -30,10 +31,6 @@ import (
 
 const (
 	SignatureDirectory = "signatures"
-)
-
-const (
-	PolyglotVersion = "v1.1.1"
 )
 
 var (
@@ -306,7 +303,7 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",
 		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: PolyglotVersion,
+		GolangPolyglotVersion: version.Version(),
 	})
 	if err != nil {
 		return err
@@ -329,7 +326,7 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",
 		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: PolyglotVersion,
+		GolangPolyglotVersion: version.Version(),
 	})
 	if err != nil {
 		return err

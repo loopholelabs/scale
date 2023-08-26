@@ -1,4 +1,4 @@
-//go:build !integration
+//go:build !integration && !generate
 
 /*
 	Copyright 2023 Loophole Labs

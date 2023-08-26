@@ -11,14 +11,18 @@
 	limitations under the License.
 */
 
-package parser
+// Package converter generates a polyglot-encoded buffer from a signature schema
+// and a data payload
+package converter
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/polyglot"
 	"github.com/loopholelabs/scale/signature"
+	"strconv"
 )
 
 var (
@@ -26,23 +30,28 @@ var (
 	ErrInvalidData   = errors.New("invalid data")
 )
 
-//var (
-//	firstCapital = regexp.MustCompile("(.)([A-Z][a-z]+)")
-//	allCapitals  = regexp.MustCompile("([a-z0-9])([A-Z])")
-//)
-
-type Parser struct {
+// Converter converts a signature schema and data payload into a polyglot-encoded buffer
+type Converter struct {
 	signature *signature.Schema
-	ctxName   string
-	ctxModel  *signature.ModelSchema
 	models    map[string]*signature.ModelSchema
 	enums     map[string]*signature.EnumSchema
+	ctxName   string
+	ctxModel  *signature.ModelSchema
 }
 
-func New(schema *signature.Schema) (*Parser, error) {
-	p := &Parser{
+func Convert(schema *signature.Schema, data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
+	p, err := New(schema)
+	if err != nil {
+		return err
+	}
+	return p.Convert(data, encoder)
+}
+
+func New(schema *signature.Schema) (*Converter, error) {
+	p := &Converter{
 		signature: schema,
 		models:    make(map[string]*signature.ModelSchema),
+		enums:     make(map[string]*signature.EnumSchema),
 	}
 
 	p.ctxName = p.signature.Context
@@ -68,7 +77,7 @@ func New(schema *signature.Schema) (*Parser, error) {
 	return p, nil
 }
 
-func (p *Parser) Parse(data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
+func (p *Converter) Convert(data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
 	ctx, ok := data[p.ctxName]
 	if !ok {
 		return ErrInvalidData
@@ -87,7 +96,7 @@ func (p *Parser) Parse(data map[string]interface{}, encoder *polyglot.BufferEnco
 	return nil
 }
 
-func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]interface{}, encoder *polyglot.BufferEncoder) (err error) {
+func (p *Converter) encodeModel(model *signature.ModelSchema, data map[string]interface{}, encoder *polyglot.BufferEncoder) (err error) {
 	for _, m := range model.Models {
 		modelData, ok := data[m.Name]
 		if !ok {
@@ -159,14 +168,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing string array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]string)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid string array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.StringKind)
 		for _, ad := range arrayDataSlice {
-			encoder.String(ad)
+			j, ok := ad.(string)
+			if !ok {
+				return fmt.Errorf("%w: invalid string array data", ErrInvalidData)
+			}
+			encoder.String(j)
 		}
 	}
 
@@ -193,12 +206,12 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing int32 data", ErrInvalidData)
 		}
 
-		int32DataInt, ok := int32Data.(int32)
+		int32DataInt, ok := int32Data.(float64)
 		if !ok {
 			return fmt.Errorf("%w: invalid int32 data", ErrInvalidData)
 		}
 
-		encoder.Int32(int32DataInt)
+		encoder.Int32(int32(int32DataInt))
 	}
 
 	for _, ia := range model.Int32Arrays {
@@ -207,14 +220,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing int32 array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]int32)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid int32 array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Int32Kind)
 		for _, ad := range arrayDataSlice {
-			encoder.Int32(ad)
+			j, ok := ad.(float64)
+			if !ok {
+				return fmt.Errorf("%w: invalid int32 array data", ErrInvalidData)
+			}
+			encoder.Int32(int32(j))
 		}
 	}
 
@@ -224,12 +241,21 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing int32 map data", ErrInvalidData)
 		}
 
-		mapDataMap, ok := mapData.(map[int32]interface{})
+		mapDataMap, ok := mapData.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid int32 map data", ErrInvalidData)
 		}
 
-		err = encodeMap[int32](p, polyglot.Int32Kind, im.Value, mapDataMap, encoder.Int32, encoder)
+		convertedMapDataMap := make(map[int32]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			i, err := strconv.ParseInt(k, 10, 32)
+			if err != nil {
+				return fmt.Errorf("%w: invalid int32 map data", ErrInvalidData)
+			}
+			convertedMapDataMap[int32(i)] = v
+		}
+
+		err = encodeMap[int32](p, polyglot.Int32Kind, im.Value, convertedMapDataMap, encoder.Int32, encoder)
 		if err != nil {
 			return err
 		}
@@ -241,12 +267,12 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing int64 data", ErrInvalidData)
 		}
 
-		int64DataInt, ok := int64Data.(int64)
+		int64DataInt, ok := int64Data.(float64)
 		if !ok {
 			return fmt.Errorf("%w: invalid int64 data", ErrInvalidData)
 		}
 
-		encoder.Int64(int64DataInt)
+		encoder.Int64(int64(int64DataInt))
 	}
 
 	for _, ia := range model.Int64Arrays {
@@ -255,14 +281,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing int64 array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]int64)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid int64 array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Int64Kind)
 		for _, ad := range arrayDataSlice {
-			encoder.Int64(ad)
+			j, ok := ad.(float64)
+			if !ok {
+				return fmt.Errorf("%w: invalid int64 array data", ErrInvalidData)
+			}
+			encoder.Int64(int64(j))
 		}
 	}
 
@@ -272,12 +302,21 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing int64 map data", ErrInvalidData)
 		}
 
-		mapDataMap, ok := mapData.(map[int64]interface{})
+		mapDataMap, ok := mapData.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid int64 map data", ErrInvalidData)
 		}
 
-		err = encodeMap[int64](p, polyglot.Int64Kind, im.Value, mapDataMap, encoder.Int64, encoder)
+		convertedMapDataMap := make(map[int64]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			i, err := strconv.ParseInt(k, 10, 64)
+			if err != nil {
+				return fmt.Errorf("%w: invalid int64 map data", ErrInvalidData)
+			}
+			convertedMapDataMap[i] = v
+		}
+
+		err = encodeMap[int64](p, polyglot.Int64Kind, im.Value, convertedMapDataMap, encoder.Int64, encoder)
 		if err != nil {
 			return err
 		}
@@ -289,12 +328,12 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing uint32 data", ErrInvalidData)
 		}
 
-		uint32DataInt, ok := uint32Data.(uint32)
+		uint32DataInt, ok := uint32Data.(float64)
 		if !ok {
 			return fmt.Errorf("%w: invalid uint32 data", ErrInvalidData)
 		}
 
-		encoder.Uint32(uint32DataInt)
+		encoder.Uint32(uint32(uint32DataInt))
 	}
 
 	for _, ua := range model.Uint32Arrays {
@@ -303,14 +342,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing uint32 array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]uint32)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid uint32 array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Uint32Kind)
 		for _, ad := range arrayDataSlice {
-			encoder.Uint32(ad)
+			j, ok := ad.(float64)
+			if !ok {
+				return fmt.Errorf("%w: invalid uint32 array data", ErrInvalidData)
+			}
+			encoder.Uint32(uint32(j))
 		}
 	}
 
@@ -320,12 +363,21 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing uint32 map data", ErrInvalidData)
 		}
 
-		mapDataMap, ok := mapData.(map[uint32]interface{})
+		mapDataMap, ok := mapData.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid uint32 map data", ErrInvalidData)
 		}
 
-		err = encodeMap[uint32](p, polyglot.Uint32Kind, um.Value, mapDataMap, encoder.Uint32, encoder)
+		convertedMapDataMap := make(map[uint32]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			i, err := strconv.ParseUint(k, 10, 32)
+			if err != nil {
+				return fmt.Errorf("%w: invalid uint32 map data", ErrInvalidData)
+			}
+			convertedMapDataMap[uint32(i)] = v
+		}
+
+		err = encodeMap[uint32](p, polyglot.Uint32Kind, um.Value, convertedMapDataMap, encoder.Uint32, encoder)
 		if err != nil {
 			return err
 		}
@@ -337,12 +389,12 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing uint64 data", ErrInvalidData)
 		}
 
-		uint64DataInt, ok := uint64Data.(uint64)
+		uint64DataInt, ok := uint64Data.(float64)
 		if !ok {
 			return fmt.Errorf("%w: invalid uint64 data", ErrInvalidData)
 		}
 
-		encoder.Uint64(uint64DataInt)
+		encoder.Uint64(uint64(uint64DataInt))
 	}
 
 	for _, ua := range model.Uint64Arrays {
@@ -351,14 +403,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing uint64 array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]uint64)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid uint64 array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Uint64Kind)
 		for _, ad := range arrayDataSlice {
-			encoder.Uint64(ad)
+			j, ok := ad.(float64)
+			if !ok {
+				return fmt.Errorf("%w: invalid uint64 array data", ErrInvalidData)
+			}
+			encoder.Uint64(uint64(j))
 		}
 	}
 
@@ -368,12 +424,21 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing uint64 map data", ErrInvalidData)
 		}
 
-		mapDataMap, ok := mapData.(map[uint64]interface{})
+		mapDataMap, ok := mapData.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid uint64 map data", ErrInvalidData)
 		}
 
-		err = encodeMap[uint64](p, polyglot.Uint64Kind, um.Value, mapDataMap, encoder.Uint64, encoder)
+		convertedMapDataMap := make(map[uint64]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			i, err := strconv.ParseUint(k, 10, 64)
+			if err != nil {
+				return fmt.Errorf("%w: invalid uint64 map data", ErrInvalidData)
+			}
+			convertedMapDataMap[uint64(i)] = v
+		}
+
+		err = encodeMap[uint64](p, polyglot.Uint64Kind, um.Value, convertedMapDataMap, encoder.Uint64, encoder)
 		if err != nil {
 			return err
 		}
@@ -385,12 +450,12 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing float32 data", ErrInvalidData)
 		}
 
-		float32DataFloat, ok := float32Data.(float32)
+		float32DataFloat, ok := float32Data.(float64)
 		if !ok {
 			return fmt.Errorf("%w: invalid float32 data", ErrInvalidData)
 		}
 
-		encoder.Float32(float32DataFloat)
+		encoder.Float32(float32(float32DataFloat))
 	}
 
 	for _, fa := range model.Float32Arrays {
@@ -399,14 +464,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing float32 array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]float32)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid float32 array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Float32Kind)
 		for _, ad := range arrayDataSlice {
-			encoder.Float32(ad)
+			j, ok := ad.(float64)
+			if !ok {
+				return fmt.Errorf("%w: invalid float32 array data", ErrInvalidData)
+			}
+			encoder.Float32(float32(j))
 		}
 	}
 
@@ -430,14 +499,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing float64 array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]float64)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid float64 array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Float64Kind)
 		for _, ad := range arrayDataSlice {
-			encoder.Float64(ad)
+			j, ok := ad.(float64)
+			if !ok {
+				return fmt.Errorf("%w: invalid float64 array data", ErrInvalidData)
+			}
+			encoder.Float64(j)
 		}
 	}
 
@@ -469,7 +542,7 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing enum array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]string)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid enum array data", ErrInvalidData)
 		}
@@ -481,7 +554,11 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.Uint32Kind)
 		for _, ad := range arrayDataSlice {
-			err = p.encodeEnum(schema, ad, encoder)
+			j, ok := ad.(string)
+			if !ok {
+				return fmt.Errorf("%w: invalid enum array data", ErrInvalidData)
+			}
+			err = p.encodeEnum(schema, j, encoder)
 			if err != nil {
 				return err
 			}
@@ -537,7 +614,7 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: invalid byte data", ErrInvalidData)
 		}
 
-		d, err := hex.DecodeString(byteDataString)
+		d, err := base64.StdEncoding.DecodeString(byteDataString)
 		if err != nil {
 			return fmt.Errorf("%w: invalid byte data", ErrInvalidData)
 		}
@@ -551,14 +628,18 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing byte array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]string)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid byte array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.BytesKind)
 		for _, ad := range arrayDataSlice {
-			d, err := hex.DecodeString(ad)
+			j, ok := ad.(string)
+			if !ok {
+				return fmt.Errorf("%w: invalid byte array data", ErrInvalidData)
+			}
+			d, err := base64.StdEncoding.DecodeString(j)
 			if err != nil {
 				return fmt.Errorf("%w: invalid byte array data", ErrInvalidData)
 			}
@@ -586,21 +667,25 @@ func (p *Parser) encodeModel(model *signature.ModelSchema, data map[string]inter
 			return fmt.Errorf("%w: missing bool array data", ErrInvalidData)
 		}
 
-		arrayDataSlice, ok := arrayData.([]bool)
+		arrayDataSlice, ok := arrayData.([]interface{})
 		if !ok {
 			return fmt.Errorf("%w: invalid bool array data", ErrInvalidData)
 		}
 
 		encoder.Slice(uint32(len(arrayDataSlice)), polyglot.BoolKind)
 		for _, ad := range arrayDataSlice {
-			encoder.Bool(ad)
+			j, ok := ad.(bool)
+			if !ok {
+				return fmt.Errorf("%w: invalid bool array data", ErrInvalidData)
+			}
+			encoder.Bool(j)
 		}
 	}
 
 	return nil
 }
 
-func (p *Parser) encodeEnum(enum *signature.EnumSchema, data string, encoder *polyglot.BufferEncoder) (err error) {
+func (p *Converter) encodeEnum(enum *signature.EnumSchema, data string, encoder *polyglot.BufferEncoder) (err error) {
 	for i, v := range enum.Values {
 		if v == data {
 			encoder.Uint32(uint32(i))
@@ -610,7 +695,7 @@ func (p *Parser) encodeEnum(enum *signature.EnumSchema, data string, encoder *po
 	return fmt.Errorf("%w: invalid enum data", ErrInvalidData)
 }
 
-func encodeMap[T comparable](parser *Parser, keyKind polyglot.Kind, valueName string, mapData map[T]interface{}, keyEncoder func(T) *polyglot.BufferEncoder, encoder *polyglot.BufferEncoder) error {
+func encodeMap[T comparable](parser *Converter, keyKind polyglot.Kind, valueName string, mapData map[T]interface{}, keyEncoder func(T) *polyglot.BufferEncoder, encoder *polyglot.BufferEncoder) error {
 	valueKind := polyglot.AnyKind
 	isPrimitive := signature.ValidPrimitiveType(valueName)
 	if isPrimitive {
@@ -634,7 +719,7 @@ func encodeMap[T comparable](parser *Parser, keyKind polyglot.Kind, valueName st
 		case "bytes":
 			valueKind = polyglot.BytesKind
 		default:
-			return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+			return fmt.Errorf("%w: invalid primitive map data: %s", ErrInvalidData, valueName)
 		}
 	}
 	encoder.Map(uint32(len(mapData)), keyKind, valueKind)
@@ -645,68 +730,68 @@ func encodeMap[T comparable](parser *Parser, keyKind polyglot.Kind, valueName st
 			case "string":
 				value, ok := v.(string)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive string map data", ErrInvalidData)
 				}
 				encoder.String(value)
 			case "int32":
-				value, ok := v.(int32)
+				value, ok := v.(float64)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive int32 map data", ErrInvalidData)
 				}
-				encoder.Int32(value)
+				encoder.Int32(int32(value))
 			case "int64":
-				value, ok := v.(int64)
+				value, ok := v.(float64)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive int64 map data", ErrInvalidData)
 				}
-				encoder.Int64(value)
+				encoder.Int64(int64(value))
 			case "uint32":
-				value, ok := v.(uint32)
+				value, ok := v.(float64)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive uint32 map data", ErrInvalidData)
 				}
-				encoder.Uint32(value)
+				encoder.Uint32(uint32(value))
 			case "uint64":
-				value, ok := v.(uint64)
+				value, ok := v.(float64)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive uint64 map data", ErrInvalidData)
 				}
-				encoder.Uint64(value)
+				encoder.Uint64(uint64(value))
 			case "float32":
-				value, ok := v.(float32)
+				value, ok := v.(float64)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive float32 map data", ErrInvalidData)
 				}
-				encoder.Float32(value)
+				encoder.Float32(float32(value))
 			case "float64":
 				value, ok := v.(float64)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive float64 map data", ErrInvalidData)
 				}
 				encoder.Float64(value)
 			case "bool":
 				value, ok := v.(bool)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive bool map data", ErrInvalidData)
 				}
 				encoder.Bool(value)
 			case "bytes":
 				value, ok := v.(string)
 				if !ok {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive bytes map data", ErrInvalidData)
 				}
 				valueBytes, err := hex.DecodeString(value)
 				if err != nil {
-					return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+					return fmt.Errorf("%w: invalid primitive bytes map data", ErrInvalidData)
 				}
 				encoder.Bytes(valueBytes)
 			default:
-				return fmt.Errorf("%w: invalid string map data", ErrInvalidData)
+				return fmt.Errorf("%w: invalid primitive map data: %s", ErrInvalidData, valueName)
 			}
 		} else {
 			model, ok := parser.models[valueName]
 			if !ok {
-				return fmt.Errorf("%w: invalid string map schema", ErrInvalidData)
+				return fmt.Errorf("%w: invalid reference map schema", ErrInvalidData)
 			}
 
 			modelDataMap, ok := v.(map[string]interface{})
@@ -716,13 +801,9 @@ func encodeMap[T comparable](parser *Parser, keyKind polyglot.Kind, valueName st
 
 			err := parser.encodeModel(model, modelDataMap, encoder)
 			if err != nil {
-				return fmt.Errorf("%w: error encoding string map %s: %w", ErrInvalidData, valueName, err)
+				return fmt.Errorf("%w: error encoding map %s: %w", ErrInvalidData, valueName, err)
 			}
 		}
 	}
 	return nil
 }
-
-//func ToSnakeCase(input string) string {
-//	return strings.ToLower(allCapitals.ReplaceAllString(firstCapital.ReplaceAllString(input, "${1}_${2}"), "${1}_${2}"))
-//}

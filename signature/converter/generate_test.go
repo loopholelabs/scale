@@ -1,4 +1,4 @@
-//go:build !integration && !generate
+//go:build generate
 
 /*
 	Copyright 2023 Loophole Labs
@@ -13,29 +13,24 @@
 	limitations under the License.
 */
 
-package rust
+package converter
 
 import (
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/golang"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 )
 
-func TestGenerator(t *testing.T) {
+func TestGenerateConverterSchema(t *testing.T) {
 	s := new(signature.Schema)
-	err := s.Decode([]byte(signature.MasterTestingSchema))
+	err := s.Decode([]byte(schema))
 	require.NoError(t, err)
 
-	formatted, err := Generate(s, "types", "v0.1.0")
+	formatted, err := golang.Generate(s, "generated", "v0.1.0")
 	require.NoError(t, err)
 
-	//os.WriteFile("./generated.txt", formatted, 0644)
-
-	master, err := os.ReadFile("./generated.txt")
+	err = os.WriteFile("./converter_tests/generated.go", formatted, 0644)
 	require.NoError(t, err)
-	require.Equal(t, string(master), string(formatted))
-
-	t.Log(string(formatted))
-
 }
