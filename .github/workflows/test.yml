@@ -35,6 +35,10 @@ jobs:
           check-latest: true
           cache: true
 
+      - uses: acifani/setup-tinygo@v1
+        with:
+          tinygo-version: '0.28.1'
+
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
