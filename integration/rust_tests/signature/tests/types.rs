@@ -3,8 +3,8 @@ mod tests {
     use std::fs;
     use std::error::Error;
     use std::io::{Cursor, Seek, SeekFrom};
-    use signature::types;
-    use signature::types::{Encode, Decode};
+    use local_example_latest_guest::types;
+    use local_example_latest_guest::types::{Encode, Decode};
 
     #[test]
     fn test_output() -> Result<(), Box<dyn Error>> {

@@ -62,7 +62,7 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 		GolangPolyglotVersion: version.Version(),
 
 		RustPackageName:     "local_example_latest_guest",
-		RustPackageVersion:  "0.1.0",
+		RustPackageVersion:  "v0.1.0",
 		RustPolyglotVersion: strings.TrimPrefix(version.Version(), "v"),
 	})
 	require.NoError(t, err)

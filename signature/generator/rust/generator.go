@@ -77,7 +77,7 @@ func (g *Generator) Generate(schema *signature.Schema, packageName string, scale
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "types.rs.templ", map[string]any{
 		"schema":  schema,
-		"version": scaleVersion,
+		"version": strings.TrimPrefix(scaleVersion, "v"),
 		"package": packageName,
 	})
 	if err != nil {
@@ -102,7 +102,7 @@ func (g *Generator) GenerateCargofile(packageName string, packageVersion string,
 		"scale_version":    strings.TrimPrefix(scaleVersion, "v"),
 		"polyglot_version": strings.TrimPrefix(polyglotVersion, "v"),
 		"package":          packageName,
-		"version":          packageVersion,
+		"version":          strings.TrimPrefix(packageVersion, "v"),
 	})
 	if err != nil {
 		return nil, err

@@ -225,7 +225,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 	case WASITarget:
 		target = "wasi"
 	default:
-		return nil, fmt.Errorf("unknown build target %s", options.Target)
+		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}
 
 	buildArgs := append([]string{"build", "-o", "scale.wasm"}, options.Args...)
@@ -387,7 +387,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 	case WASITarget:
 		target = "wasm32-wasi"
 	default:
-		return nil, fmt.Errorf("unknown build target %s", options.Target)
+		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}
 
 	buildArgs := append([]string{"build"}, options.Args...)
