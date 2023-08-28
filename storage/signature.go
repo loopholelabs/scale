@@ -149,8 +149,8 @@ func (s *SignatureStorage) Get(name string, tag string, org string, hash string)
 		Name:         name,
 		Tag:          tag,
 		Schema:       sig,
-		Hash:         getHashFromName(matches[0]),
-		Organization: getOrgFromName(matches[0]),
+		Hash:         getHashFromName(filepath.Base(matches[0])),
+		Organization: getOrgFromName(filepath.Base(matches[0])),
 	}, nil
 }
 
