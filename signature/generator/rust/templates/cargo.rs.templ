@@ -1,0 +1,20 @@
+[package]
+name = "{{ .package }}"
+version = "{{ .version }}"
+edition = "2021"
+
+[lib]
+path = "guest.rs"
+
+[dependencies]
+polyglot_rs = "{{ .polyglot_version }}"
+{{ if .scale_version }}
+scale_rs = "{{ .scale_version }}"
+{{ end }}
+num_enum = "0.7.0"
+regex = "1.9.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
+	"github.com/loopholelabs/scale/signature/generator/rust"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/zip"
 )
@@ -28,7 +29,8 @@ type GuestRegistryPackage struct {
 }
 
 type GuestLocalPackage struct {
-	GolangFiles []golang.File
+	GolangFiles []File
+	RustFiles   []File
 }
 
 type HostRegistryPackage struct {
@@ -37,16 +39,22 @@ type HostRegistryPackage struct {
 }
 
 type HostLocalPackage struct {
-	GolangFiles []golang.File
+	GolangFiles []File
 }
 
 type Options struct {
-	Version               string
-	Signature             *signature.Schema
+	Signature *signature.Schema
+
 	GolangImportPath      string
 	GolangPackageName     string
 	GolangPackageVersion  string
+	GolangScaleVersion    string
 	GolangPolyglotVersion string
+
+	RustPackageName     string
+	RustPackageVersion  string
+	RustScaleVersion    string
+	RustPolyglotVersion string
 }
 
 func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
@@ -56,25 +64,25 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.Version)
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.Version)
+	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangPolyglotVersion)
+	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangScaleVersion, options.GolangPolyglotVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	files := []zip.File{
-		golang.NewFile("types.go", "types.go", golangTypes),
-		golang.NewFile("guest.go", "guest.go", guest),
-		golang.NewFile("go.mod", "go.mod", modfile),
+		NewFile("types.go", "types.go", golangTypes),
+		NewFile("guest.go", "guest.go", guest),
+		NewFile("go.mod", "go.mod", modfile),
 	}
 
 	buffer := new(bytes.Buffer)
@@ -99,29 +107,51 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.Version)
+	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.Version)
+	golangGuest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangPolyglotVersion)
+	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangScaleVersion, options.GolangPolyglotVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	files := []golang.File{
-		golang.NewFile("types.go", "types.go", golangTypes),
-		golang.NewFile("guest.go", "guest.go", guest),
-		golang.NewFile("go.mod", "go.mod", modfile),
+	golangFiles := []File{
+		NewFile("types.go", "types.go", golangTypes),
+		NewFile("guest.go", "guest.go", golangGuest),
+		NewFile("go.mod", "go.mod", modfile),
+	}
+
+	rustTypes, err := rust.Generate(options.Signature, options.RustPackageName, options.RustScaleVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	rustGuest, err := rust.GenerateGuest(options.Signature, hashString, options.RustPackageName, options.RustScaleVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	cargofile, err := rust.GenerateCargofile(options.RustPackageName, options.RustPackageVersion, options.RustScaleVersion, options.RustPolyglotVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	rustFiles := []File{
+		NewFile("types.rs", "types.rs", rustTypes),
+		NewFile("guest.rs", "guest.rs", rustGuest),
+		NewFile("Cargo.toml", "Cargo.toml", cargofile),
 	}
 
 	return &GuestLocalPackage{
-		GolangFiles: files,
+		GolangFiles: golangFiles,
+		RustFiles:   rustFiles,
 	}, nil
 }
 
@@ -137,26 +167,26 @@ func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.Version)
+	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.Version)
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.GolangScaleVersion)
 
 	if err != nil {
 		return nil, err
 	}
 
-	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangPolyglotVersion)
+	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangScaleVersion, options.GolangPolyglotVersion)
 	if err != nil {
 		return nil, err
 	}
 
 	files := []zip.File{
-		golang.NewFile("types.go", "types.go", golangTypes),
-		golang.NewFile("host.go", "host.go", host),
-		golang.NewFile("go.mod", "go.mod", modfile),
+		NewFile("types.go", "types.go", golangTypes),
+		NewFile("host.go", "host.go", host),
+		NewFile("go.mod", "go.mod", modfile),
 	}
 
 	buffer := new(bytes.Buffer)
@@ -186,25 +216,25 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.Version)
+	golangTypes, err := golang.Generate(sig, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.Version)
+	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName, options.GolangScaleVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangPolyglotVersion)
+	modfile, err := golang.GenerateModfile(options.GolangImportPath, options.GolangScaleVersion, options.GolangPolyglotVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	files := []golang.File{
-		golang.NewFile("types.go", "types.go", golangTypes),
-		golang.NewFile("host.go", "host.go", host),
-		golang.NewFile("go.mod", "go.mod", modfile),
+	files := []File{
+		NewFile("types.go", "types.go", golangTypes),
+		NewFile("host.go", "host.go", host),
+		NewFile("go.mod", "go.mod", modfile),
 	}
 
 	return &HostLocalPackage{

@@ -1,0 +1,27 @@
+[package]
+name = "scale_rs"
+version = "0.3.2"
+edition = "2021"
+description = "A High-Performance WebAssembly Function Runtime"
+homepage = "https://scale.sh"
+repository = "https://github.com/loopholelabs/scale"
+license = "Apache-2.0"
+exclude = [
+    "**/*.go",
+    "**/*.ts",
+    "**/*.js",
+    "**/*.templ",
+    "go.mod",
+    "go.sum",
+    "*.ts",
+    "*.js",
+    "*.json"
+]
+
+[lib]
+path = "scale.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

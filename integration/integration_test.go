@@ -1,5 +1,3 @@
-//go:build integration && !generate
-
 /*
 	Copyright 2023 Loophole Labs
 	Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +16,10 @@ package integration
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/loopholelabs/polyglot/version"
 	"github.com/loopholelabs/scale/build"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
-	"github.com/loopholelabs/scale/signature/generator"
-	"github.com/loopholelabs/scale/signature/generator/rust"
 	"github.com/loopholelabs/scale/signature/generator/typescript"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -93,21 +88,7 @@ func TestGolangToGolang(t *testing.T) {
 	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	guest, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             s,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
-	})
-	require.NoError(t, err)
-
 	golangSignatureDir := wd + "/golang_tests/signature"
-	for _, file := range guest.GolangFiles {
-		err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
-		require.NoError(t, err)
-	}
-
 	cmd := exec.Command("go", "mod", "tidy")
 	cmd.Dir = golangSignatureDir
 	out, err := cmd.CombinedOutput()
@@ -128,26 +109,22 @@ func TestGolangToGolang(t *testing.T) {
 }
 
 func TestRustToRust(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
 	s := new(signature.Schema)
-	err := s.Decode([]byte(signature.MasterTestingSchema))
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	const rustDir = "./rust_tests"
-
-	formatted, err := rust.Generate(s, "rust_tests", "v0.1.0")
-	require.NoError(t, err)
-
-	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
-	require.NoError(t, err)
-
+	rustSignatureDir := wd + "/rust_tests/signature"
 	cmd := exec.Command("cargo", "test", "test_output")
-	cmd.Dir = rustDir
+	cmd.Dir = rustSignatureDir
 	out, err := cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
 
 	cmd = exec.Command("cargo", "test", "test_input")
-	cmd.Dir = rustDir
+	cmd.Dir = rustSignatureDir
 	out, err = cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
@@ -187,28 +164,8 @@ func TestGolangToRust(t *testing.T) {
 	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	guest, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             s,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
-	})
-	require.NoError(t, err)
-
 	golangSignatureDir := wd + "/golang_tests/signature"
-	for _, file := range guest.GolangFiles {
-		err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
-		require.NoError(t, err)
-	}
-
-	const rustDir = "./rust_tests"
-
-	formatted, err := rust.Generate(s, "rust_tests", "v0.1.0")
-	require.NoError(t, err)
-
-	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
-	require.NoError(t, err)
+	rustSignatureDir := wd + "/rust_tests/signature"
 
 	cmd := exec.Command("go", "mod", "tidy")
 	cmd.Dir = golangSignatureDir
@@ -222,8 +179,14 @@ func TestGolangToRust(t *testing.T) {
 	assert.NoError(t, err)
 	t.Log(string(out))
 
+	cmd = exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
 	cmd = exec.Command("cargo", "test", "test_input")
-	cmd.Dir = rustDir
+	cmd.Dir = rustSignatureDir
 	out, err = cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
@@ -237,20 +200,7 @@ func TestGolangToTypescript(t *testing.T) {
 	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	guest, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             s,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
-	})
-	require.NoError(t, err)
-
 	golangSignatureDir := wd + "/golang_tests/signature"
-	for _, file := range guest.GolangFiles {
-		err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
-		require.NoError(t, err)
-	}
 
 	const typescriptDir = "./typescript_tests"
 
@@ -287,32 +237,18 @@ func TestRustToGolang(t *testing.T) {
 	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	guest, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             s,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
-	})
-	require.NoError(t, err)
-
 	golangSignatureDir := wd + "/golang_tests/signature"
-	for _, file := range guest.GolangFiles {
-		err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
-		require.NoError(t, err)
-	}
+	rustSignatureDir := wd + "/rust_tests/signature"
 
-	const rustDir = "./rust_tests"
-
-	formatted, err := rust.Generate(s, "rust_tests", "v0.1.0")
-	require.NoError(t, err)
-
-	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
-	require.NoError(t, err)
-
-	cmd := exec.Command("cargo", "test", "test_output")
-	cmd.Dir = rustDir
+	cmd := exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
 	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_output")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
 
@@ -330,9 +266,14 @@ func TestRustToGolang(t *testing.T) {
 }
 
 func TestRustToTypescript(t *testing.T) {
-	s := new(signature.Schema)
-	err := s.Decode([]byte(signature.MasterTestingSchema))
+	wd, err := os.Getwd()
 	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	rustSignatureDir := wd + "/rust_tests/signature"
 
 	const typescriptDir = "./typescript_tests"
 
@@ -342,17 +283,15 @@ func TestRustToTypescript(t *testing.T) {
 	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
 	require.NoError(t, err)
 
-	const rustDir = "./rust_tests"
-
-	formatted, err = rust.Generate(s, "rust_tests", "v0.1.0")
-	require.NoError(t, err)
-
-	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
-	require.NoError(t, err)
-
-	cmd := exec.Command("cargo", "test", "test_output")
-	cmd.Dir = rustDir
+	cmd := exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
 	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_output")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
 
@@ -371,31 +310,17 @@ func TestTypescriptToGolang(t *testing.T) {
 	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	guest, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             s,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
-	})
-	require.NoError(t, err)
-
 	golangSignatureDir := wd + "/golang_tests/signature"
-	for _, file := range guest.GolangFiles {
-		err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
-		require.NoError(t, err)
-	}
-
-	const typescriptDir = "./typescript_tests"
+	typescriptSignatureDir := wd + "/typescript_tests/signature"
 
 	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
-	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
+	err = os.WriteFile(typescriptSignatureDir+"/generated.ts", formatted, 0644)
 	require.NoError(t, err)
 
 	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-output")
-	cmd.Dir = typescriptDir
+	cmd.Dir = typescriptSignatureDir
 	out, err := cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
@@ -414,34 +339,36 @@ func TestTypescriptToGolang(t *testing.T) {
 }
 
 func TestTypescriptToRust(t *testing.T) {
-	s := new(signature.Schema)
-	err := s.Decode([]byte(signature.MasterTestingSchema))
+	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	const typescriptDir = "./typescript_tests"
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	rustSignatureDir := wd + "/rust_tests/signature"
+	typescriptSignatureDir := wd + "/typescript_tests/signature"
 
 	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
 	require.NoError(t, err)
 
-	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
-	require.NoError(t, err)
-
-	const rustDir = "./rust_tests"
-
-	formatted, err = rust.Generate(s, "rust_tests", "v0.1.0")
-	require.NoError(t, err)
-
-	err = os.WriteFile(rustDir+"/generated.rs", formatted, 0644)
+	err = os.WriteFile(typescriptSignatureDir+"/generated.ts", formatted, 0644)
 	require.NoError(t, err)
 
 	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-output")
-	cmd.Dir = typescriptDir
+	cmd.Dir = typescriptSignatureDir
 	out, err := cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))
 
+	cmd = exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
 	cmd = exec.Command("cargo", "test", "test_input")
-	cmd.Dir = rustDir
+	cmd.Dir = rustSignatureDir
 	out, err = cmd.CombinedOutput()
 	assert.NoError(t, err)
 	t.Log(string(out))

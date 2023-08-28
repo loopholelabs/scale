@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package golang
+package generator
 
 import (
 	"bytes"

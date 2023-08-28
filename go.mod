@@ -3,6 +3,7 @@ module github.com/loopholelabs/scale
 go 1.20
 
 require (
+	github.com/BurntSushi/toml v1.3.2
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/hcl/v2 v2.17.0
 	github.com/loopholelabs/polyglot v1.1.2

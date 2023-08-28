@@ -1,5 +1,3 @@
-//go:build integration && generate
-
 /*
 	Copyright 2023 Loophole Labs
 	Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +18,11 @@ import (
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator"
 	"github.com/loopholelabs/scale/signature/generator/golang"
+	"github.com/loopholelabs/scale/signature/generator/rust"
+	"github.com/loopholelabs/scale/signature/generator/typescript"
 	"github.com/stretchr/testify/require"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -53,17 +54,28 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 	require.Equal(t, "ModelWithAllFieldTypes", s.Context)
 
 	guest, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             s,
+		Signature: s,
+
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",
 		GolangPackageVersion:  "v0.1.0",
 		GolangPolyglotVersion: version.Version(),
+
+		RustPackageName:     "signature",
+		RustPackageVersion:  "0.1.0",
+		RustPolyglotVersion: strings.TrimPrefix(version.Version(), "v"),
 	})
 	require.NoError(t, err)
 
 	golangSignatureDir := wd + "/golang_tests/signature"
 	for _, file := range guest.GolangFiles {
 		err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
+		require.NoError(t, err)
+	}
+
+	rustSignatureDir := wd + "/rust_tests/signature"
+	for _, file := range guest.RustFiles {
+		err = os.WriteFile(rustSignatureDir+"/"+file.Name(), file.Data(), 0644)
 		require.NoError(t, err)
 	}
 }
@@ -73,9 +85,21 @@ func TestGenerateSimpleSchema(t *testing.T) {
 	err := s.Decode([]byte(simpleSchema))
 	require.NoError(t, err)
 
-	formatted, err := golang.Generate(s, "generated", "v0.1.0")
+	formatted, err := golang.Generate(s, "generated", "")
 	require.NoError(t, err)
 
 	err = os.WriteFile("./golang_tests/generated/generated.go", formatted, 0644)
+	require.NoError(t, err)
+
+	formatted, err = rust.Generate(s, "generated", "v0.1.0")
+	require.NoError(t, err)
+
+	err = os.WriteFile("./rust_tests/generated/generated.rs", formatted, 0644)
+	require.NoError(t, err)
+
+	formatted, err = typescript.Generate(s, "generated", "v0.1.0")
+	require.NoError(t, err)
+
+	err = os.WriteFile("./typescript_tests/generated/generated.ts", formatted, 0644)
 	require.NoError(t, err)
 }

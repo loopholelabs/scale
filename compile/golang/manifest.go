@@ -14,11 +14,8 @@
 package golang
 
 import (
-	"github.com/loopholelabs/scale/compile"
 	"golang.org/x/mod/modfile"
 )
-
-var _ compile.Manifest = (*Manifest)(nil)
 
 type Manifest struct {
 	modfile *modfile.File
