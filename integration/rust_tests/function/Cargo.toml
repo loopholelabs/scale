@@ -7,10 +7,6 @@ edition = "2021"
 path = "lib.rs"
 
 [dependencies]
-polyglot_rs = "1.1.2"
-num_enum = "0.7.0"
-regex = "1.9.4"
-
 signature = { package = "local_example_latest_guest", path = "../signature"}
 
 [profile.release]

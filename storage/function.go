@@ -56,8 +56,7 @@ type FunctionStorage struct {
 }
 
 func NewFunction(baseDirectory string) (*FunctionStorage, error) {
-	dir := path.Join(baseDirectory, FunctionDirectory)
-	err := os.MkdirAll(dir, 0755)
+	err := os.MkdirAll(baseDirectory, 0755)
 	if err != nil {
 		if !os.IsExist(err) {
 			return nil, err
@@ -65,7 +64,7 @@ func NewFunction(baseDirectory string) (*FunctionStorage, error) {
 	}
 
 	return &FunctionStorage{
-		Directory: dir,
+		Directory: baseDirectory,
 	}, nil
 }
 

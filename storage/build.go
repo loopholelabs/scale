@@ -51,8 +51,7 @@ func init() {
 }
 
 func NewBuild(baseDirectory string) (*BuildStorage, error) {
-	dir := path.Join(baseDirectory, BuildDirectory)
-	err := os.MkdirAll(dir, 0755)
+	err := os.MkdirAll(baseDirectory, 0755)
 	if err != nil {
 		if !os.IsExist(err) {
 			return nil, err
@@ -60,7 +59,7 @@ func NewBuild(baseDirectory string) (*BuildStorage, error) {
 	}
 
 	return &BuildStorage{
-		Directory: dir,
+		Directory: baseDirectory,
 	}, nil
 }
 

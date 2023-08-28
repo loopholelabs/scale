@@ -61,8 +61,7 @@ func init() {
 }
 
 func NewSignature(baseDirectory string) (*SignatureStorage, error) {
-	dir := path.Join(baseDirectory, SignatureDirectory)
-	err := os.MkdirAll(dir, 0755)
+	err := os.MkdirAll(baseDirectory, 0755)
 	if err != nil {
 		if !os.IsExist(err) {
 			return nil, err
@@ -70,7 +69,7 @@ func NewSignature(baseDirectory string) (*SignatureStorage, error) {
 	}
 
 	return &SignatureStorage{
-		Directory: dir,
+		Directory: baseDirectory,
 	}, nil
 }
 
