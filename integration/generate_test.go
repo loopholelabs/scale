@@ -78,6 +78,23 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 		err = os.WriteFile(rustSignatureDir+"/"+file.Name(), file.Data(), 0644)
 		require.NoError(t, err)
 	}
+
+	host, err := generator.GenerateHostLocal(&generator.Options{
+		Signature:             s,
+		GolangImportPath:      "signature",
+		GolangPackageName:     "signature",
+		GolangPackageVersion:  "v0.1.0",
+		GolangPolyglotVersion: version.Version(),
+	})
+	require.NoError(t, err)
+
+	golangSignatureDir = wd + "/golang_tests/host_signature"
+	for _, file := range host.GolangFiles {
+		if file.Name() != "go.mod" {
+			err = os.WriteFile(golangSignatureDir+"/"+file.Name(), file.Data(), 0644)
+			require.NoError(t, err)
+		}
+	}
 }
 
 func TestGenerateSimpleSchema(t *testing.T) {

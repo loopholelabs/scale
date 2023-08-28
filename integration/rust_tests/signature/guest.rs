@@ -18,20 +18,19 @@ static mut WRITE_BUFFER: Vec<u8> = Vec::new();
 pub unsafe fn write(ctx: Option<&mut types::ModelWithAllFieldTypes>) -> (u32, u32) {
     let mut cursor = Cursor::new(Vec::new());
     match ctx {
-        Some(c) => {
-            cursor = match types::ModelWithAllFieldTypes::encode(Some(c), &mut cursor) {
+        Some(ctx) => {
+            cursor = match types::ModelWithAllFieldTypes::encode(Some(ctx), &mut cursor) {
                 Ok(_) => cursor,
                 Err(err) => return error(err),
             };
-        },
+        }
         None => {
-            cursor = match cursor.encode_none() {
+            cursor = match types::ModelWithAllFieldTypes::encode(None, &mut cursor) {
                 Ok(_) => cursor,
-                Err(err) => return error(Box::new(err)),
+                Err(err) => return error(err),
             };
         }
     }
-
     let vec = cursor.into_inner();
 
     WRITE_BUFFER.resize(vec.len() as usize, 0);

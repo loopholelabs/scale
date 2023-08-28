@@ -10,20 +10,20 @@ mod tests {
     fn test_output() -> Result<(), Box<dyn Error>> {
         let mut buf = Cursor::new(Vec::new());
 
-        let nil_model: Option<types::EmptyModel> = None;
-        types::EmptyModel::encode(&nil_model, &mut buf)?;
+        let nil_model: Option<&types::EmptyModel> = None;
+        types::EmptyModel::encode(nil_model, &mut buf)?;
         fs::write("../../test_data/nil_model.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
 
         let empty_model = types::EmptyModel::new();
-        types::EmptyModel::encode(&Some(empty_model.clone()), &mut buf)?;
+        types::EmptyModel::encode(Some(&empty_model), &mut buf)?;
         fs::write("../../test_data/empty_model.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
 
         let empty_model_with_description = types::EmptyModelWithDescription::new();
-        types::EmptyModelWithDescription::encode(&Some(empty_model_with_description), &mut buf)?;
+        types::EmptyModelWithDescription::encode(Some(&empty_model_with_description), &mut buf)?;
         fs::write("../../test_data/empty_model_with_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -31,7 +31,7 @@ mod tests {
         let mut model_with_single_string_field = types::ModelWithSingleStringField::new();
         assert_eq!(model_with_single_string_field.string_field, String::from("DefaultValue"));
         model_with_single_string_field.string_field = String::from("hello world");
-        types::ModelWithSingleStringField::encode(&Some(model_with_single_string_field), &mut buf)?;
+        types::ModelWithSingleStringField::encode(Some(&model_with_single_string_field), &mut buf)?;
         fs::write("../../test_data/model_with_single_string_field.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -39,7 +39,7 @@ mod tests {
         let mut model_with_single_string_field_and_description = types::ModelWithSingleStringFieldAndDescription::new();
         assert_eq!(model_with_single_string_field_and_description.string_field, String::from("DefaultValue"));
         model_with_single_string_field_and_description.string_field = String::from("hello world");
-        types::ModelWithSingleStringFieldAndDescription::encode(&Some(model_with_single_string_field_and_description), &mut buf)?;
+        types::ModelWithSingleStringFieldAndDescription::encode(Some(&model_with_single_string_field_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_single_string_field_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -47,7 +47,7 @@ mod tests {
         let mut model_with_single_int32_field = types::ModelWithSingleInt32Field::new();
         assert_eq!(model_with_single_int32_field.int32_field, 32);
         model_with_single_int32_field.int32_field = 42;
-        types::ModelWithSingleInt32Field::encode(&Some(model_with_single_int32_field), &mut buf)?;
+        types::ModelWithSingleInt32Field::encode(Some(&model_with_single_int32_field), &mut buf)?;
         fs::write("../../test_data/model_with_single_int32_field.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -55,7 +55,7 @@ mod tests {
         let mut model_with_single_int32_field_and_description = types::ModelWithSingleInt32FieldAndDescription::new();
         assert_eq!(model_with_single_int32_field_and_description.int32_field, 32);
         model_with_single_int32_field_and_description.int32_field = 42;
-        types::ModelWithSingleInt32FieldAndDescription::encode(&Some(model_with_single_int32_field_and_description), &mut buf)?;
+        types::ModelWithSingleInt32FieldAndDescription::encode(Some(&model_with_single_int32_field_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_single_int32_field_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -65,7 +65,7 @@ mod tests {
         assert_eq!(model_with_multiple_fields.int32_field, 32);
         model_with_multiple_fields.string_field = String::from("hello world");
         model_with_multiple_fields.int32_field = 42;
-        types::ModelWithMultipleFields::encode(&Some(model_with_multiple_fields), &mut buf)?;
+        types::ModelWithMultipleFields::encode(Some(&model_with_multiple_fields), &mut buf)?;
         fs::write("../../test_data/model_with_multiple_fields.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -75,7 +75,7 @@ mod tests {
         assert_eq!(model_with_multiple_fields_and_description.int32_field, 32);
         model_with_multiple_fields_and_description.string_field = String::from("hello world");
         model_with_multiple_fields_and_description.int32_field = 42;
-        types::ModelWithMultipleFieldsAndDescription::encode(&Some(model_with_multiple_fields_and_description), &mut buf)?;
+        types::ModelWithMultipleFieldsAndDescription::encode(Some(&model_with_multiple_fields_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_multiple_fields_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -83,7 +83,7 @@ mod tests {
         let mut model_with_enum = types::ModelWithEnum::new();
         assert_eq!(model_with_enum.enum_field, types::GenericEnum::DefaultValue);
         model_with_enum.enum_field = types::GenericEnum::SecondValue;
-        types::ModelWithEnum::encode(&Some(model_with_enum), &mut buf)?;
+        types::ModelWithEnum::encode(Some(&model_with_enum), &mut buf)?;
         fs::write("../../test_data/model_with_enum.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -91,7 +91,7 @@ mod tests {
         let mut model_with_enum_and_description = types::ModelWithEnumAndDescription::new();
         assert_eq!(model_with_enum_and_description.enum_field, types::GenericEnum::DefaultValue);
         model_with_enum_and_description.enum_field = types::GenericEnum::SecondValue;
-        types::ModelWithEnumAndDescription::encode(&Some(model_with_enum_and_description), &mut buf)?;
+        types::ModelWithEnumAndDescription::encode(Some(&model_with_enum_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_enum_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -100,7 +100,7 @@ mod tests {
         let default_enum_value = model_with_enum_accessor.get_enum_field();
         assert_eq!(*default_enum_value, types::GenericEnum::DefaultValue);
         model_with_enum_accessor.set_enum_field(types::GenericEnum::SecondValue);
-        types::ModelWithEnumAccessor::encode(&Some(model_with_enum_accessor), &mut buf)?;
+        types::ModelWithEnumAccessor::encode(Some(&model_with_enum_accessor), &mut buf)?;
         fs::write("../../test_data/model_with_enum_accessor.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -109,7 +109,7 @@ mod tests {
         let default_enum_value = model_with_enum_accessor_and_description.get_enum_field();
         assert_eq!(*default_enum_value, types::GenericEnum::DefaultValue);
         model_with_enum_accessor_and_description.set_enum_field(types::GenericEnum::SecondValue);
-        types::ModelWithEnumAccessorAndDescription::encode(&Some(model_with_enum_accessor_and_description), &mut buf)?;
+        types::ModelWithEnumAccessorAndDescription::encode(Some(&model_with_enum_accessor_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_enum_accessor_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -127,7 +127,7 @@ mod tests {
         assert!(model_with_multiple_fields_accessor.set_int32_field(-1).is_err());
         assert!(model_with_multiple_fields_accessor.set_int32_field(101).is_err());
         model_with_multiple_fields_accessor.set_int32_field(42)?;
-        types::ModelWithMultipleFieldsAccessor::encode(&Some(model_with_multiple_fields_accessor.clone()), &mut buf)?;
+        types::ModelWithMultipleFieldsAccessor::encode(Some(&model_with_multiple_fields_accessor), &mut buf)?;
         fs::write("../../test_data/model_with_multiple_fields_accessor.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -139,7 +139,7 @@ mod tests {
         assert_eq!(int32_value, 32);
         model_with_multiple_fields_accessor_and_description.set_string_field(String::from("hello world"))?;
         model_with_multiple_fields_accessor_and_description.set_int32_field(42)?;
-        types::ModelWithMultipleFieldsAccessorAndDescription::encode(&Some(model_with_multiple_fields_accessor_and_description), &mut buf)?;
+        types::ModelWithMultipleFieldsAccessorAndDescription::encode(Some(&model_with_multiple_fields_accessor_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_multiple_fields_accessor_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -149,7 +149,7 @@ mod tests {
         assert_eq!(model_with_embedded_models.embedded_model_array_with_multiple_fields_accessor.capacity(), 64);
         assert_eq!(model_with_embedded_models.embedded_model_array_with_multiple_fields_accessor.len(), 0);
         model_with_embedded_models.embedded_model_array_with_multiple_fields_accessor.push(model_with_multiple_fields_accessor.clone());
-        types::ModelWithEmbeddedModels::encode(&Some(model_with_embedded_models), &mut buf)?;
+        types::ModelWithEmbeddedModels::encode(Some(&model_with_embedded_models), &mut buf)?;
         fs::write("../../test_data/model_with_embedded_models.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(model_with_embedded_models_and_description.embedded_model_array_with_multiple_fields_accessor.capacity(), 0);
         assert_eq!(model_with_embedded_models_and_description.embedded_model_array_with_multiple_fields_accessor.len(), 0);
         model_with_embedded_models_and_description.embedded_model_array_with_multiple_fields_accessor.push(model_with_multiple_fields_accessor.clone());
-        types::ModelWithEmbeddedModelsAndDescription::encode(&Some(model_with_embedded_models_and_description), &mut buf)?;
+        types::ModelWithEmbeddedModelsAndDescription::encode(Some(&model_with_embedded_models_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_embedded_models_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -171,7 +171,7 @@ mod tests {
         assert_eq!(embedded_model_array.capacity(), 0);
         assert_eq!(embedded_model_array.len(), 0);
         model_with_embedded_models_accessor.set_embedded_model_array_with_multiple_fields_accessor(vec![model_with_multiple_fields_accessor.clone()]);
-        types::ModelWithEmbeddedModelsAccessor::encode(&Some(model_with_embedded_models_accessor), &mut buf)?;
+        types::ModelWithEmbeddedModelsAccessor::encode(Some(&model_with_embedded_models_accessor), &mut buf)?;
         fs::write("../../test_data/model_with_embedded_models_accessor.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -183,7 +183,7 @@ mod tests {
         assert_eq!(embedded_model_array.capacity(), 0);
         assert_eq!(embedded_model_array.len(), 0);
         model_with_embedded_models_accessor_and_description.set_embedded_model_array_with_multiple_fields_accessor(vec![model_with_multiple_fields_accessor.clone()]);
-        types::ModelWithEmbeddedModelsAccessorAndDescription::encode(&Some(model_with_embedded_models_accessor_and_description), &mut buf)?;
+        types::ModelWithEmbeddedModelsAccessorAndDescription::encode(Some(&model_with_embedded_models_accessor_and_description), &mut buf)?;
         fs::write("../../test_data/model_with_embedded_models_accessor_and_description.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();
@@ -290,7 +290,7 @@ mod tests {
         model_with_all_field_types.model_array_field.push(empty_model.clone());
         model_with_all_field_types.model_array_field.push(empty_model.clone());
 
-        types::ModelWithAllFieldTypes::encode(&Some(model_with_all_field_types), &mut buf)?;
+        types::ModelWithAllFieldTypes::encode(Some(&model_with_all_field_types), &mut buf)?;
         fs::write("../../test_data/model_with_all_field_types.bin", buf.get_ref())?;
         buf.seek(SeekFrom::Start(0))?;
         buf.get_mut().clear();

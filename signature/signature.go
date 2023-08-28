@@ -314,6 +314,10 @@ func (s *Schema) CloneWithDisabledAccessorsValidatorsAndModifiers() (*Schema, er
 	if err != nil {
 		return nil, err
 	}
+	clone.hasCaseModifier = false
+	clone.hasLimitValidator = false
+	clone.hasRegexValidator = false
+	clone.hasLengthValidator = false
 	for _, model := range clone.Models {
 		for _, modelReference := range model.Models {
 			modelReference.Accessor = false
@@ -457,7 +461,7 @@ func (s *Schema) CloneWithDisabledAccessorsValidatorsAndModifiers() (*Schema, er
 		}
 	}
 
-	return clone, nil
+	return clone, clone.validateAndNormalize()
 }
 
 // HasLimitValidator returns true if the schema has a limit validator

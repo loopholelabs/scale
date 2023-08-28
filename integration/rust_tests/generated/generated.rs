@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use regex::Regex;
 
 pub trait Encode {
-    fn encode<'a> (a: &Option<Self>, b: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> where Self: Sized;
+    fn encode<'a> (a: Option<&Self>, b: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> where Self: Sized;
 }
 
 trait EncodeSelf {
@@ -259,7 +259,7 @@ pub trait Decode {
     }
 
     impl Encode for Context {
-        fn encode<'a> (a: &Option<Context>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        fn encode<'a> (a: Option<&Context>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
             a.encode_self(e)
         }
     }
@@ -360,6 +360,17 @@ pub trait Decode {
     
 
 
+            Ok(e)
+        }
+    }
+
+    impl EncodeSelf for Option<&Context> {
+        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+            if let Some(x) = self {
+                x.encode_self(e)?;
+            } else {
+                e.encode_none()?;
+            }
             Ok(e)
         }
     }

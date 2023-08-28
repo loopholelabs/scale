@@ -22,7 +22,7 @@ trait EncodeSelf {
 }
 
 pub trait Decode {
-    fn decode<'a>(b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<Self>, Box<dyn std::error::Error>> where Self: Sized;
+    fn decode (b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<Self>, Box<dyn std::error::Error>> where Self: Sized;
 }
     
     #[derive(Debug, Eq, PartialEq, TryFromPrimitive, Copy, Clone, Hash)]
