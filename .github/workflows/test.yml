@@ -40,14 +40,11 @@ jobs:
           tinygo-version: '0.28.1'
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
-
-      - name: Add wasm32-unknown-unknown Toolchain
-        run: rustup target add wasm32-unknown-unknown
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          rustup target add wasm32-unknown-unknown
+        shell: bash
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
