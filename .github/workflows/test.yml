@@ -43,7 +43,7 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
-          rustup target add wasm32-unknown-unknown
+          rustup target add wasm32-wasi
         shell: bash
 
       - name: Setup Node.js

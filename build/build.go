@@ -31,6 +31,12 @@ import (
 	"path"
 )
 
+type Target int
+
+const (
+	WASITarget Target = iota
+)
+
 var (
 	ErrNoGo     = errors.New("go not found in PATH. Please install go: https://golang.org/doc/install")
 	ErrNoTinyGo = errors.New("tinygo not found in PATH. Please install tinygo: https://tinygo.org/getting-started/")
@@ -45,6 +51,8 @@ type LocalGolangOptions struct {
 	SignaturePath    string
 	SignatureSchema  *signature.Schema
 	StorageDirectory string
+	Release          bool
+	Target           Target
 	GoBin            string
 	TinyGoBin        string
 	Args             []string
@@ -57,6 +65,8 @@ type LocalRustOptions struct {
 	SignaturePath    string
 	SignatureSchema  *signature.Schema
 	StorageDirectory string
+	Release          bool
+	Target           Target
 	Registry         string
 	CargoBin         string
 	Args             []string
@@ -210,8 +220,19 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
-	buildArgs := append([]string{"build", "-o", "scale.wasm", "-target=wasi"}, options.Args...)
-	buildArgs = append(buildArgs, "main.go")
+	var target string
+	switch options.Target {
+	case WASITarget:
+		target = "wasi"
+	default:
+		return nil, fmt.Errorf("unknown build target %s", options.Target)
+	}
+
+	buildArgs := append([]string{"build", "-o", "scale.wasm"}, options.Args...)
+	if options.Release {
+		buildArgs = append(buildArgs, "-no-debug")
+	}
+	buildArgs = append(buildArgs, "-target", target, "main.go")
 
 	cmd = exec.Command(options.TinyGoBin, buildArgs...)
 	cmd.Dir = compilePath
@@ -361,9 +382,23 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
-	buildsArgs := append([]string{"build", "--target=wasm32-unknown-unknown"}, options.Args...)
+	var target string
+	switch options.Target {
+	case WASITarget:
+		target = "wasm32-wasi"
+	default:
+		return nil, fmt.Errorf("unknown build target %s", options.Target)
+	}
 
-	cmd = exec.Command(options.CargoBin, buildsArgs...)
+	buildArgs := append([]string{"build"}, options.Args...)
+	if options.Release {
+		buildArgs = append(buildArgs, "--release")
+	} else {
+		buildArgs = append(buildArgs, "--debug")
+	}
+	buildArgs = append(buildArgs, "--target", target)
+
+	cmd = exec.Command(options.CargoBin, buildArgs...)
 	cmd.Dir = compilePath
 
 	output, err = cmd.CombinedOutput()

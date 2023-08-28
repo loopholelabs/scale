@@ -72,6 +72,8 @@ func TestGolangE2E(t *testing.T) {
 		SignatureSchema:  s,
 		SourceDirectory:  golangFunctionDir,
 		StorageDirectory: golangCompileDir,
+		Release:          false,
+		Target:           build.WASITarget,
 	})
 	require.NoError(t, err)
 
@@ -139,6 +141,8 @@ func TestRustE2E(t *testing.T) {
 		SignatureSchema:  s,
 		SourceDirectory:  rustFunctionDir,
 		StorageDirectory: rustCompileDir,
+		Release:          false,
+		Target:           build.WASITarget,
 	})
 	require.NoError(t, err)
 
