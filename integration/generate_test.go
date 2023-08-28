@@ -61,7 +61,7 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 		GolangPackageVersion:  "v0.1.0",
 		GolangPolyglotVersion: version.Version(),
 
-		RustPackageName:     "signature",
+		RustPackageName:     "local_example_latest_guest",
 		RustPackageVersion:  "0.1.0",
 		RustPolyglotVersion: strings.TrimPrefix(version.Version(), "v"),
 	})

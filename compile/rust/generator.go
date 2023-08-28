@@ -25,8 +25,8 @@ import (
 
 var generator *Generator
 
-func GenerateRustCargofile(schema *scalefile.Schema, registry string, signatureVersion string, signaturePath string, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
-	return generator.GenerateRustCargofile(schema, registry, signatureVersion, signaturePath, functionPath, dependencies, packageName, packageVersion)
+func GenerateRustCargofile(schema *scalefile.Schema, registry string, signaturePackage string, signatureVersion string, signaturePath string, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+	return generator.GenerateRustCargofile(schema, registry, signaturePackage, signatureVersion, signaturePath, functionPath, dependencies, packageName, packageVersion)
 }
 
 func GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
@@ -47,7 +47,7 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, registry string, signatureVersion string, signaturePath string, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, registry string, signaturePackage string, signatureVersion string, signaturePath string, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
 	if !strings.HasPrefix(signaturePath, "/") && !strings.HasPrefix(signaturePath, "./") && !strings.HasPrefix(signaturePath, "../") {
 		signaturePath = "./" + signaturePath
 	}
@@ -63,6 +63,7 @@ func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, registry str
 		"dependencies":         dependencies,
 		"registry":             registry,
 		"signature_dependency": "signature",
+		"signature_package":    signaturePackage,
 		"signature_path":       signaturePath,
 		"signature_version":    signatureVersion,
 		"function_dependency":  schema.Name,

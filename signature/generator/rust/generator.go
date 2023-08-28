@@ -35,8 +35,8 @@ func Generate(schema *signature.Schema, packageName string, scaleVersion string)
 }
 
 // GenerateCargofile generates the cargo.toml file for the signature
-func GenerateCargofile(packageName string, version string, scaleVersion string, polyglotVersion string) ([]byte, error) {
-	return generator.GenerateCargofile(packageName, version, scaleVersion, polyglotVersion)
+func GenerateCargofile(packageName string, packageVersion string, scaleVersion string, polyglotVersion string) ([]byte, error) {
+	return generator.GenerateCargofile(packageName, packageVersion, scaleVersion, polyglotVersion)
 }
 
 func GenerateGuest(schema *signature.Schema, hash string, packageName string, scaleVersion string) ([]byte, error) {

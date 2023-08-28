@@ -11,7 +11,7 @@ polyglot_rs = "1.1.2"
 num_enum = "0.7.0"
 regex = "1.9.4"
 
-signature = { path = "../signature"}
+signature = { package = "local_example_latest_guest", path = "../signature"}
 
 [profile.release]
 opt-level = 3

@@ -157,7 +157,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
 			}
-			err = storage.GenerateSignature(storageSig.Schema, signaturePath)
+			err = storage.GenerateSignature(storageSig.Schema, storageSig.Name, storageSig.Tag, storageSig.Organization, signaturePath)
 			if err != nil {
 				return nil, fmt.Errorf("unable to generate local signature: %w", err)
 			}
@@ -332,7 +332,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
 			}
-			err = storage.GenerateSignature(storageSig.Schema, signaturePath)
+			err = storage.GenerateSignature(storageSig.Schema, storageSig.Name, storageSig.Tag, storageSig.Organization, signaturePath)
 			if err != nil {
 				return nil, fmt.Errorf("unable to generate local signature: %w", err)
 			}
@@ -345,7 +345,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		sig = options.SignatureSchema
 	}
 
-	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, options.Registry, signatureImportVersion, signatureImportPath, options.SourceDirectory, nil, "compile", "0.1.0")
+	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, options.Registry, fmt.Sprintf("%s_%s_%s_guest", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag), signatureImportVersion, signatureImportPath, options.SourceDirectory, nil, "compile", "0.1.0")
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
 	}
@@ -393,8 +393,6 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 	buildArgs := append([]string{"build"}, options.Args...)
 	if options.Release {
 		buildArgs = append(buildArgs, "--release")
-	} else {
-		buildArgs = append(buildArgs, "--debug")
 	}
 	buildArgs = append(buildArgs, "--target", target)
 
@@ -409,7 +407,11 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
-	data, err := os.ReadFile(path.Join(compilePath, "target", "wasm32-unknown-unknown", "debug", "compile.wasm"))
+	targetFolder := "debug"
+	if options.Release {
+		targetFolder = "release"
+	}
+	data, err := os.ReadFile(path.Join(compilePath, "target", target, targetFolder, "compile.wasm"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}

@@ -222,13 +222,13 @@ func (s *SignatureStorage) Put(name string, tag string, org string, sig *signatu
 	hashString := hex.EncodeToString(hash)
 
 	f := s.signatureName(name, tag, org, hashString)
-	p := s.fullPath(f)
-	err = os.MkdirAll(p, 0755)
+	directory := s.fullPath(f)
+	err = os.MkdirAll(directory, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = GenerateSignature(sig, p)
+	err = GenerateSignature(sig, name, tag, org, directory)
 	if err != nil {
 		return err
 	}
@@ -282,28 +282,28 @@ func (s *SignatureStorage) signatureSearch(name string, tag string, org string) 
 
 // GenerateSignature generates the signature files and writes them to
 // the given path.
-func GenerateSignature(sig *signature.Schema, p string) error {
+func GenerateSignature(sig *signature.Schema, name string, tag string, org string, directory string) error {
 	encoded, err := sig.Encode()
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(p, "signature"), encoded, 0644)
+	err = os.WriteFile(path.Join(directory, "signature"), encoded, 0644)
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(path.Join(p, "golang", "guest"), 0755)
+	err = os.MkdirAll(path.Join(directory, "golang", "guest"), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(path.Join(p, "rust", "guest"), 0755)
+	err = os.MkdirAll(path.Join(directory, "rust", "guest"), 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(path.Join(p, "golang", "host"), 0755)
+	err = os.MkdirAll(path.Join(directory, "golang", "host"), 0755)
 	if err != nil {
 		return err
 	}
@@ -314,7 +314,7 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		GolangPackageName:     "signature",
 		GolangPackageVersion:  "v0.1.0",
 		GolangPolyglotVersion: version.Version(),
-		RustPackageName:       "signature",
+		RustPackageName:       fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
 		RustPackageVersion:    "0.1.0",
 		RustPolyglotVersion:   version.Version(),
 	})
@@ -323,14 +323,14 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 	}
 
 	for _, file := range guestPackage.GolangFiles {
-		err = os.WriteFile(path.Join(p, "golang", "guest", file.Path()), file.Data(), 0644)
+		err = os.WriteFile(path.Join(directory, "golang", "guest", file.Path()), file.Data(), 0644)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, file := range guestPackage.RustFiles {
-		err = os.WriteFile(path.Join(p, "rust", "guest", file.Path()), file.Data(), 0644)
+		err = os.WriteFile(path.Join(directory, "rust", "guest", file.Path()), file.Data(), 0644)
 		if err != nil {
 			return err
 		}
@@ -348,7 +348,7 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 	}
 
 	for _, file := range hostPackage.GolangFiles {
-		err = os.WriteFile(path.Join(p, "golang", "host", file.Path()), file.Data(), 0644)
+		err = os.WriteFile(path.Join(directory, "golang", "host", file.Path()), file.Data(), 0644)
 		if err != nil {
 			return err
 		}
