@@ -14,7 +14,9 @@
 package generator
 
 import (
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"encoding/hex"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
@@ -26,6 +28,7 @@ import (
 type GuestRegistryPackage struct {
 	GolangModule  *bytes.Buffer
 	GolangModfile []byte
+	RustCrate     *bytes.Buffer
 }
 
 type GuestLocalPackage struct {
@@ -85,8 +88,8 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
-	buffer := new(bytes.Buffer)
-	err = zip.Create(buffer, module.Version{
+	golangBuffer := new(bytes.Buffer)
+	err = zip.Create(golangBuffer, module.Version{
 		Path:    options.GolangImportPath,
 		Version: options.GolangPackageVersion,
 	}, files)
@@ -94,9 +97,68 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 		return nil, err
 	}
 
+	rustTypes, err := rust.Generate(options.Signature, options.RustPackageName, options.RustScaleVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	rustGuest, err := rust.GenerateGuest(options.Signature, hashString, options.RustPackageName, options.RustScaleVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	cargofile, err := rust.GenerateCargofile(options.RustPackageName, options.RustPackageVersion, options.RustScaleVersion, options.RustPolyglotVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	rustFiles := []File{
+		NewFile("types.rs", "types.rs", rustTypes),
+		NewFile("guest.rs", "guest.rs", rustGuest),
+		NewFile("Cargo.toml", "Cargo.toml", cargofile),
+	}
+
+	rustBuffer := new(bytes.Buffer)
+	gzipRustWriter := gzip.NewWriter(rustBuffer)
+	tarRustWriter := tar.NewWriter(gzipRustWriter)
+
+	var header *tar.Header
+	for _, file := range rustFiles {
+		header, err = tar.FileInfoHeader(file, file.Name())
+		if err != nil {
+			_ = gzipRustWriter.Close()
+			_ = tarRustWriter.Close()
+			return nil, err
+		}
+
+		err = tarRustWriter.WriteHeader(header)
+		if err != nil {
+			_ = gzipRustWriter.Close()
+			_ = tarRustWriter.Close()
+			return nil, err
+		}
+		_, err = tarRustWriter.Write(file.Data())
+		if err != nil {
+			_ = gzipRustWriter.Close()
+			_ = tarRustWriter.Close()
+			return nil, err
+		}
+	}
+
+	err = gzipRustWriter.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	err = tarRustWriter.Close()
+	if err != nil {
+		return nil, err
+	}
+
 	return &GuestRegistryPackage{
-		GolangModule:  buffer,
+		GolangModule:  golangBuffer,
 		GolangModfile: modfile,
+		RustCrate:     rustBuffer,
 	}, nil
 }
 
