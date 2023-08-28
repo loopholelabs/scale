@@ -15,12 +15,22 @@ static mut WRITE_BUFFER: Vec<u8> = Vec::new();
 // write serializes the signature into the global WRITE_BUFFER and returns the pointer to the buffer and its size
 //
 // Users should not use this method.
-pub unsafe fn write(ctx: types::ModelWithAllFieldTypes) -> (u32, u32) {
+pub unsafe fn write(ctx: Option<&mut types::ModelWithAllFieldTypes>) -> (u32, u32) {
     let mut cursor = Cursor::new(Vec::new());
-    cursor = match types::ModelWithAllFieldTypes::encode(&Some(ctx), &mut cursor) {
-        Ok(_) => cursor,
-        Err(err) => return error(err),
-    };
+    match ctx {
+        Some(c) => {
+            cursor = match types::ModelWithAllFieldTypes::encode(Some(c), &mut cursor) {
+                Ok(_) => cursor,
+                Err(err) => return error(err),
+            };
+        },
+        None => {
+            cursor = match cursor.encode_none() {
+                Ok(_) => cursor,
+                Err(err) => return error(Box::new(err)),
+            };
+        }
+    }
 
     let vec = cursor.into_inner();
 
@@ -87,7 +97,7 @@ pub unsafe fn hash() -> (u32, u32) {
 }
 
 // next calls the next function in the Scale Function Chain
-pub fn next(ctx: types::ModelWithAllFieldTypes) -> Result<Option<types::ModelWithAllFieldTypes>, Box<dyn std::error::Error>> {
+pub fn next(ctx: Option<&mut types::ModelWithAllFieldTypes>) -> Result<Option<types::ModelWithAllFieldTypes>, Box<dyn std::error::Error>> {
     unsafe {
         let (ptr, len) = write(ctx);
         _next(ptr, len);

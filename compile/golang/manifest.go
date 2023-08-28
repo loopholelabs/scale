@@ -40,27 +40,31 @@ func (m *Manifest) AddRequire(dependency string, version string) error {
 }
 
 func (m *Manifest) HasRequire(dependency string, version string, lax bool) bool {
-	if m.modfile.Require != nil {
-		for _, v := range m.modfile.Require {
-			if v.Mod.Path == dependency && (lax || v.Mod.Version == version) {
-				return true
-			}
+	for _, v := range m.modfile.Require {
+		if v.Mod.Path == dependency && (lax || v.Mod.Version == version) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string, lax bool) bool {
+	for _, v := range m.modfile.Replace {
+		if v.Old.Path == oldDependency && v.New.Path == newDependency && (lax || (v.Old.Version == oldVersion && v.New.Version == newVersion)) {
+			return true
 		}
 	}
 
 	return false
 }
 
-func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string, lax bool) bool {
-	if m.modfile.Replace != nil {
-		for _, v := range m.modfile.Replace {
-			if v.Old.Path == oldDependency && v.New.Path == newDependency && (lax || (v.Old.Version == oldVersion && v.New.Version == newVersion)) {
-				return true
-			}
+func (m *Manifest) GetReplacement(dependency string) (string, string) {
+	for _, v := range m.modfile.Replace {
+		if v.Old.Path == dependency {
+			return v.New.Version, v.New.Path
 		}
 	}
-
-	return false
+	return "", ""
 }
 
 func (m *Manifest) RemoveRequire(dependency string) error {

@@ -64,9 +64,63 @@ func TestCompileGolang(t *testing.T) {
 
 	schema, err := build.LocalGolang(&build.LocalGolangOptions{
 		Scalefile:        scf,
-		Signature:        s,
+		SignaturePath:    wd + "/golang_tests/signature",
+		SignatureSchema:  s,
 		SourceDirectory:  golangFunctionDir,
 		StorageDirectory: golangCompileDir,
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
+	assert.Equal(t, scf.Name, schema.Name)
+	assert.Equal(t, scf.Tag, schema.Tag)
+	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
+	assert.Equal(t, s, schema.SignatureSchema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scalefunc.Go, schema.Language)
+	assert.Equal(t, 0, len(schema.Dependencies))
+}
+
+func TestCompileRust(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	hash, err := s.Hash()
+	require.NoError(t, err)
+
+	rustCompileDir := wd + "/rust_tests/compile"
+	err = os.MkdirAll(rustCompileDir, 0755)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.RemoveAll(rustCompileDir)
+		require.NoError(t, err)
+	})
+
+	rustFunctionDir := wd + "/rust_tests/function"
+	scf := &scalefile.Schema{
+		Version:  scalefile.V1AlphaVersion,
+		Name:     "example",
+		Tag:      "latest",
+		Language: string(scalefunc.Rust),
+		Signature: scalefile.SignatureSchema{
+			Organization: "local",
+			Name:         "example",
+			Tag:          "latest",
+		},
+		Function: "example",
+	}
+
+	schema, err := build.LocalRust(&build.LocalRustOptions{
+		Scalefile:        scf,
+		SignaturePath:    wd + "/rust_tests/signature",
+		SignatureSchema:  s,
+		SourceDirectory:  rustFunctionDir,
+		StorageDirectory: rustCompileDir,
 	})
 	require.NoError(t, err)
 

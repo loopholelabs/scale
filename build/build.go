@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/loopholelabs/scale/compile/golang"
+	"github.com/loopholelabs/scale/compile/rust"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
@@ -40,18 +41,27 @@ var (
 type LocalGolangOptions struct {
 	Version          string
 	Scalefile        *scalefile.Schema
-	Signature        *signature.Schema
 	SourceDirectory  string
+	SignaturePath    string
+	SignatureSchema  *signature.Schema
 	StorageDirectory string
 	GoBin            string
 	TinyGoBin        string
 	Args             []string
 }
 
-type RustOptions struct {
-	CargoBin string
-	Args     []string
+type LocalRustOptions struct {
+	Version          string
+	Scalefile        *scalefile.Schema
+	SourceDirectory  string
+	SignaturePath    string
+	SignatureSchema  *signature.Schema
+	StorageDirectory string
+	Registry         string
+	CargoBin         string
+	Args             []string
 }
+
 type TypescriptOptions struct {
 	NpmBin string
 	Args   []string
@@ -118,39 +128,17 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		_ = stb.Delete(build)
 	}()
 
-	var signatureImportPath string
-	var signatureImportVersion string
-	var sig *storage.Signature
-	if options.Signature != nil {
-		hash, err := options.Signature.Hash()
-		if err != nil {
-			return nil, fmt.Errorf("unable to hash signature: %w", err)
-		}
-		sig = &storage.Signature{
-			Schema:       options.Signature,
-			Hash:         hex.EncodeToString(hash),
-			Organization: "local",
-		}
-
-		signaturePath := path.Join(build.Path, "signature")
-		err = os.MkdirAll(signaturePath, 0755)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create local signature directory: %w", err)
-		}
-		err = storage.GenerateSignature(sig.Schema, signaturePath)
-		if err != nil {
-			return nil, fmt.Errorf("unable to generate local signature: %w", err)
-		}
-
-		signatureImportPath = path.Join(signaturePath, "golang", "guest")
-	} else {
+	signatureImportPath := options.SignaturePath
+	signatureImportVersion := ""
+	var sig *signature.Schema
+	if signatureImportPath == "" {
 		switch options.Scalefile.Signature.Organization {
 		case "local":
-			sig, err = sts.Get(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
+			storageSig, err := sts.Get(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
 			if err != nil {
 				return nil, fmt.Errorf("unable to get local signature: %w", err)
 			}
-			if sig == nil {
+			if storageSig == nil {
 				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
 			}
 
@@ -159,15 +147,17 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 			if err != nil {
 				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
 			}
-			err = storage.GenerateSignature(sig.Schema, signaturePath)
+			err = storage.GenerateSignature(storageSig.Schema, signaturePath)
 			if err != nil {
 				return nil, fmt.Errorf("unable to generate local signature: %w", err)
 			}
-
+			sig = storageSig.Schema
 			signatureImportPath = path.Join(signaturePath, "golang", "guest")
 		default:
 			return nil, fmt.Errorf("unknown signature organization %s", options.Scalefile.Signature.Organization)
 		}
+	} else {
+		sig = options.SignatureSchema
 	}
 
 	dependencies := []*scalefunc.Dependency{
@@ -183,12 +173,12 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		},
 	}
 
-	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureImportPath, signatureImportVersion, options.SourceDirectory, dependencies, "compile", options.Version)
+	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureImportPath, signatureImportVersion, options.SourceDirectory, dependencies, "compile")
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}
 
-	mainFile, err := golang.GenerateGoMain(sig.Schema, options.Scalefile, options.Version)
+	mainFile, err := golang.GenerateGoMain(sig, options.Scalefile, options.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
 	}
@@ -220,10 +210,10 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
-	tinygoArgs := append([]string{"build", "-o", "scale.wasm", "-target=wasi"}, options.Args...)
-	tinygoArgs = append(tinygoArgs, "main.go")
+	buildArgs := append([]string{"build", "-o", "scale.wasm", "-target=wasi"}, options.Args...)
+	buildArgs = append(buildArgs, "main.go")
 
-	cmd = exec.Command(options.TinyGoBin, tinygoArgs...)
+	cmd = exec.Command(options.TinyGoBin, buildArgs...)
 	cmd.Dir = compilePath
 
 	output, err = cmd.CombinedOutput()
@@ -239,13 +229,168 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
+	hash, err := sig.Hash()
+	if err != nil {
+		return nil, fmt.Errorf("unable to hash signature: %w", err)
+	}
+
 	return &scalefunc.Schema{
 		Version:         scalefunc.V1Alpha,
 		Name:            options.Scalefile.Name,
 		Tag:             options.Scalefile.Tag,
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
-		SignatureSchema: sig.Schema,
-		SignatureHash:   sig.Hash,
+		SignatureSchema: sig,
+		SignatureHash:   hex.EncodeToString(hash),
+		Language:        scalefunc.Go,
+		Dependencies:    nil,
+		Function:        data,
+	}, nil
+}
+
+func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
+	stb := storage.DefaultBuild
+	sts := storage.DefaultSignature
+	if options.StorageDirectory != "" {
+		var err error
+		stb, err = storage.NewBuild(options.StorageDirectory)
+		if err != nil {
+			return nil, fmt.Errorf("failed to instantiate builds storage for %s: %w", options.StorageDirectory, err)
+		}
+
+		sts, err = storage.NewSignature(options.StorageDirectory)
+		if err != nil {
+			return nil, fmt.Errorf("failed to instantiate signatures storage for %s: %w", options.StorageDirectory, err)
+		}
+	}
+
+	if options.CargoBin != "" {
+		stat, err := os.Stat(options.CargoBin)
+		if err != nil {
+			return nil, fmt.Errorf("unable to find cargo binary %s: %w", options.CargoBin, err)
+		}
+		if !(stat.Mode()&0111 != 0) {
+			return nil, fmt.Errorf("cargo binary %s is not executable", options.CargoBin)
+		}
+	} else {
+		var err error
+		options.CargoBin, err = exec.LookPath("cargo")
+		if err != nil {
+			return nil, ErrNoCargo
+		}
+	}
+
+	_, err := os.Stat(options.SourceDirectory)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find source directory %s: %w", options.SourceDirectory, err)
+	}
+
+	build, err := stb.Mkdir()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create build directory: %w", err)
+	}
+	defer func() {
+		_ = stb.Delete(build)
+	}()
+
+	signatureImportPath := options.SignaturePath
+	signatureImportVersion := ""
+	var sig *signature.Schema
+	if signatureImportPath == "" {
+		switch options.Scalefile.Signature.Organization {
+		case "local":
+			storageSig, err := sts.Get(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
+			if err != nil {
+				return nil, fmt.Errorf("unable to get local signature: %w", err)
+			}
+			if storageSig == nil {
+				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
+			}
+
+			signaturePath := path.Join(build.Path, "signature")
+			err = os.MkdirAll(signaturePath, 0755)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
+			}
+			err = storage.GenerateSignature(storageSig.Schema, signaturePath)
+			if err != nil {
+				return nil, fmt.Errorf("unable to generate local signature: %w", err)
+			}
+			sig = storageSig.Schema
+			signatureImportPath = path.Join(signaturePath, "rust", "guest")
+		default:
+			return nil, fmt.Errorf("unknown signature organization %s", options.Scalefile.Signature.Organization)
+		}
+	} else {
+		sig = options.SignatureSchema
+	}
+
+	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, options.Registry, signatureImportVersion, signatureImportPath, options.SourceDirectory, nil, "compile", "0.1.0")
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
+	}
+
+	libFile, err := rust.GenerateRustLib(sig, options.Scalefile, options.Version)
+	if err != nil {
+		return nil, fmt.Errorf("unable to generate lib.rs file: %w", err)
+	}
+
+	compilePath := path.Join(build.Path, "compile")
+
+	err = os.MkdirAll(compilePath, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create compile directory: %w", err)
+	}
+
+	err = os.WriteFile(path.Join(compilePath, "Cargo.toml"), cargofile, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create cargo.toml file: %w", err)
+	}
+
+	err = os.WriteFile(path.Join(compilePath, "lib.rs"), libFile, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create lib.rs file: %w", err)
+	}
+
+	cmd := exec.Command(options.CargoBin, "check")
+	cmd.Dir = compilePath
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("unable to compile scale function: %s", output)
+		}
+		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+	}
+
+	buildsArgs := append([]string{"build", "--target=wasm32-unknown-unknown"}, options.Args...)
+
+	cmd = exec.Command(options.CargoBin, buildsArgs...)
+	cmd.Dir = compilePath
+
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("unable to compile scale function: %s", output)
+		}
+		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+	}
+
+	data, err := os.ReadFile(path.Join(compilePath, "target", "wasm32-unknown-unknown", "debug", "compile.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
+	}
+
+	hash, err := sig.Hash()
+	if err != nil {
+		return nil, fmt.Errorf("unable to hash signature: %w", err)
+	}
+
+	return &scalefunc.Schema{
+		Version:         scalefunc.V1Alpha,
+		Name:            options.Scalefile.Name,
+		Tag:             options.Scalefile.Tag,
+		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
+		SignatureSchema: sig,
+		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
 		Function:        data,

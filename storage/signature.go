@@ -298,12 +298,25 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		return err
 	}
 
+	err = os.MkdirAll(path.Join(p, "rust", "guest"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path.Join(p, "golang", "host"), 0755)
+	if err != nil {
+		return err
+	}
+
 	guestPackage, err := generator.GenerateGuestLocal(&generator.Options{
 		Signature:             sig,
 		GolangImportPath:      "signature",
 		GolangPackageName:     "signature",
 		GolangPackageVersion:  "v0.1.0",
 		GolangPolyglotVersion: version.Version(),
+		RustPackageName:       "signature",
+		RustPackageVersion:    "0.1.0",
+		RustPolyglotVersion:   version.Version(),
 	})
 	if err != nil {
 		return err
@@ -316,9 +329,11 @@ func GenerateSignature(sig *signature.Schema, p string) error {
 		}
 	}
 
-	err = os.MkdirAll(path.Join(p, "golang", "host"), 0755)
-	if err != nil {
-		return err
+	for _, file := range guestPackage.RustFiles {
+		err = os.WriteFile(path.Join(p, "rust", "guest", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{

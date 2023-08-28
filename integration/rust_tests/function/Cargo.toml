@@ -1,0 +1,19 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+polyglot_rs = "1.1.2"
+num_enum = "0.7.0"
+regex = "1.9.4"
+
+signature = { path = "../signature"}
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
