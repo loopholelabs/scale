@@ -152,14 +152,9 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
 			}
 
-			signaturePath := path.Join(build.Path, "signature")
-			err = os.MkdirAll(signaturePath, 0755)
+			signaturePath, err := sts.Path(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
 			if err != nil {
-				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
-			}
-			err = storage.GenerateSignature(storageSig.Schema, storageSig.Name, storageSig.Tag, storageSig.Organization, signaturePath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to generate local signature: %w", err)
+				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
 			}
 			sig = storageSig.Schema
 			signatureImportPath = path.Join(signaturePath, "golang", "guest")
@@ -327,14 +322,9 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
 			}
 
-			signaturePath := path.Join(build.Path, "signature")
-			err = os.MkdirAll(signaturePath, 0755)
+			signaturePath, err := sts.Path(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
 			if err != nil {
-				return nil, fmt.Errorf("unable to create local signature directory: %w", err)
-			}
-			err = storage.GenerateSignature(storageSig.Schema, storageSig.Name, storageSig.Tag, storageSig.Organization, signaturePath)
-			if err != nil {
-				return nil, fmt.Errorf("unable to generate local signature: %w", err)
+				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
 			}
 			sig = storageSig.Schema
 			signatureImportPath = path.Join(signaturePath, "rust", "guest")
