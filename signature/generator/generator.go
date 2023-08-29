@@ -29,6 +29,7 @@ type GuestRegistryPackage struct {
 	GolangModule  *bytes.Buffer
 	GolangModfile []byte
 	RustCrate     *bytes.Buffer
+	RustCargofile []byte
 }
 
 type GuestLocalPackage struct {
@@ -159,6 +160,7 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 		GolangModule:  golangBuffer,
 		GolangModfile: modfile,
 		RustCrate:     rustBuffer,
+		RustCargofile: cargofile,
 	}, nil
 }
 
