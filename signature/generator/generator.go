@@ -24,6 +24,7 @@ import (
 	"github.com/loopholelabs/scale/signature/generator/rust"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/zip"
+	"path"
 )
 
 type GuestRegistryPackage struct {
@@ -132,6 +133,8 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 			_ = gzipRustWriter.Close()
 			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
 		}
+
+		header.Name = path.Join(fmt.Sprintf("%s-%s", options.RustPackageName, options.RustPackageVersion), header.Name)
 
 		err = tarRustWriter.WriteHeader(header)
 		if err != nil {
