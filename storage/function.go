@@ -18,6 +18,7 @@
 package storage
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/loopholelabs/scale/scalefunc"
 	"os"
@@ -146,7 +147,7 @@ func (s *FunctionStorage) Get(name string, tag string, org string, hash string) 
 
 // Put stores the Scale Function with the given name, tag, organization, and hash
 func (s *FunctionStorage) Put(name string, tag string, org string, sf *scalefunc.Schema) error {
-	f := s.functionName(name, tag, org, sf.Hash)
+	f := s.functionName(name, tag, org, hex.EncodeToString(sf.GetHash()))
 	p := s.fullPath(f)
 	return os.WriteFile(p, sf.Encode(), 0644)
 }

@@ -271,6 +271,43 @@ func (s *Schema) Decode(data []byte) error {
 	return nil
 }
 
+// GetHash returns the hash of the Schema
+func (s *Schema) GetHash() []byte {
+	b := polyglot.GetBuffer()
+	defer polyglot.PutBuffer(b)
+	e := polyglot.Encoder(b)
+	e.String(string(s.Version))
+	e.String(s.Name)
+	e.String(s.Tag)
+	e.String(s.SignatureName)
+
+	f := hclwrite.NewEmptyFile()
+	gohcl.EncodeIntoBody(s.SignatureSchema, f.Body())
+	e.Bytes(f.Bytes())
+
+	e.String(s.SignatureHash)
+
+	e.String(string(s.Language))
+
+	e.Slice(uint32(len(s.Dependencies)), polyglot.AnyKind)
+	for _, d := range s.Dependencies {
+		e.String(d.Name)
+		e.String(d.Version)
+		e.Map(uint32(len(d.Metadata)), polyglot.StringKind, polyglot.StringKind)
+		for k, v := range d.Metadata {
+			e.String(k)
+			e.String(v)
+		}
+	}
+
+	e.Bytes(s.Function)
+
+	hash := sha256.New()
+	hash.Write(b.Bytes())
+
+	return hash.Sum(nil)
+}
+
 // SetEnv sets the environment variables for the Schema
 func (s *Schema) SetEnv(env map[string]string) {
 	s.env = env
