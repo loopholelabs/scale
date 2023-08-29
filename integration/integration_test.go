@@ -25,6 +25,7 @@ import (
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -66,12 +67,17 @@ func TestGolangE2E(t *testing.T) {
 		Function: "Example",
 	}
 
+	stb, err := storage.NewBuild(golangCompileDir)
+	require.NoError(t, err)
+
 	schema, err := build.LocalGolang(&build.LocalGolangOptions{
+		Version:          "test",
 		Scalefile:        scf,
-		SignaturePath:    wd + "/golang_tests/signature",
-		SignatureSchema:  s,
 		SourceDirectory:  golangFunctionDir,
-		StorageDirectory: golangCompileDir,
+		SignaturePath:    wd + "/golang_tests/signature",
+		SignatureVersion: "",
+		SignatureSchema:  s,
+		Storage:          stb,
 		Release:          false,
 		Target:           build.WASITarget,
 	})
@@ -135,12 +141,18 @@ func TestRustE2E(t *testing.T) {
 		Function: "example",
 	}
 
+	stb, err := storage.NewBuild(rustCompileDir)
+	require.NoError(t, err)
+
 	schema, err := build.LocalRust(&build.LocalRustOptions{
+		Version:          "test",
 		Scalefile:        scf,
-		SignaturePath:    wd + "/rust_tests/signature",
-		SignatureSchema:  s,
 		SourceDirectory:  rustFunctionDir,
-		StorageDirectory: rustCompileDir,
+		SignaturePackage: fmt.Sprintf("%s_%s_%s_guest", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag),
+		SignaturePath:    wd + "/rust_tests/signature",
+		SignatureVersion: "",
+		SignatureSchema:  s,
+		Storage:          stb,
 		Release:          false,
 		Target:           build.WASITarget,
 	})

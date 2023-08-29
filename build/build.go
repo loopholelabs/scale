@@ -54,27 +54,28 @@ type LocalGolangOptions struct {
 	// SourceDirectory is the directory where the source code is located
 	SourceDirectory string
 
-	// SignaturePath is an optional path to where the signature is located
-	// if this is not specified, the signature from the Scalefile will be used
+	// SignaturePath is the import path for the signature
+	//
+	// For local signatures this will be a path to the signature package
+	// For remote signatures this will be a path to the signature repository
 	SignaturePath string
 
-	// SignatureSchema is the optional schema of the signature, it's required if the SignaturePath is not specified
-	// and the signature from the Scalefile has an organization that is not "local"
+	// SignatureVersion is the optional version of the signature
+	//
+	// This is required for remote signatures
+	SignatureVersion string
+
+	// SignatureSchema is the schema of the signature
 	SignatureSchema *signature.Schema
 
-	// StorageDirectory is an optional directory where the build and signature will be stored
-	StorageDirectory string
+	// Storage is the storage handler to use for the build
+	Storage *storage.BuildStorage
 
 	// Release is whether to build in release mode
 	Release bool
 
 	// Target is the target to build for
 	Target Target
-
-	// Registry is the registry to use for the signature
-	//
-	// Example: go.scale.sh/v1
-	Registry string
 
 	// GoBin is the optional path to the go binary
 	GoBin string
@@ -96,27 +97,30 @@ type LocalRustOptions struct {
 	// SourceDirectory is the directory where the source code is located
 	SourceDirectory string
 
-	// SignaturePath is an optional path to where the signature is located
-	// if this is not specified, the signature from the Scalefile will be used
+	// SignaturePackage is the package for the signature
+	SignaturePackage string
+
+	// SignaturePath is the optional import path for the signature
+	//
+	// This is required for local signatures
 	SignaturePath string
 
-	// SignatureSchema is the optional schema of the signature, it's required if the SignaturePath is not specified
-	// and the signature from the Scalefile has an organization that is not "local"
+	// SignatureVersion is the optional version of the signature
+	//
+	// This is required for remote signatures
+	SignatureVersion string
+
+	// SignatureSchema is the schema of the signature
 	SignatureSchema *signature.Schema
 
-	// StorageDirectory is an optional directory where the build and signature will be stored
-	StorageDirectory string
+	// Storage is the storage handler to use for the build
+	Storage *storage.BuildStorage
 
 	// Release is whether to build in release mode
 	Release bool
 
 	// Target is the target to build for
 	Target Target
-
-	// Registry is the registry to use for the signature
-	//
-	// Example: scale
-	Registry string
 
 	// CargoBin is the optional path to the cargo binary
 	CargoBin string
@@ -131,21 +135,6 @@ type TypescriptOptions struct {
 }
 
 func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
-	stb := storage.DefaultBuild
-	sts := storage.DefaultSignature
-	if options.StorageDirectory != "" {
-		var err error
-		stb, err = storage.NewBuild(options.StorageDirectory)
-		if err != nil {
-			return nil, fmt.Errorf("failed to instantiate builds storage for %s: %w", options.StorageDirectory, err)
-		}
-
-		sts, err = storage.NewSignature(options.StorageDirectory)
-		if err != nil {
-			return nil, fmt.Errorf("failed to instantiate signatures storage for %s: %w", options.StorageDirectory, err)
-		}
-	}
-
 	if options.GoBin != "" {
 		stat, err := os.Stat(options.GoBin)
 		if err != nil {
@@ -183,48 +172,13 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to find source directory %s: %w", options.SourceDirectory, err)
 	}
 
-	build, err := stb.Mkdir()
+	build, err := options.Storage.Mkdir()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create build directory: %w", err)
 	}
 	defer func() {
-		_ = stb.Delete(build)
+		_ = options.Storage.Delete(build)
 	}()
-
-	signatureImportPath := options.SignaturePath
-	signatureImportVersion := ""
-	var sig *signature.Schema
-	if signatureImportPath == "" {
-		switch options.Scalefile.Signature.Organization {
-		case "local":
-			storageSig, err := sts.Get(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
-			if err != nil {
-				return nil, fmt.Errorf("unable to get local signature: %w", err)
-			}
-			if storageSig == nil {
-				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
-			}
-
-			signaturePath, err := sts.Path(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
-			if err != nil {
-				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
-			}
-			sig = storageSig.Schema
-			signatureImportPath = path.Join(signaturePath, "golang", "guest")
-		default:
-			if options.SignatureSchema == nil {
-				return nil, fmt.Errorf("signature schema is required for non-local signatures")
-			}
-			if options.Registry == "" {
-				return nil, fmt.Errorf("registry is required for non-local signatures")
-			}
-			signatureImportPath = fmt.Sprintf("%s/%s/%s/%s/guest", options.Registry, options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
-			signatureImportVersion = "v0.1.0"
-			sig = options.SignatureSchema
-		}
-	} else {
-		sig = options.SignatureSchema
-	}
 
 	dependencies := []*scalefunc.Dependency{
 		{
@@ -239,12 +193,12 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		},
 	}
 
-	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureImportPath, signatureImportVersion, options.SourceDirectory, dependencies, "compile")
+	modfile, err := golang.GenerateGoModfile(options.Scalefile, options.SignaturePath, options.SignatureVersion, options.SourceDirectory, dependencies, "compile")
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}
 
-	mainFile, err := golang.GenerateGoMain(sig, options.Scalefile, options.Version)
+	mainFile, err := golang.GenerateGoMain(options.SignatureSchema, options.Scalefile, options.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
 	}
@@ -306,7 +260,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
-	hash, err := sig.Hash()
+	hash, err := options.SignatureSchema.Hash()
 	if err != nil {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
@@ -316,7 +270,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		Name:            options.Scalefile.Name,
 		Tag:             options.Scalefile.Tag,
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
-		SignatureSchema: sig,
+		SignatureSchema: options.SignatureSchema,
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
@@ -325,21 +279,6 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 }
 
 func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
-	stb := storage.DefaultBuild
-	sts := storage.DefaultSignature
-	if options.StorageDirectory != "" {
-		var err error
-		stb, err = storage.NewBuild(options.StorageDirectory)
-		if err != nil {
-			return nil, fmt.Errorf("failed to instantiate builds storage for %s: %w", options.StorageDirectory, err)
-		}
-
-		sts, err = storage.NewSignature(options.StorageDirectory)
-		if err != nil {
-			return nil, fmt.Errorf("failed to instantiate signatures storage for %s: %w", options.StorageDirectory, err)
-		}
-	}
-
 	if options.CargoBin != "" {
 		stat, err := os.Stat(options.CargoBin)
 		if err != nil {
@@ -361,55 +300,20 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to find source directory %s: %w", options.SourceDirectory, err)
 	}
 
-	build, err := stb.Mkdir()
+	build, err := options.Storage.Mkdir()
 	if err != nil {
 		return nil, fmt.Errorf("unable to create build directory: %w", err)
 	}
 	defer func() {
-		_ = stb.Delete(build)
+		_ = options.Storage.Delete(build)
 	}()
 
-	signatureImportPath := options.SignaturePath
-	signatureImportVersion := ""
-	var sig *signature.Schema
-	if signatureImportPath == "" {
-		switch options.Scalefile.Signature.Organization {
-		case "local":
-			storageSig, err := sts.Get(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
-			if err != nil {
-				return nil, fmt.Errorf("unable to get local signature: %w", err)
-			}
-			if storageSig == nil {
-				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
-			}
-
-			signaturePath, err := sts.Path(options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag, options.Scalefile.Signature.Organization, "")
-			if err != nil {
-				return nil, fmt.Errorf("local signature %s:%s not found", options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
-			}
-			sig = storageSig.Schema
-			signatureImportPath = path.Join(signaturePath, "rust", "guest")
-		default:
-			if options.SignatureSchema == nil {
-				return nil, fmt.Errorf("signature schema is required for non-local signatures")
-			}
-			if options.Registry == "" {
-				return nil, fmt.Errorf("registry is required for non-local signatures")
-			}
-			signatureImportPath = ""
-			signatureImportVersion = "0.1.0"
-			sig = options.SignatureSchema
-		}
-	} else {
-		sig = options.SignatureSchema
-	}
-
-	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, options.Registry, fmt.Sprintf("%s_%s_%s_guest", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag), signatureImportVersion, signatureImportPath, options.SourceDirectory, nil, "compile", "0.1.0")
+	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, options.SignaturePackage, options.SignatureVersion, options.SignaturePath, options.SourceDirectory, nil, "compile", "0.1.0")
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
 	}
 
-	libFile, err := rust.GenerateRustLib(sig, options.Scalefile, options.Version)
+	libFile, err := rust.GenerateRustLib(options.SignatureSchema, options.Scalefile, options.Version)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate lib.rs file: %w", err)
 	}
@@ -475,7 +379,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
-	hash, err := sig.Hash()
+	hash, err := options.SignatureSchema.Hash()
 	if err != nil {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
@@ -485,7 +389,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		Name:            options.Scalefile.Name,
 		Tag:             options.Scalefile.Tag,
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
-		SignatureSchema: sig,
+		SignatureSchema: options.SignatureSchema,
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
