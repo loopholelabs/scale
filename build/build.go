@@ -45,31 +45,84 @@ var (
 )
 
 type LocalGolangOptions struct {
-	Version          string
-	Scalefile        *scalefile.Schema
-	SourceDirectory  string
-	SignaturePath    string
-	SignatureSchema  *signature.Schema
+	// Version is the generator version
+	Version string
+
+	// Scalefile is the scalefile to be built
+	Scalefile *scalefile.Schema
+
+	// SourceDirectory is the directory where the source code is located
+	SourceDirectory string
+
+	// SignaturePath is an optional path to where the signature is located
+	// if this is not specified, the signature from the Scalefile will be used
+	SignaturePath string
+
+	// SignatureSchema is the optional schema of the signature, it's required if the SignaturePath is not specified
+	// and the signature from the Scalefile has an organization that is not "local"
+	SignatureSchema *signature.Schema
+
+	// StorageDirectory is an optional directory where the build and signature will be stored
 	StorageDirectory string
-	Release          bool
-	Target           Target
-	GoBin            string
-	TinyGoBin        string
-	Args             []string
+
+	// Release is whether to build in release mode
+	Release bool
+
+	// Target is the target to build for
+	Target Target
+
+	// Registry is the registry to use for the signature
+	//
+	// Example: go.scale.sh/v1
+	Registry string
+
+	// GoBin is the optional path to the go binary
+	GoBin string
+
+	// TinyGoBin is the optional path to the tinygo binary
+	TinyGoBin string
+
+	// Args are the optional arguments to pass to the compiler
+	Args []string
 }
 
 type LocalRustOptions struct {
-	Version          string
-	Scalefile        *scalefile.Schema
-	SourceDirectory  string
-	SignaturePath    string
-	SignatureSchema  *signature.Schema
+	// Version is the generator version
+	Version string
+
+	// Scalefile is the scalefile to be built
+	Scalefile *scalefile.Schema
+
+	// SourceDirectory is the directory where the source code is located
+	SourceDirectory string
+
+	// SignaturePath is an optional path to where the signature is located
+	// if this is not specified, the signature from the Scalefile will be used
+	SignaturePath string
+
+	// SignatureSchema is the optional schema of the signature, it's required if the SignaturePath is not specified
+	// and the signature from the Scalefile has an organization that is not "local"
+	SignatureSchema *signature.Schema
+
+	// StorageDirectory is an optional directory where the build and signature will be stored
 	StorageDirectory string
-	Release          bool
-	Target           Target
-	Registry         string
-	CargoBin         string
-	Args             []string
+
+	// Release is whether to build in release mode
+	Release bool
+
+	// Target is the target to build for
+	Target Target
+
+	// Registry is the registry to use for the signature
+	//
+	// Example: scale
+	Registry string
+
+	// CargoBin is the optional path to the cargo binary
+	CargoBin string
+
+	// Args are the optional arguments to pass to the compiler
+	Args []string
 }
 
 type TypescriptOptions struct {
@@ -159,7 +212,15 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 			sig = storageSig.Schema
 			signatureImportPath = path.Join(signaturePath, "golang", "guest")
 		default:
-			return nil, fmt.Errorf("unknown signature organization %s", options.Scalefile.Signature.Organization)
+			if options.SignatureSchema == nil {
+				return nil, fmt.Errorf("signature schema is required for non-local signatures")
+			}
+			if options.Registry == "" {
+				return nil, fmt.Errorf("registry is required for non-local signatures")
+			}
+			signatureImportPath = fmt.Sprintf("%s/%s/%s/%s/guest", options.Registry, options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag)
+			signatureImportVersion = "v0.1.0"
+			sig = options.SignatureSchema
 		}
 	} else {
 		sig = options.SignatureSchema
@@ -329,7 +390,15 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 			sig = storageSig.Schema
 			signatureImportPath = path.Join(signaturePath, "rust", "guest")
 		default:
-			return nil, fmt.Errorf("unknown signature organization %s", options.Scalefile.Signature.Organization)
+			if options.SignatureSchema == nil {
+				return nil, fmt.Errorf("signature schema is required for non-local signatures")
+			}
+			if options.Registry == "" {
+				return nil, fmt.Errorf("registry is required for non-local signatures")
+			}
+			signatureImportPath = ""
+			signatureImportVersion = "0.1.0"
+			sig = options.SignatureSchema
 		}
 	} else {
 		sig = options.SignatureSchema

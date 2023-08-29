@@ -39,7 +39,14 @@ type Cargo struct {
 }
 
 type DependencyPath struct {
-	Path string `toml:"path"`
+	Path    string `toml:"path"`
+	Package string `toml:"package"`
+}
+
+type DependencyVersion struct {
+	Version  string `toml:"version"`
+	Package  string `toml:"package"`
+	Registry string `toml:"registry"`
 }
 
 type Manifest struct {
@@ -57,15 +64,13 @@ func ParseManifest(data []byte) (*Manifest, error) {
 	}, nil
 }
 
-func (m *Manifest) AddDependencyWithVersion(dependency string, version string) error {
+func (m *Manifest) AddDependencyWithVersion(dependency string, version DependencyVersion) error {
 	m.cargo.Dependencies[dependency] = version
 	return nil
 }
 
-func (m *Manifest) AddDependencyWithPath(dependency string, path string) error {
-	m.cargo.Dependencies[dependency] = DependencyPath{
-		Path: path,
-	}
+func (m *Manifest) AddDependencyWithPath(dependency string, path DependencyPath) error {
+	m.cargo.Dependencies[dependency] = path
 	return nil
 }
 
