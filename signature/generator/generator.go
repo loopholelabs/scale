@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/hex"
+	"fmt"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang"
 	"github.com/loopholelabs/scale/signature/generator/rust"
@@ -127,33 +128,33 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 	for _, file := range rustFiles {
 		header, err = tar.FileInfoHeader(file, file.Name())
 		if err != nil {
-			_ = gzipRustWriter.Close()
 			_ = tarRustWriter.Close()
-			return nil, err
+			_ = gzipRustWriter.Close()
+			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
 		}
 
 		err = tarRustWriter.WriteHeader(header)
 		if err != nil {
-			_ = gzipRustWriter.Close()
 			_ = tarRustWriter.Close()
-			return nil, err
+			_ = gzipRustWriter.Close()
+			return nil, fmt.Errorf("failed to write tar header for %s: %w", file.Name(), err)
 		}
 		_, err = tarRustWriter.Write(file.Data())
 		if err != nil {
-			_ = gzipRustWriter.Close()
 			_ = tarRustWriter.Close()
-			return nil, err
+			_ = gzipRustWriter.Close()
+			return nil, fmt.Errorf("failed to write tar data for %s: %w", file.Name(), err)
 		}
-	}
-
-	err = gzipRustWriter.Close()
-	if err != nil {
-		return nil, err
 	}
 
 	err = tarRustWriter.Close()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	err = gzipRustWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
 	}
 
 	return &GuestRegistryPackage{
