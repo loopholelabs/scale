@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 {{ .signature_dependency }} = { package = "{{ .signature_package }}", path = "{{ .signature_path }}" }
 {{ end }}
 
-{{ if (and .signature_version) }}
+{{ if .signature_version }}
 {{ .signature_dependency }} = { package = "{{ .signature_package }}", version = "{{ .signature_version }}", registry = "scale" }
 {{ end }}
 
