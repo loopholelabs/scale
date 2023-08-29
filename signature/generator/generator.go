@@ -25,6 +25,7 @@ import (
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/zip"
 	"path"
+	"strings"
 )
 
 type GuestRegistryPackage struct {
@@ -134,7 +135,7 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
 		}
 
-		header.Name = path.Join(fmt.Sprintf("%s-%s", options.RustPackageName, options.RustPackageVersion), header.Name)
+		header.Name = path.Join(fmt.Sprintf("%s-%s", options.RustPackageName, strings.TrimPrefix(options.RustPackageVersion, "v")), header.Name)
 
 		err = tarRustWriter.WriteHeader(header)
 		if err != nil {
