@@ -15,8 +15,10 @@ package rust
 
 import (
 	"bytes"
+	"context"
 	polyglotUtils "github.com/loopholelabs/polyglot/utils"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/rust/format"
 	"github.com/loopholelabs/scale/signature/generator/rust/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
 	"strings"
@@ -53,7 +55,8 @@ func init() {
 
 // Generator is the rust generator
 type Generator struct {
-	templ *template.Template
+	templ     *template.Template
+	formatter *format.Formatter
 }
 
 // New creates a new rust generator
@@ -63,8 +66,14 @@ func New() (*Generator, error) {
 		return nil, err
 	}
 
+	formatter, err := format.New()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Generator{
-		templ: templ,
+		templ:     templ,
+		formatter: formatter,
 	}, nil
 }
 
@@ -84,15 +93,20 @@ func (g *Generator) Generate(schema *signature.Schema, packageName string, scale
 		return nil, err
 	}
 
-	// TODO: Compile `rustfmt` to a scale fn
-	//cmd := exec.Command("rustfmt")
-	//cmd.Stdin = bytes.NewReader(buf.Bytes())
-	//output, err := cmd.CombinedOutput()
-	//if err != nil {
-	//	return nil, err
-	//}
+	formatted, err := g.formatter.Format(context.Background(), buf.String())
+	if err != nil {
+		return nil, err
+	}
 
-	return buf.Bytes(), nil
+	buf.Reset()
+	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
+		"version": strings.TrimPrefix(scaleVersion, "v"),
+		"package": packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return []byte(buf.String() + "\n\n" + formatted), nil
 }
 
 // GenerateCargofile generates the cargofile for the signature
@@ -128,15 +142,20 @@ func (g *Generator) GenerateGuest(schema *signature.Schema, hash string, package
 		return nil, err
 	}
 
-	// TODO: Compile `rustfmt` to a scale fn
-	//cmd := exec.Command("rustfmt")
-	//cmd.Stdin = bytes.NewReader(buf.Bytes())
-	//output, err := cmd.CombinedOutput()
-	//if err != nil {
-	//	return nil, err
-	//}
+	formatted, err := g.formatter.Format(context.Background(), buf.String())
+	if err != nil {
+		return nil, err
+	}
 
-	return buf.Bytes(), nil
+	buf.Reset()
+	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
+		"version": strings.TrimPrefix(scaleVersion, "v"),
+		"package": packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return []byte(buf.String() + "\n\n" + formatted), nil
 }
 
 func templateFunctions() template.FuncMap {

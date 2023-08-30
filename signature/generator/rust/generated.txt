@@ -5,9531 +5,1883 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
-
 use std::io::Cursor;
 use polyglot_rs::{DecodingError, Encoder, Decoder, Kind};
 use num_enum::TryFromPrimitive;
 use std::convert::TryFrom;
 use std::collections::HashMap;
 use regex::Regex;
-
 pub trait Encode {
-    fn encode<'a> (a: Option<&Self>, b: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> where Self: Sized;
+    fn encode<'a>(
+        a: Option<&Self>,
+        b: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>>
+    where
+        Self: Sized;
 }
-
 trait EncodeSelf {
-    fn encode_self<'a, 'b> (&'b self, b: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>>;
+    fn encode_self<'a, 'b>(
+        &'b self,
+        b: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>>;
 }
-
 pub trait Decode {
-    fn decode (b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<Self>, Box<dyn std::error::Error>> where Self: Sized;
+    fn decode(
+        b: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<Self>, Box<dyn std::error::Error>>
+    where
+        Self: Sized;
 }
-    
-    #[derive(Debug, Eq, PartialEq, TryFromPrimitive, Copy, Clone, Hash)]
-    #[repr(u32)]
-    pub enum GenericEnum {
-        FirstValue = 0,
-        SecondValue = 1,
-        DefaultValue = 2,
-    }
+#[derive(Debug, Eq, PartialEq, TryFromPrimitive, Copy, Clone, Hash)]
+#[repr(u32)]
+pub enum GenericEnum {
+    FirstValue = 0,
+    SecondValue = 1,
+    DefaultValue = 2,
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct EmptyModel {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+pub struct EmptyModel {}
+impl EmptyModel {
+    pub fn new() -> Self {
+        Self {}
     }
-
-    impl EmptyModel {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
+}
+impl Encode for EmptyModel {
+    fn encode<'a>(
+        a: Option<&EmptyModel>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for EmptyModel {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&EmptyModel> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
+        Ok(e)
     }
-
-    impl Encode for EmptyModel {
-        fn encode<'a> (a: Option<&EmptyModel>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+}
+impl EncodeSelf for Option<EmptyModel> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for EmptyModel {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
+}
+impl Decode for EmptyModel {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<EmptyModel>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
         }
-    }
-
-    impl EncodeSelf for Option<&EmptyModel> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
         }
+        let mut x = EmptyModel::new();
+        Ok(Some(x))
     }
-
-    impl EncodeSelf for Option<EmptyModel> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for EmptyModel {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<EmptyModel>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = EmptyModel::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // EmptyModelWithDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct EmptyModelWithDescription {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl EmptyModelWithDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for EmptyModelWithDescription {
-        fn encode<'a> (a: Option<&EmptyModelWithDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for EmptyModelWithDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<&EmptyModelWithDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<EmptyModelWithDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for EmptyModelWithDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<EmptyModelWithDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = EmptyModelWithDescription::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithSingleStringField {
-        
-
-        
-
-
-        
-    
-            pub string_field: String,
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+pub struct EmptyModelWithDescription {}
+impl EmptyModelWithDescription {
+    pub fn new() -> Self {
+        Self {}
     }
-
-    impl ModelWithSingleStringField {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
+}
+impl Encode for EmptyModelWithDescription {
+    fn encode<'a>(
+        a: Option<&EmptyModelWithDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for EmptyModelWithDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&EmptyModelWithDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
+        Ok(e)
     }
-
-    impl Encode for ModelWithSingleStringField {
-        fn encode<'a> (a: Option<&ModelWithSingleStringField>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+}
+impl EncodeSelf for Option<EmptyModelWithDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl Decode for EmptyModelWithDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<EmptyModelWithDescription>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = EmptyModelWithDescription::new();
+        Ok(Some(x))
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithSingleStringField {
+    pub string_field: String,
+}
+impl ModelWithSingleStringField {
+    pub fn new() -> Self {
+        Self {
+            string_field: "DefaultValue".to_string(),
         }
     }
-
-    impl EncodeSelf for ModelWithSingleStringField {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
+}
+impl Encode for ModelWithSingleStringField {
+    fn encode<'a>(
+        a: Option<&ModelWithSingleStringField>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithSingleStringField {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_string(&self.string_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithSingleStringField> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithSingleStringField> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithSingleStringField> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithSingleStringField> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithSingleStringField {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithSingleStringField>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithSingleStringField::new();
-
-            
-
-            
-
-
-            
-    
+}
+impl Decode for ModelWithSingleStringField {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithSingleStringField>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithSingleStringField::new();
         x.string_field = d.decode_string()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
+        Ok(Some(x))
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithSingleStringFieldAndDescription {
+    pub string_field: String,
+}
+impl ModelWithSingleStringFieldAndDescription {
+    pub fn new() -> Self {
+        Self {
+            string_field: "DefaultValue".to_string(),
         }
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // ModelWithSingleStringFieldAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithSingleStringFieldAndDescription {
-        
-
-        
-
-
-        
-    
-            pub string_field: String,
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+}
+impl Encode for ModelWithSingleStringFieldAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithSingleStringFieldAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
     }
-
-    impl ModelWithSingleStringFieldAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithSingleStringFieldAndDescription {
-        fn encode<'a> (a: Option<&ModelWithSingleStringFieldAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithSingleStringFieldAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
+}
+impl EncodeSelf for ModelWithSingleStringFieldAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_string(&self.string_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithSingleStringFieldAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithSingleStringFieldAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithSingleStringFieldAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithSingleStringFieldAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithSingleStringFieldAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithSingleStringFieldAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithSingleStringFieldAndDescription::new();
-
-            
-
-            
-
-
-            
-    
+}
+impl Decode for ModelWithSingleStringFieldAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithSingleStringFieldAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithSingleStringFieldAndDescription::new();
         x.string_field = d.decode_string()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithSingleInt32Field {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-            pub int32_field: i32,
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+pub struct ModelWithSingleInt32Field {
+    pub int32_field: i32,
+}
+impl ModelWithSingleInt32Field {
+    pub fn new() -> Self {
+        Self { int32_field: 32 }
     }
-
-    impl ModelWithSingleInt32Field {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
+}
+impl Encode for ModelWithSingleInt32Field {
+    fn encode<'a>(
+        a: Option<&ModelWithSingleInt32Field>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
     }
-
-    impl Encode for ModelWithSingleInt32Field {
-        fn encode<'a> (a: Option<&ModelWithSingleInt32Field>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithSingleInt32Field {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
+}
+impl EncodeSelf for ModelWithSingleInt32Field {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_i32(self.int32_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithSingleInt32Field> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithSingleInt32Field> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithSingleInt32Field> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithSingleInt32Field> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithSingleInt32Field {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithSingleInt32Field>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithSingleInt32Field::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
+}
+impl Decode for ModelWithSingleInt32Field {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithSingleInt32Field>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithSingleInt32Field::new();
         x.int32_field = d.decode_i32()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // ModelWithSingleInt32FieldAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithSingleInt32FieldAndDescription {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-            pub int32_field: i32,
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithSingleInt32FieldAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithSingleInt32FieldAndDescription {
-        fn encode<'a> (a: Option<&ModelWithSingleInt32FieldAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithSingleInt32FieldAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-        e.encode_i32(self.int32_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<&ModelWithSingleInt32FieldAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<ModelWithSingleInt32FieldAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for ModelWithSingleInt32FieldAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithSingleInt32FieldAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithSingleInt32FieldAndDescription::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-        x.int32_field = d.decode_i32()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithMultipleFields {
-        
-
-        
-
-
-        
-    
-            pub string_field: String,
-
-        
-    
-
-        
-    
-
-
-        
-    
-            pub int32_field: i32,
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+pub struct ModelWithSingleInt32FieldAndDescription {
+    pub int32_field: i32,
+}
+impl ModelWithSingleInt32FieldAndDescription {
+    pub fn new() -> Self {
+        Self { int32_field: 32 }
     }
-
-    impl ModelWithMultipleFields {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
+}
+impl Encode for ModelWithSingleInt32FieldAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithSingleInt32FieldAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithSingleInt32FieldAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        e.encode_i32(self.int32_field)?;
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithSingleInt32FieldAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
+        Ok(e)
     }
-
-    impl Encode for ModelWithMultipleFields {
-        fn encode<'a> (a: Option<&ModelWithMultipleFields>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+}
+impl EncodeSelf for Option<ModelWithSingleInt32FieldAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl Decode for ModelWithSingleInt32FieldAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithSingleInt32FieldAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithSingleInt32FieldAndDescription::new();
+        x.int32_field = d.decode_i32()?;
+        Ok(Some(x))
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithMultipleFields {
+    pub string_field: String,
+    pub int32_field: i32,
+}
+impl ModelWithMultipleFields {
+    pub fn new() -> Self {
+        Self {
+            string_field: "DefaultValue".to_string(),
+            int32_field: 32,
         }
     }
-
-    impl EncodeSelf for ModelWithMultipleFields {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
+}
+impl Encode for ModelWithMultipleFields {
+    fn encode<'a>(
+        a: Option<&ModelWithMultipleFields>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithMultipleFields {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_string(&self.string_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         e.encode_i32(self.int32_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithMultipleFields> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithMultipleFields> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithMultipleFields> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithMultipleFields> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithMultipleFields {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithMultipleFields>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithMultipleFields::new();
-
-            
-
-            
-
-
-            
-    
+}
+impl Decode for ModelWithMultipleFields {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithMultipleFields>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithMultipleFields::new();
         x.string_field = d.decode_string()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         x.int32_field = d.decode_i32()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
+        Ok(Some(x))
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithMultipleFieldsAndDescription {
+    pub string_field: String,
+    pub int32_field: i32,
+}
+impl ModelWithMultipleFieldsAndDescription {
+    pub fn new() -> Self {
+        Self {
+            string_field: "DefaultValue".to_string(),
+            int32_field: 32,
         }
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // ModelWithMultipleFieldsAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithMultipleFieldsAndDescription {
-        
-
-        
-
-
-        
-    
-            pub string_field: String,
-
-        
-    
-
-        
-    
-
-
-        
-    
-            pub int32_field: i32,
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+}
+impl Encode for ModelWithMultipleFieldsAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithMultipleFieldsAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
     }
-
-    impl ModelWithMultipleFieldsAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithMultipleFieldsAndDescription {
-        fn encode<'a> (a: Option<&ModelWithMultipleFieldsAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithMultipleFieldsAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
+}
+impl EncodeSelf for ModelWithMultipleFieldsAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_string(&self.string_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         e.encode_i32(self.int32_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithMultipleFieldsAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithMultipleFieldsAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithMultipleFieldsAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithMultipleFieldsAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithMultipleFieldsAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithMultipleFieldsAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithMultipleFieldsAndDescription::new();
-
-            
-
-            
-
-
-            
-    
+}
+impl Decode for ModelWithMultipleFieldsAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithMultipleFieldsAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithMultipleFieldsAndDescription::new();
         x.string_field = d.decode_string()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         x.int32_field = d.decode_i32()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEnum {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-            pub enum_field: GenericEnum,
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEnum {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-        enum_field: GenericEnum::DefaultValue,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEnum {
-        fn encode<'a> (a: Option<&ModelWithEnum>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+pub struct ModelWithEnum {
+    pub enum_field: GenericEnum,
+}
+impl ModelWithEnum {
+    pub fn new() -> Self {
+        Self {
+            enum_field: GenericEnum::DefaultValue,
         }
     }
-
-    impl EncodeSelf for ModelWithEnum {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
+}
+impl Encode for ModelWithEnum {
+    fn encode<'a>(
+        a: Option<&ModelWithEnum>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEnum {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_u32(self.enum_field as u32)?;
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithEnum> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithEnum> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithEnum> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithEnum> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl Decode for ModelWithEnum {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithEnum>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
         }
-    }
-
-    impl Decode for ModelWithEnum {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEnum>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEnum::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
         }
+        let mut x = ModelWithEnum::new();
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
+            .ok()
+            .ok_or(DecodingError::InvalidEnum)?;
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // ModelWithEnumAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEnumAndDescription {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-            pub enum_field: GenericEnum,
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEnumAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-        enum_field: GenericEnum::DefaultValue,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEnumAndDescription {
-        fn encode<'a> (a: Option<&ModelWithEnumAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithEnumAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-        e.encode_u32(self.enum_field as u32)?;
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<&ModelWithEnumAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<ModelWithEnumAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for ModelWithEnumAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEnumAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEnumAndDescription::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEnumAccessor {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-            enum_field: GenericEnum,
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEnumAccessor {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-        enum_field: GenericEnum::DefaultValue,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEnumAccessor {
-        fn encode<'a> (a: Option<&ModelWithEnumAccessor>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+pub struct ModelWithEnumAndDescription {
+    pub enum_field: GenericEnum,
+}
+impl ModelWithEnumAndDescription {
+    pub fn new() -> Self {
+        Self {
+            enum_field: GenericEnum::DefaultValue,
         }
     }
-
-    impl EncodeSelf for ModelWithEnumAccessor {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
+}
+impl Encode for ModelWithEnumAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithEnumAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEnumAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_u32(self.enum_field as u32)?;
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithEnumAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithEnumAccessor> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithEnumAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithEnumAccessor> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl Decode for ModelWithEnumAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithEnumAndDescription>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
         }
-    }
-
-    impl Decode for ModelWithEnumAccessor {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEnumAccessor>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEnumAccessor::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
         }
+        let mut x = ModelWithEnumAndDescription::new();
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
+            .ok()
+            .ok_or(DecodingError::InvalidEnum)?;
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-            impl ModelWithEnumAccessor {
-                pub fn get_enum_field(&self) -> &GenericEnum {
-                    &self.enum_field
-                }
-
-                pub fn set_enum_field(&mut self, v: GenericEnum) {
-                    self.enum_field = v;
-                }
-            }
-
-
-        // ModelWithEnumAccessorAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEnumAccessorAndDescription {
-        
-
-        
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-            enum_field: GenericEnum,
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEnumAccessorAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-        enum_field: GenericEnum::DefaultValue,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEnumAccessorAndDescription {
-        fn encode<'a> (a: Option<&ModelWithEnumAccessorAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithEnumAccessorAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-        e.encode_u32(self.enum_field as u32)?;
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<&ModelWithEnumAccessorAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<ModelWithEnumAccessorAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for ModelWithEnumAccessorAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEnumAccessorAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEnumAccessorAndDescription::new();
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-
-    
-    
-
-    
-    
-            impl ModelWithEnumAccessorAndDescription {
-                pub fn get_enum_field(&self) -> &GenericEnum {
-                    &self.enum_field
-                }
-
-                pub fn set_enum_field(&mut self, v: GenericEnum) {
-                    self.enum_field = v;
-                }
-            }
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithMultipleFieldsAccessor {
-        
-
-        
-
-
-        
-    
-            string_field: String,
-
-        
-    
-
-        
-    
-
-
-        
-    
-            int32_field: i32,
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithMultipleFieldsAccessor {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
+pub struct ModelWithEnumAccessor {
+    enum_field: GenericEnum,
+}
+impl ModelWithEnumAccessor {
+    pub fn new() -> Self {
+        Self {
+            enum_field: GenericEnum::DefaultValue,
         }
-
-
-        
-    
-    
-            pub fn get_string_field(&self) -> String {
-                self.string_field.clone()
-            }
-
-            pub fn set_string_field(&mut self, mut v: String) -> Result<(), Box<dyn std::error::Error>> {
+    }
+}
+impl Encode for ModelWithEnumAccessor {
+    fn encode<'a>(
+        a: Option<&ModelWithEnumAccessor>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEnumAccessor {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        e.encode_u32(self.enum_field as u32)?;
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithEnumAccessor> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<ModelWithEnumAccessor> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl Decode for ModelWithEnumAccessor {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithEnumAccessor>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithEnumAccessor::new();
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
+            .ok()
+            .ok_or(DecodingError::InvalidEnum)?;
+        Ok(Some(x))
+    }
+}
+impl ModelWithEnumAccessor {
+    pub fn get_enum_field(&self) -> &GenericEnum {
+        &self.enum_field
+    }
+    pub fn set_enum_field(&mut self, v: GenericEnum) {
+        self.enum_field = v;
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithEnumAccessorAndDescription {
+    enum_field: GenericEnum,
+}
+impl ModelWithEnumAccessorAndDescription {
+    pub fn new() -> Self {
+        Self {
+            enum_field: GenericEnum::DefaultValue,
+        }
+    }
+}
+impl Encode for ModelWithEnumAccessorAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithEnumAccessorAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEnumAccessorAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        e.encode_u32(self.enum_field as u32)?;
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithEnumAccessorAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<ModelWithEnumAccessorAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl Decode for ModelWithEnumAccessorAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithEnumAccessorAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithEnumAccessorAndDescription::new();
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
+            .ok()
+            .ok_or(DecodingError::InvalidEnum)?;
+        Ok(Some(x))
+    }
+}
+impl ModelWithEnumAccessorAndDescription {
+    pub fn get_enum_field(&self) -> &GenericEnum {
+        &self.enum_field
+    }
+    pub fn set_enum_field(&mut self, v: GenericEnum) {
+        self.enum_field = v;
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithMultipleFieldsAccessor {
+    string_field: String,
+    int32_field: i32,
+}
+impl ModelWithMultipleFieldsAccessor {
+    pub fn new() -> Self {
+        Self {
+            string_field: "DefaultValue".to_string(),
+            int32_field: 32,
+        }
+    }
+    pub fn get_string_field(&self) -> String {
+        self.string_field.clone()
+    }
+    pub fn set_string_field(
+        &mut self,
+        mut v: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if !Regex::new("^[a-zA-Z0-9]*$")?.is_match(v.as_str()) {
-            return Err(Box::<dyn std::error::Error>::from("value must match ^[a-zA-Z0-9]*$"));
+            return Err(
+                Box::<dyn std::error::Error>::from("value must match ^[a-zA-Z0-9]*$"),
+            );
         }
-
-            if v.len() > 20 || v.len() < 1 {
-                return Err(Box::<dyn std::error::Error>::from("value must be between { .Minimum }} and 20"));
-            }
-
-            v = v.to_uppercase();
-
-                self.string_field = v;
-                Ok(())
-            }
-
-        
-    
-    
-           pub  fn get_int32_field(&self) -> i32 {
-                self.int32_field
-            }
-
-            pub fn set_int32_field(&mut self, v: i32) -> Result<(), Box<dyn std::error::Error>> {
+        if v.len() > 20 || v.len() < 1 {
+            return Err(
+                Box::<
+                    dyn std::error::Error,
+                >::from("value must be between { .Minimum }} and 20"),
+            );
+        }
+        v = v.to_uppercase();
+        self.string_field = v;
+        Ok(())
+    }
+    pub fn get_int32_field(&self) -> i32 {
+        self.int32_field
+    }
+    pub fn set_int32_field(&mut self, v: i32) -> Result<(), Box<dyn std::error::Error>> {
         if v > 100 || v < 0 {
-            return Err(Box::<dyn std::error::Error>::from("value must be between { .Minimum }} and 100"));
+            return Err(
+                Box::<
+                    dyn std::error::Error,
+                >::from("value must be between { .Minimum }} and 100"),
+            );
         }
-
-                self.int32_field = v;
-                Ok(())
-            }
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
+        self.int32_field = v;
+        Ok(())
     }
-
-    impl Encode for ModelWithMultipleFieldsAccessor {
-        fn encode<'a> (a: Option<&ModelWithMultipleFieldsAccessor>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
+}
+impl Encode for ModelWithMultipleFieldsAccessor {
+    fn encode<'a>(
+        a: Option<&ModelWithMultipleFieldsAccessor>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
     }
-
-    impl EncodeSelf for ModelWithMultipleFieldsAccessor {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
+}
+impl EncodeSelf for ModelWithMultipleFieldsAccessor {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_string(&self.string_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         e.encode_i32(self.int32_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithMultipleFieldsAccessor> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithMultipleFieldsAccessor> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithMultipleFieldsAccessor> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithMultipleFieldsAccessor> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithMultipleFieldsAccessor {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithMultipleFieldsAccessor>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithMultipleFieldsAccessor::new();
-
-            
-
-            
-
-
-            
-    
+}
+impl Decode for ModelWithMultipleFieldsAccessor {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithMultipleFieldsAccessor>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithMultipleFieldsAccessor::new();
         x.string_field = d.decode_string()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         x.int32_field = d.decode_i32()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
+        Ok(Some(x))
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithMultipleFieldsAccessorAndDescription {
+    string_field: String,
+    int32_field: i32,
+}
+impl ModelWithMultipleFieldsAccessorAndDescription {
+    pub fn new() -> Self {
+        Self {
+            string_field: "DefaultValue".to_string(),
+            int32_field: 32,
         }
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // ModelWithMultipleFieldsAccessorAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithMultipleFieldsAccessorAndDescription {
-        
-
-        
-
-
-        
-    
-            string_field: String,
-
-        
-    
-
-        
-    
-
-
-        
-    
-            int32_field: i32,
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
+    pub fn get_string_field(&self) -> String {
+        self.string_field.clone()
     }
-
-    impl ModelWithMultipleFieldsAccessorAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-
-                
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-            pub fn get_string_field(&self) -> String {
-                self.string_field.clone()
-            }
-
-            pub fn set_string_field(&mut self, mut v: String) -> Result<(), Box<dyn std::error::Error>> {
-
-
-
-                self.string_field = v;
-                Ok(())
-            }
-
-        
-    
-    
-           pub  fn get_int32_field(&self) -> i32 {
-                self.int32_field
-            }
-
-            pub fn set_int32_field(&mut self, v: i32) -> Result<(), Box<dyn std::error::Error>> {
-
-                self.int32_field = v;
-                Ok(())
-            }
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
+    pub fn set_string_field(
+        &mut self,
+        mut v: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.string_field = v;
+        Ok(())
     }
-
-    impl Encode for ModelWithMultipleFieldsAccessorAndDescription {
-        fn encode<'a> (a: Option<&ModelWithMultipleFieldsAccessorAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
+    pub fn get_int32_field(&self) -> i32 {
+        self.int32_field
     }
-
-    impl EncodeSelf for ModelWithMultipleFieldsAccessorAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-
-            
-
-
-            
-    
+    pub fn set_int32_field(&mut self, v: i32) -> Result<(), Box<dyn std::error::Error>> {
+        self.int32_field = v;
+        Ok(())
+    }
+}
+impl Encode for ModelWithMultipleFieldsAccessorAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithMultipleFieldsAccessorAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithMultipleFieldsAccessorAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         e.encode_string(&self.string_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         e.encode_i32(self.int32_field)?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithMultipleFieldsAccessorAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithMultipleFieldsAccessorAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithMultipleFieldsAccessorAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithMultipleFieldsAccessorAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithMultipleFieldsAccessorAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithMultipleFieldsAccessorAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithMultipleFieldsAccessorAndDescription::new();
-
-            
-
-            
-
-
-            
-    
+}
+impl Decode for ModelWithMultipleFieldsAccessorAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithMultipleFieldsAccessorAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithMultipleFieldsAccessorAndDescription::new();
         x.string_field = d.decode_string()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
         x.int32_field = d.decode_i32()?;
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEmbeddedModels {
-        
-            pub embedded_empty_model: Option<EmptyModel>,
-
-        
-            pub embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEmbeddedModels {
-        pub fn new () -> Self {
-            Self {
-                
-        embedded_empty_model: Some(EmptyModel::new()),
-
-                
-        embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(64),
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEmbeddedModels {
-        fn encode<'a> (a: Option<&ModelWithEmbeddedModels>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+pub struct ModelWithEmbeddedModels {
+    pub embedded_empty_model: Option<EmptyModel>,
+    pub embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
+}
+impl ModelWithEmbeddedModels {
+    pub fn new() -> Self {
+        Self {
+            embedded_empty_model: Some(EmptyModel::new()),
+            embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(64),
         }
     }
-
-    impl EncodeSelf for ModelWithEmbeddedModels {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
+}
+impl Encode for ModelWithEmbeddedModels {
+    fn encode<'a>(
+        a: Option<&ModelWithEmbeddedModels>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEmbeddedModels {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.embedded_empty_model.encode_self(e)?;
-
-            
-        e.encode_array(self.embedded_model_array_with_multiple_fields_accessor.len(), Kind::Any)?;
+        e.encode_array(
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
+            Kind::Any,
+        )?;
         for a in &self.embedded_model_array_with_multiple_fields_accessor {
             a.encode_self(e)?;
         }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithEmbeddedModels> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithEmbeddedModels> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithEmbeddedModels> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithEmbeddedModels> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithEmbeddedModels {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEmbeddedModels>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEmbeddedModels::new();
-
-            
+}
+impl Decode for ModelWithEmbeddedModels {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithEmbeddedModels>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithEmbeddedModels::new();
         x.embedded_empty_model = EmptyModel::decode(d)?;
-
-            
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
         for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?);
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
         }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
-
-        // ModelWithEmbeddedModelsAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEmbeddedModelsAndDescription {
-        
-            pub embedded_empty_model: Option<EmptyModel>,
-
-        
-            pub embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEmbeddedModelsAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-        embedded_empty_model: Some(EmptyModel::new()),
-
-                
-        embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(0),
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEmbeddedModelsAndDescription {
-        fn encode<'a> (a: Option<&ModelWithEmbeddedModelsAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithEmbeddedModelsAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-        self.embedded_empty_model.encode_self(e)?;
-
-            
-        e.encode_array(self.embedded_model_array_with_multiple_fields_accessor.len(), Kind::Any)?;
-        for a in &self.embedded_model_array_with_multiple_fields_accessor {
-            a.encode_self(e)?;
-        }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<&ModelWithEmbeddedModelsAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<ModelWithEmbeddedModelsAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for ModelWithEmbeddedModelsAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEmbeddedModelsAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEmbeddedModelsAndDescription::new();
-
-            
-        x.embedded_empty_model = EmptyModel::decode(d)?;
-
-            
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
-        for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?);
-        }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEmbeddedModelsAccessor {
-        
-            embedded_empty_model: Option<EmptyModel>,
-
-        
-            embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEmbeddedModelsAccessor {
-        pub fn new () -> Self {
-            Self {
-                
-        embedded_empty_model: Some(EmptyModel::new()),
-
-                
-        embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(0),
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEmbeddedModelsAccessor {
-        fn encode<'a> (a: Option<&ModelWithEmbeddedModelsAccessor>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+pub struct ModelWithEmbeddedModelsAndDescription {
+    pub embedded_empty_model: Option<EmptyModel>,
+    pub embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
+}
+impl ModelWithEmbeddedModelsAndDescription {
+    pub fn new() -> Self {
+        Self {
+            embedded_empty_model: Some(EmptyModel::new()),
+            embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(0),
         }
     }
-
-    impl EncodeSelf for ModelWithEmbeddedModelsAccessor {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
+}
+impl Encode for ModelWithEmbeddedModelsAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithEmbeddedModelsAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEmbeddedModelsAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.embedded_empty_model.encode_self(e)?;
-
-            
-        e.encode_array(self.embedded_model_array_with_multiple_fields_accessor.len(), Kind::Any)?;
+        e.encode_array(
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
+            Kind::Any,
+        )?;
         for a in &self.embedded_model_array_with_multiple_fields_accessor {
             a.encode_self(e)?;
         }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithEmbeddedModelsAccessor> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithEmbeddedModelsAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithEmbeddedModelsAccessor> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithEmbeddedModelsAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithEmbeddedModelsAccessor {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEmbeddedModelsAccessor>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEmbeddedModelsAccessor::new();
-
-            
+}
+impl Decode for ModelWithEmbeddedModelsAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithEmbeddedModelsAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithEmbeddedModelsAndDescription::new();
         x.embedded_empty_model = EmptyModel::decode(d)?;
-
-            
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
         for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?);
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
         }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-            impl ModelWithEmbeddedModelsAccessor {
-                pub fn get_embedded_empty_model(&self) -> &Option<EmptyModel> {
-                    &self.embedded_empty_model
-                }
-
-                pub fn set_embedded_empty_model(&mut self, v: Option<EmptyModel>) {
-                    self.embedded_empty_model = v;
-                }
-            }
-
-    
-    
-            impl ModelWithEmbeddedModelsAccessor {
-                pub fn get_embedded_model_array_with_multiple_fields_accessor (&self) -> Option<&Vec<ModelWithMultipleFieldsAccessor>> {
-                    Some(&self.embedded_model_array_with_multiple_fields_accessor)
-                }
-
-                pub fn set_embedded_model_array_with_multiple_fields_accessor (&mut self, v: Vec<ModelWithMultipleFieldsAccessor>) {
-                    self.embedded_model_array_with_multiple_fields_accessor = v;
-                }
-            }
-
-    
-    
-
-
-        // ModelWithEmbeddedModelsAccessorAndDescription: Test Description
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithEmbeddedModelsAccessorAndDescription {
-        
-            embedded_empty_model: Option<EmptyModel>,
-
-        
-            embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-
-        
-    
-
-        
-    
-
-    }
-
-    impl ModelWithEmbeddedModelsAccessorAndDescription {
-        pub fn new () -> Self {
-            Self {
-                
-        embedded_empty_model: Some(EmptyModel::new()),
-
-                
-        embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(0),
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-
-                
-    
-
-                
-    
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithEmbeddedModelsAccessorAndDescription {
-        fn encode<'a> (a: Option<&ModelWithEmbeddedModelsAccessorAndDescription>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
-        }
-    }
-
-    impl EncodeSelf for ModelWithEmbeddedModelsAccessorAndDescription {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
-        self.embedded_empty_model.encode_self(e)?;
-
-            
-        e.encode_array(self.embedded_model_array_with_multiple_fields_accessor.len(), Kind::Any)?;
-        for a in &self.embedded_model_array_with_multiple_fields_accessor {
-            a.encode_self(e)?;
-        }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-
-            
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<&ModelWithEmbeddedModelsAccessorAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl EncodeSelf for Option<ModelWithEmbeddedModelsAccessorAndDescription> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
-        }
-    }
-
-    impl Decode for ModelWithEmbeddedModelsAccessorAndDescription {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithEmbeddedModelsAccessorAndDescription>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithEmbeddedModelsAccessorAndDescription::new();
-
-            
-        x.embedded_empty_model = EmptyModel::decode(d)?;
-
-            
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
-        for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?);
-        }
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            
-    
-
-            
-    
-
-
-            Ok(Some(x))
-        }
-    }
-
-    
-    
-            impl ModelWithEmbeddedModelsAccessorAndDescription {
-                pub fn get_embedded_empty_model(&self) -> &Option<EmptyModel> {
-                    &self.embedded_empty_model
-                }
-
-                pub fn set_embedded_empty_model(&mut self, v: Option<EmptyModel>) {
-                    self.embedded_empty_model = v;
-                }
-            }
-
-    
-    
-            impl ModelWithEmbeddedModelsAccessorAndDescription {
-                pub fn get_embedded_model_array_with_multiple_fields_accessor (&self) -> Option<&Vec<ModelWithMultipleFieldsAccessor>> {
-                    Some(&self.embedded_model_array_with_multiple_fields_accessor)
-                }
-
-                pub fn set_embedded_model_array_with_multiple_fields_accessor (&mut self, v: Vec<ModelWithMultipleFieldsAccessor>) {
-                    self.embedded_model_array_with_multiple_fields_accessor = v;
-                }
-            }
-
-    
-    
-
+}
 #[derive(Clone, Debug, PartialEq)]
-    pub struct ModelWithAllFieldTypes {
-        
-            pub model_field: Option<EmptyModel>,
-
-        
-            pub model_array_field: Vec<EmptyModel>,
-
-
-        
-    
-            pub string_field: String,
-
-        
-    
-            pub string_array_field: Vec<String>,
-
-        
-    
-            pub string_map_field: HashMap<String, String>,
-    
-            pub string_map_field_embedded: HashMap<String, EmptyModel>,
-    
-
-
-        
-    
-            pub int32_field: i32,
-
-        
-    
-            pub int32_array_field: Vec<i32>,
-
-        
-    
-            pub int32_map_field: HashMap<i32, i32>,
-    
-            pub int32_map_field_embedded: HashMap<i32, EmptyModel>,
-    
-
-
-
-        
-    
-            pub int64_field: i64,
-
-        
-    
-            pub int64_array_field: Vec<i64>,
-
-        
-    
-            pub int64_map_field: HashMap<i64, i64>,
-    
-            pub int64_map_field_embedded: HashMap<i64, EmptyModel>,
-    
-
-
-        
-    
-            pub uint32_field: u32,
-
-        
-    
-            pub uint32_array_field: Vec<u32>,
-
-        
-    
-            pub uint32_map_field: HashMap<u32, u32>,
-    
-            pub uint32_map_field_embedded: HashMap<u32, EmptyModel>,
-    
-
-
-        
-    
-            pub uint64_field: u64,
-
-        
-    
-            pub uint64_array_field: Vec<u64>,
-
-        
-    
-            pub uint64_map_field: HashMap<u64, u64>,
-    
-            pub uint64_map_field_embedded: HashMap<u64, EmptyModel>,
-    
-
-
-        
-    
-            pub float32_field: f32,
-
-        
-    
-            pub float32_array_field: Vec<f32>,
-
-
-        
-    
-            pub float64_field: f64,
-
-        
-    
-            pub float64_array_field: Vec<f64>,
-
-
-        
-    
-            pub enum_field: GenericEnum,
-
-        
-    
-            pub enum_array_field: Vec<GenericEnum>,
-
-        
-    
-            pub enum_map_field: HashMap<GenericEnum, String>,
-            pub enum_map_field_embedded: HashMap<GenericEnum, EmptyModel>,
-
-
-        
-    
-            pub bytes_field: Vec<u8>,
-
-        
-    
-            pub bytes_array_field: Vec<Vec<u8>>,
-
-
-        
-    
-            pub bool_field: bool,
-
-        
-    
-            pub bool_array_field: Vec<bool>,
-
-    }
-
-    impl ModelWithAllFieldTypes {
-        pub fn new () -> Self {
-            Self {
-                
-        model_field: Some(EmptyModel::new()),
-
-                
-        model_array_field: Vec::with_capacity(0),
-
-
-                
-    
-        string_field: "DefaultValue".to_string(),
-    
-
-                
-    
-        string_array_field: Vec::with_capacity(0),
-
-                
-    
-        string_map_field: HashMap::new(),
-        string_map_field_embedded: HashMap::new(),
-
-
-                
-    
-        int32_field: 32,
-    
-
-                
-    
-        int32_array_field: Vec::with_capacity(0),
-
-                
-    
-        int32_map_field: HashMap::new(),
-        int32_map_field_embedded: HashMap::new(),
-
-
-                
-    
-        int64_field: 64,
-    
-
-                
-    
-        int64_array_field: Vec::with_capacity(0),
-
-                
-    
-        int64_map_field: HashMap::new(),
-        int64_map_field_embedded: HashMap::new(),
-
-
-                
-    
-        uint32_field: 32,
-    
-
-                
-    
-        uint32_array_field: Vec::with_capacity(0),
-
-                
-    
-        uint32_map_field: HashMap::new(),
-        uint32_map_field_embedded: HashMap::new(),
-
-
-                
-    
-        uint64_field: 64,
-    
-
-                
-    
-        uint64_array_field: Vec::with_capacity(0),
-
-                
-    
-        uint64_map_field: HashMap::new(),
-        uint64_map_field_embedded: HashMap::new(),
-
-
-                
-    
-        float32_field: 32.32,
-    
-
-                
-    
-        float32_array_field: Vec::with_capacity(0),
-
-
-                
-    
-        float64_field: 64.64,
-    
-
-                
-    
-        float64_array_field: Vec::with_capacity(0),
-
-
-                
-    
-        enum_field: GenericEnum::DefaultValue,
-    
-
-                
-    
-        enum_array_field: Vec::with_capacity(0),
-
-                
-    
-        enum_map_field: HashMap::new(),
-    
-        enum_map_field_embedded: HashMap::new(),
-    
-
-
-                
-    
-        bytes_field: Vec::with_capacity(512),
-    
-
-                
-    
-        bytes_array_field: Vec::with_capacity(0),
-
-
-                
-    
-        bool_field: true,
-    
-
-                
-    
-        bool_array_field: Vec::with_capacity(0),
-
-            }
-        }
-
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-        
-    
-    
-
-    }
-
-    impl Encode for ModelWithAllFieldTypes {
-        fn encode<'a> (a: Option<&ModelWithAllFieldTypes>, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            a.encode_self(e)
+pub struct ModelWithEmbeddedModelsAccessor {
+    embedded_empty_model: Option<EmptyModel>,
+    embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
+}
+impl ModelWithEmbeddedModelsAccessor {
+    pub fn new() -> Self {
+        Self {
+            embedded_empty_model: Some(EmptyModel::new()),
+            embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(0),
         }
     }
-
-    impl EncodeSelf for ModelWithAllFieldTypes {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            
+}
+impl Encode for ModelWithEmbeddedModelsAccessor {
+    fn encode<'a>(
+        a: Option<&ModelWithEmbeddedModelsAccessor>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEmbeddedModelsAccessor {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        self.embedded_empty_model.encode_self(e)?;
+        e.encode_array(
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
+            Kind::Any,
+        )?;
+        for a in &self.embedded_model_array_with_multiple_fields_accessor {
+            a.encode_self(e)?;
+        }
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithEmbeddedModelsAccessor> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<ModelWithEmbeddedModelsAccessor> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl Decode for ModelWithEmbeddedModelsAccessor {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithEmbeddedModelsAccessor>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithEmbeddedModelsAccessor::new();
+        x.embedded_empty_model = EmptyModel::decode(d)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
+        for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
+        }
+        Ok(Some(x))
+    }
+}
+impl ModelWithEmbeddedModelsAccessor {
+    pub fn get_embedded_empty_model(&self) -> &Option<EmptyModel> {
+        &self.embedded_empty_model
+    }
+    pub fn set_embedded_empty_model(&mut self, v: Option<EmptyModel>) {
+        self.embedded_empty_model = v;
+    }
+}
+impl ModelWithEmbeddedModelsAccessor {
+    pub fn get_embedded_model_array_with_multiple_fields_accessor(
+        &self,
+    ) -> Option<&Vec<ModelWithMultipleFieldsAccessor>> {
+        Some(&self.embedded_model_array_with_multiple_fields_accessor)
+    }
+    pub fn set_embedded_model_array_with_multiple_fields_accessor(
+        &mut self,
+        v: Vec<ModelWithMultipleFieldsAccessor>,
+    ) {
+        self.embedded_model_array_with_multiple_fields_accessor = v;
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithEmbeddedModelsAccessorAndDescription {
+    embedded_empty_model: Option<EmptyModel>,
+    embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
+}
+impl ModelWithEmbeddedModelsAccessorAndDescription {
+    pub fn new() -> Self {
+        Self {
+            embedded_empty_model: Some(EmptyModel::new()),
+            embedded_model_array_with_multiple_fields_accessor: Vec::with_capacity(0),
+        }
+    }
+}
+impl Encode for ModelWithEmbeddedModelsAccessorAndDescription {
+    fn encode<'a>(
+        a: Option<&ModelWithEmbeddedModelsAccessorAndDescription>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithEmbeddedModelsAccessorAndDescription {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        self.embedded_empty_model.encode_self(e)?;
+        e.encode_array(
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
+            Kind::Any,
+        )?;
+        for a in &self.embedded_model_array_with_multiple_fields_accessor {
+            a.encode_self(e)?;
+        }
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<&ModelWithEmbeddedModelsAccessorAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl EncodeSelf for Option<ModelWithEmbeddedModelsAccessorAndDescription> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
+        }
+        Ok(e)
+    }
+}
+impl Decode for ModelWithEmbeddedModelsAccessorAndDescription {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<
+        Option<ModelWithEmbeddedModelsAccessorAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithEmbeddedModelsAccessorAndDescription::new();
+        x.embedded_empty_model = EmptyModel::decode(d)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
+        for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
+        }
+        Ok(Some(x))
+    }
+}
+impl ModelWithEmbeddedModelsAccessorAndDescription {
+    pub fn get_embedded_empty_model(&self) -> &Option<EmptyModel> {
+        &self.embedded_empty_model
+    }
+    pub fn set_embedded_empty_model(&mut self, v: Option<EmptyModel>) {
+        self.embedded_empty_model = v;
+    }
+}
+impl ModelWithEmbeddedModelsAccessorAndDescription {
+    pub fn get_embedded_model_array_with_multiple_fields_accessor(
+        &self,
+    ) -> Option<&Vec<ModelWithMultipleFieldsAccessor>> {
+        Some(&self.embedded_model_array_with_multiple_fields_accessor)
+    }
+    pub fn set_embedded_model_array_with_multiple_fields_accessor(
+        &mut self,
+        v: Vec<ModelWithMultipleFieldsAccessor>,
+    ) {
+        self.embedded_model_array_with_multiple_fields_accessor = v;
+    }
+}
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModelWithAllFieldTypes {
+    pub model_field: Option<EmptyModel>,
+    pub model_array_field: Vec<EmptyModel>,
+    pub string_field: String,
+    pub string_array_field: Vec<String>,
+    pub string_map_field: HashMap<String, String>,
+    pub string_map_field_embedded: HashMap<String, EmptyModel>,
+    pub int32_field: i32,
+    pub int32_array_field: Vec<i32>,
+    pub int32_map_field: HashMap<i32, i32>,
+    pub int32_map_field_embedded: HashMap<i32, EmptyModel>,
+    pub int64_field: i64,
+    pub int64_array_field: Vec<i64>,
+    pub int64_map_field: HashMap<i64, i64>,
+    pub int64_map_field_embedded: HashMap<i64, EmptyModel>,
+    pub uint32_field: u32,
+    pub uint32_array_field: Vec<u32>,
+    pub uint32_map_field: HashMap<u32, u32>,
+    pub uint32_map_field_embedded: HashMap<u32, EmptyModel>,
+    pub uint64_field: u64,
+    pub uint64_array_field: Vec<u64>,
+    pub uint64_map_field: HashMap<u64, u64>,
+    pub uint64_map_field_embedded: HashMap<u64, EmptyModel>,
+    pub float32_field: f32,
+    pub float32_array_field: Vec<f32>,
+    pub float64_field: f64,
+    pub float64_array_field: Vec<f64>,
+    pub enum_field: GenericEnum,
+    pub enum_array_field: Vec<GenericEnum>,
+    pub enum_map_field: HashMap<GenericEnum, String>,
+    pub enum_map_field_embedded: HashMap<GenericEnum, EmptyModel>,
+    pub bytes_field: Vec<u8>,
+    pub bytes_array_field: Vec<Vec<u8>>,
+    pub bool_field: bool,
+    pub bool_array_field: Vec<bool>,
+}
+impl ModelWithAllFieldTypes {
+    pub fn new() -> Self {
+        Self {
+            model_field: Some(EmptyModel::new()),
+            model_array_field: Vec::with_capacity(0),
+            string_field: "DefaultValue".to_string(),
+            string_array_field: Vec::with_capacity(0),
+            string_map_field: HashMap::new(),
+            string_map_field_embedded: HashMap::new(),
+            int32_field: 32,
+            int32_array_field: Vec::with_capacity(0),
+            int32_map_field: HashMap::new(),
+            int32_map_field_embedded: HashMap::new(),
+            int64_field: 64,
+            int64_array_field: Vec::with_capacity(0),
+            int64_map_field: HashMap::new(),
+            int64_map_field_embedded: HashMap::new(),
+            uint32_field: 32,
+            uint32_array_field: Vec::with_capacity(0),
+            uint32_map_field: HashMap::new(),
+            uint32_map_field_embedded: HashMap::new(),
+            uint64_field: 64,
+            uint64_array_field: Vec::with_capacity(0),
+            uint64_map_field: HashMap::new(),
+            uint64_map_field_embedded: HashMap::new(),
+            float32_field: 32.32,
+            float32_array_field: Vec::with_capacity(0),
+            float64_field: 64.64,
+            float64_array_field: Vec::with_capacity(0),
+            enum_field: GenericEnum::DefaultValue,
+            enum_array_field: Vec::with_capacity(0),
+            enum_map_field: HashMap::new(),
+            enum_map_field_embedded: HashMap::new(),
+            bytes_field: Vec::with_capacity(512),
+            bytes_array_field: Vec::with_capacity(0),
+            bool_field: true,
+            bool_array_field: Vec::with_capacity(0),
+        }
+    }
+}
+impl Encode for ModelWithAllFieldTypes {
+    fn encode<'a>(
+        a: Option<&ModelWithAllFieldTypes>,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        a.encode_self(e)
+    }
+}
+impl EncodeSelf for ModelWithAllFieldTypes {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.model_field.encode_self(e)?;
-
-            
         e.encode_array(self.model_array_field.len(), Kind::Any)?;
         for a in &self.model_array_field {
             a.encode_self(e)?;
         }
-
-
-            
-    
         e.encode_string(&self.string_field)?;
-
-            
-    
         e.encode_array(self.string_array_field.len(), Kind::String)?;
         for a in &self.string_array_field {
             e.encode_string(&a)?;
         }
-
-            
-    
-            e.encode_map(self.string_map_field.len(), Kind::String, Kind::String)?;
-            for (k, v) in &self.string_map_field {
-                e.encode_string(&k)?;
-                e.encode_string(&v)?;
-            }
-            e.encode_map(self.string_map_field_embedded.len(), Kind::String, Kind::Any)?;
-            for (k, v) in &self.string_map_field_embedded {
-                e.encode_string(&k)?;
-                v.encode_self(e)?;
-            }
-
-
-            
-    
+        e.encode_map(self.string_map_field.len(), Kind::String, Kind::String)?;
+        for (k, v) in &self.string_map_field {
+            e.encode_string(&k)?;
+            e.encode_string(&v)?;
+        }
+        e.encode_map(self.string_map_field_embedded.len(), Kind::String, Kind::Any)?;
+        for (k, v) in &self.string_map_field_embedded {
+            e.encode_string(&k)?;
+            v.encode_self(e)?;
+        }
         e.encode_i32(self.int32_field)?;
-
-            
-    
         e.encode_array(self.int32_array_field.len(), Kind::I32)?;
         for a in &self.int32_array_field {
             e.encode_i32(*a)?;
         }
-
-            
-    
-            e.encode_map(self.int32_map_field.len(), Kind::I32, Kind::I32)?;
-            for (k, v) in &self.int32_map_field {
-                e.encode_i32(*k)?;
-                e.encode_i32(*v)?;
-            }
-            e.encode_map(self.int32_map_field_embedded.len(), Kind::I32, Kind::Any)?;
-            for (k, v) in &self.int32_map_field_embedded {
-                e.encode_i32(*k)?;
-                v.encode_self(e)?;
-            }
-
-
-            
-    
+        e.encode_map(self.int32_map_field.len(), Kind::I32, Kind::I32)?;
+        for (k, v) in &self.int32_map_field {
+            e.encode_i32(*k)?;
+            e.encode_i32(*v)?;
+        }
+        e.encode_map(self.int32_map_field_embedded.len(), Kind::I32, Kind::Any)?;
+        for (k, v) in &self.int32_map_field_embedded {
+            e.encode_i32(*k)?;
+            v.encode_self(e)?;
+        }
         e.encode_i64(self.int64_field)?;
-
-            
-    
         e.encode_array(self.int64_array_field.len(), Kind::I64)?;
         for a in &self.int64_array_field {
             e.encode_i64(*a)?;
         }
-
-            
-    
-            e.encode_map(self.int64_map_field.len(), Kind::I64, Kind::I64)?;
-            for (k, v) in &self.int64_map_field {
-                e.encode_i64(*k)?;
-                e.encode_i64(*v)?;
-            }
-            e.encode_map(self.int64_map_field_embedded.len(), Kind::I64, Kind::Any)?;
-            for (k, v) in &self.int64_map_field_embedded {
-                e.encode_i64(*k)?;
-                v.encode_self(e)?;
-            }
-
-
-            
-    
+        e.encode_map(self.int64_map_field.len(), Kind::I64, Kind::I64)?;
+        for (k, v) in &self.int64_map_field {
+            e.encode_i64(*k)?;
+            e.encode_i64(*v)?;
+        }
+        e.encode_map(self.int64_map_field_embedded.len(), Kind::I64, Kind::Any)?;
+        for (k, v) in &self.int64_map_field_embedded {
+            e.encode_i64(*k)?;
+            v.encode_self(e)?;
+        }
         e.encode_u32(self.uint32_field)?;
-
-            
-    
         e.encode_array(self.uint32_array_field.len(), Kind::U32)?;
         for a in &self.uint32_array_field {
             e.encode_u32(*a)?;
         }
-
-            
-    
-            e.encode_map(self.uint32_map_field.len(), Kind::U32, Kind::U32)?;
-            for (k, v) in &self.uint32_map_field {
-                e.encode_u32(*k)?;
-                e.encode_u32(*v)?;
-            }
-            e.encode_map(self.uint32_map_field_embedded.len(), Kind::U32, Kind::Any)?;
-            for (k, v) in &self.uint32_map_field_embedded {
-                e.encode_u32(*k)?;
-                v.encode_self(e)?;
-            }
-
-
-            
-    
+        e.encode_map(self.uint32_map_field.len(), Kind::U32, Kind::U32)?;
+        for (k, v) in &self.uint32_map_field {
+            e.encode_u32(*k)?;
+            e.encode_u32(*v)?;
+        }
+        e.encode_map(self.uint32_map_field_embedded.len(), Kind::U32, Kind::Any)?;
+        for (k, v) in &self.uint32_map_field_embedded {
+            e.encode_u32(*k)?;
+            v.encode_self(e)?;
+        }
         e.encode_u64(self.uint64_field)?;
-
-            
-    
         e.encode_array(self.uint64_array_field.len(), Kind::U64)?;
         for a in &self.uint64_array_field {
             e.encode_u64(*a)?;
         }
-
-            
-    
-            e.encode_map(self.uint64_map_field.len(), Kind::U64, Kind::U64)?;
-            for (k, v) in &self.uint64_map_field {
-                e.encode_u64(*k)?;
-                e.encode_u64(*v)?;
-            }
-            e.encode_map(self.uint64_map_field_embedded.len(), Kind::U64, Kind::Any)?;
-            for (k, v) in &self.uint64_map_field_embedded {
-                e.encode_u64(*k)?;
-                v.encode_self(e)?;
-            }
-
-
-            
-    
+        e.encode_map(self.uint64_map_field.len(), Kind::U64, Kind::U64)?;
+        for (k, v) in &self.uint64_map_field {
+            e.encode_u64(*k)?;
+            e.encode_u64(*v)?;
+        }
+        e.encode_map(self.uint64_map_field_embedded.len(), Kind::U64, Kind::Any)?;
+        for (k, v) in &self.uint64_map_field_embedded {
+            e.encode_u64(*k)?;
+            v.encode_self(e)?;
+        }
         e.encode_f32(self.float32_field)?;
-
-            
-    
         e.encode_array(self.float32_array_field.len(), Kind::F32)?;
         for a in &self.float32_array_field {
             e.encode_f32(*a)?;
         }
-
-
-            
-    
         e.encode_f64(self.float64_field)?;
-
-            
-    
         e.encode_array(self.float64_array_field.len(), Kind::F64)?;
         for a in &self.float64_array_field {
             e.encode_f64(*a)?;
         }
-
-
-            
-    
         e.encode_u32(self.enum_field as u32)?;
-
-            
         e.encode_array(self.enum_array_field.len(), Kind::U32)?;
         for a in &self.enum_array_field {
             e.encode_u32(*a as u32)?;
         }
-
-            
-            e.encode_map(self.enum_map_field.len(), Kind::U32, Kind::String)?;
-            for (k, v) in &self.enum_map_field {
-                e.encode_u32(*k as u32)?;
-                    e.encode_string(&v)?;
-            }
-            e.encode_map(self.enum_map_field_embedded.len(), Kind::U32, Kind::Any)?;
-            for (k, v) in &self.enum_map_field_embedded {
-                e.encode_u32(*k as u32)?;
-                v.encode_self(e)?;
-            }
-
-
-            
-    
+        e.encode_map(self.enum_map_field.len(), Kind::U32, Kind::String)?;
+        for (k, v) in &self.enum_map_field {
+            e.encode_u32(*k as u32)?;
+            e.encode_string(&v)?;
+        }
+        e.encode_map(self.enum_map_field_embedded.len(), Kind::U32, Kind::Any)?;
+        for (k, v) in &self.enum_map_field_embedded {
+            e.encode_u32(*k as u32)?;
+            v.encode_self(e)?;
+        }
         e.encode_bytes(&self.bytes_field)?;
-
-            
-    
         e.encode_array(self.bytes_array_field.len(), Kind::Bytes)?;
         for a in &self.bytes_array_field {
             e.encode_bytes(&a)?;
         }
-
-
-            
-    
         e.encode_bool(self.bool_field)?;
-
-            
-    
         e.encode_array(self.bool_array_field.len(), Kind::Bool)?;
         for a in &self.bool_array_field {
             e.encode_bool(*a)?;
         }
-
-
-            Ok(e)
-        }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<&ModelWithAllFieldTypes> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<&ModelWithAllFieldTypes> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl EncodeSelf for Option<ModelWithAllFieldTypes> {
-        fn encode_self<'a, 'b> (&'b self, e: &'a mut Cursor<Vec<u8>>) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
-            if let Some(x) = self {
-                x.encode_self(e)?;
-            } else {
-                e.encode_none()?;
-            }
-            Ok(e)
+}
+impl EncodeSelf for Option<ModelWithAllFieldTypes> {
+    fn encode_self<'a, 'b>(
+        &'b self,
+        e: &'a mut Cursor<Vec<u8>>,
+    ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        if let Some(x) = self {
+            x.encode_self(e)?;
+        } else {
+            e.encode_none()?;
         }
+        Ok(e)
     }
-
-    impl Decode for ModelWithAllFieldTypes {
-        fn decode (d: &mut Cursor<&mut Vec<u8>>) -> Result<Option<ModelWithAllFieldTypes>, Box<dyn std::error::Error>> {
-            if d.decode_none() {
-                return Ok(None);
-            }
-
-            if let Ok(error) = d.decode_error() {
-                return Err(error);
-            }
-
-            let mut x = ModelWithAllFieldTypes::new();
-
-            
+}
+impl Decode for ModelWithAllFieldTypes {
+    fn decode(
+        d: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<ModelWithAllFieldTypes>, Box<dyn std::error::Error>> {
+        if d.decode_none() {
+            return Ok(None);
+        }
+        if let Ok(error) = d.decode_error() {
+            return Err(error);
+        }
+        let mut x = ModelWithAllFieldTypes::new();
         x.model_field = EmptyModel::decode(d)?;
-
-            
         let size_model_array_field = d.decode_array(Kind::Any)?;
         for _ in 0..size_model_array_field {
-            x.model_array_field.push(EmptyModel::decode(d)?.ok_or(DecodingError::InvalidArray)?);
+            x.model_array_field
+                .push(EmptyModel::decode(d)?.ok_or(DecodingError::InvalidArray)?);
         }
-
-
-            
-    
         x.string_field = d.decode_string()?;
-
-            
-    
         let size_string_array_field = d.decode_array(Kind::String)?;
         for _ in 0..size_string_array_field {
             x.string_array_field.push(d.decode_string()?);
         }
-
-            
-    
-            let size_string_map_field = d.decode_map(Kind::String, Kind::String)?;
-            for _ in 0..size_string_map_field {
-                let k = d.decode_string()?;
-                let v = d.decode_string()?;
-                x.string_map_field.insert(k, v);
-            }
-            let size_string_map_field_embedded = d.decode_map(Kind::String, Kind::Any)?;
-            for _ in 0..size_string_map_field_embedded {
-                let k = d.decode_string()?;
-                let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
-                x.string_map_field_embedded.insert(k, v);
-            }
-
-
-            
-    
+        let size_string_map_field = d.decode_map(Kind::String, Kind::String)?;
+        for _ in 0..size_string_map_field {
+            let k = d.decode_string()?;
+            let v = d.decode_string()?;
+            x.string_map_field.insert(k, v);
+        }
+        let size_string_map_field_embedded = d.decode_map(Kind::String, Kind::Any)?;
+        for _ in 0..size_string_map_field_embedded {
+            let k = d.decode_string()?;
+            let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+            x.string_map_field_embedded.insert(k, v);
+        }
         x.int32_field = d.decode_i32()?;
-
-            
-    
         let size_int32_array_field = d.decode_array(Kind::I32)?;
         for _ in 0..size_int32_array_field {
             x.int32_array_field.push(d.decode_i32()?);
         }
-
-            
-    
-            let size_int32_map_field = d.decode_map(Kind::I32, Kind::I32)?;
-            for _ in 0..size_int32_map_field {
-                let k = d.decode_i32()?;
-                let v = d.decode_i32()?;
-                x.int32_map_field.insert(k, v);
-            }
-            let size_int32_map_field_embedded = d.decode_map(Kind::I32, Kind::Any)?;
-            for _ in 0..size_int32_map_field_embedded {
-                let k = d.decode_i32()?;
-                let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
-                x.int32_map_field_embedded.insert(k, v);
-            }
-
-
-            
-    
+        let size_int32_map_field = d.decode_map(Kind::I32, Kind::I32)?;
+        for _ in 0..size_int32_map_field {
+            let k = d.decode_i32()?;
+            let v = d.decode_i32()?;
+            x.int32_map_field.insert(k, v);
+        }
+        let size_int32_map_field_embedded = d.decode_map(Kind::I32, Kind::Any)?;
+        for _ in 0..size_int32_map_field_embedded {
+            let k = d.decode_i32()?;
+            let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+            x.int32_map_field_embedded.insert(k, v);
+        }
         x.int64_field = d.decode_i64()?;
-
-            
-    
         let size_int64_array_field = d.decode_array(Kind::I64)?;
         for _ in 0..size_int64_array_field {
             x.int64_array_field.push(d.decode_i64()?);
         }
-
-            
-    
-            let size_int64_map_field = d.decode_map(Kind::I64, Kind::I64)?;
-            for _ in 0..size_int64_map_field {
-                let k = d.decode_i64()?;
-                let v = d.decode_i64()?;
-                x.int64_map_field.insert(k, v);
-            }
-            let size_int64_map_field_embedded = d.decode_map(Kind::I64, Kind::Any)?;
-            for _ in 0..size_int64_map_field_embedded {
-                let k = d.decode_i64()?;
-                let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
-                x.int64_map_field_embedded.insert(k, v);
-            }
-
-
-            
-    
+        let size_int64_map_field = d.decode_map(Kind::I64, Kind::I64)?;
+        for _ in 0..size_int64_map_field {
+            let k = d.decode_i64()?;
+            let v = d.decode_i64()?;
+            x.int64_map_field.insert(k, v);
+        }
+        let size_int64_map_field_embedded = d.decode_map(Kind::I64, Kind::Any)?;
+        for _ in 0..size_int64_map_field_embedded {
+            let k = d.decode_i64()?;
+            let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+            x.int64_map_field_embedded.insert(k, v);
+        }
         x.uint32_field = d.decode_u32()?;
-
-            
-    
         let size_uint32_array_field = d.decode_array(Kind::U32)?;
         for _ in 0..size_uint32_array_field {
             x.uint32_array_field.push(d.decode_u32()?);
         }
-
-            
-    
-            let size_uint32_map_field = d.decode_map(Kind::U32, Kind::U32)?;
-            for _ in 0..size_uint32_map_field {
-                let k = d.decode_u32()?;
-                let v = d.decode_u32()?;
-                x.uint32_map_field.insert(k, v);
-            }
-            let size_uint32_map_field_embedded = d.decode_map(Kind::U32, Kind::Any)?;
-            for _ in 0..size_uint32_map_field_embedded {
-                let k = d.decode_u32()?;
-                let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
-                x.uint32_map_field_embedded.insert(k, v);
-            }
-
-
-            
-    
+        let size_uint32_map_field = d.decode_map(Kind::U32, Kind::U32)?;
+        for _ in 0..size_uint32_map_field {
+            let k = d.decode_u32()?;
+            let v = d.decode_u32()?;
+            x.uint32_map_field.insert(k, v);
+        }
+        let size_uint32_map_field_embedded = d.decode_map(Kind::U32, Kind::Any)?;
+        for _ in 0..size_uint32_map_field_embedded {
+            let k = d.decode_u32()?;
+            let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+            x.uint32_map_field_embedded.insert(k, v);
+        }
         x.uint64_field = d.decode_u64()?;
-
-            
-    
         let size_uint64_array_field = d.decode_array(Kind::U64)?;
         for _ in 0..size_uint64_array_field {
             x.uint64_array_field.push(d.decode_u64()?);
         }
-
-            
-    
-            let size_uint64_map_field = d.decode_map(Kind::U64, Kind::U64)?;
-            for _ in 0..size_uint64_map_field {
-                let k = d.decode_u64()?;
-                let v = d.decode_u64()?;
-                x.uint64_map_field.insert(k, v);
-            }
-            let size_uint64_map_field_embedded = d.decode_map(Kind::U64, Kind::Any)?;
-            for _ in 0..size_uint64_map_field_embedded {
-                let k = d.decode_u64()?;
-                let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
-                x.uint64_map_field_embedded.insert(k, v);
-            }
-
-
-            
-    
+        let size_uint64_map_field = d.decode_map(Kind::U64, Kind::U64)?;
+        for _ in 0..size_uint64_map_field {
+            let k = d.decode_u64()?;
+            let v = d.decode_u64()?;
+            x.uint64_map_field.insert(k, v);
+        }
+        let size_uint64_map_field_embedded = d.decode_map(Kind::U64, Kind::Any)?;
+        for _ in 0..size_uint64_map_field_embedded {
+            let k = d.decode_u64()?;
+            let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+            x.uint64_map_field_embedded.insert(k, v);
+        }
         x.float32_field = d.decode_f32()?;
-
-            
-    
         let size_float32_array_field = d.decode_array(Kind::F32)?;
         for _ in 0..size_float32_array_field {
             x.float32_array_field.push(d.decode_f32()?);
         }
-
-
-            
-    
         x.float64_field = d.decode_f64()?;
-
-            
-    
         let size_float64_array_field = d.decode_array(Kind::F64)?;
         for _ in 0..size_float64_array_field {
             x.float64_array_field.push(d.decode_f64()?);
         }
-
-
-            
-    
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
-
-            
-    
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
+            .ok()
+            .ok_or(DecodingError::InvalidEnum)?;
         let size_enum_array_field = d.decode_array(Kind::U32)?;
         for _ in 0..size_enum_array_field {
             x.enum_array_field.push(GenericEnum::try_from(d.decode_u32()?)?);
         }
-
-            
-    
-            let size_enum_map_field = d.decode_map(Kind::U32, Kind::String)?;
-            for _ in 0..size_enum_map_field {
-                let k = GenericEnum::try_from(d.decode_u32()?)?;
-                let v = d.decode_string()?;
-                x.enum_map_field.insert(k, v);
-            }
-            let size_enum_map_field_embedded = d.decode_map(Kind::U32, Kind::Any)?;
-            for _ in 0..size_enum_map_field_embedded {
-                let k = GenericEnum::try_from(d.decode_u32()?)?;
-                let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
-                x.enum_map_field_embedded.insert(k, v);
-            }
-
-
-            
-    
+        let size_enum_map_field = d.decode_map(Kind::U32, Kind::String)?;
+        for _ in 0..size_enum_map_field {
+            let k = GenericEnum::try_from(d.decode_u32()?)?;
+            let v = d.decode_string()?;
+            x.enum_map_field.insert(k, v);
+        }
+        let size_enum_map_field_embedded = d.decode_map(Kind::U32, Kind::Any)?;
+        for _ in 0..size_enum_map_field_embedded {
+            let k = GenericEnum::try_from(d.decode_u32()?)?;
+            let v = EmptyModel::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+            x.enum_map_field_embedded.insert(k, v);
+        }
         x.bytes_field = d.decode_bytes()?;
-
-            
-    
         let size_bytes_array_field = d.decode_array(Kind::Bytes)?;
         for _ in 0..size_bytes_array_field {
             x.bytes_array_field.push(d.decode_bytes()?);
         }
-
-
-            
-    
         x.bool_field = d.decode_bool()?;
-
-            
-    
         let size_bool_array_field = d.decode_array(Kind::Bool)?;
         for _ in 0..size_bool_array_field {
             x.bool_array_field.push(d.decode_bool()?);
         }
-
-
-            Ok(Some(x))
-        }
+        Ok(Some(x))
     }
-
-    
-    
-
-    
-    
-
-    
-    
-
+}
