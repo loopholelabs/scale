@@ -25,7 +25,7 @@ import (
 
 func TestGenerateConverterSchema(t *testing.T) {
 	s := new(signature.Schema)
-	err := s.Decode([]byte(schema))
+	err := s.Decode([]byte(testSchema))
 	require.NoError(t, err)
 
 	formatted, err := golang.Generate(s, "generated", "v0.1.0")

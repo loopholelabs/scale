@@ -15,7 +15,7 @@ package converter
 
 //go:generate go test ./... -tags=generate -v
 
-const schema = `
+const testSchema = `
 version = "v1alpha"
 context = "Context"
 

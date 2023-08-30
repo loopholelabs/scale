@@ -39,12 +39,20 @@ type Converter struct {
 	ctxModel  *signature.ModelSchema
 }
 
-func Convert(schema *signature.Schema, data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
+func ToPolyglot(schema *signature.Schema, data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
 	p, err := New(schema)
 	if err != nil {
 		return err
 	}
-	return p.Convert(data, encoder)
+	return p.ToPolyglot(data, encoder)
+}
+
+func FromPolyglot(schema *signature.Schema, decoder *polyglot.Decoder) (map[string]interface{}, error) {
+	p, err := New(schema)
+	if err != nil {
+		return nil, err
+	}
+	return p.FromPolyglot(decoder)
 }
 
 func New(schema *signature.Schema) (*Converter, error) {
@@ -77,7 +85,7 @@ func New(schema *signature.Schema) (*Converter, error) {
 	return p, nil
 }
 
-func (p *Converter) Convert(data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
+func (p *Converter) ToPolyglot(data map[string]interface{}, encoder *polyglot.BufferEncoder) error {
 	ctx, ok := data[p.ctxName]
 	if !ok {
 		return ErrInvalidData
@@ -94,6 +102,16 @@ func (p *Converter) Convert(data map[string]interface{}, encoder *polyglot.Buffe
 	}
 
 	return nil
+}
+
+func (p *Converter) FromPolyglot(decoder *polyglot.Decoder) (map[string]interface{}, error) {
+	output := make(map[string]interface{})
+	data, err := p.decodeModel(p.ctxModel, decoder)
+	if err != nil {
+		return nil, fmt.Errorf("%w: error decoding context: %w", ErrInvalidData, err)
+	}
+	output[p.ctxName] = data
+	return output, nil
 }
 
 func (p *Converter) encodeModel(model *signature.ModelSchema, data map[string]interface{}, encoder *polyglot.BufferEncoder) (err error) {
@@ -685,6 +703,411 @@ func (p *Converter) encodeModel(model *signature.ModelSchema, data map[string]in
 	return nil
 }
 
+func (p *Converter) decodeModel(model *signature.ModelSchema, decoder *polyglot.Decoder) (map[string]interface{}, error) {
+	output := make(map[string]interface{})
+	for _, m := range model.Models {
+		schema, ok := p.models[m.Reference]
+		if !ok {
+			return nil, fmt.Errorf("%w: missing model reference schema", ErrInvalidSchema)
+		}
+		modelDataMap, err := p.decodeModel(schema, decoder)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding model %s: %w", ErrInvalidData, m.Name, err)
+		}
+		output[m.Name] = modelDataMap
+	}
+
+	for _, a := range model.ModelArrays {
+		size, err := decoder.Slice(polyglot.AnyKind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding model array size: %w", ErrInvalidData, err)
+		}
+
+		schema, ok := p.models[a.Reference]
+		if !ok {
+			return nil, fmt.Errorf("%w: missing model array reference schema", ErrInvalidSchema)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+
+		for i := uint32(0); i < size; i++ {
+			modelDataMap, err := p.decodeModel(schema, decoder)
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding model array %s: %w", ErrInvalidData, a.Name, err)
+			}
+			arrayMap = append(arrayMap, modelDataMap)
+		}
+		output[a.Name] = arrayMap
+	}
+
+	for _, s := range model.Strings {
+		data, err := decoder.String()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding string data: %w", ErrInvalidData, err)
+		}
+
+		output[s.Name] = data
+	}
+
+	for _, sa := range model.StringArrays {
+		size, err := decoder.Slice(polyglot.StringKind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding string array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.String()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding string array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, data)
+		}
+
+		output[sa.Name] = arrayMap
+	}
+
+	for _, sm := range model.StringMaps {
+		mapDataMap, err := decodeMap[string](p, polyglot.StringKind, sm.Value, decoder.String, decoder)
+		if err != nil {
+			return nil, err
+		}
+
+		output[sm.Name] = mapDataMap
+	}
+
+	for _, i := range model.Int32s {
+		data, err := decoder.Int32()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding int32 data: %w", ErrInvalidData, err)
+		}
+
+		output[i.Name] = float64(data)
+	}
+
+	for _, ia := range model.Int32Arrays {
+		size, err := decoder.Slice(polyglot.Int32Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding int32 array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Int32()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding int32 array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, float64(data))
+		}
+
+		output[ia.Name] = arrayMap
+	}
+
+	for _, im := range model.Int32Maps {
+		mapDataMap, err := decodeMap[int32](p, polyglot.Int32Kind, im.Value, decoder.Int32, decoder)
+		if err != nil {
+			return nil, err
+		}
+
+		dataMap := make(map[string]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			dataMap[strconv.FormatInt(int64(k), 10)] = v
+		}
+
+		output[im.Name] = dataMap
+	}
+
+	for _, i := range model.Int64s {
+		data, err := decoder.Int64()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding int64 data: %w", ErrInvalidData, err)
+		}
+
+		output[i.Name] = float64(data)
+	}
+
+	for _, ia := range model.Int64Arrays {
+		size, err := decoder.Slice(polyglot.Int64Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding int64 array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Int64()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding int64 array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, float64(data))
+		}
+
+		output[ia.Name] = arrayMap
+	}
+
+	for _, im := range model.Int64Maps {
+		mapDataMap, err := decodeMap[int64](p, polyglot.Int64Kind, im.Value, decoder.Int64, decoder)
+		if err != nil {
+			return nil, err
+		}
+
+		dataMap := make(map[string]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			dataMap[strconv.FormatInt(k, 10)] = v
+		}
+
+		output[im.Name] = dataMap
+	}
+
+	for _, u := range model.Uint32s {
+		data, err := decoder.Uint32()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding uint32 data: %w", ErrInvalidData, err)
+		}
+
+		output[u.Name] = float64(data)
+	}
+
+	for _, ua := range model.Uint32Arrays {
+		size, err := decoder.Slice(polyglot.Uint32Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding uint32 array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Uint32()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding uint32 array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, float64(data))
+		}
+
+		output[ua.Name] = arrayMap
+	}
+
+	for _, um := range model.Uint32Maps {
+		mapDataMap, err := decodeMap[uint32](p, polyglot.Uint32Kind, um.Value, decoder.Uint32, decoder)
+		if err != nil {
+			return nil, err
+		}
+
+		dataMap := make(map[string]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			dataMap[strconv.FormatUint(uint64(k), 10)] = v
+		}
+
+		output[um.Name] = dataMap
+	}
+
+	for _, u := range model.Uint64s {
+		data, err := decoder.Uint64()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding uint64 data: %w", ErrInvalidData, err)
+		}
+
+		output[u.Name] = float64(data)
+	}
+
+	for _, ua := range model.Uint64Arrays {
+		size, err := decoder.Slice(polyglot.Uint64Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding uint64 array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Uint64()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding uint64 array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, float64(data))
+		}
+
+		output[ua.Name] = arrayMap
+	}
+
+	for _, um := range model.Uint64Maps {
+		mapDataMap, err := decodeMap[uint64](p, polyglot.Uint64Kind, um.Value, decoder.Uint64, decoder)
+		if err != nil {
+			return nil, err
+		}
+
+		dataMap := make(map[string]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			dataMap[strconv.FormatUint(k, 10)] = v
+		}
+
+		output[um.Name] = dataMap
+	}
+
+	for _, f := range model.Float32s {
+		data, err := decoder.Float32()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding float32 data: %w", ErrInvalidData, err)
+		}
+
+		output[f.Name] = float64(data)
+	}
+
+	for _, fa := range model.Float32Arrays {
+		size, err := decoder.Slice(polyglot.Float32Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding float32 array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Float32()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding float32 array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, float64(data))
+		}
+
+		output[fa.Name] = arrayMap
+	}
+
+	for _, f := range model.Float64s {
+		data, err := decoder.Float64()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding float64 data: %w", ErrInvalidData, err)
+		}
+
+		output[f.Name] = data
+	}
+
+	for _, fa := range model.Float64Arrays {
+		size, err := decoder.Slice(polyglot.Float64Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding float64 array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Float64()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding float64 array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, data)
+		}
+
+		output[fa.Name] = arrayMap
+	}
+
+	for _, e := range model.Enums {
+		schema, ok := p.enums[e.Reference]
+		if !ok {
+			return nil, fmt.Errorf("%w: missing enum reference schema", ErrInvalidSchema)
+		}
+
+		data, err := p.decodeEnum(schema, decoder)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding enum data: %w", ErrInvalidData, err)
+		}
+
+		output[e.Name] = data
+	}
+
+	for _, ea := range model.EnumArrays {
+		size, err := decoder.Slice(polyglot.Uint32Kind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding enum array size: %w", ErrInvalidData, err)
+		}
+
+		schema, ok := p.enums[ea.Reference]
+		if !ok {
+			return nil, fmt.Errorf("%w: missing enum array reference schema", ErrInvalidSchema)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := p.decodeEnum(schema, decoder)
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding enum array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, data)
+		}
+
+		output[ea.Name] = arrayMap
+	}
+
+	for _, em := range model.EnumMaps {
+		schema, ok := p.enums[em.Reference]
+		if !ok {
+			return nil, fmt.Errorf("%w: missing enum map reference schema", ErrInvalidSchema)
+		}
+
+		mapDataMap, err := decodeMap[uint32](p, polyglot.Uint32Kind, em.Value, decoder.Uint32, decoder)
+		if err != nil {
+			return nil, err
+		}
+
+		dataMap := make(map[string]interface{}, len(mapDataMap))
+		for k, v := range mapDataMap {
+			dataMap[schema.Values[k]] = v
+		}
+
+		output[em.Name] = dataMap
+	}
+
+	for _, b := range model.Bytes {
+		data, err := decoder.Bytes(nil)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding byte data: %w", ErrInvalidData, err)
+		}
+
+		output[b.Name] = base64.StdEncoding.EncodeToString(data)
+	}
+
+	for _, ba := range model.BytesArrays {
+		size, err := decoder.Slice(polyglot.BytesKind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding byte array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Bytes(nil)
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding byte array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, base64.StdEncoding.EncodeToString(data))
+		}
+
+		output[ba.Name] = arrayMap
+	}
+
+	for _, b := range model.Bools {
+		data, err := decoder.Bool()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding bool data: %w", ErrInvalidData, err)
+		}
+
+		output[b.Name] = data
+	}
+
+	for _, ba := range model.BoolArrays {
+		size, err := decoder.Slice(polyglot.BoolKind)
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding bool array size: %w", ErrInvalidData, err)
+		}
+
+		arrayMap := make([]interface{}, 0, size)
+		for i := uint32(0); i < size; i++ {
+			data, err := decoder.Bool()
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding bool array data: %w", ErrInvalidData, err)
+			}
+			arrayMap = append(arrayMap, data)
+		}
+
+		output[ba.Name] = arrayMap
+	}
+
+	return output, nil
+}
+
 func (p *Converter) encodeEnum(enum *signature.EnumSchema, data string, encoder *polyglot.BufferEncoder) (err error) {
 	for i, v := range enum.Values {
 		if v == data {
@@ -693,6 +1116,19 @@ func (p *Converter) encodeEnum(enum *signature.EnumSchema, data string, encoder 
 		}
 	}
 	return fmt.Errorf("%w: invalid enum data", ErrInvalidData)
+}
+
+func (p *Converter) decodeEnum(enum *signature.EnumSchema, decoder *polyglot.Decoder) (string, error) {
+	i, err := decoder.Uint32()
+	if err != nil {
+		return "", fmt.Errorf("%w: error decoding enum data: %w", ErrInvalidData, err)
+	}
+
+	if int(i) >= len(enum.Values) {
+		return "", fmt.Errorf("%w: invalid enum data", ErrInvalidData)
+	}
+
+	return enum.Values[i], nil
 }
 
 func encodeMap[T comparable](parser *Converter, keyKind polyglot.Kind, valueName string, mapData map[T]interface{}, keyEncoder func(T) *polyglot.BufferEncoder, encoder *polyglot.BufferEncoder) error {
@@ -806,4 +1242,118 @@ func encodeMap[T comparable](parser *Converter, keyKind polyglot.Kind, valueName
 		}
 	}
 	return nil
+}
+
+func decodeMap[T comparable](parser *Converter, keyKind polyglot.Kind, valueName string, keyDecoder func() (T, error), decoder *polyglot.Decoder) (map[T]interface{}, error) {
+	valueKind := polyglot.AnyKind
+	isPrimitive := signature.ValidPrimitiveType(valueName)
+	if isPrimitive {
+		switch valueName {
+		case "string":
+			valueKind = polyglot.StringKind
+		case "int32":
+			valueKind = polyglot.Int32Kind
+		case "int64":
+			valueKind = polyglot.Int64Kind
+		case "uint32":
+			valueKind = polyglot.Uint32Kind
+		case "uint64":
+			valueKind = polyglot.Uint64Kind
+		case "float32":
+			valueKind = polyglot.Float32Kind
+		case "float64":
+			valueKind = polyglot.Float64Kind
+		case "bool":
+			valueKind = polyglot.BoolKind
+		case "bytes":
+			valueKind = polyglot.BytesKind
+		default:
+			return nil, fmt.Errorf("%w: invalid primitive map data: %s", ErrInvalidData, valueName)
+		}
+	}
+
+	size, err := decoder.Map(keyKind, valueKind)
+	if err != nil {
+		return nil, fmt.Errorf("%w: error decoding map size: %w", ErrInvalidData, err)
+	}
+	dataMap := make(map[T]interface{}, size)
+	for i := uint32(0); i < size; i++ {
+		key, err := keyDecoder()
+		if err != nil {
+			return nil, fmt.Errorf("%w: error decoding map key: %w", ErrInvalidData, err)
+		}
+		if isPrimitive {
+			switch valueName {
+			case "string":
+				value, err := decoder.String()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive string map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = value
+			case "int32":
+				value, err := decoder.Int32()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive int32 map value: %w", ErrInvalidData, err)
+				}
+
+				dataMap[key] = float64(value)
+			case "int64":
+				value, err := decoder.Int64()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive int64 map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = float64(value)
+			case "uint32":
+				value, err := decoder.Uint32()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive uint32 map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = float64(value)
+			case "uint64":
+				value, err := decoder.Uint64()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive uint64 map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = float64(value)
+			case "float32":
+				value, err := decoder.Float32()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive float32 map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = float64(value)
+			case "float64":
+				value, err := decoder.Float64()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive float64 map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = value
+			case "bool":
+				value, err := decoder.Bool()
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive bool map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = value
+			case "bytes":
+				value, err := decoder.Bytes(nil)
+				if err != nil {
+					return nil, fmt.Errorf("%w: error decoding primitive bytes map value: %w", ErrInvalidData, err)
+				}
+				dataMap[key] = hex.EncodeToString(value)
+			default:
+				return nil, fmt.Errorf("%w: invalid primitive map data: %s", ErrInvalidData, valueName)
+			}
+		} else {
+			model, ok := parser.models[valueName]
+			if !ok {
+				return nil, fmt.Errorf("%w: invalid reference map schema", ErrInvalidData)
+			}
+
+			modelDataMap, err := parser.decodeModel(model, decoder)
+			if err != nil {
+				return nil, fmt.Errorf("%w: error decoding map %s: %w", ErrInvalidData, valueName, err)
+			}
+			dataMap[key] = modelDataMap
+		}
+	}
+	return dataMap, nil
 }
