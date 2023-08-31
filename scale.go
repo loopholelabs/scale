@@ -113,6 +113,7 @@ func (r *Scale[T]) init() error {
 		return fmt.Errorf("failed to instantiate host module wasi: %w", err)
 	}
 
+	testSignature := r.config.newSignature()
 	for _, sf := range r.config.functions {
 		f, err := newFunction(r.config.context, r, sf.function, sf.env)
 		if err != nil {
@@ -123,8 +124,8 @@ func (r *Scale[T]) init() error {
 			r.head = f
 		}
 
-		if r.head.scaleFunc.SignatureHash != sf.function.SignatureHash {
-			return fmt.Errorf("function '%s:%s' and '%s:%s' have mismatching signatures", r.head.scaleFunc.Name, r.head.scaleFunc.Tag, sf.function.Name, sf.function.Tag)
+		if testSignature.Hash() != "" && testSignature.Hash() != sf.function.SignatureHash {
+			return fmt.Errorf("passed in function '%s:%s' has an invalid signatures", sf.function.Name, sf.function.Tag)
 		}
 
 		if r.tail != nil {
