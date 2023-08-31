@@ -268,7 +268,6 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
-		Stateless:       options.Scalefile.Stateless,
 		Function:        data,
 	}, nil
 }
@@ -388,7 +387,6 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
-		Stateless:       options.Scalefile.Stateless,
 		Function:        data,
 	}, nil
 }
