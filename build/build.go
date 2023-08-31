@@ -41,7 +41,6 @@ var (
 	ErrNoGo     = errors.New("go not found in PATH. Please install go: https://golang.org/doc/install")
 	ErrNoTinyGo = errors.New("tinygo not found in PATH. Please install tinygo: https://tinygo.org/getting-started/")
 	ErrNoCargo  = errors.New("cargo not found in PATH. Please install cargo: https://doc.rust-lang.org/cargo/getting-started/installation.html")
-	ErrNoNpm    = errors.New("npm not found in PATH. Please install npm: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm")
 )
 
 type LocalGolangOptions struct {
@@ -127,11 +126,6 @@ type LocalRustOptions struct {
 
 	// Args are the optional arguments to pass to the compiler
 	Args []string
-}
-
-type TypescriptOptions struct {
-	NpmBin string
-	Args   []string
 }
 
 func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
@@ -274,6 +268,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
+		Stateless:       options.Scalefile.Stateless,
 		Function:        data,
 	}, nil
 }
@@ -393,6 +388,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
 		Dependencies:    nil,
+		Stateless:       options.Scalefile.Stateless,
 		Function:        data,
 	}, nil
 }

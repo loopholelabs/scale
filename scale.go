@@ -20,19 +20,14 @@ package scale
 import (
 	"context"
 	"crypto/rand"
-	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
-	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
-)
-
-var (
-	NoFunctionsError = errors.New("no available functions")
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
@@ -45,101 +40,165 @@ type Scale[T signature.Signature] struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
 
-	new signature.New[T]
+	config *Config[T]
 
-	functions []*Function[T]
-	head      *Function[T]
-	tail      *Function[T]
+	head *function[T]
+	tail *function[T]
 
-	modulesMu sync.RWMutex
-	modules   map[string]*Module[T]
+	activeModulesMu sync.RWMutex
+	activeModules   map[string]*moduleInstance[T]
 
 	TraceDataCallback func(data string)
 }
 
-func New[T signature.Signature](ctx context.Context, sig signature.New[T], functions []*scalefunc.Schema) (*Scale[T], error) {
-	if len(functions) == 0 {
-		return nil, NoFunctionsError
-	}
-
+func New[T signature.Signature](config *Config[T]) (*Scale[T], error) {
 	r := &Scale[T]{
-		runtime:      wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfig().WithCloseOnContextDone(true)),
-		moduleConfig: wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
-		modules:      make(map[string]*Module[T]),
-		new:          sig,
+		runtime:       wazero.NewRuntimeWithConfig(config.context, wazero.NewRuntimeConfig().WithCloseOnContextDone(true)),
+		moduleConfig:  wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
+		activeModules: make(map[string]*moduleInstance[T]),
+		config:        config,
 	}
 
-	module := r.runtime.NewHostModuleBuilder("env").
+	return r, r.init()
+}
+
+// Instance returns a new instance of a Scale Function chain
+// with the provided and optional next function.
+func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
+	return newInstance(r, next...)
+}
+
+// PersistentInstance returns a new persistent instance of a Scale Function chain
+// with the provided context and optional next function.
+func (r *Scale[T]) PersistentInstance(ctx context.Context, next ...Next[T]) (*Instance[T], error) {
+	return newPersistentInstance(ctx, r, next...)
+}
+
+func (r *Scale[T]) init() error {
+	err := r.config.validate()
+	if err != nil {
+		return err
+	}
+
+	envHostModuleBuilder := r.runtime.NewHostModuleBuilder("env").
 		NewFunctionBuilder().
 		WithGoModuleFunction(api.GoModuleFunc(r.next), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
 		WithParameterNames("pointer", "length").Export("next")
 
-	compiled, err := module.Compile(ctx)
+	_, err = envHostModuleBuilder.Instantiate(r.config.context)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile env: %w", err)
-	}
-
-	_, err = r.runtime.InstantiateModule(ctx, compiled, r.moduleConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate host module env: %w", err)
+		return fmt.Errorf("failed to instantiate env host module: %w", err)
 	}
 
 	// Tracing Functions
-	builder := r.runtime.NewHostModuleBuilder("scale")
-	builder.NewFunctionBuilder().
+	scaleHostModuleBuilder := r.runtime.NewHostModuleBuilder("scale")
+	scaleHostModuleBuilder.NewFunctionBuilder().
 		WithGoModuleFunction(api.GoModuleFunc(r.getFunctionNameLen), []api.ValueType{}, []api.ValueType{api.ValueTypeI32}).
 		WithParameterNames("pointer").Export("get_function_name_len")
-	builder.NewFunctionBuilder().
+	scaleHostModuleBuilder.NewFunctionBuilder().
 		WithGoModuleFunction(api.GoModuleFunc(r.getFunctionName), []api.ValueType{api.ValueTypeI32}, []api.ValueType{}).
 		WithParameterNames("pointer").Export("get_function_name")
-	builder.NewFunctionBuilder().
+	scaleHostModuleBuilder.NewFunctionBuilder().
 		WithGoModuleFunction(api.GoModuleFunc(r.getInstanceID), []api.ValueType{api.ValueTypeI32}, []api.ValueType{}).
 		WithParameterNames("pointer").Export("get_instance_id")
-	builder.NewFunctionBuilder().
-		WithGoModuleFunction(api.GoModuleFunc(r.OTELTraceJSON), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
+	scaleHostModuleBuilder.NewFunctionBuilder().
+		WithGoModuleFunction(api.GoModuleFunc(r.otelTraceJSON), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
 		WithParameterNames("pointer", "length").Export("otel_trace_json")
 
-	_, err = builder.Instantiate(ctx)
+	_, err = scaleHostModuleBuilder.Instantiate(r.config.context)
 	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate host module scale: %w", err)
+		return fmt.Errorf("failed to instantiate scale host module: %w", err)
 	}
 
-	_, err = wasi_snapshot_preview1.Instantiate(ctx, r.runtime)
+	_, err = wasi_snapshot_preview1.Instantiate(r.config.context, r.runtime)
 	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate host module wasi: %w", err)
+		return fmt.Errorf("failed to instantiate host module wasi: %w", err)
 	}
 
-	for _, f := range functions {
-		sf, err := r.CompileFunction(ctx, f)
+	for _, sf := range r.config.functions {
+		f, err := newFunction(r.config.context, r, sf.function, sf.env)
 		if err != nil {
-			return nil, fmt.Errorf("failed to pre-compile function '%s': %w", f.Name, err)
+			return fmt.Errorf("failed to pre-compile function '%s:%s': %w", sf.function.Name, sf.function.Tag, err)
 		}
+
 		if r.head == nil {
-			r.head = sf
+			r.head = f
 		}
+
+		if r.head.scaleFunc.SignatureHash != sf.function.SignatureHash {
+			return fmt.Errorf("function '%s:%s' and '%s:%s' have mismatching signatures", r.head.scaleFunc.Name, r.head.scaleFunc.Tag, sf.function.Name, sf.function.Tag)
+		}
+
 		if r.tail != nil {
-			r.tail.next = sf
+			r.tail.next = f
 		}
-		r.tail = sf
+
+		r.tail = f
 	}
 
-	return r, nil
+	return nil
 }
 
-func (r *Scale[T]) CompileFunction(ctx context.Context, scaleFunc *scalefunc.Schema) (*Function[T], error) {
-	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
+func (r *Scale[T]) next(ctx context.Context, module api.Module, params []uint64) {
+	r.activeModulesMu.RLock()
+	m := r.activeModules[module.Name()]
+	r.activeModulesMu.RUnlock()
+	if m == nil {
+		return
+	}
+
+	pointer := uint32(params[0])
+	length := uint32(params[1])
+	buf, ok := m.instantiatedModule.Memory().Read(pointer, length)
+	if !ok {
+		return
+	}
+
+	err := m.signature.Read(buf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to compile module '%s': %w", scaleFunc.Name, err)
+		return
 	}
 
-	f := &Function[T]{
-		identifier: fmt.Sprintf("%s:%s", scaleFunc.Name, scaleFunc.Tag),
-		scaleFunc:  scaleFunc,
-		compiled:   compiled,
+	if m.nextInstance != nil {
+		m.nextInstance.setSignature(m.signature)
+		err = m.nextInstance.function.runWithModule(ctx, m.signature, m.nextInstance)
+	} else if m.function.next == nil {
+		m.signature, err = m.instance.next(m.signature)
+	} else {
+		err = m.function.next.run(ctx, m.signature, m.instance)
+	}
+	if err != nil {
+		buf = m.signature.Error(err)
+	} else {
+		buf = m.signature.Write()
 	}
 
-	f.modulePool = NewPool[T](ctx, f, r)
+	writeBuffer, err := m.resize.Call(ctx, uint64(len(buf)))
+	if err != nil {
+		return
+	}
+	module.Memory().Write(uint32(writeBuffer[0]), buf)
+}
 
-	r.functions = append(r.functions, f)
-	return f, nil
+type Parsed struct {
+	Organization string
+	Name         string
+	Tag          string
+}
+
+// Parse parses a function or signature name of the form <org>/<name>:<tag> into its organization, name, and tag
+func Parse(name string) *Parsed {
+	orgSplit := strings.Split(name, "/")
+	if len(orgSplit) == 1 {
+		orgSplit = []string{"", name}
+	}
+	tagSplit := strings.Split(orgSplit[1], ":")
+	if len(tagSplit) == 1 {
+		tagSplit = []string{tagSplit[0], ""}
+	}
+	return &Parsed{
+		Organization: orgSplit[0],
+		Name:         tagSplit[0],
+		Tag:          tagSplit[1],
+	}
 }

@@ -23,30 +23,29 @@ import (
 	"github.com/loopholelabs/scale/signature"
 )
 
-type Pool[T signature.Signature] struct {
+type modulePool[T signature.Signature] struct {
 	pool sync.Pool
-	new  func() (*Module[T], error)
+	new  func() (*moduleInstance[T], error)
 }
 
-func NewPool[T signature.Signature](ctx context.Context, f *Function[T], r *Scale[T]) *Pool[T] {
-	return &Pool[T]{
-		new: func() (*Module[T], error) {
-			return NewModule[T](ctx, f, r)
+func newModulePool[T signature.Signature](ctx context.Context, r *Scale[T], f *function[T]) *modulePool[T] {
+	return &modulePool[T]{
+		new: func() (*moduleInstance[T], error) {
+			return newModuleInstance[T](ctx, r, f, nil)
 		},
 	}
 }
 
-func (p *Pool[T]) Put(module *Module[T]) {
+func (p *modulePool[T]) Put(module *moduleInstance[T]) {
 	if module != nil {
 		p.pool.Put(module)
 	}
 }
 
-func (p *Pool[T]) Get() (*Module[T], error) {
-	rv, ok := p.pool.Get().(*Module[T])
+func (p *modulePool[T]) Get() (*moduleInstance[T], error) {
+	rv, ok := p.pool.Get().(*moduleInstance[T])
 	if ok && rv != nil {
 		return rv, nil
 	}
-
 	return p.new()
 }

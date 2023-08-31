@@ -35,8 +35,8 @@ func New() (*Formatter, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	runtime, err := scale.New(ctx, signature.New, []*scalefunc.Schema{s})
+	cfg := scale.NewConfig(signature.New).WithFunction(s)
+	runtime, err := scale.New(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func New() (*Formatter, error) {
 }
 
 func (f *Formatter) Format(ctx context.Context, code string) (string, error) {
-	instance, err := f.runtime.Instance()
+	instance, err := f.runtime.PersistentInstance(ctx)
 	if err != nil {
 		return "", err
 	}

@@ -19,72 +19,97 @@ package scale
 import (
 	"context"
 	"fmt"
-	"regexp"
-
 	"github.com/google/uuid"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero/api"
 )
 
-var (
-	EnvStringRegex = regexp.MustCompile(`[^A-Za-z0-9_]`)
-)
+type moduleInstance[T signature.Signature] struct {
+	// function is the function that this moduleInstance is associated with
+	function *function[T]
 
-// ValidEnv returns true if the string is valid for use as an environment variable
-func ValidEnv(str string) bool {
-	return !EnvStringRegex.MatchString(str)
-}
+	// instantiatedModule is the instantiated wasm module
+	instantiatedModule api.Module
 
-type Module[T signature.Signature] struct {
-	module   api.Module
-	function *Function[T]
-	runtime  *Scale[T]
+	// run is the exported `run` function
+	run api.Function
 
-	run    api.Function
+	// resize is the exported `resize` function
 	resize api.Function
 
-	instance  *Instance[T]
+	// instance is set during the initialization of the moduleInstance
+	instance *Instance[T]
+
+	// signature is set during the initialization of the moduleInstance
 	signature T
+
+	// nextInstance is the nextInstance moduleInstance in the chain
+	//
+	// This is only set for persistent instances, otherwise it's nil
+	nextInstance *moduleInstance[T]
 }
 
-func NewModule[T signature.Signature](ctx context.Context, f *Function[T], r *Scale[T]) (*Module[T], error) {
+// newModuleInstance creates a new moduleInstance
+//
+// If the instance parameter is given then the entire moduleInstance chain is initialized, with `module.init`
+// being called, and the moduleInstance.nextInstance field is set to the nextInstance moduleInstance in the chain.
+// In this case, `module.cleanup` must be called when the moduleInstance is no longer needed.
+func newModuleInstance[T signature.Signature](ctx context.Context, r *Scale[T], f *function[T], i *Instance[T]) (*moduleInstance[T], error) {
 	config := r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.identifier, uuid.New().String()))
-	for k, v := range f.scaleFunc.GetEnv() {
-		if ValidEnv(k) && len(k) > 0 {
-			config = config.WithEnv(k, v)
-		}
+	for k, v := range f.env {
+		config = config.WithEnv(k, v)
 	}
 
-	module, err := r.runtime.InstantiateModule(ctx, f.compiled, config)
+	instantiatedModule, err := r.runtime.InstantiateModule(ctx, f.compiled, config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate module '%s': %w", f.scaleFunc.Name, err)
+		return nil, fmt.Errorf("failed to instantiate module '%s': %w", f.identifier, err)
 	}
 
-	run := module.ExportedFunction("run")
-	resize := module.ExportedFunction("resize")
+	run := instantiatedModule.ExportedFunction("run")
+	resize := instantiatedModule.ExportedFunction("resize")
 	if run == nil || resize == nil {
-		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.scaleFunc.Name)
+		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.identifier)
 	}
 
-	return &Module[T]{
-		module:   module,
-		function: f,
-		runtime:  r,
-		run:      run,
-		resize:   resize,
-	}, nil
+	m := &moduleInstance[T]{
+		function:           f,
+		instantiatedModule: instantiatedModule,
+		run:                run,
+		resize:             resize,
+	}
+
+	if f.next != nil && i != nil {
+		m.nextInstance, err = newModuleInstance[T](ctx, r, f.next, i)
+		if err != nil {
+			return nil, err
+		}
+		m.init(r, i)
+	}
+
+	return m, nil
 }
 
-func (m *Module[T]) init(signature T, i *Instance[T]) {
-	m.signature = signature
+// init initializes the moduleInstance and registers it with the Scale runtime
+func (m *moduleInstance[T]) init(r *Scale[T], i *Instance[T]) {
 	m.instance = i
-	m.runtime.modulesMu.Lock()
-	m.runtime.modules[m.module.Name()] = m
-	m.runtime.modulesMu.Unlock()
+	r.activeModulesMu.Lock()
+	r.activeModules[m.instantiatedModule.Name()] = m
+	r.activeModulesMu.Unlock()
 }
 
-func (m *Module[T]) reset() {
-	m.runtime.modulesMu.Lock()
-	delete(m.runtime.modules, m.module.Name())
-	m.runtime.modulesMu.Unlock()
+// cleanup removes the moduleInstance from the Scale runtime
+//
+// if it has a nextInstance moduleInstance, then it is also cleaned up
+func (m *moduleInstance[T]) cleanup(r *Scale[T]) {
+	r.activeModulesMu.Lock()
+	delete(r.activeModules, m.instantiatedModule.Name())
+	r.activeModulesMu.Unlock()
+	if m.nextInstance != nil {
+		m.nextInstance.cleanup(r)
+	}
+}
+
+// setSignature sets the signature for the moduleInstance
+func (m *moduleInstance[T]) setSignature(signature T) {
+	m.signature = signature
 }

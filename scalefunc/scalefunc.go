@@ -28,7 +28,6 @@ import (
 	signatureSchema "github.com/loopholelabs/scale/signature"
 	"os"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -94,12 +93,10 @@ type Schema struct {
 	SignatureHash   string                  `json:"signature_hash" yaml:"signature_hash"`
 	Language        Language                `json:"language" yaml:"language"`
 	Dependencies    []Dependency            `json:"dependencies" yaml:"dependencies"`
+	Stateless       bool                    `json:"stateless" yaml:"stateless"`
 	Function        []byte                  `json:"function" yaml:"function"`
 	Size            uint32                  `json:"size" yaml:"size"`
 	Hash            string                  `json:"hash" yaml:"hash"`
-
-	// env is used by the host at runtime to specify environment variables for the function
-	env map[string]string
 }
 
 // Encode encodes the Schema into a byte array
@@ -130,6 +127,8 @@ func (s *Schema) Encode() []byte {
 			e.String(v)
 		}
 	}
+
+	e.Bool(s.Stateless)
 
 	e.Bytes(s.Function)
 
@@ -246,6 +245,11 @@ func (s *Schema) Decode(data []byte) error {
 		}
 	}
 
+	s.Stateless, err = d.Bool()
+	if err != nil {
+		s.Stateless = false
+	}
+
 	s.Function, err = d.Bytes(nil)
 	if err != nil {
 		return err
@@ -300,22 +304,14 @@ func (s *Schema) GetHash() []byte {
 		}
 	}
 
+	e.Bool(s.Stateless)
+
 	e.Bytes(s.Function)
 
 	hash := sha256.New()
 	hash.Write(b.Bytes())
 
 	return hash.Sum(nil)
-}
-
-// SetEnv sets the environment variables for the Schema
-func (s *Schema) SetEnv(env map[string]string) {
-	s.env = env
-}
-
-// GetEnv returns the environment variables for the Schema
-func (s *Schema) GetEnv() map[string]string {
-	return s.env
 }
 
 // Read opens a file at the given path and returns a *ScaleFile
@@ -332,18 +328,4 @@ func Read(path string) (*Schema, error) {
 func Write(path string, scaleFunc *Schema) error {
 	data := scaleFunc.Encode()
 	return os.WriteFile(path, data, 0644)
-}
-
-// ParseFunctionName parses a function name of the form <org>/<name>:<tag> into its organization, name, and tag
-func ParseFunctionName(fn string) (string, string, string) {
-	orgSplit := strings.Split(fn, "/")
-	if len(orgSplit) == 1 {
-		orgSplit = []string{"", fn}
-	}
-	tagSplit := strings.Split(orgSplit[1], ":")
-	if len(tagSplit) == 1 {
-		tagSplit = []string{tagSplit[0], ""}
-	}
-
-	return orgSplit[0], tagSplit[0], tagSplit[1]
 }

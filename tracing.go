@@ -23,9 +23,9 @@ import (
 
 // getFunctionNameLen is the Host function for getting the Function Name Length
 func (r *Scale[T]) getFunctionNameLen(_ context.Context, module api.Module, params []uint64) {
-	r.modulesMu.RLock()
-	m := r.modules[module.Name()]
-	r.modulesMu.RUnlock()
+	r.activeModulesMu.RLock()
+	m := r.activeModules[module.Name()]
+	r.activeModulesMu.RUnlock()
 	if m == nil {
 		return
 	}
@@ -35,9 +35,9 @@ func (r *Scale[T]) getFunctionNameLen(_ context.Context, module api.Module, para
 
 // getFunctionName is the Host function for getting the Function Name
 func (r *Scale[T]) getFunctionName(_ context.Context, module api.Module, params []uint64) {
-	r.modulesMu.RLock()
-	m := r.modules[module.Name()]
-	r.modulesMu.RUnlock()
+	r.activeModulesMu.RLock()
+	m := r.activeModules[module.Name()]
+	r.activeModulesMu.RUnlock()
 	if m == nil {
 		return
 	}
@@ -49,9 +49,9 @@ func (r *Scale[T]) getFunctionName(_ context.Context, module api.Module, params 
 
 // getInstanceID is the Host function to get 16 byte Instance ID
 func (r *Scale[T]) getInstanceID(_ context.Context, module api.Module, params []uint64) {
-	r.modulesMu.RLock()
-	m := r.modules[module.Name()]
-	r.modulesMu.RUnlock()
+	r.activeModulesMu.RLock()
+	m := r.activeModules[module.Name()]
+	r.activeModulesMu.RUnlock()
 	if m == nil {
 		return
 	}
@@ -61,9 +61,9 @@ func (r *Scale[T]) getInstanceID(_ context.Context, module api.Module, params []
 	mem.Write(ptr, m.instance.instanceID)
 }
 
-// OTELTraceJSON is the Host function to receive OTEL Trace data in JSON
+// otelTraceJSON is the Host function to receive OTEL Trace data in JSON
 // and then call the TraceDataCallback
-func (r *Scale[T]) OTELTraceJSON(_ context.Context, module api.Module, params []uint64) {
+func (r *Scale[T]) otelTraceJSON(_ context.Context, module api.Module, params []uint64) {
 	if r.TraceDataCallback == nil {
 		return
 	}
