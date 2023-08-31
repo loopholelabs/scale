@@ -32,7 +32,7 @@ type Instance[T signature.Signature] struct {
 	next Next[T]
 }
 
-func newInstance[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
+func newInstanceSetup[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
 	i := &Instance[T]{
 		runtime:    r,
 		instanceID: make([]byte, 16),
@@ -54,8 +54,8 @@ func newInstance[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance
 	return i, nil
 }
 
-func newPersistentInstance[T signature.Signature](ctx context.Context, r *Scale[T], next ...Next[T]) (*Instance[T], error) {
-	i, err := newInstance[T](r, next...)
+func newInstance[T signature.Signature](ctx context.Context, r *Scale[T], next ...Next[T]) (*Instance[T], error) {
+	i, err := newInstanceSetup[T](r, next...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +66,10 @@ func newPersistentInstance[T signature.Signature](ctx context.Context, r *Scale[
 	}
 
 	return i, nil
+}
+
+func newPoolingInstance[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
+	return newInstanceSetup[T](r, next...)
 }
 
 func (i *Instance[T]) Run(ctx context.Context, signature T) error {

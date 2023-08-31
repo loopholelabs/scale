@@ -65,13 +65,11 @@ func New[T signature.Signature](config *Config[T]) (*Scale[T], error) {
 // Instance returns a new instance of a Scale Function chain
 // with the provided and optional next function.
 func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
-	return newInstance(r, next...)
-}
+	if r.config.pooling {
+		return newPoolingInstance(r, next...)
+	}
 
-// PersistentInstance returns a new persistent instance of a Scale Function chain
-// with the provided context and optional next function.
-func (r *Scale[T]) PersistentInstance(ctx context.Context, next ...Next[T]) (*Instance[T], error) {
-	return newPersistentInstance(ctx, r, next...)
+	return newInstance(r.config.context, r, next...)
 }
 
 func (r *Scale[T]) init() error {

@@ -93,7 +93,6 @@ type Schema struct {
 	SignatureHash   string                  `json:"signature_hash" yaml:"signature_hash"`
 	Language        Language                `json:"language" yaml:"language"`
 	Dependencies    []Dependency            `json:"dependencies" yaml:"dependencies"`
-	Stateless       bool                    `json:"stateless" yaml:"stateless"`
 	Function        []byte                  `json:"function" yaml:"function"`
 	Size            uint32                  `json:"size" yaml:"size"`
 	Hash            string                  `json:"hash" yaml:"hash"`
@@ -127,8 +126,6 @@ func (s *Schema) Encode() []byte {
 			e.String(v)
 		}
 	}
-
-	e.Bool(s.Stateless)
 
 	e.Bytes(s.Function)
 
@@ -245,11 +242,6 @@ func (s *Schema) Decode(data []byte) error {
 		}
 	}
 
-	s.Stateless, err = d.Bool()
-	if err != nil {
-		s.Stateless = false
-	}
-
 	s.Function, err = d.Bytes(nil)
 	if err != nil {
 		return err
@@ -303,8 +295,6 @@ func (s *Schema) GetHash() []byte {
 			e.String(v)
 		}
 	}
-
-	e.Bool(s.Stateless)
 
 	e.Bytes(s.Function)
 

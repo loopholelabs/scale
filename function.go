@@ -84,27 +84,16 @@ func (f *function[T]) runWithModule(ctx context.Context, moduleInstance *moduleI
 }
 
 func (f *function[T]) run(ctx context.Context, signature T, instance *Instance[T]) error {
-	var module *moduleInstance[T]
-	var err error
-	if f.scaleFunc.Stateless {
-		module, err = f.modulePool.Get()
-		if err != nil {
-			return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
-		}
-	} else {
-		module, err = newModuleInstance[T](ctx, f.runtime, f, instance)
-		if err != nil {
-			return fmt.Errorf("failed to create module for function %s: %w", f.scaleFunc.Name, err)
-		}
+	module, err := f.modulePool.Get()
+	if err != nil {
+		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
 	}
 
 	module.init(f.runtime, instance)
 	module.setSignature(signature)
 
 	err = f.runWithModule(ctx, module)
-	if f.scaleFunc.Stateless {
-		module.cleanup(f.runtime)
-	}
+	module.cleanup(f.runtime)
 	if err != nil {
 		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
 	}

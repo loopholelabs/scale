@@ -35,7 +35,7 @@ func New() (*Formatter, error) {
 		return nil, err
 	}
 
-	cfg := scale.NewConfig(signature.New).WithFunction(s)
+	cfg := scale.NewConfig(signature.New).WithFunction(s).WithPooling(true)
 	runtime, err := scale.New(cfg)
 	if err != nil {
 		return nil, err
