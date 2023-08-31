@@ -26,6 +26,10 @@ func NewSignature(schema *signature.Schema) (*Signature, error) {
 	}, nil
 }
 
+func (s *Signature) Signature() *Signature {
+	return s
+}
+
 func (s *Signature) Read(b []byte) (err error) {
 	d := polyglot.GetDecoder(b)
 	s.data, err = s.converter.FromPolyglot(d)
