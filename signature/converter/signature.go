@@ -59,3 +59,7 @@ func (s *Signature) Hash() string {
 func (s *Signature) FromJSON(b []byte) error {
 	return json.Unmarshal(b, &s.data)
 }
+
+func (s *Signature) ToJSON() ([]byte, error) {
+	return json.Marshal(s.data)
+}
