@@ -92,8 +92,8 @@ func TestGolangE2E(t *testing.T) {
 	assert.Equal(t, scalefunc.Go, schema.Language)
 	assert.Equal(t, 0, len(schema.Dependencies))
 
-	ctx := context.Background()
-	runtime, err := scale.New(ctx, hostSignature.New, []*scalefunc.Schema{schema})
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
 
 	instance, err := runtime.Instance()
@@ -101,6 +101,7 @@ func TestGolangE2E(t *testing.T) {
 
 	sig := hostSignature.New()
 
+	ctx := context.Background()
 	err = instance.Run(ctx, sig)
 	require.NoError(t, err)
 
@@ -167,8 +168,8 @@ func TestRustE2E(t *testing.T) {
 	assert.Equal(t, scalefunc.Go, schema.Language)
 	assert.Equal(t, 0, len(schema.Dependencies))
 
-	ctx := context.Background()
-	runtime, err := scale.New(ctx, hostSignature.New, []*scalefunc.Schema{schema})
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
 
 	instance, err := runtime.Instance()
@@ -176,6 +177,7 @@ func TestRustE2E(t *testing.T) {
 
 	sig := hostSignature.New()
 
+	ctx := context.Background()
 	err = instance.Run(ctx, sig)
 	require.NoError(t, err)
 

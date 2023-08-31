@@ -71,7 +71,7 @@ func newPersistentInstance[T signature.Signature](ctx context.Context, r *Scale[
 func (i *Instance[T]) Run(ctx context.Context, signature T) error {
 	if i.head != nil {
 		i.head.setSignature(signature)
-		return i.head.function.runWithModule(ctx, signature, i.head)
+		return i.head.function.runWithModule(ctx, i.head)
 	}
 
 	return i.runtime.head.run(ctx, signature, i)

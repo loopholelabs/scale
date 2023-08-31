@@ -50,8 +50,8 @@ type function[T signature.Signature] struct {
 	env map[string]string
 }
 
-func (f *function[T]) runWithModule(ctx context.Context, signature T, moduleInstance *moduleInstance[T]) error {
-	buf := signature.Write()
+func (f *function[T]) runWithModule(ctx context.Context, moduleInstance *moduleInstance[T]) error {
+	buf := moduleInstance.signature.Write()
 	ctxBufferLength := uint64(len(buf))
 	writeBuffer, err := moduleInstance.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
@@ -76,7 +76,7 @@ func (f *function[T]) runWithModule(ctx context.Context, signature T, moduleInst
 		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
 	}
 
-	err = signature.Read(buf)
+	err = moduleInstance.signature.Read(buf)
 	if err != nil {
 		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
 	}
@@ -101,7 +101,7 @@ func (f *function[T]) run(ctx context.Context, signature T, instance *Instance[T
 	module.init(f.runtime, instance)
 	module.setSignature(signature)
 
-	err = f.runWithModule(ctx, signature, module)
+	err = f.runWithModule(ctx, module)
 	if f.scaleFunc.Stateless {
 		module.cleanup(f.runtime)
 	}

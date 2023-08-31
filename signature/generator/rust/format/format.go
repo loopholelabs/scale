@@ -47,7 +47,7 @@ func New() (*Formatter, error) {
 }
 
 func (f *Formatter) Format(ctx context.Context, code string) (string, error) {
-	instance, err := f.runtime.PersistentInstance(ctx)
+	instance, err := f.runtime.Instance()
 	if err != nil {
 		return "", err
 	}

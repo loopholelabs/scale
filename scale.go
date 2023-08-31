@@ -161,7 +161,7 @@ func (r *Scale[T]) next(ctx context.Context, module api.Module, params []uint64)
 
 	if m.nextInstance != nil {
 		m.nextInstance.setSignature(m.signature)
-		err = m.nextInstance.function.runWithModule(ctx, m.signature, m.nextInstance)
+		err = m.nextInstance.function.runWithModule(ctx, m.nextInstance)
 	} else if m.function.next == nil {
 		m.signature, err = m.instance.next(m.signature)
 	} else {

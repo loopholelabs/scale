@@ -78,12 +78,15 @@ func newModuleInstance[T signature.Signature](ctx context.Context, r *Scale[T], 
 		resize:             resize,
 	}
 
-	if f.next != nil && i != nil {
-		m.nextInstance, err = newModuleInstance[T](ctx, r, f.next, i)
-		if err != nil {
-			return nil, err
-		}
+	if i != nil {
 		m.init(r, i)
+		if f.next != nil {
+			m.nextInstance, err = newModuleInstance[T](ctx, r, f.next, i)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	}
 
 	return m, nil
