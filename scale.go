@@ -116,6 +116,10 @@ func (r *Scale[T]) init() error {
 
 	testSignature := r.config.newSignature()
 	for _, sf := range r.config.functions {
+		if testSignature.Hash() != "" && testSignature.Hash() != sf.function.SignatureHash {
+			return fmt.Errorf("passed in function '%s:%s' has an invalid signatures", sf.function.Name, sf.function.Tag)
+		}
+
 		f, err := newFunction(r.config.context, r, sf.function, sf.env)
 		if err != nil {
 			return fmt.Errorf("failed to pre-compile function '%s:%s': %w", sf.function.Name, sf.function.Tag, err)
@@ -123,10 +127,6 @@ func (r *Scale[T]) init() error {
 
 		if r.head == nil {
 			r.head = f
-		}
-
-		if testSignature.Hash() != "" && testSignature.Hash() != sf.function.SignatureHash {
-			return fmt.Errorf("passed in function '%s:%s' has an invalid signatures", sf.function.Name, sf.function.Tag)
 		}
 
 		if r.tail != nil {

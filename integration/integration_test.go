@@ -25,6 +25,7 @@ import (
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/typescript"
 	"github.com/loopholelabs/scale/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -234,31 +235,37 @@ func TestRustToRust(t *testing.T) {
 	t.Log(string(out))
 }
 
-//func TestTypescriptToTypescript(t *testing.T) {
-//	s := new(signature.Schema)
-//	err := s.Decode([]byte(signature.MasterTestingSchema))
-//	require.NoError(t, err)
-//
-//	const typescriptDir = "./typescript_tests"
-//
-//	formatted, err := typescript.Generate(s, "typescript_tests", "v0.1.0")
-//	require.NoError(t, err)
-//
-//	err = os.WriteFile(typescriptDir+"/generated.ts", formatted, 0644)
-//	require.NoError(t, err)
-//
-//	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-output")
-//	cmd.Dir = typescriptDir
-//	out, err := cmd.CombinedOutput()
-//	assert.NoError(t, err)
-//	t.Log(string(out))
-//
-//	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-input")
-//	cmd.Dir = typescriptDir
-//	out, err = cmd.CombinedOutput()
-//	assert.NoError(t, err)
-//	t.Log(string(out))
-//}
+func TestTypescriptToTypescript(t *testing.T) {
+	s := new(signature.Schema)
+	err := s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	const typescriptDir = "./typescript_tests/signature"
+
+	transpiled, err := typescript.GenerateTypesTranspiled(s, "typescript_tests", "generated.js")
+	require.NoError(t, err)
+
+	err = os.WriteFile(typescriptDir+"/generated.js", transpiled.Javascript, 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(typescriptDir+"/generated.js.map", transpiled.SourceMap, 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile(typescriptDir+"/generated.d.ts", transpiled.Declaration, 0644)
+	require.NoError(t, err)
+
+	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-output")
+	cmd.Dir = typescriptDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-input")
+	cmd.Dir = typescriptDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
 
 func TestGolangToRust(t *testing.T) {
 	wd, err := os.Getwd()

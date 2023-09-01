@@ -59,7 +59,7 @@ func (r *Scale[T]) getInstanceID(_ context.Context, module api.Module, params []
 
 	ptr := uint32(params[0])
 	mem := module.Memory()
-	mem.Write(ptr, m.instance.instanceID)
+	mem.Write(ptr, m.instance.id)
 }
 
 // otelTraceJSON is the Host function to receive OTEL Trace data in JSON

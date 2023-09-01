@@ -62,6 +62,9 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 
 		RustPackageName:    "local_example_latest_guest",
 		RustPackageVersion: "v0.1.0",
+
+		TypescriptPackageName:    "local-example-latest-guest",
+		TypescriptPackageVersion: "v0.1.0",
 	})
 	require.NoError(t, err)
 
@@ -77,11 +80,21 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	typescriptSignatureDir := wd + "/typescript_tests/signature"
+	for _, file := range guest.TypescriptFiles {
+		err = os.WriteFile(typescriptSignatureDir+"/"+file.Name(), file.Data(), 0644)
+		require.NoError(t, err)
+	}
+
 	host, err := generator.GenerateHostLocal(&generator.Options{
-		Signature:               s,
+		Signature: s,
+
 		GolangPackageImportPath: "signature",
 		GolangPackageName:       "signature",
 		GolangPackageVersion:    "v0.1.0",
+
+		TypescriptPackageName:    "local-example-latest-host",
+		TypescriptPackageVersion: "v0.1.0",
 	})
 	require.NoError(t, err)
 
@@ -92,6 +105,12 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
+
+	typescriptSignatureDir = wd + "/typescript_tests/host_signature"
+	for _, file := range host.TypescriptFiles {
+		err = os.WriteFile(typescriptSignatureDir+"/"+file.Name(), file.Data(), 0644)
+		require.NoError(t, err)
+	}
 }
 
 func TestGenerateSimpleSchema(t *testing.T) {
@@ -99,21 +118,27 @@ func TestGenerateSimpleSchema(t *testing.T) {
 	err := s.Decode([]byte(simpleSchema))
 	require.NoError(t, err)
 
-	formatted, err := golang.Generate(s, "generated")
+	formatted, err := golang.GenerateTypes(s, "generated")
 	require.NoError(t, err)
 
 	err = os.WriteFile("./golang_tests/generated/generated.go", formatted, 0644)
 	require.NoError(t, err)
 
-	formatted, err = rust.Generate(s, "generated")
+	formatted, err = rust.GenerateTypes(s, "generated")
 	require.NoError(t, err)
 
 	err = os.WriteFile("./rust_tests/generated/generated.rs", formatted, 0644)
 	require.NoError(t, err)
 
-	formatted, err = typescript.Generate(s, "generated", "v0.1.0")
+	transpiled, err := typescript.GenerateTypesTranspiled(s, "generated", "generated.js")
 	require.NoError(t, err)
 
-	err = os.WriteFile("./typescript_tests/generated/generated.ts", formatted, 0644)
+	err = os.WriteFile("./typescript_tests/generated/generated.js", transpiled.Javascript, 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile("./typescript_tests/generated/generated.js.map", transpiled.SourceMap, 0644)
+	require.NoError(t, err)
+
+	err = os.WriteFile("./typescript_tests/generated/generated.d.ts", transpiled.Declaration, 0644)
 	require.NoError(t, err)
 }

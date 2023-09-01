@@ -19,6 +19,7 @@ import (
 	"compress/gzip"
 	"encoding/hex"
 	"fmt"
+	"github.com/loopholelabs/scale/signature/generator/typescript"
 	"path"
 	"strings"
 
@@ -31,24 +32,30 @@ import (
 )
 
 type GuestRegistryPackage struct {
-	GolangModule  *bytes.Buffer
-	GolangModfile []byte
-	RustCrate     *bytes.Buffer
-	RustCargofile []byte
+	GolangModule          *bytes.Buffer
+	GolangModfile         []byte
+	RustCrate             *bytes.Buffer
+	RustCargofile         []byte
+	TypescriptPackage     *bytes.Buffer
+	TypescriptPackageJSON []byte
 }
 
 type GuestLocalPackage struct {
-	GolangFiles []File
-	RustFiles   []File
+	GolangFiles     []File
+	RustFiles       []File
+	TypescriptFiles []File
 }
 
 type HostRegistryPackage struct {
-	GolangModule  *bytes.Buffer
-	GolangModfile []byte
+	GolangModule          *bytes.Buffer
+	GolangModfile         []byte
+	TypescriptPackage     *bytes.Buffer
+	TypescriptPackageJSON []byte
 }
 
 type HostLocalPackage struct {
-	GolangFiles []File
+	GolangFiles     []File
+	TypescriptFiles []File
 }
 
 type Options struct {
@@ -60,6 +67,9 @@ type Options struct {
 
 	RustPackageName    string
 	RustPackageVersion string
+
+	TypescriptPackageName    string
+	TypescriptPackageVersion string
 }
 
 func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
@@ -69,12 +79,12 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(options.Signature, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	guest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName)
+	golangGuest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +96,7 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 
 	files := []zip.File{
 		NewFile("types.go", "types.go", golangTypes),
-		NewFile("guest.go", "guest.go", guest),
+		NewFile("guest.go", "guest.go", golangGuest),
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
@@ -99,7 +109,7 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 		return nil, err
 	}
 
-	rustTypes, err := rust.Generate(options.Signature, options.RustPackageName)
+	rustTypes, err := rust.GenerateTypes(options.Signature, options.RustPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -159,11 +169,76 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
 	}
 
+	typescriptTypes, err := typescript.GenerateTypesTranspiled(options.Signature, options.TypescriptPackageName, "types.js")
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptGuest, err := typescript.GenerateGuestTranspiled(options.Signature, hashString, options.TypescriptPackageName, "index.js")
+	if err != nil {
+		return nil, err
+	}
+
+	packageJSON, err := typescript.GeneratePackageJSON(options.TypescriptPackageName, options.TypescriptPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptFiles := []File{
+		NewFile("types.js", "types.js", typescriptTypes.Javascript),
+		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
+		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.js", "index.js", typescriptGuest.Javascript),
+		NewFile("index.js.map", "index.js.map", typescriptGuest.SourceMap),
+		NewFile("index.d.ts", "index.d.ts", typescriptGuest.Declaration),
+		NewFile("package.json", "package.json", packageJSON),
+	}
+
+	typescriptBuffer := new(bytes.Buffer)
+	gzipTypescriptWriter := gzip.NewWriter(typescriptBuffer)
+	tarTypescriptWriter := tar.NewWriter(gzipTypescriptWriter)
+
+	for _, file := range typescriptFiles {
+		header, err = tar.FileInfoHeader(file, file.Name())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
+		}
+
+		header.Name = path.Join("package", header.Name)
+
+		err = tarTypescriptWriter.WriteHeader(header)
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar header for %s: %w", file.Name(), err)
+		}
+		_, err = tarTypescriptWriter.Write(file.Data())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar data for %s: %w", file.Name(), err)
+		}
+	}
+
+	err = tarTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	err = gzipTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
+	}
+
 	return &GuestRegistryPackage{
-		GolangModule:  golangBuffer,
-		GolangModfile: modfile,
-		RustCrate:     rustBuffer,
-		RustCargofile: cargofile,
+		GolangModule:          golangBuffer,
+		GolangModfile:         modfile,
+		RustCrate:             rustBuffer,
+		RustCargofile:         cargofile,
+		TypescriptPackage:     typescriptBuffer,
+		TypescriptPackageJSON: packageJSON,
 	}, nil
 }
 
@@ -174,7 +249,7 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.Generate(options.Signature, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(options.Signature, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +270,7 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
-	rustTypes, err := rust.Generate(options.Signature, options.RustPackageName)
+	rustTypes, err := rust.GenerateTypes(options.Signature, options.RustPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -216,9 +291,35 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		NewFile("Cargo.toml", "Cargo.toml", cargofile),
 	}
 
+	typescriptTypes, err := typescript.GenerateTypesTranspiled(options.Signature, options.TypescriptPackageName, "types.js")
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptGuest, err := typescript.GenerateGuestTranspiled(options.Signature, hashString, options.TypescriptPackageName, "index.js")
+	if err != nil {
+		return nil, err
+	}
+
+	packageJSON, err := typescript.GeneratePackageJSON(options.TypescriptPackageName, options.TypescriptPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptFiles := []File{
+		NewFile("types.js", "types.js", typescriptTypes.Javascript),
+		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
+		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.js", "index.js", typescriptGuest.Javascript),
+		NewFile("index.js.map", "index.js.map", typescriptGuest.SourceMap),
+		NewFile("index.d.ts", "index.d.ts", typescriptGuest.Declaration),
+		NewFile("package.json", "package.json", packageJSON),
+	}
+
 	return &GuestLocalPackage{
-		GolangFiles: golangFiles,
-		RustFiles:   rustFiles,
+		GolangFiles:     golangFiles,
+		RustFiles:       rustFiles,
+		TypescriptFiles: typescriptFiles,
 	}, nil
 }
 
@@ -234,12 +335,12 @@ func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(sig, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName)
+	golangHost, err := golang.GenerateHost(sig, hashString, options.GolangPackageName)
 
 	if err != nil {
 		return nil, err
@@ -252,12 +353,12 @@ func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 
 	files := []zip.File{
 		NewFile("types.go", "types.go", golangTypes),
-		NewFile("host.go", "host.go", host),
+		NewFile("host.go", "host.go", golangHost),
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
-	buffer := new(bytes.Buffer)
-	err = zip.Create(buffer, module.Version{
+	golangBuffer := new(bytes.Buffer)
+	err = zip.Create(golangBuffer, module.Version{
 		Path:    options.GolangPackageImportPath,
 		Version: options.GolangPackageVersion,
 	}, files)
@@ -265,9 +366,75 @@ func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 		return nil, err
 	}
 
+	typescriptTypes, err := typescript.GenerateTypesTranspiled(sig, options.TypescriptPackageName, "types.js")
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptHost, err := typescript.GenerateHostTranspiled(sig, hashString, options.TypescriptPackageName, "index.js")
+	if err != nil {
+		return nil, err
+	}
+
+	packageJSON, err := typescript.GeneratePackageJSON(options.TypescriptPackageName, options.TypescriptPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptFiles := []File{
+		NewFile("types.js", "types.js", typescriptTypes.Javascript),
+		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
+		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.js", "index.js", typescriptHost.Javascript),
+		NewFile("index.js.map", "index.js.map", typescriptHost.SourceMap),
+		NewFile("index.d.ts", "index.d.ts", typescriptHost.Declaration),
+		NewFile("package.json", "package.json", packageJSON),
+	}
+
+	typescriptBuffer := new(bytes.Buffer)
+	gzipTypescriptWriter := gzip.NewWriter(typescriptBuffer)
+	tarTypescriptWriter := tar.NewWriter(gzipTypescriptWriter)
+
+	var header *tar.Header
+	for _, file := range typescriptFiles {
+		header, err = tar.FileInfoHeader(file, file.Name())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
+		}
+
+		header.Name = path.Join("package", header.Name)
+
+		err = tarTypescriptWriter.WriteHeader(header)
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar header for %s: %w", file.Name(), err)
+		}
+		_, err = tarTypescriptWriter.Write(file.Data())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar data for %s: %w", file.Name(), err)
+		}
+	}
+
+	err = tarTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	err = gzipTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
+	}
+
 	return &HostRegistryPackage{
-		GolangModule:  buffer,
-		GolangModfile: modfile,
+		GolangModule:          golangBuffer,
+		GolangModfile:         modfile,
+		TypescriptPackage:     typescriptBuffer,
+		TypescriptPackageJSON: packageJSON,
 	}, nil
 }
 
@@ -283,12 +450,12 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.Generate(sig, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(sig, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	host, err := golang.GenerateHost(sig, hashString, options.GolangPackageName)
+	golangHost, err := golang.GenerateHost(sig, hashString, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -298,13 +465,39 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		return nil, err
 	}
 
-	files := []File{
+	golangFiles := []File{
 		NewFile("types.go", "types.go", golangTypes),
-		NewFile("host.go", "host.go", host),
+		NewFile("host.go", "host.go", golangHost),
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
+	typescriptTypes, err := typescript.GenerateTypesTranspiled(sig, options.TypescriptPackageName, "types.js")
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptHost, err := typescript.GenerateHostTranspiled(sig, hashString, options.TypescriptPackageName, "index.js")
+	if err != nil {
+		return nil, err
+	}
+
+	packageJSON, err := typescript.GeneratePackageJSON(options.TypescriptPackageName, options.TypescriptPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptFiles := []File{
+		NewFile("types.js", "types.js", typescriptTypes.Javascript),
+		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
+		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.js", "index.js", typescriptHost.Javascript),
+		NewFile("index.js.map", "index.js.map", typescriptHost.SourceMap),
+		NewFile("index.d.ts", "index.d.ts", typescriptHost.Declaration),
+		NewFile("package.json", "package.json", packageJSON),
+	}
+
 	return &HostLocalPackage{
-		GolangFiles: files,
+		GolangFiles:     golangFiles,
+		TypescriptFiles: typescriptFiles,
 	}, nil
 }

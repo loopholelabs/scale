@@ -62,3 +62,14 @@
         {{- end -}}
     {{ end }}
 {{ end }}
+
+{{ define "ts_enums_accessor_declaration" }}
+    {{ $current_model := . }}
+    {{- range .Enums }}
+        {{- if .Accessor }}
+            get {{ CamelCase .Name }}(): {{  .Reference }};
+
+            set {{ CamelCase .Name }}(val: {{ .Reference }});
+        {{- end -}}
+    {{ end }}
+{{ end }}

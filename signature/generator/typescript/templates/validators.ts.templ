@@ -18,7 +18,7 @@
 
 {{ define "ts_regex_validator" }}
     {{- if . }}
-        if (/{{ .Expression }}/.test(val) === false) {
+        if (!/{{ .Expression }}/.test(val)) {
             throw new Error("value must match {{ .Expression }}");
         }
     {{- end }}

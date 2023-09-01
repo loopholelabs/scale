@@ -51,6 +51,25 @@ type function[T interfaces.Signature] struct {
 	env map[string]string
 }
 
+func newFunction[T interfaces.Signature](ctx context.Context, r *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*function[T], error) {
+	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)
+	}
+
+	f := &function[T]{
+		runtime:    r,
+		identifier: fmt.Sprintf("%s:%s", scaleFunc.Name, scaleFunc.Tag),
+		compiled:   compiled,
+		scaleFunc:  scaleFunc,
+		env:        env,
+	}
+
+	f.modulePool = newModulePool[T](ctx, r, f)
+
+	return f, nil
+}
+
 func (f *function[T]) runWithModule(ctx context.Context, moduleInstance *moduleInstance[T]) error {
 	buf := moduleInstance.signature.Write()
 	ctxBufferLength := uint64(len(buf))
@@ -100,23 +119,4 @@ func (f *function[T]) run(ctx context.Context, signature T, instance *Instance[T
 	}
 
 	return nil
-}
-
-func newFunction[T interfaces.Signature](ctx context.Context, r *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*function[T], error) {
-	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)
-	}
-
-	f := &function[T]{
-		runtime:    r,
-		identifier: fmt.Sprintf("%s:%s", scaleFunc.Name, scaleFunc.Tag),
-		compiled:   compiled,
-		scaleFunc:  scaleFunc,
-		env:        env,
-	}
-
-	f.modulePool = newModulePool[T](ctx, r, f)
-
-	return f, nil
 }

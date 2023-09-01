@@ -22,6 +22,8 @@ import (
 
 	scaleVersion "github.com/loopholelabs/scale/version"
 
+	interfacesVersion "github.com/loopholelabs/scale-signature-interfaces/version"
+
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
@@ -33,9 +35,9 @@ const (
 
 var generator *Generator
 
-// Generate generates the types for the signature
-func Generate(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
-	return generator.Generate(signatureSchema, packageName)
+// GenerateTypes generates the types for the signature
+func GenerateTypes(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
+	return generator.GenerateTypes(signatureSchema, packageName)
 }
 
 // GenerateModfile generates the go.mod file for the signature
@@ -43,10 +45,12 @@ func GenerateModfile(packageImportPath string) ([]byte, error) {
 	return generator.GenerateModfile(packageImportPath)
 }
 
+// GenerateGuest generates the guest bindings for the signature
 func GenerateGuest(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
 	return generator.GenerateGuest(signatureSchema, signatureHash, packageName)
 }
 
+// GenerateHost generates the host bindings for the signature
 func GenerateHost(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
 	return generator.GenerateHost(signatureSchema, signatureHash, packageName)
 }
@@ -76,8 +80,8 @@ func New() (*Generator, error) {
 	}, nil
 }
 
-// Generate generates the types for the signature
-func (g *Generator) Generate(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
+// GenerateTypes generates the types for the signature
+func (g *Generator) GenerateTypes(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
@@ -99,8 +103,9 @@ func (g *Generator) Generate(signatureSchema *signature.Schema, packageName stri
 func (g *Generator) GenerateModfile(packageImportPath string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "mod.go.templ", map[string]any{
-		"polyglot_version":    polyglotVersion.Version(),
-		"package_import_path": packageImportPath,
+		"polyglot_version":                   polyglotVersion.Version(),
+		"scale_signature_interfaces_version": interfacesVersion.Version(),
+		"package_import_path":                packageImportPath,
 	})
 	if err != nil {
 		return nil, err
@@ -109,7 +114,7 @@ func (g *Generator) GenerateModfile(packageImportPath string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// GenerateGuest generates the guest bindings
+// GenerateGuest generates the guest bindings for the signature
 func (g *Generator) GenerateGuest(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
@@ -129,7 +134,7 @@ func (g *Generator) GenerateGuest(signatureSchema *signature.Schema, signatureHa
 	return format.Source(buf.Bytes())
 }
 
-// GenerateHost generates the host bindings
+// GenerateHost generates the host bindings for the signature
 //
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func (g *Generator) GenerateHost(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {

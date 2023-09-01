@@ -19,6 +19,8 @@ import (
 	"strings"
 	"text/template"
 
+	interfacesVersion "github.com/loopholelabs/scale-signature-interfaces/version"
+
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
 
 	scaleVersion "github.com/loopholelabs/scale/version"
@@ -37,9 +39,9 @@ const (
 
 var generator *Generator
 
-// Generate generates the types for the signature
-func Generate(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
-	return generator.Generate(signatureSchema, packageName)
+// GenerateTypes generates the types for the signature
+func GenerateTypes(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
+	return generator.GenerateTypes(signatureSchema, packageName)
 }
 
 // GenerateCargofile generates the cargo.toml file for the signature
@@ -83,8 +85,8 @@ func New() (*Generator, error) {
 	}, nil
 }
 
-// Generate generates the rust code for the given schema
-func (g *Generator) Generate(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
+// GenerateTypes generates the types for the signature
+func (g *Generator) GenerateTypes(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
@@ -118,9 +120,10 @@ func (g *Generator) Generate(signatureSchema *signature.Schema, packageName stri
 func (g *Generator) GenerateCargofile(packageName string, packageVersion string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "cargo.rs.templ", map[string]any{
-		"polyglot_version": strings.TrimPrefix(polyglotVersion.Version(), "v"),
-		"package_name":     packageName,
-		"package_version":  strings.TrimPrefix(packageVersion, "v"),
+		"polyglot_version":                   strings.TrimPrefix(polyglotVersion.Version(), "v"),
+		"scale_signature_interfaces_version": strings.TrimPrefix(interfacesVersion.Version(), "v"),
+		"package_name":                       packageName,
+		"package_version":                    strings.TrimPrefix(packageVersion, "v"),
 	})
 	if err != nil {
 		return nil, err

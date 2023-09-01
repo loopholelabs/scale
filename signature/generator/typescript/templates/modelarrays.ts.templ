@@ -78,3 +78,14 @@
         {{- end -}}
     {{ end }}
 {{ end }}
+
+{{ define "ts_modelarrays_accessor_declaration" }}
+    {{ $current_model := . }}
+    {{- range .ModelArrays }}
+        {{- if .Accessor }}
+            get {{ CamelCase .Name }}(): Array<{{ .Reference }}>;
+
+            set {{.Name }}(val: Array<{{ .Reference }}>);
+        {{- end -}}
+    {{ end }}
+{{ end }}

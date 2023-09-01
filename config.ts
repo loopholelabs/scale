@@ -14,22 +14,72 @@
 	limitations under the License.
 */
 
-
+import { Signature, New } from "@loopholelabs/scale-signature-interfaces";
+import { ScaleFunc } from "./scalefunc/scalefunc";
 
 const envStringRegex = /[^A-Za-z0-9_]/;
 
 class ConfigFunction {
-    function: ScaleFunc.Schema;
-    env: { [key: string]: string };
+    function: ScaleFunc;
+    env: { [key: string]: string } | undefined;
+
+    constructor(fn: ScaleFunc, env?: { [key: string]: string }) {
+        this.function = fn;
+        this.env = env;
+    }
 }
 
 export class Config<T extends Signature> {
-    newSignature: NewSignature<T>;
+    newSignature: New<T>;
     functions: ConfigFunction[] = [];
-    context: any = null; // Note: You'll want to import or define a more specific context type.
-    pooling: boolean;
 
-    constructor(newSignature: NewSignature<T>) {
+    constructor(newSignature: New<T>) {
         this.newSignature = newSignature;
     }
+
+    validate(): Error | null {
+        if (!this) {
+            return new Error("no config provided");
+        }
+        if (this.functions.length === 0) {
+            return new Error("no functions provided");
+        }
+
+        for (const f of this.functions) {
+            if (!f.function) {
+                return new Error("invalid function");
+            }
+            for (const k in f.env) {
+                if (!validEnv(k)) {
+                    return new Error("invalid environment variable");
+                }
+            }
+        }
+
+        return null;
+    }
+
+    withFunction(func: ScaleFunc, env?: { [key: string]: string }): Config<T> {
+        const f = new ConfigFunction(func, env);
+        f.function = func;
+
+        if (env) {
+            f.env = env;
+        }
+
+        this.functions.push(f);
+        return this;
+    }
+
+    withFunctions(functions: ScaleFunc[], env?: { [key: string]: string }): Config<T> {
+        for (const func of functions) {
+            this.withFunction(func, env);
+        }
+        return this;
+    }
+}
+
+// Helper function
+function validEnv(str: string): boolean {
+    return !envStringRegex.test(str);
 }

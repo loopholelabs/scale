@@ -14,97 +14,72 @@
 	limitations under the License.
 */
 
-import { Signature, NewSignature } from "@loopholelabs/scale-signature";
-import { ScaleFunc } from "@loopholelabs/scalefile/scalefunc";
-import * as httpSignature  from "@loopholelabs/scale-signature-http";
-
-import { randomBytes } from "crypto";
-
-import { ScaleMod } from "./scalemod";
-
-import { Func } from "./func";
-import { Instance } from "./instance";
-import { Pool } from "./pool";
-import { Module } from "./module";
-import { Cache } from "./cache";
-import {DisabledWASI} from "./wasi";
-
-import { TraceCallbackFunc } from "./scalemod";
-
-export * from "./instance"
-export * from "./module"
-export * from "./func"
-export * from "./wasi"
+import { Signature } from "@loopholelabs/scale-signature-interfaces";
+import { Config } from "./config";
+import { Module as TracingModule, CallbackFunction as TraceCallbackFunction } from "./tracing";
+import { Func, NewFunc } from "./function";
+import { DisabledWASI } from "./wasi";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
-export async function New<T extends Signature>(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]): Promise<Runtime<T>> {
-    const r = new Runtime(newSignature, functions);
+export async function New<T extends Signature>(config: Config<T>): Promise<Scale<T>> {
+    const r = new Scale(config);
     await r.Ready();
     return r;
 }
 
-export class Runtime<T extends Signature> {
-    public NewSignature: NewSignature<T>;
+export class Scale<T extends Signature> {
     private readonly ready: Promise<any>;
-    private functions: Func<T>[];
+
+    public readonly moduleConfig: WebAssembly.Imports;
+    private readonly config: Config<T>;
+
     public head: undefined | Func<T>;
     public tail: undefined | Func<T>;
 
-    public InvocationId: Buffer;
-    public TraceDataCallback: TraceCallbackFunc | undefined;
+    public TraceDataCallback: TraceCallbackFunction | undefined;
 
-    constructor(newSignature: NewSignature<T>, functions: (Promise<ScaleFunc>|ScaleFunc|Func<T>)[]) {
-        this.NewSignature = newSignature;
-        this.functions = [];
-        this.InvocationId = Buffer.alloc(16);
+    constructor(config: Config<T>) {
+        this.config = config;
+        const wasi = new DisabledWASI();
+        const tracing = new TracingModule("unknown", Buffer.alloc(16), undefined);
+        this.moduleConfig = {
+            wasi_snapshot_preview1: wasi.GetImports(),
+            scale: tracing.GetImports(),
+            env: {
+                next: (ptr: number, len: number): number => {
+                    return 0;
+                }
+            },
+        }
 
         this.ready = new Promise(async (resolve) => {
-            for (let i = 0; i < functions.length; i++) {
-                const fn = functions[i];
-                let f: Func<T>;
-                if (fn instanceof ScaleFunc) {
-                    const wasi = new DisabledWASI();
-                    const scaleMod = new ScaleMod("unknown", Buffer.alloc(16), undefined);
-                    const instantiatedSource = await WebAssembly.instantiate(fn.Function, {
-                        wasi_snapshot_preview1: wasi.GetImports(),
-                        env: {
-                            next: (ptr: number, len: number): number => {
-                                return 0;
-                            }
-                        },
-                        scale: scaleMod.GetImports(),
-                    });
-                    f = new Func<T>(fn, instantiatedSource.module);
-                } else if (fn instanceof Promise<ScaleFunc>) {
-                    const wasi = new DisabledWASI();
-                    const scaleMod = new ScaleMod("unknown", Buffer.alloc(16), undefined);
-                    const resolvedFn = await fn;
-                    const instantiatedSource = await WebAssembly.instantiate(resolvedFn.Function, {
-                        wasi_snapshot_preview1: wasi.GetImports(),
-                        env: {
-                            next: (ptr: number, len: number): number => {
-                                return 0;
-                            }
-                        },
-                        scale: scaleMod.GetImports(),
-                    });
-                    f = new Func<T>(resolvedFn, instantiatedSource.module);
-                } else {
-                    f = fn
+            const testSignature = this.config.newSignature();
+
+            for (let i = 0; i < this.config.functions.length; i++) {
+                const fn = this.config.functions[i];
+
+                if (testSignature.Hash() != fn.function.SignatureHash) {
+                    throw new Error(`passed in function ${fn.function.Name}:${fn.function.Tag} has an invalid signature`);
                 }
 
-                f.modulePool = new Pool<T>(f, this);
-                this.functions.push(f);
+                let f: Func<T>;
+                try {
+                    f = await NewFunc<T>(this, fn.function, this.moduleConfig, fn.env);
+                } catch (e) {
+                    throw new Error(`failed to pre-compile function ${fn.function.Name}:${fn.function.Tag}: ${e}`);
+                }
+
                 if (this.head === undefined) {
                     this.head = f;
                 }
+
                 if (this.tail !== undefined) {
                     this.tail.next = f;
                 }
+
                 this.tail = f;
             }
-
             resolve(true);
         });
     }
@@ -114,7 +89,6 @@ export class Runtime<T extends Signature> {
     }
 
     async Instance(next: null | NextFn<T>): Promise<Instance<T>> {
-        this.InvocationId = randomBytes(16);
 
         const i = new Instance<T>(this, next);
         for (let a = 0; a < this.functions.length; a++) {

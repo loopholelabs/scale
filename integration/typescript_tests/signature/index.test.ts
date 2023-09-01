@@ -1,4 +1,4 @@
-import * as generated from "./generated";
+import * as generated from "./types";
 import * as polyglot from "@loopholelabs/polyglot";
 import * as fs from 'fs';
 

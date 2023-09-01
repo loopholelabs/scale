@@ -28,7 +28,7 @@ func TestGenerateConverterSchema(t *testing.T) {
 	err := s.Decode([]byte(testSchema))
 	require.NoError(t, err)
 
-	formatted, err := golang.Generate(s, "generated")
+	formatted, err := golang.GenerateTypes(s, "generated")
 	require.NoError(t, err)
 
 	err = os.WriteFile("./converter_tests/generated.go", formatted, 0644)

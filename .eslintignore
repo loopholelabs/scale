@@ -6,3 +6,4 @@ target
 **/*.rs
 go.mod
 go.sum
+integration

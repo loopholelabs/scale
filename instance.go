@@ -25,8 +25,8 @@ import (
 
 // Instance is a single instance of a Scale Function chain
 type Instance[T signature.Signature] struct {
-	runtime    *Scale[T]
-	instanceID []byte
+	runtime *Scale[T]
+	id      []byte
 
 	head *moduleInstance[T]
 
@@ -35,11 +35,11 @@ type Instance[T signature.Signature] struct {
 
 func newInstanceSetup[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
 	i := &Instance[T]{
-		runtime:    r,
-		instanceID: make([]byte, 16),
+		runtime: r,
+		id:      make([]byte, 16),
 	}
 
-	_, err := rand.Read(i.instanceID)
+	_, err := rand.Read(i.id)
 	if err != nil {
 		return nil, err
 	}

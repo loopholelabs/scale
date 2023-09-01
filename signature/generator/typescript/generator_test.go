@@ -29,10 +29,10 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	formatted, err := Generate(s, "types", "v0.1.0")
+	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
 
-	// os.WriteFile("./generated.txt", formatted, 0644)
+	//os.WriteFile("./generated.txt", formatted, 0644)
 
 	master, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)

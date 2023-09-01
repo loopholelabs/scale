@@ -12,9 +12,9 @@ const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5"
 
 var _ interfaces.Signature = (*Signature)(nil)
 
-// sig is the host representation of the signature
+// Signature is the host representation of the signature
 //
-// Users should not use this type directly, but instead pass the Signature() function
+// Users should not use this type directly, but instead pass the New() function
 // to the Scale Runtime
 type Signature struct {
 	Context *ModelWithAllFieldTypes
@@ -23,7 +23,7 @@ type Signature struct {
 
 // New returns a new signature and tells the Scale Runtime how to use it
 //
-// This function should be passed into the scale runtime as an argument
+// This function should be passed into the scale runtime config as an argument
 func New() *Signature {
 	return &Signature{
 		Context: NewModelWithAllFieldTypes(),
@@ -41,6 +41,8 @@ func (x *Signature) Read(b []byte) error {
 }
 
 // Write writes the signature into a byte slice and returns it
+//
+// This method is meant to be used by the Scale Runtime to serialize the Signature
 func (x *Signature) Write() []byte {
 	x.buf.Reset()
 	x.Context.Encode(x.buf)
@@ -48,6 +50,8 @@ func (x *Signature) Write() []byte {
 }
 
 // Error writes the signature into a byte slice and returns it
+//
+// This method is meant to be used by the Scale Runtime to return an error
 func (x *Signature) Error(err error) []byte {
 	x.buf.Reset()
 	polyglot.Encoder(x.buf).Error(err)
@@ -55,6 +59,8 @@ func (x *Signature) Error(err error) []byte {
 }
 
 // Hash returns the hash of the signature
+//
+// This method is meant to be used by the Scale Runtime to validate Signature and Function compatibility
 func (x *Signature) Hash() string {
 	return hash
 }

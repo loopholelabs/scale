@@ -15,8 +15,16 @@ package typescript
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"strings"
 	"text/template"
+
+	"github.com/evanw/esbuild/pkg/api"
+	polyglotVersion "github.com/loopholelabs/polyglot/version"
+
+	interfacesVersion "github.com/loopholelabs/scale-signature-interfaces/version"
+	scaleVersion "github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/typescript/templates"
@@ -26,12 +34,82 @@ import (
 
 const (
 	defaultPackageName = "types"
+	tsConfig           = `
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "paths": {
+      "signature": ["./"]
+    },
+    "types": ["node"]
+  },
+}`
 )
 
 var generator *Generator
 
-func Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
-	return generator.Generate(schema, packageName, version)
+type Transpiled struct {
+	Javascript  []byte
+	SourceMap   []byte
+	Declaration []byte
+}
+
+// GenerateTypes generates the types for the signature
+func GenerateTypes(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
+	return generator.GenerateTypes(signatureSchema, packageName)
+}
+
+// GenerateTypesTranspiled generates the types for the signature and transpiles it to javascript
+func GenerateTypesTranspiled(signatureSchema *signature.Schema, packageName string, sourceName string) (*Transpiled, error) {
+	typescriptSource, err := generator.GenerateTypes(signatureSchema, packageName)
+	if err != nil {
+		return nil, err
+	}
+	return generator.GenerateTypesTranspiled(signatureSchema, packageName, sourceName, string(typescriptSource))
+}
+
+// GeneratePackageJSON generates the package.json file for the signature
+func GeneratePackageJSON(packageName string, packageVersion string) ([]byte, error) {
+	return generator.GeneratePackageJSON(packageName, packageVersion)
+}
+
+// GenerateGuest generates the guest bindings for the signature
+func GenerateGuest(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
+	return generator.GenerateGuest(signatureSchema, signatureHash, packageName)
+}
+
+// GenerateGuestTranspiled generates the guest bindings and transpiles it to javascript
+func GenerateGuestTranspiled(signatureSchema *signature.Schema, signatureHash string, packageName string, sourceName string) (*Transpiled, error) {
+	typescriptSource, err := generator.GenerateGuest(signatureSchema, signatureHash, packageName)
+	if err != nil {
+		return nil, err
+	}
+	return generator.GenerateGuestTranspiled(signatureSchema, packageName, sourceName, string(typescriptSource))
+}
+
+// GenerateHost generates the host bindings for the signature
+//
+// Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
+func GenerateHost(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
+	return generator.GenerateHost(signatureSchema, signatureHash, packageName)
+}
+
+// GenerateHostTranspiled generates the host bindings and transpiles it to javascript
+//
+// Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
+func GenerateHostTranspiled(signatureSchema *signature.Schema, signatureHash string, packageName string, sourceName string) (*Transpiled, error) {
+	typescriptSource, err := generator.GenerateHost(signatureSchema, signatureHash, packageName)
+	if err != nil {
+		return nil, err
+	}
+	return generator.GenerateHostTranspiled(signatureSchema, packageName, sourceName, string(typescriptSource))
 }
 
 func init() {
@@ -59,23 +137,202 @@ func New() (*Generator, error) {
 	}, nil
 }
 
-// Generate generates the typescript code
-func (g *Generator) Generate(schema *signature.Schema, packageName string, version string) ([]byte, error) {
+// GenerateTypes generates the types for the signature
+//
+// This is not transpiled to javascript and does not include source maps or type definitions
+func (g *Generator) GenerateTypes(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "types.ts.templ", map[string]any{
-		"schema":  schema,
-		"version": version,
-		"package": packageName,
+		"signature_schema":  signatureSchema,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return []byte(formatTS(buf.String())), nil
+}
+
+// GenerateTypesTranspiled takes the typescript source for the generated types and transpiles it to javascript
+func (g *Generator) GenerateTypesTranspiled(signatureSchema *signature.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
+	result := api.Transform(typescriptSource, api.TransformOptions{
+		Loader:      api.LoaderTS,
+		Format:      api.FormatCommonJS,
+		Sourcemap:   api.SourceMapExternal,
+		SourceRoot:  sourceName,
+		TsconfigRaw: tsConfig,
+	})
+
+	if len(result.Errors) > 0 {
+		var errString strings.Builder
+		for _, err := range result.Errors {
+			errString.WriteString(err.Text)
+			errString.WriteRune('\n')
+		}
+		return nil, errors.New(errString.String())
+	}
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "declaration.ts.templ", map[string]any{
+		"signature_schema":  signatureSchema,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Transpiled{
+		Javascript:  append(result.Code, []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
+		SourceMap:   result.Map,
+		Declaration: []byte(formatTS(buf.String())),
+	}, nil
+}
+
+// GeneratePackageJSON generates the package.json file for the signature
+func (g *Generator) GeneratePackageJSON(packageName string, packageVersion string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "package.ts.templ", map[string]any{
+		"polyglot_version":                   strings.TrimPrefix(polyglotVersion.Version(), "v"),
+		"scale_signature_interfaces_version": strings.TrimPrefix(interfacesVersion.Version(), "v"),
+		"package_name":                       packageName,
+		"package_version":                    strings.TrimPrefix(packageVersion, "v"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+// GenerateGuest generates the guest bindings for the signature
+func (g *Generator) GenerateGuest(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "guest.ts.templ", map[string]any{
+		"signature_schema":  signatureSchema,
+		"signature_hash":    signatureHash,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(formatTS(buf.String())), nil
+}
+
+// GenerateGuestTranspiled takes the typescript source for the generated guest bindings and transpiles it to javascript
+func (g *Generator) GenerateGuestTranspiled(signatureSchema *signature.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
+	result := api.Transform(typescriptSource, api.TransformOptions{
+		Loader:      api.LoaderTS,
+		Format:      api.FormatCommonJS,
+		Sourcemap:   api.SourceMapExternal,
+		SourceRoot:  sourceName,
+		TsconfigRaw: tsConfig,
+	})
+
+	if len(result.Errors) > 0 {
+		var errString strings.Builder
+		for _, err := range result.Errors {
+			errString.WriteString(err.Text)
+			errString.WriteRune('\n')
+		}
+		return nil, errors.New(errString.String())
+	}
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "declaration-guest.ts.templ", map[string]any{
+		"signature_schema":  signatureSchema,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Transpiled{
+		Javascript:  append(result.Code, []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
+		SourceMap:   result.Map,
+		Declaration: []byte(formatTS(buf.String())),
+	}, nil
+}
+
+// GenerateHost generates the host bindings for the signature
+//
+// Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
+func (g *Generator) GenerateHost(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "host.ts.templ", map[string]any{
+		"signature_schema":  signatureSchema,
+		"signature_hash":    signatureHash,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(formatTS(buf.String())), nil
+}
+
+// GenerateHostTranspiled takes the typescript source for the generated host bindings and transpiles it to javascript
+//
+// Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
+func (g *Generator) GenerateHostTranspiled(signatureSchema *signature.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
+	result := api.Transform(typescriptSource, api.TransformOptions{
+		Loader:      api.LoaderTS,
+		Format:      api.FormatCommonJS,
+		Sourcemap:   api.SourceMapExternal,
+		SourceRoot:  sourceName,
+		TsconfigRaw: tsConfig,
+	})
+
+	if len(result.Errors) > 0 {
+		var errString strings.Builder
+		for _, err := range result.Errors {
+			errString.WriteString(err.Text)
+			errString.WriteRune('\n')
+		}
+		return nil, errors.New(errString.String())
+	}
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "declaration-host.ts.templ", map[string]any{
+		"signature_schema":  signatureSchema,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Transpiled{
+		Javascript:  append(result.Code, []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
+		SourceMap:   result.Map,
+		Declaration: []byte(formatTS(buf.String())),
+	}, nil
 }
 
 func templateFunctions() template.FuncMap {

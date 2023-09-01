@@ -80,17 +80,30 @@
     {{ $model := .Model }}
     {{- range .Entries }}
         {{- if (Deref .Accessor) }}
-            get {{ CamelCase .Name }} () {
+            get {{ CamelCase .Name }}(): {{ Primitive $type }} {
                 return this.#{{ CamelCase .Name }};
             }
 
-            set {{ CamelCase .Name }} (val) {
+            set {{ CamelCase .Name }} (val: {{ Primitive $type }}) {
                 {{- template "ts_numbers_limit_validator" .LimitValidator }}
                 this.#{{ CamelCase .Name }} = val;
             }
         {{- end -}}
     {{ end }}
 {{ end }}
+
+{{ define "ts_numbers_accessor_declaration" }}
+    {{ $type := .Type }}
+    {{ $model := .Model }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            get {{ CamelCase .Name }}(): {{ Primitive $type }};
+
+            set {{ CamelCase .Name }} (val: {{ Primitive $type }});
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
 
 {{ define "ts_strings_accessor" }}
     {{ $type := .Type }}
@@ -101,12 +114,24 @@
                 return this.#{{ CamelCase .Name }};
             }
 
-            set {{ CamelCase .Name }}(val) {
+            set {{ CamelCase .Name }}(val: {{ Primitive $type}}) {
                 {{- template "ts_regex_validator" .RegexValidator }}
                 {{- template "ts_length_validator" .LengthValidator }}
                 {{- template "ts_case_modifier" .CaseModifier }}
                 this.#{{ CamelCase .Name }} = val;
             }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_strings_accessor_declaration" }}
+    {{ $type := .Type }}
+    {{ $model := .Model }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            get {{ CamelCase .Name }}(): {{ Primitive $type }};
+
+            set {{ CamelCase .Name }}(val: {{ Primitive $type }});
         {{- end -}}
     {{ end }}
 {{ end }}

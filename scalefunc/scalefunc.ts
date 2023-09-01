@@ -16,8 +16,10 @@
 
 import sha256 from "fast-sha256";
 
-import { Encoder, Decoder } from "@loopholelabs/polyglot";
+import {Decoder, Encoder} from "@loopholelabs/polyglot";
+import fs from "fs";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const Buffer = require("buffer/").Buffer;
 
 export const InvalidStringRegex = /[^A-Za-z0-9-.]/;
@@ -51,98 +53,95 @@ export const AcceptedVersions: Version[] = [V1Alpha];
 // AcceptedLanguages is an array of acceptable Languages
 export const AcceptedLanguages: Language[] = [Go, Rust, Typescript, Javascript];
 
+export class Dependency {
+    public Name: string;
+    public Version: string;
+
+    constructor(name: string, version: string) {
+        this.Name = name;
+        this.Version = version;
+    }
+}
+
 export class ScaleFunc {
     public Version: Version;
     public Name: string;
     public Tag: string;
     public SignatureName: string;
-    SignatureSchema
+    public SignatureBytes: Buffer;
+    public SignatureHash: string;
     public Language: Language;
+    public Dependencies: Dependency[];
     public Function: Buffer;
     public Size: undefined | number;
-    public Checksum: undefined | string;
-
-
-    Version         Version                 `json:"version" yaml:"version"`
-    Name            string                  `json:"name" yaml:"name"`
-    Tag             string                  `json:"tag" yaml:"tag"`
-    SignatureName   string                  `json:"signature_name" yaml:"signature_name"`
-    SignatureSchema *signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
-    SignatureHash   string                  `json:"signature_hash" yaml:"signature_hash"`
-    Language        Language                `json:"language" yaml:"language"`
-    Dependencies    []Dependency            `json:"dependencies" yaml:"dependencies"`
-    Function        []byte                  `json:"function" yaml:"function"`
-    Size            uint32                  `json:"size" yaml:"size"`
-    Hash            string                  `json:"hash" yaml:"hash"`
+    public Hash: undefined | string;
 
     constructor(
         version: Version,
         name: string,
         tag: string,
-        signature: string,
-        language: string,
+        signatureName: string,
+        signatureBytes: Buffer,
+        signatureHash: string,
+        language: Language,
+        dependencies: Dependency[],
         fn: Buffer
     ) {
         this.Version = version;
         this.Name = name;
         this.Tag = tag;
-        this.Signature = signature;
+        this.SignatureName = signatureName;
+        this.SignatureBytes = signatureBytes;
+        this.SignatureHash = signatureHash;
         this.Language = language;
+        this.Dependencies = dependencies;
         this.Function = fn;
     }
 
     Encode(): Uint8Array {
-       let enc = new polyglot.Encoder();
-       enc.string()
-        let b = encodeString(new Uint8Array(), this.Version as string);
-        b = encodeString(b, this.Name);
-        b = encodeString(b, this.Tag);
-        b = encodeString(b, this.Signature);
-        b = encodeString(b, this.Language as string);
-        b = encodeUint8Array(b, this.Function);
+        const enc = new Encoder();
+        enc.string(this.Version as string);
+        enc.string(this.Name);
+        enc.string(this.Tag);
+        enc.string(this.SignatureName);
+        enc.uint8Array(this.SignatureBytes);
+        enc.string(this.SignatureHash);
+        enc.string(this.Language as string);
+        enc.uint8Array(this.Function);
 
         // Compute the hash (sha256)
 
-        const size = b.length;
-        const hashed = sha256(b);
-        let hex = Buffer.from(hashed).toString("hex");
+        const size = enc.bytes.length;
+        const hashed = sha256(enc.bytes);
+        const hex = Buffer.from(hashed).toString("hex");
 
-        b = encodeUint32(b, size);
-        b = encodeString(b, hex);
-        return b;
+        enc.uint32(size);
+        enc.string(hex);
+
+        return enc.bytes;
     }
 
     static Decode(data: Uint8Array): ScaleFunc {
-        let b: Uint8Array = data;
-        let versionString: string;
-        ({ value: versionString, buf: b } = decodeString(b));
-        const version = versionString as Version;
+        const dec = new Decoder(data);
+
+        const version = dec.string() as Version;
         if (!AcceptedVersions.includes(version)) throw VersionErr;
 
-        let name: string;
-        ({ value: name, buf: b } = decodeString(b));
+        const name = dec.string();
+        const tag = dec.string();
+        const signatureName = dec.string();
+        const signatureBytes = dec.uint8Array();
+        const signatureHash = dec.string();
 
-        let tag: string;
-        ({ value: tag, buf: b } = decodeString(b));
-
-        let signature: string;
-        ({ value: signature, buf: b } = decodeString(b));
-
-        let language: string;
-        ({ value: language, buf: b } = decodeString(b));
+        const language = dec.string();
         if (!AcceptedLanguages.includes(language)) throw LanguageErr;
 
-        let fn: Uint8Array;
-        ({ value: fn, buf: b } = decodeUint8Array(b));
-
-        let size: number;
-        ({ value: size, buf: b } = decodeUint32(b));
-
-        let hash: string;
-        ({ value: hash } = decodeString(b));
+        const fn = dec.uint8Array();
+        const size = dec.uint32();
+        const hash = dec.string();
 
         const hashed = sha256(data.slice(0, size));
-        let hex = Buffer.from(hashed).toString("hex");
+        const hex = Buffer.from(hashed).toString("hex");
 
         if (hex !== hash) throw ChecksumErr;
 
@@ -150,16 +149,27 @@ export class ScaleFunc {
             version,
             name,
             tag,
-            signature,
+            signatureName,
+            Buffer.from(signatureBytes),
+            signatureHash,
             language,
+            [],
             Buffer.from(fn)
         );
         sf.Size = size;
-        sf.Checksum = hash;
+        sf.Hash = hash;
         return sf;
     }
 }
 
 export function ValidString(str: string): boolean {
     return !InvalidStringRegex.test(str);
+}
+
+export function Read(path: string): ScaleFunc {
+    return ScaleFunc.Decode(fs.readFileSync(path, null));
+}
+
+export function Write(path: string, scaleFunc: ScaleFunc) {
+    fs.writeFileSync(path, scaleFunc.Encode());
 }
