@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const generated = __importStar(require("./generated"));
+const generated = __importStar(require("./types"));
 const polyglot = __importStar(require("@loopholelabs/polyglot"));
 const fs = __importStar(require("fs"));
 test('test-output', () => {
