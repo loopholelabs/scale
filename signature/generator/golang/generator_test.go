@@ -32,7 +32,7 @@ func TestGenerator(t *testing.T) {
 	formatted, err := Generate(s, "types")
 	require.NoError(t, err)
 
-	//os.WriteFile("./generated.txt", formatted, 0644)
+	// os.WriteFile("./generated.txt", formatted, 0644)
 
 	master, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)

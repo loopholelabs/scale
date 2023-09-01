@@ -15,10 +15,12 @@ package golang
 
 import (
 	"bytes"
-	polyglotVersion "github.com/loopholelabs/polyglot/version"
-	scaleVersion "github.com/loopholelabs/scale/version"
 	"go/format"
 	"text/template"
+
+	polyglotVersion "github.com/loopholelabs/polyglot/version"
+
+	scaleVersion "github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/golang/templates"

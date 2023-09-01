@@ -14,8 +14,23 @@
     limitations under the License.
 */
 
-pub mod config;
+use lazy_static::lazy_static;
+use regex::Regex;
+use scale_signature_interfaces::New;
+use std::collections::HashMap;
 
-struct Scale<T: scale_signature_interfaces::Signature> {
-    config: config::Config<T>,
+lazy_static! {
+    static ref ENV_STRING_REGEX: Regex = Regex::new(r"[^A-Za-z0-9_]").unwrap();
+}
+
+#[derive(Debug)]
+struct ConfigFunction {
+    // function: Option<Schema>,
+    env: HashMap<String, String>,
+}
+
+#[derive(Debug)]
+pub struct Config<T: scale_signature_interfaces::Signature> {
+    new_signature: New<T>,
+    functions: Vec<ConfigFunction>,
 }

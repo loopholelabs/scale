@@ -16,10 +16,12 @@ package rust
 import (
 	"bytes"
 	"context"
-	polyglotVersion "github.com/loopholelabs/polyglot/version"
-	scaleVersion "github.com/loopholelabs/scale/version"
 	"strings"
 	"text/template"
+
+	polyglotVersion "github.com/loopholelabs/polyglot/version"
+
+	scaleVersion "github.com/loopholelabs/scale/version"
 
 	polyglotUtils "github.com/loopholelabs/polyglot/utils"
 

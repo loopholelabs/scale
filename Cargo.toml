@@ -25,3 +25,8 @@ path = "scale.rs"
 opt-level = 3
 lto = true
 codegen-units = 1
+
+[dependencies]
+lazy_static = "1.4.0"
+regex = "1.9.4"
+scale_signature_interfaces = "0.1.3"
