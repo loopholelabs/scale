@@ -20,15 +20,16 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
+
 	"github.com/loopholelabs/scale/compile/golang"
 	"github.com/loopholelabs/scale/compile/rust"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
-	"os"
-	"os/exec"
-	"path"
 )
 
 type Target int

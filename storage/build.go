@@ -18,9 +18,10 @@
 package storage
 
 import (
-	"github.com/google/uuid"
 	"os"
 	"path"
+
+	"github.com/google/uuid"
 )
 
 const (

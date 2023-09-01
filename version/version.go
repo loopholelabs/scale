@@ -1,5 +1,5 @@
 /*
-	Copyright 2022 Loophole Labs
+	Copyright 2023 Loophole Labs
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -14,8 +14,15 @@
 	limitations under the License.
 */
 
-package scale
+package version
 
-func unpackUint32(packed uint64) (uint32, uint32) {
-	return uint32(packed >> 32), uint32(packed)
+import (
+	_ "embed"
+)
+
+//go:embed current_version
+var currentVersion string
+
+func Version() string {
+	return currentVersion
 }

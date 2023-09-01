@@ -15,10 +15,11 @@ package typescript
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/signature"
-	"github.com/loopholelabs/scale/signature/generator/typescript/templates"
 	"strings"
 	"text/template"
+
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/typescript/templates"
 
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
@@ -216,6 +217,7 @@ func polyglotPrimitiveDecode(t string) string {
 	}
 }
 
+//nolint:revive
 func formatTS(code string) string {
 	var output strings.Builder
 	indentLevel := 0

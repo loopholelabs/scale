@@ -20,10 +20,11 @@ package storage
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/loopholelabs/scale/scalefunc"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/loopholelabs/scale/scalefunc"
 )
 
 const (

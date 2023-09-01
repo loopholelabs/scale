@@ -24,10 +24,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+
+	"github.com/loopholelabs/scale/signature"
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
@@ -158,12 +159,13 @@ func (r *Scale[T]) next(ctx context.Context, module api.Module, params []uint64)
 		return
 	}
 
-	if m.nextInstance != nil {
+	switch {
+	case m.nextInstance != nil:
 		m.nextInstance.setSignature(m.signature)
 		err = m.nextInstance.function.runWithModule(ctx, m.nextInstance)
-	} else if m.function.next == nil {
+	case m.function.next == nil:
 		m.signature, err = m.instance.next(m.signature)
-	} else {
+	default:
 		err = m.function.next.run(ctx, m.signature, m.instance)
 	}
 	if err != nil {

@@ -18,6 +18,7 @@ package scale
 
 import (
 	"context"
+
 	"github.com/tetratelabs/wazero/api"
 )
 

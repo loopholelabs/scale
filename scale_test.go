@@ -18,7 +18,7 @@
 
 package scale
 
-//import (
+// import (
 //	"context"
 //	"encoding/json"
 //	"errors"
@@ -36,13 +36,13 @@ package scale
 //	"github.com/stretchr/testify/require"
 //)
 //
-//type TestCase struct {
+// type TestCase struct {
 //	Name   string
 //	Module *harness.Module
 //	Run    func(*scalefunc.Schema, *testing.T)
 //}
 //
-//func TestRuntimeGo(t *testing.T) {
+// func TestRuntimeGo(t *testing.T) {
 //	passthroughModule := &harness.Module{
 //		Name:      "passthrough",
 //		Path:      "tests/modules/passthrough/passthrough.go",
@@ -272,7 +272,7 @@ package scale
 //	}
 //}
 //
-//func TestRuntimeGoTracing(t *testing.T) {
+// func TestRuntimeGoTracing(t *testing.T) {
 //	tracingModule := &harness.Module{
 //		Name:      "tracing",
 //		Path:      "tests/modules/tracing/tracing.go",
@@ -373,13 +373,13 @@ package scale
 //	assert.NotEqual(t, trace3.InvocationId, trace2.InvocationId)
 //}
 //
-//type TraceData struct {
+// type TraceData struct {
 //	ServiceName  string `json:"serviceName"`
 //	InvocationId string `json:"invocationId"`
 //	Timestamp    uint64 `json:"timestamp"`
 //}
 //
-//func TestRuntimeHTTPSignatureGo(t *testing.T) {
+// func TestRuntimeHTTPSignatureGo(t *testing.T) {
 //	passthroughModule := &harness.Module{
 //		Name:      "http-passthrough",
 //		Path:      "tests/modules/http-passthrough/http-passthrough.go",
@@ -477,7 +477,7 @@ package scale
 //	}
 //}
 //
-//func TestRuntimeRs(t *testing.T) {
+// func TestRuntimeRs(t *testing.T) {
 //	passthroughModule := &harness.Module{
 //		Name:          "passthrough",
 //		Path:          "../rust/tests/modules/passthrough/passthrough.rs",
@@ -722,7 +722,7 @@ package scale
 //	}
 //}
 //
-//func TestRuntimeHTTPSignatureRs(t *testing.T) {
+// func TestRuntimeHTTPSignatureRs(t *testing.T) {
 //	passthroughModule := &harness.Module{
 //		Name:      "http_passthrough",
 //		Path:      "../rust/tests/modules/http_passthrough/http_passthrough.rs",

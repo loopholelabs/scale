@@ -15,13 +15,14 @@ package golang
 
 import (
 	"bytes"
+	"go/format"
+	"strings"
+	"text/template"
+
 	"github.com/loopholelabs/scale/compile/golang/templates"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
-	"go/format"
-	"strings"
-	"text/template"
 )
 
 const (

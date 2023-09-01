@@ -20,15 +20,15 @@ import (
 	"context"
 	"sync"
 
-	"github.com/loopholelabs/scale/signature"
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
-type modulePool[T signature.Signature] struct {
+type modulePool[T interfaces.Signature] struct {
 	pool sync.Pool
 	new  func() (*moduleInstance[T], error)
 }
 
-func newModulePool[T signature.Signature](ctx context.Context, r *Scale[T], f *function[T]) *modulePool[T] {
+func newModulePool[T interfaces.Signature](ctx context.Context, r *Scale[T], f *function[T]) *modulePool[T] {
 	return &modulePool[T]{
 		new: func() (*moduleInstance[T], error) {
 			return newModuleInstance[T](ctx, r, f, nil)

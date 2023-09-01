@@ -14,16 +14,16 @@
 package integration
 
 import (
-	"github.com/loopholelabs/polyglot/version"
+	"os"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator"
 	"github.com/loopholelabs/scale/signature/generator/golang"
 	"github.com/loopholelabs/scale/signature/generator/rust"
 	"github.com/loopholelabs/scale/signature/generator/typescript"
-	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"testing"
 )
 
 const simpleSchema = `
@@ -56,14 +56,12 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 	guest, err := generator.GenerateGuestLocal(&generator.Options{
 		Signature: s,
 
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
+		GolangPackageImportPath: "signature",
+		GolangPackageName:       "signature",
+		GolangPackageVersion:    "v0.1.0",
 
-		RustPackageName:     "local_example_latest_guest",
-		RustPackageVersion:  "v0.1.0",
-		RustPolyglotVersion: strings.TrimPrefix(version.Version(), "v"),
+		RustPackageName:    "local_example_latest_guest",
+		RustPackageVersion: "v0.1.0",
 	})
 	require.NoError(t, err)
 
@@ -80,11 +78,10 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 	}
 
 	host, err := generator.GenerateHostLocal(&generator.Options{
-		Signature:             s,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
+		Signature:               s,
+		GolangPackageImportPath: "signature",
+		GolangPackageName:       "signature",
+		GolangPackageVersion:    "v0.1.0",
 	})
 	require.NoError(t, err)
 
@@ -102,13 +99,13 @@ func TestGenerateSimpleSchema(t *testing.T) {
 	err := s.Decode([]byte(simpleSchema))
 	require.NoError(t, err)
 
-	formatted, err := golang.Generate(s, "generated", "")
+	formatted, err := golang.Generate(s, "generated")
 	require.NoError(t, err)
 
 	err = os.WriteFile("./golang_tests/generated/generated.go", formatted, 0644)
 	require.NoError(t, err)
 
-	formatted, err = rust.Generate(s, "generated", "v0.1.0")
+	formatted, err = rust.Generate(s, "generated")
 	require.NoError(t, err)
 
 	err = os.WriteFile("./rust_tests/generated/generated.rs", formatted, 0644)

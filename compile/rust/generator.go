@@ -15,12 +15,13 @@ package rust
 
 import (
 	"bytes"
+	"strings"
+	"text/template"
+
 	"github.com/loopholelabs/scale/compile/rust/templates"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
-	"strings"
-	"text/template"
 )
 
 var generator *Generator

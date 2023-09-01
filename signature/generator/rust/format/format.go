@@ -16,6 +16,7 @@ package format
 import (
 	"context"
 	_ "embed"
+
 	"github.com/loopholelabs/scale"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature/generator/rust/format/signature"

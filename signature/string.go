@@ -81,7 +81,7 @@ func (s *StringSchema) Validate(model *ModelSchema) error {
 	}
 
 	if s.Accessor != nil {
-		if *s.Accessor == false && (s.LengthValidator != nil || s.RegexValidator != nil || s.CaseModifier != nil) {
+		if !*s.Accessor && (s.LengthValidator != nil || s.RegexValidator != nil || s.CaseModifier != nil) {
 			return fmt.Errorf("invalid %s.%s.accessor: cannot be false while using validators or modifiers", model.Name, s.Name)
 		}
 	} else {
@@ -140,7 +140,7 @@ func (s *StringArraySchema) Validate(model *ModelSchema) error {
 	}
 
 	if s.Accessor != nil {
-		if *s.Accessor == false && (s.LengthValidator != nil || s.RegexValidator != nil || s.CaseModifier != nil) {
+		if !*s.Accessor && (s.LengthValidator != nil || s.RegexValidator != nil || s.CaseModifier != nil) {
 			return fmt.Errorf("invalid %s.%s.accessor: cannot be false while using validators or modifiers", model.Name, s.Name)
 		}
 	} else {
@@ -199,7 +199,7 @@ func (s *StringMapSchema) Validate(model *ModelSchema) error {
 	}
 
 	if s.Accessor != nil {
-		if *s.Accessor == false && (s.LengthValidator != nil || s.RegexValidator != nil || s.CaseModifier != nil) {
+		if !*s.Accessor && (s.LengthValidator != nil || s.RegexValidator != nil || s.CaseModifier != nil) {
 			return fmt.Errorf("invalid %s.%s.accessor: cannot be false while using validators or modifiers", model.Name, s.Name)
 		}
 	} else {

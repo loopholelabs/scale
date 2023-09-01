@@ -1,0 +1,8 @@
+node_modules
+dist
+target
+.github
+**/*.go
+**/*.rs
+go.mod
+go.sum

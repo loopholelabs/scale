@@ -16,10 +16,12 @@
 package golang
 
 import (
-	"github.com/loopholelabs/scale/signature"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/loopholelabs/scale/signature"
 )
 
 func TestGenerator(t *testing.T) {
@@ -27,7 +29,7 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	formatted, err := Generate(s, "types", "v0.1.0")
+	formatted, err := Generate(s, "types")
 	require.NoError(t, err)
 
 	//os.WriteFile("./generated.txt", formatted, 0644)

@@ -21,14 +21,17 @@ package signature
 import (
 	"crypto/sha256"
 	"fmt"
+	"os"
+	"regexp"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"os"
-	"regexp"
+
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
 const (
@@ -44,17 +47,7 @@ var (
 	TitleCaser = cases.Title(language.Und, cases.NoLower)
 )
 
-// New is a factory function for creating a new Signature
-type New[T Signature] func() T
-
-// Signature is an interface that must be implemented by all Scale Signatures
-// for use with the Host. Guest implementations do not use this interface.
-type Signature interface {
-	Read(b []byte) error    // Read reads the signature from the given byte slice
-	Write() []byte          // Write writes the signature into a byte slice and returns it
-	Error(err error) []byte // Error writes the error into a byte slice and returns it
-	Hash() string           // Hash returns the SHA256 hash of the Signature
-}
+type Signature = interfaces.Signature
 
 // Schema is the top-level structure of a Scale Signature schema
 type Schema struct {

@@ -16,9 +16,10 @@
 package typescript
 
 import (
-	"github.com/loopholelabs/scale/signature"
 	"os"
 	"testing"
+
+	"github.com/loopholelabs/scale/signature"
 
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +32,7 @@ func TestGenerator(t *testing.T) {
 	formatted, err := Generate(s, "types", "v0.1.0")
 	require.NoError(t, err)
 
-	//os.WriteFile("./generated.txt", formatted, 0644)
+	// os.WriteFile("./generated.txt", formatted, 0644)
 
 	master, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)

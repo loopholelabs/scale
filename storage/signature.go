@@ -20,13 +20,13 @@ package storage
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/loopholelabs/polyglot/version"
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
-	"github.com/loopholelabs/scale/signature/generator"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/loopholelabs/scale/scalefunc"
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator"
 )
 
 const (
@@ -308,14 +308,14 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 	}
 
 	guestPackage, err := generator.GenerateGuestLocal(&generator.Options{
-		Signature:             sig,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
-		RustPackageName:       fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
-		RustPackageVersion:    "0.1.0",
-		RustPolyglotVersion:   version.Version(),
+		Signature: sig,
+
+		GolangPackageImportPath: "signature",
+		GolangPackageName:       "signature",
+		GolangPackageVersion:    "v0.1.0",
+
+		RustPackageName:    fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		RustPackageVersion: "0.1.0",
 	})
 	if err != nil {
 		return err
@@ -336,11 +336,10 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 	}
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
-		Signature:             sig,
-		GolangImportPath:      "signature",
-		GolangPackageName:     "signature",
-		GolangPackageVersion:  "v0.1.0",
-		GolangPolyglotVersion: version.Version(),
+		Signature:               sig,
+		GolangPackageImportPath: "signature",
+		GolangPackageName:       "signature",
+		GolangPackageVersion:    "v0.1.0",
 	})
 	if err != nil {
 		return err

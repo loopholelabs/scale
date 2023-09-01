@@ -19,6 +19,7 @@ package scale
 import (
 	"context"
 	"crypto/rand"
+
 	"github.com/loopholelabs/scale/signature"
 )
 

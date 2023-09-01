@@ -20,14 +20,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero"
+
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
+	"github.com/loopholelabs/scale/scalefunc"
 )
 
 // function is the runtime representation of a scale function with
 // a compiled module source.
-type function[T signature.Signature] struct {
+type function[T interfaces.Signature] struct {
 	// runtime is the scale runtime that the function belongs to
 	runtime *Scale[T]
 
@@ -101,7 +102,7 @@ func (f *function[T]) run(ctx context.Context, signature T, instance *Instance[T
 	return nil
 }
 
-func newFunction[T signature.Signature](ctx context.Context, r *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*function[T], error) {
+func newFunction[T interfaces.Signature](ctx context.Context, r *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*function[T], error) {
 	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)

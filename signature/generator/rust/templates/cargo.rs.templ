@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
-name = "{{ .package }}"
-version = "{{ .version }}"
+name = "{{ .package_name }}"
+version = "{{ .package_version }}"
 
 [profile.release]
 opt-level = 3
@@ -17,10 +17,8 @@ version = "0.7.0"
 [dependencies.regex]
 version = "1.9.4"
 
+[dependencies.scale_signature_interfaces]
+version = "0.1.3"
+
 [dependencies.polyglot_rs]
 version = "{{ .polyglot_version }}"
-
-{{- if .scale_version -}}
-[dependencies.scale_rs]
-version = "{{ .scale_version }}"
-{{- end -}}

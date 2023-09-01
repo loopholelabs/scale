@@ -2,7 +2,9 @@ package converter
 
 import (
 	"encoding/json"
+
 	"github.com/loopholelabs/polyglot"
+
 	"github.com/loopholelabs/scale/signature"
 )
 

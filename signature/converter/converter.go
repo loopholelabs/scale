@@ -20,9 +20,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/polyglot"
-	"github.com/loopholelabs/scale/signature"
 	"strconv"
+
+	"github.com/loopholelabs/polyglot"
+
+	"github.com/loopholelabs/scale/signature"
 )
 
 var (
@@ -453,7 +455,7 @@ func (p *Converter) encodeModel(model *signature.ModelSchema, data map[string]in
 			if err != nil {
 				return fmt.Errorf("%w: invalid uint64 map data", ErrInvalidData)
 			}
-			convertedMapDataMap[uint64(i)] = v
+			convertedMapDataMap[i] = v
 		}
 
 		err = encodeMap[uint64](p, polyglot.Uint64Kind, um.Value, convertedMapDataMap, encoder.Uint64, encoder)

@@ -50,7 +50,7 @@ func (s *NumberSchema[T]) Validate(model *ModelSchema) error {
 	}
 
 	if s.Accessor != nil {
-		if *s.Accessor == false && s.LimitValidator != nil {
+		if !*s.Accessor && s.LimitValidator != nil {
 			return fmt.Errorf("invalid %s.%s.accessor: cannot be false while using validators or modifiers", model.Name, s.Name)
 		}
 	} else {
@@ -89,7 +89,7 @@ func (s *NumberArraySchema[T]) Validate(model *ModelSchema) error {
 	}
 
 	if s.Accessor != nil {
-		if *s.Accessor == false && s.LimitValidator != nil {
+		if !*s.Accessor && s.LimitValidator != nil {
 			return fmt.Errorf("invalid %s.%s.accessor: cannot be false while using validators or modifiers", model.Name, s.Name)
 		}
 	} else {
@@ -128,7 +128,7 @@ func (s *NumberMapSchema[T]) Validate(model *ModelSchema) error {
 	}
 
 	if s.Accessor != nil {
-		if *s.Accessor == false && s.LimitValidator != nil {
+		if !*s.Accessor && s.LimitValidator != nil {
 			return fmt.Errorf("invalid %s.%s.accessor: cannot be false while using validators or modifiers", model.Name, s.Name)
 		}
 	} else {

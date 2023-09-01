@@ -19,9 +19,11 @@ package scale
 import (
 	"context"
 	"errors"
+	"regexp"
+
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
-	"regexp"
 )
 
 var (
@@ -42,14 +44,14 @@ type configFunction struct {
 
 // Config is the configuration for a Scale Runtime
 type Config[T signature.Signature] struct {
-	newSignature signature.New[T]
+	newSignature interfaces.New[T]
 	functions    []configFunction
 	context      context.Context
 	pooling      bool
 }
 
 // NewConfig returns a new Scale Runtime Config
-func NewConfig[T signature.Signature](newSignature signature.New[T]) *Config[T] {
+func NewConfig[T signature.Signature](newSignature interfaces.New[T]) *Config[T] {
 	return &Config[T]{
 		newSignature: newSignature,
 	}
@@ -81,7 +83,7 @@ func (c *Config[T]) validate() error {
 	return nil
 }
 
-func (c *Config[T]) WithSignature(newSignature signature.New[T]) *Config[T] {
+func (c *Config[T]) WithSignature(newSignature interfaces.New[T]) *Config[T] {
 	c.newSignature = newSignature
 	return c
 }

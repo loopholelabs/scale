@@ -18,11 +18,12 @@ package generator
 
 import (
 	"bytes"
-	"golang.org/x/mod/zip"
 	"io"
 	"io/fs"
 	"os"
 	"time"
+
+	"golang.org/x/mod/zip"
 )
 
 var _ zip.File = (*File)(nil)

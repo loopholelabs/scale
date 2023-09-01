@@ -16,13 +16,17 @@ package rust
 import (
 	"bytes"
 	"context"
+	polyglotVersion "github.com/loopholelabs/polyglot/version"
+	scaleVersion "github.com/loopholelabs/scale/version"
+	"strings"
+	"text/template"
+
 	polyglotUtils "github.com/loopholelabs/polyglot/utils"
+
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/signature/generator/rust/format"
 	"github.com/loopholelabs/scale/signature/generator/rust/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
-	"strings"
-	"text/template"
 )
 
 const (
@@ -32,17 +36,17 @@ const (
 var generator *Generator
 
 // Generate generates the types for the signature
-func Generate(schema *signature.Schema, packageName string, scaleVersion string) ([]byte, error) {
-	return generator.Generate(schema, packageName, scaleVersion)
+func Generate(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
+	return generator.Generate(signatureSchema, packageName)
 }
 
 // GenerateCargofile generates the cargo.toml file for the signature
-func GenerateCargofile(packageName string, packageVersion string, scaleVersion string, polyglotVersion string) ([]byte, error) {
-	return generator.GenerateCargofile(packageName, packageVersion, scaleVersion, polyglotVersion)
+func GenerateCargofile(packageName string, packageVersion string) ([]byte, error) {
+	return generator.GenerateCargofile(packageName, packageVersion)
 }
 
-func GenerateGuest(schema *signature.Schema, hash string, packageName string, scaleVersion string) ([]byte, error) {
-	return generator.GenerateGuest(schema, hash, packageName, scaleVersion)
+func GenerateGuest(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
+	return generator.GenerateGuest(signatureSchema, signatureHash, packageName)
 }
 
 func init() {
@@ -78,16 +82,15 @@ func New() (*Generator, error) {
 }
 
 // Generate generates the rust code for the given schema
-func (g *Generator) Generate(schema *signature.Schema, packageName string, scaleVersion string) ([]byte, error) {
+func (g *Generator) Generate(signatureSchema *signature.Schema, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "types.rs.templ", map[string]any{
-		"schema":  schema,
-		"version": strings.TrimPrefix(scaleVersion, "v"),
-		"package": packageName,
+		"signature_schema": signatureSchema,
+		"package_name":     packageName,
 	})
 	if err != nil {
 		return nil, err
@@ -100,8 +103,8 @@ func (g *Generator) Generate(schema *signature.Schema, packageName string, scale
 
 	buf.Reset()
 	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
-		"version": strings.TrimPrefix(scaleVersion, "v"),
-		"package": packageName,
+		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
 	})
 	if err != nil {
 		return nil, err
@@ -110,13 +113,12 @@ func (g *Generator) Generate(schema *signature.Schema, packageName string, scale
 }
 
 // GenerateCargofile generates the cargofile for the signature
-func (g *Generator) GenerateCargofile(packageName string, packageVersion string, scaleVersion string, polyglotVersion string) ([]byte, error) {
+func (g *Generator) GenerateCargofile(packageName string, packageVersion string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "cargo.rs.templ", map[string]any{
-		"scale_version":    strings.TrimPrefix(scaleVersion, "v"),
-		"polyglot_version": strings.TrimPrefix(polyglotVersion, "v"),
-		"package":          packageName,
-		"version":          strings.TrimPrefix(packageVersion, "v"),
+		"polyglot_version": strings.TrimPrefix(polyglotVersion.Version(), "v"),
+		"package_name":     packageName,
+		"package_version":  strings.TrimPrefix(packageVersion, "v"),
 	})
 	if err != nil {
 		return nil, err
@@ -126,17 +128,15 @@ func (g *Generator) GenerateCargofile(packageName string, packageVersion string,
 }
 
 // GenerateGuest generates the guest bindings
-func (g *Generator) GenerateGuest(schema *signature.Schema, hash string, packageName string, scaleVersion string) ([]byte, error) {
+func (g *Generator) GenerateGuest(signatureSchema *signature.Schema, signatureHash string, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.rs.templ", map[string]any{
-		"schema":  schema,
-		"hash":    hash,
-		"version": strings.TrimPrefix(scaleVersion, "v"),
-		"package": packageName,
+		"signature_schema": signatureSchema,
+		"signature_hash":   signatureHash,
 	})
 	if err != nil {
 		return nil, err
@@ -149,8 +149,8 @@ func (g *Generator) GenerateGuest(schema *signature.Schema, hash string, package
 
 	buf.Reset()
 	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
-		"version": strings.TrimPrefix(scaleVersion, "v"),
-		"package": packageName,
+		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
 	})
 	if err != nil {
 		return nil, err

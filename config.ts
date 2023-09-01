@@ -14,8 +14,22 @@
 	limitations under the License.
 */
 
-package scale
 
-func unpackUint32(packed uint64) (uint32, uint32) {
-	return uint32(packed >> 32), uint32(packed)
+
+const envStringRegex = /[^A-Za-z0-9_]/;
+
+class ConfigFunction {
+    function: ScaleFunc.Schema;
+    env: { [key: string]: string };
+}
+
+export class Config<T extends Signature> {
+    newSignature: NewSignature<T>;
+    functions: ConfigFunction[] = [];
+    context: any = null; // Note: You'll want to import or define a more specific context type.
+    pooling: boolean;
+
+    constructor(newSignature: NewSignature<T>) {
+        this.newSignature = newSignature;
+    }
 }

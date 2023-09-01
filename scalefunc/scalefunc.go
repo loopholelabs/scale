@@ -22,18 +22,20 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"os"
+	"regexp"
+
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/loopholelabs/polyglot"
+
 	signatureSchema "github.com/loopholelabs/scale/signature"
-	"os"
-	"regexp"
 )
 
 var (
-	VersionErr  = errors.New("unknown or invalid version")
-	LanguageErr = errors.New("unknown or invalid language")
-	HashErr     = errors.New("error while verifying hash")
+	ErrVersion  = errors.New("unknown or invalid version")
+	ErrLanguage = errors.New("unknown or invalid language")
+	ErrHash     = errors.New("error while verifying hash")
 )
 
 var (
@@ -158,7 +160,7 @@ func (s *Schema) Decode(data []byte) error {
 		}
 	}
 	if invalid {
-		return VersionErr
+		return ErrVersion
 	}
 
 	s.Name, err = d.String()
@@ -206,7 +208,7 @@ func (s *Schema) Decode(data []byte) error {
 		}
 	}
 	if invalid {
-		return LanguageErr
+		return ErrLanguage
 	}
 
 	dependenciesSize, err := d.Slice(polyglot.AnyKind)
@@ -261,7 +263,7 @@ func (s *Schema) Decode(data []byte) error {
 	hash.Write(data[:s.Size])
 
 	if hex.EncodeToString(hash.Sum(nil)) != s.Hash {
-		return HashErr
+		return ErrHash
 	}
 
 	return nil

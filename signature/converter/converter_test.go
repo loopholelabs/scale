@@ -15,11 +15,13 @@ package converter
 
 import (
 	"encoding/json"
-	"github.com/loopholelabs/polyglot"
-	"github.com/loopholelabs/scale/signature"
-	"github.com/loopholelabs/scale/signature/converter/converter_tests"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/loopholelabs/polyglot"
+	"github.com/stretchr/testify/require"
+
+	"github.com/loopholelabs/scale/signature"
+	generated "github.com/loopholelabs/scale/signature/converter/converter_tests"
 )
 
 const jsonData = `

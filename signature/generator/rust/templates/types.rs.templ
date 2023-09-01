@@ -22,11 +22,11 @@ pub trait Decode {
     fn decode (b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<Self>, Box<dyn std::error::Error>> where Self: Sized;
 }
 
-{{- range .schema.Enums }}
+{{- range .signature_schema.Enums }}
     {{ template "rs_enums_definition" . }}
 {{- end }}
 
-{{- range .schema.Models -}}
+{{- range .signature_schema.Models -}}
     {{- if .Description }}
         // {{ .Name }}: {{ .Description }}
     {{ end -}}

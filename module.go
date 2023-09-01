@@ -19,9 +19,11 @@ package scale
 import (
 	"context"
 	"fmt"
+
 	"github.com/google/uuid"
-	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero/api"
+
+	"github.com/loopholelabs/scale/signature"
 )
 
 type moduleInstance[T signature.Signature] struct {
