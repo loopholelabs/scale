@@ -19,9 +19,10 @@ import (
 	"compress/gzip"
 	"encoding/hex"
 	"fmt"
-	"github.com/loopholelabs/scale/signature/generator/typescript"
 	"path"
 	"strings"
+
+	"github.com/loopholelabs/scale/signature/generator/typescript"
 
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/zip"
