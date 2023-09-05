@@ -13,12 +13,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+
 use polyglot_rs::Encoder;
 use quickjs_wasm_sys::{
-    ext_js_undefined, size_t as JS_size_t, JSContext, JSValue, JS_DefinePropertyValueStr,
-    JS_FreeCString, JS_ThrowInternalError, JS_ToCStringLen2, JS_PROP_C_W_E,
+    ext_js_undefined, size_t as JS_size_t, JSCFunctionData, JSContext, JSValue,
+    JS_DefinePropertyValueStr, JS_FreeCString, JS_NewCFunctionData, JS_ThrowInternalError,
+    JS_ToCStringLen2, JS_PROP_C_W_E,
 };
-use quickjs_wasm_sys::{JSCFunctionData, JS_NewCFunctionData};
 use std::error::Error;
 use std::ffi::CString;
 use std::io::{Cursor, Write};

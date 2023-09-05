@@ -14,24 +14,14 @@
     limitations under the License.
 */
 
-#[cfg(all(not(feature = "runtime_source"), feature = "embedded_source"))]
-use std::{fs, io};
-
 fn main() {
     #[cfg(all(not(feature = "runtime_source"), feature = "embedded_source"))]
     {
         let output_directory = std::env::var("OUT_DIR").unwrap();
         let js_source_input_path = std::env::var("JS_SOURCE_PATH").unwrap();
         let js_source_output_path = format!("{}/js_source", output_directory);
-        let mut js_source_output_file = fs::OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open(&js_source_output_path)
-            .expect("unable to open/create js source output file");
 
-        if let Ok(mut js_source_input_file) = fs::File::open(&js_source_input_path) {
-            io::copy(&mut js_source_input_file, &mut js_source_output_file)
-                .expect("failed to js source input file after opening");
-        }
+        fs::copy(&js_source_input_path, &js_source_output_path)
+            .expect("unable to copy js source to output directory");
     }
 }

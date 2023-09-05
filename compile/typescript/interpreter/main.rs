@@ -53,7 +53,7 @@ pub extern "C" fn init() {
 }
 
 #[cfg(all(not(feature = "embedded_source"), feature = "runtime_source"))]
-#[link(wasm_import_module = "scale")]
+#[link(wasm_import_module = "env")]
 extern "C" {
     // get_js_source_len is a function that is imported from the host
     // that returns the runtime js source length as a u32
@@ -190,7 +190,6 @@ fn initialize_runtime() {
     }
 }
 
-#[allow(dead_code)]
 fn main() {
     unsafe {
         if !JS_INITIALIZED {

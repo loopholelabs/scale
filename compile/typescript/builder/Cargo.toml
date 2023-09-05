@@ -1,0 +1,22 @@
+[package]
+name = "js_builder"
+version = "0.1.0"
+edition = "2021"
+description = "A CLI for compiling JS Source into a Scale Function"
+homepage = "https://scale.sh"
+repository = "https://github.com/loopholelabs/scale"
+license = "Apache-2.0"
+
+[[bin]]
+name = "js_builder"
+path = "main.rs"
+
+[dependencies]
+structopt = "0.3"
+binaryen = "0.12.1"
+wizer = "3.0.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

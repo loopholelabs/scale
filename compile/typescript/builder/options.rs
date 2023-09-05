@@ -13,8 +13,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-pub mod config;
 
-struct Scale<T: scale_signature_interfaces::Signature> {
-    config: config::Config<T>,
+use std::path::PathBuf;
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "js_builder",
+    about = "A CLI for compiling JS Source into a Scale Function"
+)]
+pub struct Options {
+    #[structopt(parse(from_os_str))]
+    pub input: PathBuf,
+
+    #[structopt(short = "o", parse(from_os_str), default_value = "scale.wasm")]
+    pub output: PathBuf,
 }
