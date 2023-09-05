@@ -38,10 +38,10 @@ fn stub_engine_for_clippy() {
 
 // Copy the engine binary build from the `core` crate
 fn copy_engine_binary() {
-    let input_path = env::var("JS_INTERPRETER_ENGINE_PATH")
-        .unwrap_or("../interpreter/target/wasm32-wasi/release/js_interpreter.wasm".into());
+    let input_path = env::var("JS_INTERPRETER_PATH")
+        .unwrap_or("interpreter/target/wasm32-wasi/release/js_interpreter.wasm".into());
     let output_path = format!("{}/interpreter.wasm", env::var("OUT_DIR").unwrap());
     println!("cargo:rerun-if-changed={:?}", input_path);
     println!("cargo:rerun-if-changed=build.rs");
-    fs::copy(&input_path, output_path).expect("failed to copy interpreter.wasm");
+    fs::copy(&input_path, output_path).expect("failed to copy js_interpreter.wasm");
 }

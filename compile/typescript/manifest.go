@@ -50,7 +50,7 @@ func (m *Manifest) HasRequire(dependency string, version string, lax bool) bool 
 
 func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string, lax bool) bool {
 	for _, v := range m.modfile.Replace {
-		if v.Old.Path == oldDependency && (lax || (v.New.Path == newDependency && v.Old.Version == oldVersion && v.New.Version == newVersion)) {
+		if v.Old.Path == oldDependency && v.New.Path == newDependency && (lax || (v.Old.Version == oldVersion && v.New.Version == newVersion)) {
 			return true
 		}
 	}

@@ -15,6 +15,7 @@ package rust
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/BurntSushi/toml"
 )
@@ -50,6 +51,13 @@ type DependencyVersion struct {
 	Registry string `toml:"registry"`
 }
 
+type ParsedDependency struct {
+	Version  string `toml:"version,omitempty"`
+	Package  string `toml:"package,omitempty"`
+	Registry string `toml:"registry,omitempty"`
+	Path     string `toml:"path,omitempty"`
+}
+
 type Manifest struct {
 	cargo *Cargo
 }
@@ -82,6 +90,38 @@ func (m *Manifest) HasDependency(dependency string) bool {
 
 func (m *Manifest) RemoveDependency(dependency string) error {
 	delete(m.cargo.Dependencies, dependency)
+	return nil
+}
+
+func (m *Manifest) GetDependency(dependency string) *ParsedDependency {
+	dep, ok := m.cargo.Dependencies[dependency]
+	if !ok {
+		return nil
+	}
+	d := new(ParsedDependency)
+	stringDependency, ok := dep.(string)
+	if ok {
+		d.Version = stringDependency
+		return d
+	}
+
+	structDependency, ok := dep.(map[string]interface{})
+	if ok {
+		if version, ok := structDependency["version"]; ok {
+			d.Version = fmt.Sprintf("%s", version)
+		}
+		if pkg, ok := structDependency["package"]; ok {
+			d.Package = fmt.Sprintf("%s", pkg)
+		}
+		if registry, ok := structDependency["registry"]; ok {
+			d.Registry = fmt.Sprintf("%s", registry)
+		}
+		if path, ok := structDependency["path"]; ok {
+			d.Path = fmt.Sprintf("%s", path)
+		}
+		return d
+	}
+
 	return nil
 }
 

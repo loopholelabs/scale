@@ -1,0 +1,5 @@
+[target.x86_64-unknown-linux-gnu]
+pre-build = ["apt-get install python3 -y"]
+
+[target.aarch64-unknown-linux-gnu]
+pre-build = ["apt-get install python3 -y"]

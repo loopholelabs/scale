@@ -26,8 +26,8 @@ import (
 
 var generator *Generator
 
-func GenerateRustCargofile(schema *scalefile.Schema, signaturePackage string, signatureVersion string, signaturePath string, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
-	return generator.GenerateRustCargofile(schema, signaturePackage, signatureVersion, signaturePath, functionPath, dependencies, packageName, packageVersion)
+func GenerateRustCargofile(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+	return generator.GenerateRustCargofile(schema, parsedSignatureDependency, functionPath, dependencies, packageName, packageVersion)
 }
 
 func GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
@@ -48,9 +48,9 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, signaturePackage string, signatureVersion string, signaturePath string, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
-	if signaturePath != "" && !strings.HasPrefix(signaturePath, "/") && !strings.HasPrefix(signaturePath, "./") && !strings.HasPrefix(signaturePath, "../") {
-		signaturePath = "./" + signaturePath
+func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+	if parsedSignatureDependency.Path != "" && !strings.HasPrefix(parsedSignatureDependency.Path, "/") && !strings.HasPrefix(parsedSignatureDependency.Path, "./") && !strings.HasPrefix(parsedSignatureDependency.Path, "../") {
+		parsedSignatureDependency.Path = "./" + parsedSignatureDependency.Path
 	}
 
 	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
@@ -63,9 +63,9 @@ func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, signaturePac
 		"package":              packageName,
 		"dependencies":         dependencies,
 		"signature_dependency": "signature",
-		"signature_package":    signaturePackage,
-		"signature_path":       signaturePath,
-		"signature_version":    signatureVersion,
+		"signature_package":    parsedSignatureDependency.Package,
+		"signature_path":       parsedSignatureDependency.Path,
+		"signature_version":    parsedSignatureDependency.Version,
 		"function_dependency":  schema.Name,
 		"function_path":        functionPath,
 	})
