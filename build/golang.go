@@ -136,7 +136,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to parse signature dependency in go.mod")
 	}
 
-	if signatureDependencyVersion != "" && options.Scalefile.Signature.Organization == "local" {
+	if (signatureDependencyVersion != "" && options.Scalefile.Signature.Organization == "local") || (signatureDependencyVersion == "" && options.Scalefile.Signature.Organization != "local") {
 		return nil, fmt.Errorf("scalefile's signature block does not match go.mod")
 	}
 

@@ -125,7 +125,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to parse signature dependency in Cargo.toml")
 	}
 
-	if signatureDependency.Registry == "scale" && options.Scalefile.Signature.Organization == "local" {
+	if (signatureDependency.Registry == "scale" && options.Scalefile.Signature.Organization == "local") || (signatureDependency.Registry == "" && options.Scalefile.Signature.Organization != "local") {
 		return nil, fmt.Errorf("scalefile's signature block does not match Cargo.toml")
 	}
 
