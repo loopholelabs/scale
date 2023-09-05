@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/hcl/v2 v2.18.0
 	github.com/loopholelabs/polyglot v1.1.3
-	github.com/loopholelabs/scale-signature-interfaces v0.1.6
+	github.com/loopholelabs/scale-signature-interfaces v0.1.7
 	github.com/stretchr/testify v1.8.4
 	github.com/tetratelabs/wazero v1.5.0
 	golang.org/x/mod v0.12.0

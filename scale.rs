@@ -14,6 +14,9 @@
     limitations under the License.
 */
 
+#[path = "compile/typescript/interpreter/js_interpreter.rs"]
+pub mod js_interpreter;
+
 pub mod config;
 
 struct Scale<T: scale_signature_interfaces::Signature> {

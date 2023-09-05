@@ -101,7 +101,7 @@ pub fn next(ctx: Option<&mut types::{{ .signature_schema.Context }}>) -> Result<
     }
 }
 
-#[link(wasm_import_module = "env")]
+#[link(wasm_import_module = "scale")]
 extern "C" {
     #[link_name = "next"]
     fn _next(ptr: u32, size: u32);

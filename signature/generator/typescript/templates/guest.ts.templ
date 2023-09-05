@@ -70,7 +70,7 @@ export function Hash(): number[] {
 // Next calls the next function in the Scale Function Chain
 export function Next(ctx: {{ .signature_schema.Context }}): {{ .signature_schema.Context }} | undefined {
     const [ptr, len] = Write(ctx);
-    const next = (global as any)[interfaces.TYPESCRIPT_NEXT_FUNCTION];
+    const next = (global as any)[interfaces.TYPESCRIPT_NEXT];
     next([ptr, len]);
     return Read();
 }
