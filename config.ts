@@ -30,14 +30,14 @@ class ConfigFunction {
 }
 
 export class Config<T extends Signature> {
-    newSignature: New<T>;
-    functions: ConfigFunction[] = [];
+    private newSignature: New<T>;
+    private functions: ConfigFunction[] = [];
 
     constructor(newSignature: New<T>) {
         this.newSignature = newSignature;
     }
 
-    validate(): Error | null {
+    public validate(): Error | null {
         if (!this) {
             return new Error("no config provided");
         }
@@ -59,7 +59,12 @@ export class Config<T extends Signature> {
         return null;
     }
 
-    withFunction(func: ScaleFunc, env?: { [key: string]: string }): Config<T> {
+    public withSignature(newSignature: New<T>): Config<T> {
+        this.newSignature = newSignature;
+        return this;
+    }
+
+    public withFunction(func: ScaleFunc, env?: { [key: string]: string }): Config<T> {
         const f = new ConfigFunction(func, env);
         f.function = func;
 
@@ -71,7 +76,7 @@ export class Config<T extends Signature> {
         return this;
     }
 
-    withFunctions(functions: ScaleFunc[], env?: { [key: string]: string }): Config<T> {
+    public withFunctions(functions: ScaleFunc[], env?: { [key: string]: string }): Config<T> {
         for (const func of functions) {
             this.withFunction(func, env);
         }

@@ -75,6 +75,6 @@ func Next(ctx *ModelWithAllFieldTypes) (*ModelWithAllFieldTypes, error) {
 	return Read(ctx)
 }
 
-//export next
+//go:export next
 //go:linkname next
 func next(offset uint32, length uint32)

@@ -69,7 +69,7 @@ function Hash() {
 }
 function Next(ctx) {
   const [ptr, len] = Write(ctx);
-  const next = global[interfaces.TYPESCRIPT_NEXT_FUNCTION];
+  const next = global[interfaces.TYPESCRIPT_NEXT];
   next([ptr, len]);
   return Read();
 }
