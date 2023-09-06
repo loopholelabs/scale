@@ -19,6 +19,7 @@ package scale
 import (
 	"context"
 	"fmt"
+	"github.com/loopholelabs/polyglot"
 
 	"github.com/google/uuid"
 	"github.com/tetratelabs/wazero/api"
@@ -39,9 +40,6 @@ type module[T signature.Signature] struct {
 
 	// resizeFunction is the exported `resize` function
 	resizeFunction api.Function
-
-	// initializeFunction is the exported `initialize` function
-	initializeFunction api.Function
 
 	// function is set during the initialization of the module
 	function *function[T]
@@ -69,12 +67,32 @@ func newModule[T signature.Signature](ctx context.Context, template *template[T]
 		return nil, fmt.Errorf("failed to find run, resize, or initialize implementations for function %s", template.identifier)
 	}
 
+	packed, err := initialize.Call(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run initialize function for '%s': %w", template.identifier, err)
+	}
+
+	if packed[0] != 0 {
+		offset, length := unpackUint32(packed[0])
+		buf, ok := instantiatedModule.Memory().Read(offset, length)
+		if !ok {
+			return nil, fmt.Errorf("failed to read memory for function '%s'", template.identifier)
+		}
+
+		dec := polyglot.GetDecoder(buf)
+		valErr, err := dec.Error()
+		polyglot.ReturnDecoder(dec)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode error for function '%s': %w", template.identifier, err)
+		}
+		return nil, fmt.Errorf("failed to initialize function '%s': %s", template.identifier, valErr)
+	}
+
 	return &module[T]{
 		template:           template,
 		instantiatedModule: instantiatedModule,
 		runFunction:        run,
 		resizeFunction:     resize,
-		initializeFunction: initialize,
 	}, nil
 }
 
