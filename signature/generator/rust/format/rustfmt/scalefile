@@ -1,0 +1,16 @@
+version  = "v1alpha"
+name     = "rustfmt"
+tag      = "latest"
+language = "rust"
+
+signature {
+  organization = "local"
+  name         = "rustfmt"
+  tag          = "latest"
+}
+
+stateless = true
+
+function    = "scale"
+initialize  = ""
+description = ""

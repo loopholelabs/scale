@@ -19,71 +19,75 @@ package scale
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
 
 	"github.com/loopholelabs/scale/signature"
 )
 
 // Instance is a single instance of a Scale Function chain
 type Instance[T signature.Signature] struct {
+	// runtime is the runtime that this instance belongs to
 	runtime *Scale[T]
-	id      []byte
 
-	head *moduleInstance[T]
+	// identifier is the unique identifier for this instance
+	identifier []byte
 
+	// head is the head function in the chain for this instance
+	head *function[T]
+
+	// next is the next function in the chain for this instance
 	next Next[T]
 }
 
-func newInstanceSetup[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
-	i := &Instance[T]{
-		runtime: r,
-		id:      make([]byte, 16),
+func newInstance[T signature.Signature](ctx context.Context, runtime *Scale[T], next ...Next[T]) (*Instance[T], error) {
+	instance := &Instance[T]{
+		runtime:    runtime,
+		identifier: make([]byte, 16),
 	}
 
-	_, err := rand.Read(i.id)
+	_, err := rand.Read(instance.identifier)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(next) > 0 && next[0] != nil {
-		i.next = next[0]
+		instance.next = next[0]
 	} else {
-		i.next = func(ctx T) (T, error) {
+		instance.next = func(ctx T) (T, error) {
 			return ctx, nil
 		}
 	}
 
-	return i, nil
-}
+	previousFunction := instance.head
+	nextTemplate := instance.runtime.head
 
-func newInstance[T signature.Signature](ctx context.Context, r *Scale[T], next ...Next[T]) (*Instance[T], error) {
-	i, err := newInstanceSetup[T](r, next...)
-	if err != nil {
-		return nil, err
+	for nextTemplate != nil {
+		fn, err := newFunction(ctx, instance, nextTemplate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create function: %w", err)
+		}
+		if instance.head == nil {
+			instance.head = fn
+		}
+		if previousFunction != nil {
+			previousFunction.next = fn
+		}
+		previousFunction = fn
+		nextTemplate = nextTemplate.next
 	}
 
-	i.head, err = newModuleInstance(ctx, i.runtime, i.runtime.head, i)
-	if err != nil {
-		return nil, err
-	}
-
-	return i, nil
-}
-
-func newPoolingInstance[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
-	return newInstanceSetup[T](r, next...)
+	return instance, nil
 }
 
 func (i *Instance[T]) Run(ctx context.Context, signature T) error {
-	if i.head != nil {
-		i.head.setSignature(signature)
-		return i.head.function.runWithModule(ctx, i.head)
+	m, err := i.head.getModule(signature)
+	if err != nil {
+		return fmt.Errorf("failed to get module for function '%s': %w", i.head.template.identifier, err)
 	}
-
-	return i.runtime.head.run(ctx, signature, i)
-}
-
-func (i *Instance[T]) Cleanup() {
-	if i.head != nil {
-		i.head.cleanup(i.runtime)
+	err = m.run(ctx)
+	i.head.putModule(m)
+	if err != nil {
+		return fmt.Errorf("failed to run function '%s': %w", i.head.template.identifier, err)
 	}
+	return nil
 }

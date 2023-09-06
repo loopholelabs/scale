@@ -19,10 +19,10 @@ import (
 
 	"github.com/loopholelabs/scale"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature/generator/rust/format/signature"
+	signature "github.com/loopholelabs/scale/signature/generator/rust/format/signature/host"
 )
 
-//go:embed local-rustfmt-latest.scale
+//go:embed rustfmt/local-rustfmt-latest.scale
 var localRustfmtLatest []byte
 
 type Formatter struct {
@@ -36,7 +36,7 @@ func New() (*Formatter, error) {
 		return nil, err
 	}
 
-	cfg := scale.NewConfig(signature.New).WithFunction(s).WithPooling(true)
+	cfg := scale.NewConfig(signature.New).WithFunction(s)
 	runtime, err := scale.New(cfg)
 	if err != nil {
 		return nil, err

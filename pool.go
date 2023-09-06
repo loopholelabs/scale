@@ -25,27 +25,27 @@ import (
 
 type modulePool[T interfaces.Signature] struct {
 	pool sync.Pool
-	new  func() (*moduleInstance[T], error)
+	new  func() (*module[T], error)
 }
 
-func newModulePool[T interfaces.Signature](ctx context.Context, r *Scale[T], f *function[T]) *modulePool[T] {
+func newModulePool[T interfaces.Signature](ctx context.Context, template *template[T]) *modulePool[T] {
 	return &modulePool[T]{
-		new: func() (*moduleInstance[T], error) {
-			return newModuleInstance[T](ctx, r, f, nil)
+		new: func() (*module[T], error) {
+			return newModule[T](ctx, template)
 		},
 	}
 }
 
-func (p *modulePool[T]) Put(module *moduleInstance[T]) {
-	if module != nil {
-		p.pool.Put(module)
+func (p *modulePool[T]) Put(m *module[T]) {
+	if m != nil {
+		p.pool.Put(m)
 	}
 }
 
-func (p *modulePool[T]) Get() (*moduleInstance[T], error) {
-	rv, ok := p.pool.Get().(*moduleInstance[T])
-	if ok && rv != nil {
-		return rv, nil
+func (p *modulePool[T]) Get() (*module[T], error) {
+	m, ok := p.pool.Get().(*module[T])
+	if ok && m != nil {
+		return m, nil
 	}
 	return p.new()
 }

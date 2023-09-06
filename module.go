@@ -26,95 +26,111 @@ import (
 	"github.com/loopholelabs/scale/signature"
 )
 
-type moduleInstance[T signature.Signature] struct {
-	// function is the function that this moduleInstance is associated with
-	function *function[T]
+type module[T signature.Signature] struct {
+	// template is the template that the module
+	// was created from
+	template *template[T]
 
 	// instantiatedModule is the instantiated wasm module
 	instantiatedModule api.Module
 
-	// run is the exported `run` function
-	run api.Function
+	// runFunction is the exported `run` function
+	runFunction api.Function
 
-	// resize is the exported `resize` function
-	resize api.Function
+	// resizeFunction is the exported `resize` function
+	resizeFunction api.Function
 
-	// instance is set during the initialization of the moduleInstance
-	instance *Instance[T]
+	// initializeFunction is the exported `initialize` function
+	initializeFunction api.Function
 
-	// signature is set during the initialization of the moduleInstance
+	// function is set during the initialization of the module
+	function *function[T]
+
+	// signature is set during the initialization of the module
 	signature T
-
-	// nextInstance is the nextInstance moduleInstance in the chain
-	//
-	// This is only set for persistent instances, otherwise it's nil
-	nextInstance *moduleInstance[T]
 }
 
-// newModuleInstance creates a new moduleInstance
-//
-// If the instance parameter is given then the entire moduleInstance chain is initialized, with `module.init`
-// being called, and the moduleInstance.nextInstance field is set to the nextInstance moduleInstance in the chain.
-// In this case, `module.cleanup` must be called when the moduleInstance is no longer needed.
-func newModuleInstance[T signature.Signature](ctx context.Context, r *Scale[T], f *function[T], i *Instance[T]) (*moduleInstance[T], error) {
-	config := r.moduleConfig.WithName(fmt.Sprintf("%s.%s", f.identifier, uuid.New().String()))
-	for k, v := range f.env {
+// newModule creates a new module
+func newModule[T signature.Signature](ctx context.Context, template *template[T]) (*module[T], error) {
+	config := template.runtime.moduleConfig.WithName(fmt.Sprintf("%s.%s", template.identifier, uuid.New().String()))
+	for k, v := range template.env {
 		config = config.WithEnv(k, v)
 	}
 
-	instantiatedModule, err := r.runtime.InstantiateModule(ctx, f.compiled, config)
+	instantiatedModule, err := template.runtime.runtime.InstantiateModule(ctx, template.compiled, config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to instantiate module '%s': %w", f.identifier, err)
+		return nil, fmt.Errorf("failed to instantiate module '%s': %w", template.identifier, err)
 	}
 
 	run := instantiatedModule.ExportedFunction("run")
 	resize := instantiatedModule.ExportedFunction("resize")
-	if run == nil || resize == nil {
-		return nil, fmt.Errorf("failed to find run or resize implementations for function %s", f.identifier)
+	initialize := instantiatedModule.ExportedFunction("initialize")
+	if run == nil || resize == nil || initialize == nil {
+		return nil, fmt.Errorf("failed to find run, resize, or initialize implementations for function %s", template.identifier)
 	}
 
-	m := &moduleInstance[T]{
-		function:           f,
+	return &module[T]{
+		template:           template,
 		instantiatedModule: instantiatedModule,
-		run:                run,
-		resize:             resize,
-	}
-
-	if i != nil {
-		m.init(r, i)
-		if f.next != nil {
-			m.nextInstance, err = newModuleInstance[T](ctx, r, f.next, i)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-	}
-
-	return m, nil
+		runFunction:        run,
+		resizeFunction:     resize,
+		initializeFunction: initialize,
+	}, nil
 }
 
-// init initializes the moduleInstance and registers it with the Scale runtime
-func (m *moduleInstance[T]) init(r *Scale[T], i *Instance[T]) {
-	m.instance = i
-	r.activeModulesMu.Lock()
-	r.activeModules[m.instantiatedModule.Name()] = m
-	r.activeModulesMu.Unlock()
-}
-
-// cleanup removes the moduleInstance from the Scale runtime
+// run runs the module
 //
-// if it has a nextInstance moduleInstance, then it is also cleaned up
-func (m *moduleInstance[T]) cleanup(r *Scale[T]) {
-	r.activeModulesMu.Lock()
-	delete(r.activeModules, m.instantiatedModule.Name())
-	r.activeModulesMu.Unlock()
-	if m.nextInstance != nil {
-		m.nextInstance.cleanup(r)
+// The signature of the module must be set before calling this function
+func (m *module[T]) run(ctx context.Context) error {
+	buf := m.signature.Write()
+	ctxBufferLength := uint64(len(buf))
+	writeBuffer, err := m.resizeFunction.Call(ctx, ctxBufferLength)
+	if err != nil {
+		return fmt.Errorf("failed to allocate memory for function '%s': %w", m.template.identifier, err)
 	}
+
+	if !m.instantiatedModule.Memory().Write(uint32(writeBuffer[0]), buf) {
+		return fmt.Errorf("failed to write memory for function '%s'", m.template.identifier)
+	}
+
+	packed, err := m.runFunction.Call(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to run function '%s': %w", m.template.identifier, err)
+	}
+	if packed[0] == 0 {
+		return fmt.Errorf("failed to run function '%s'", m.template.identifier)
+	}
+
+	offset, length := unpackUint32(packed[0])
+	buf, ok := m.instantiatedModule.Memory().Read(offset, length)
+	if !ok {
+		return fmt.Errorf("failed to read memory for function '%s'", m.template.identifier)
+	}
+
+	err = m.signature.Read(buf)
+	if err != nil {
+		return fmt.Errorf("error while running function '%s': %w", m.template.identifier, err)
+	}
+	return nil
 }
 
-// setSignature sets the signature for the moduleInstance
-func (m *moduleInstance[T]) setSignature(signature T) {
+// register sets the module's instance field and registers it as an active module with the runtime
+func (m *module[T]) register(function *function[T]) {
+	m.function = function
+	m.template.runtime.activeModulesMu.Lock()
+	m.template.runtime.activeModules[m.instantiatedModule.Name()] = m
+	m.template.runtime.activeModulesMu.Unlock()
+}
+
+// cleanup removes the module from the runtime's active modules map
+func (m *module[T]) cleanup() {
+	m.function = nil
+	m.template.runtime.activeModulesMu.Lock()
+	delete(m.template.runtime.activeModules, m.instantiatedModule.Name())
+	m.template.runtime.activeModulesMu.Unlock()
+}
+
+// setSignature sets the module's signature
+func (m *module[T]) setSignature(signature T) {
 	m.signature = signature
 }

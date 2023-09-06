@@ -19,104 +19,65 @@ package scale
 import (
 	"context"
 	"fmt"
-
-	"github.com/tetratelabs/wazero"
-
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
-	"github.com/loopholelabs/scale/scalefunc"
 )
 
-// function is the runtime representation of a scale function with
-// a compiled module source.
+// function is an instantiated function that can be run
 type function[T interfaces.Signature] struct {
-	// runtime is the scale runtime that the function belongs to
-	runtime *Scale[T]
+	// instance is the instance that this function belongs to
+	instance *Instance[T]
 
-	// identifier is the identifier for the function
-	identifier string
+	// template is the template that the function
+	// was created from
+	template *template[T]
 
-	// compiled is the compiled module source
-	compiled wazero.CompiledModule
-
-	// scaleFunc is the scale function definition schema
-	scaleFunc *scalefunc.Schema
-
-	// next is the (optional) next function in the chain
+	// next is the next function in the chain
 	next *function[T]
 
-	// modulePool is the pool of modules for the function
-	modulePool *modulePool[T]
-
-	// env contains the (optional) environment variables for the function
-	env map[string]string
+	// module is the optional, stateful, instantiated module for this function
+	//
+	// If the function is stateless, then this will be nil
+	module *module[T]
 }
 
-func newFunction[T interfaces.Signature](ctx context.Context, r *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*function[T], error) {
-	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)
+// newFunction creates a new function from an Instance and a template
+func newFunction[T interfaces.Signature](ctx context.Context, instance *Instance[T], template *template[T]) (fn *function[T], err error) {
+	fn = &function[T]{
+		instance: instance,
+		template: template,
 	}
 
-	f := &function[T]{
-		runtime:    r,
-		identifier: fmt.Sprintf("%s:%s", scaleFunc.Name, scaleFunc.Tag),
-		compiled:   compiled,
-		scaleFunc:  scaleFunc,
-		env:        env,
+	if template.modulePool == nil {
+		fn.module, err = newModule[T](ctx, fn.template)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create module for function '%s': %w", fn.template.identifier, err)
+		}
+		fn.module.register(fn)
 	}
 
-	f.modulePool = newModulePool[T](ctx, r, f)
-
-	return f, nil
+	return fn, nil
 }
 
-func (f *function[T]) runWithModule(ctx context.Context, moduleInstance *moduleInstance[T]) error {
-	buf := moduleInstance.signature.Write()
-	ctxBufferLength := uint64(len(buf))
-	writeBuffer, err := moduleInstance.resize.Call(ctx, ctxBufferLength)
+func (f *function[T]) getModule(signature T) (*module[T], error) {
+	if f.module != nil {
+		f.module.setSignature(signature)
+		return f.module, nil
+	}
+	if f.template.modulePool == nil {
+		return nil, fmt.Errorf("cannot get module from pool for function %s: module pool is nil", f.template.identifier)
+	}
+	m, err := f.template.modulePool.Get()
 	if err != nil {
-		return fmt.Errorf("failed to allocate memory for function '%s': %w", f.scaleFunc.Name, err)
+		return nil, fmt.Errorf("failed to get module from pool for function %s: %w", f.template.identifier, err)
 	}
-
-	if !moduleInstance.instantiatedModule.Memory().Write(uint32(writeBuffer[0]), buf) {
-		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.Name)
-	}
-
-	packed, err := moduleInstance.run.Call(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to run function '%s': %w", f.scaleFunc.Name, err)
-	}
-	if packed[0] == 0 {
-		return fmt.Errorf("failed to run function '%s'", f.scaleFunc.Name)
-	}
-
-	offset, length := unpackUint32(packed[0])
-	buf, ok := moduleInstance.instantiatedModule.Memory().Read(offset, length)
-	if !ok {
-		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
-	}
-
-	err = moduleInstance.signature.Read(buf)
-	if err != nil {
-		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
-	}
-	return nil
+	m.register(f)
+	m.setSignature(signature)
+	return m, nil
 }
 
-func (f *function[T]) run(ctx context.Context, signature T, instance *Instance[T]) error {
-	module, err := f.modulePool.Get()
-	if err != nil {
-		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
+func (f *function[T]) putModule(m *module[T]) {
+	if f.template.modulePool != nil {
+		m.cleanup()
+		f.template.modulePool.Put(m)
 	}
-
-	module.init(f.runtime, instance)
-	module.setSignature(signature)
-
-	err = f.runWithModule(ctx, module)
-	module.cleanup(f.runtime)
-	if err != nil {
-		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
-	}
-
-	return nil
 }

@@ -228,6 +228,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		SignatureSchema: options.SignatureSchema,
 		SignatureHash:   hex.EncodeToString(hash),
 		Language:        scalefunc.Go,
+		Stateless:       options.Scalefile.Stateless,
 		Dependencies:    nil,
 		Function:        data,
 	}, nil

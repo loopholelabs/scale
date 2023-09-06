@@ -94,6 +94,7 @@ type Schema struct {
 	SignatureSchema *signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
 	SignatureHash   string                  `json:"signature_hash" yaml:"signature_hash"`
 	Language        Language                `json:"language" yaml:"language"`
+	Stateless       bool                    `json:"stateless" yaml:"stateless"`
 	Dependencies    []Dependency            `json:"dependencies" yaml:"dependencies"`
 	Function        []byte                  `json:"function" yaml:"function"`
 	Size            uint32                  `json:"size" yaml:"size"`
@@ -117,6 +118,8 @@ func (s *Schema) Encode() []byte {
 	e.String(s.SignatureHash)
 
 	e.String(string(s.Language))
+
+	e.Bool(s.Stateless)
 
 	e.Slice(uint32(len(s.Dependencies)), polyglot.AnyKind)
 	for _, d := range s.Dependencies {
@@ -209,6 +212,11 @@ func (s *Schema) Decode(data []byte) error {
 	}
 	if invalid {
 		return ErrLanguage
+	}
+
+	s.Stateless, err = d.Bool()
+	if err != nil {
+		s.Stateless = false
 	}
 
 	dependenciesSize, err := d.Slice(polyglot.AnyKind)

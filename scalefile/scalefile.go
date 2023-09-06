@@ -53,6 +53,7 @@ type Schema struct {
 	Tag         string          `hcl:"tag,attr"`
 	Language    string          `hcl:"language,attr"`
 	Signature   SignatureSchema `hcl:"signature,block"`
+	Stateless   bool            `hcl:"stateless,optional"`
 	Function    string          `hcl:"function,attr"`
 	Initialize  string          `hcl:"initialize,attr"`
 	Description string          `hcl:"description,optional"`

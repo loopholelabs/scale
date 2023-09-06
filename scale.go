@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/tetratelabs/wazero"
@@ -43,11 +42,11 @@ type Scale[T signature.Signature] struct {
 
 	config *Config[T]
 
-	head *function[T]
-	tail *function[T]
+	head *template[T]
+	tail *template[T]
 
 	activeModulesMu sync.RWMutex
-	activeModules   map[string]*moduleInstance[T]
+	activeModules   map[string]*module[T]
 
 	TraceDataCallback func(data string)
 }
@@ -56,7 +55,7 @@ func New[T signature.Signature](config *Config[T]) (*Scale[T], error) {
 	r := &Scale[T]{
 		runtime:       wazero.NewRuntimeWithConfig(config.context, wazero.NewRuntimeConfig().WithCloseOnContextDone(true)),
 		moduleConfig:  wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
-		activeModules: make(map[string]*moduleInstance[T]),
+		activeModules: make(map[string]*module[T]),
 		config:        config,
 	}
 
@@ -66,10 +65,6 @@ func New[T signature.Signature](config *Config[T]) (*Scale[T], error) {
 // Instance returns a new instance of a Scale Function chain
 // with the provided and optional next function.
 func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
-	if r.config.pooling {
-		return newPoolingInstance(r, next...)
-	}
-
 	return newInstance(r.config.context, r, next...)
 }
 
@@ -120,20 +115,20 @@ func (r *Scale[T]) init() error {
 			return fmt.Errorf("passed in function '%s:%s' has an invalid signatures", sf.function.Name, sf.function.Tag)
 		}
 
-		f, err := newFunction(r.config.context, r, sf.function, sf.env)
+		t, err := newTemplate(r.config.context, r, sf.function, sf.env)
 		if err != nil {
 			return fmt.Errorf("failed to pre-compile function '%s:%s': %w", sf.function.Name, sf.function.Tag, err)
 		}
 
 		if r.head == nil {
-			r.head = f
+			r.head = t
 		}
 
 		if r.tail != nil {
-			r.tail.next = f
+			r.tail.next = t
 		}
 
-		r.tail = f
+		r.tail = t
 	}
 
 	return nil
@@ -159,14 +154,16 @@ func (r *Scale[T]) next(ctx context.Context, module api.Module, params []uint64)
 		return
 	}
 
-	switch {
-	case m.nextInstance != nil:
-		m.nextInstance.setSignature(m.signature)
-		err = m.nextInstance.function.runWithModule(ctx, m.nextInstance)
-	case m.function.next == nil:
-		m.signature, err = m.instance.next(m.signature)
-	default:
-		err = m.function.next.run(ctx, m.signature, m.instance)
+	if m.function.next != nil {
+		nextModule, err := m.function.next.getModule(m.signature)
+		if err == nil {
+			err = nextModule.run(ctx)
+			if err == nil {
+				m.function.next.putModule(nextModule)
+			}
+		}
+	} else {
+		m.signature, err = m.function.instance.next(m.signature)
 	}
 	if err != nil {
 		buf = m.signature.Error(err)
@@ -174,32 +171,9 @@ func (r *Scale[T]) next(ctx context.Context, module api.Module, params []uint64)
 		buf = m.signature.Write()
 	}
 
-	writeBuffer, err := m.resize.Call(ctx, uint64(len(buf)))
+	writeBuffer, err := m.resizeFunction.Call(ctx, uint64(len(buf)))
 	if err != nil {
 		return
 	}
 	module.Memory().Write(uint32(writeBuffer[0]), buf)
-}
-
-type Parsed struct {
-	Organization string
-	Name         string
-	Tag          string
-}
-
-// Parse parses a function or signature name of the form <org>/<name>:<tag> into its organization, name, and tag
-func Parse(name string) *Parsed {
-	orgSplit := strings.Split(name, "/")
-	if len(orgSplit) == 1 {
-		orgSplit = []string{"", name}
-	}
-	tagSplit := strings.Split(orgSplit[1], ":")
-	if len(tagSplit) == 1 {
-		tagSplit = []string{tagSplit[0], ""}
-	}
-	return &Parsed{
-		Organization: orgSplit[0],
-		Name:         tagSplit[0],
-		Tag:          tagSplit[1],
-	}
 }

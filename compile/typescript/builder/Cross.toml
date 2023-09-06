@@ -3,3 +3,6 @@ pre-build = ["apt-get install python3 -y"]
 
 [target.aarch64-unknown-linux-gnu]
 pre-build = ["apt-get install python3 -y"]
+
+[target.x86_64-pc-windows-msvc]
+image = "ghcr.io/loopholelabs/x86_64-pc-windows-msvc-cross:latest"

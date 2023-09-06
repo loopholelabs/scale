@@ -47,7 +47,6 @@ type Config[T signature.Signature] struct {
 	newSignature interfaces.New[T]
 	functions    []configFunction
 	context      context.Context
-	pooling      bool
 }
 
 // NewConfig returns a new Scale Runtime Config
@@ -110,11 +109,6 @@ func (c *Config[T]) WithFunctions(function []*scalefunc.Schema, env ...map[strin
 
 func (c *Config[T]) WithContext(ctx context.Context) *Config[T] {
 	c.context = ctx
-	return c
-}
-
-func (c *Config[T]) WithPooling(pooling bool) *Config[T] {
-	c.pooling = pooling
 	return c
 }
 

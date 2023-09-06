@@ -31,7 +31,7 @@ func (r *Scale[T]) getFunctionNameLen(_ context.Context, module api.Module, para
 		return
 	}
 
-	params[0] = uint64(len([]byte(m.function.identifier)))
+	params[0] = uint64(len([]byte(m.function.template.identifier)))
 }
 
 // getFunctionName is the Host function for getting the Function Name
@@ -45,7 +45,7 @@ func (r *Scale[T]) getFunctionName(_ context.Context, module api.Module, params 
 
 	ptr := uint32(params[0])
 	mem := module.Memory()
-	mem.Write(ptr, []byte(m.function.identifier))
+	mem.Write(ptr, []byte(m.function.template.identifier))
 }
 
 // getInstanceID is the Host function to get 16 byte Instance ID
@@ -59,7 +59,7 @@ func (r *Scale[T]) getInstanceID(_ context.Context, module api.Module, params []
 
 	ptr := uint32(params[0])
 	mem := module.Memory()
-	mem.Write(ptr, m.instance.id)
+	mem.Write(ptr, m.function.instance.identifier)
 }
 
 // otelTraceJSON is the Host function to receive OTEL Trace data in JSON
