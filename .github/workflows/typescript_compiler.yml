@@ -85,4 +85,4 @@ jobs:
           default_author: github_actions
           commit: "--signoff"
           message: "Add: js_builder-${{ matrix.name }}"
-          add: js_builder-${{ matrix.name }}
+          add: compile/typescript/builder/js_builder-${{ matrix.name }}
