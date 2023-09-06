@@ -20,15 +20,16 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+
 	"github.com/loopholelabs/scale/compile/rust"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
-	"os"
-	"os/exec"
-	"path"
-	"path/filepath"
 )
 
 var (
@@ -44,19 +45,6 @@ type LocalRustOptions struct {
 
 	// SourceDirectory is the directory where the source code is located
 	SourceDirectory string
-
-	//// SignaturePackage is the package for the signature
-	//SignaturePackage string
-	//
-	//// SignaturePath is the optional import path for the signature
-	////
-	//// This is required for local signatures
-	//SignaturePath string
-	//
-	//// SignatureVersion is the optional version of the signature
-	////
-	//// This is required for remote signatures
-	//SignatureVersion string
 
 	// SignatureSchema is the schema of the signature
 	SignatureSchema *signature.Schema
