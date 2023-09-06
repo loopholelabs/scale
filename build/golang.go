@@ -132,7 +132,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 	}
 
 	signatureDependencyVersion, signatureDependencyPath := manifest.GetReplacement("signature")
-	if signatureDependencyVersion != "" || signatureDependencyPath != "" {
+	if signatureDependencyVersion != "" && signatureDependencyPath != "" {
 		return nil, fmt.Errorf("unable to parse signature dependency in go.mod")
 	}
 

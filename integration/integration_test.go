@@ -71,15 +71,13 @@ func TestGolangE2E(t *testing.T) {
 	require.NoError(t, err)
 
 	schema, err := build.LocalGolang(&build.LocalGolangOptions{
-		Version:          "test",
-		Scalefile:        scf,
-		SourceDirectory:  golangFunctionDir,
-		SignaturePath:    wd + "/golang_tests/signature",
-		SignatureVersion: "",
-		SignatureSchema:  s,
-		Storage:          stb,
-		Release:          false,
-		Target:           build.WASITarget,
+		Version:         "test",
+		Scalefile:       scf,
+		SourceDirectory: golangFunctionDir,
+		SignatureSchema: s,
+		Storage:         stb,
+		Release:         false,
+		Target:          build.WASITarget,
 	})
 	require.NoError(t, err)
 
@@ -146,16 +144,13 @@ func TestRustE2E(t *testing.T) {
 	require.NoError(t, err)
 
 	schema, err := build.LocalRust(&build.LocalRustOptions{
-		Version:          "test",
-		Scalefile:        scf,
-		SourceDirectory:  rustFunctionDir,
-		SignaturePackage: fmt.Sprintf("%s_%s_%s_guest", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag),
-		SignaturePath:    wd + "/rust_tests/signature",
-		SignatureVersion: "",
-		SignatureSchema:  s,
-		Storage:          stb,
-		Release:          false,
-		Target:           build.WASITarget,
+		Version:         "test",
+		Scalefile:       scf,
+		SourceDirectory: rustFunctionDir,
+		SignatureSchema: s,
+		Storage:         stb,
+		Release:         false,
+		Target:          build.WASITarget,
 	})
 	require.NoError(t, err)
 
