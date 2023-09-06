@@ -90,4 +90,4 @@ jobs:
           commit: "--signoff"
           message: "Add: js_builder-${{ matrix.name }}"
           add: compile/typescript/builder/js_builder-${{ matrix.name }}
-          pull: true
+          pull: "--rebase --autostash"
