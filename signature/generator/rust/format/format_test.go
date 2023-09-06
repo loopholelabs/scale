@@ -22,10 +22,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const data = `
+const data1 = `
 use crate::{ lazy::{Lazy, SyncLazy, SyncOnceCell}, panic,
         sync::{ atomic::{AtomicUsize, Ordering::SeqCst},
             mpsc::channel, Mutex, },
+      thread,
+    };
+    impl<T, U> Into<U> for T where U: From<T> {
+        fn into(self) -> U { U::from(self) }
+    }
+`
+
+const data2 = `
+use crate::{ lazy::{Lazy, SyncLazy, SyncOnceCell}, panic,sync::{ atomic::{AtomicUsize, Ordering},mpsc::channel, Mutex, },
       thread,
     };
     impl<T, U> Into<U> for T where U: From<T> {
@@ -37,7 +46,12 @@ func TestFormatter(t *testing.T) {
 	f, err := New()
 	require.NoError(t, err)
 
-	formatted, err := f.Format(context.Background(), data)
+	formatted, err := f.Format(context.Background(), data1)
+	require.NoError(t, err)
+
+	t.Logf("Formatted:\n\n%s\n", formatted)
+
+	formatted, err = f.Format(context.Background(), data2)
 	require.NoError(t, err)
 
 	t.Logf("Formatted:\n\n%s\n", formatted)
