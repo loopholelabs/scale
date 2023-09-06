@@ -22,5 +22,5 @@ import (
 	_ "embed"
 )
 
-//go:embed target/aarch64-apple-darwin/release/js_builder
+//go:embed js_builder-aarch64-apple-darwin
 var BuilderExecutable []byte

@@ -22,5 +22,5 @@ import (
 	_ "embed"
 )
 
-//go:embed target/aarch64-unknown-linux-gnu/release/js_builder
+//go:embed js_builder-aarch64-unknown-linux-gnu
 var BuilderExecutable []byte
