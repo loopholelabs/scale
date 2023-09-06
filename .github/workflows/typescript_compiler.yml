@@ -54,7 +54,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
+
       - name: Set up Rust
         run: |
           rustup toolchain install stable --profile minimal --no-self-update
@@ -88,3 +90,4 @@ jobs:
           commit: "--signoff"
           message: "Add: js_builder-${{ matrix.name }}"
           add: compile/typescript/builder/js_builder-${{ matrix.name }}
+          pull: true
