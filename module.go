@@ -19,6 +19,7 @@ package scale
 import (
 	"context"
 	"fmt"
+
 	"github.com/loopholelabs/polyglot"
 
 	"github.com/google/uuid"

@@ -20,19 +20,15 @@ import { ScaleFunc } from "./scalefunc/scalefunc";
 import { Scale } from "./scale";
 import { DisabledWASI } from "./wasi";
 import {ModuleInstance} from "./module";
+import {Instance} from "./instance";
+import {Template} from "./template";
 
 export class Func<T extends Signature> {
-    private runtime: Scale<T>
+    private instance: Instance<T>;
+    private template: Template<T>;
+    private next: undefined | Func<T>;
+    private module: ModuleInstance<T>;
 
-    private identifier: string;
-
-    private compiled: WebAssembly.Module;
-
-    private scaleFunc: ScaleFunc;
-
-    public next: undefined | Func<T>;
-
-    private env: { [key: string]: string } | undefined;
 
     constructor(r: Scale<T>, scaleFunc: ScaleFunc, compiled: WebAssembly.Module, env?: { [key: string]: string }) {
         this.runtime = r;

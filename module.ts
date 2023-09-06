@@ -18,26 +18,23 @@ import { Signature } from "@loopholelabs/scale-signature-interfaces";
 import { Func } from "./function";
 import { Scale } from "./scale";
 import {Instance} from "./instance";
+import {Template} from "./template";
 
-export class ModuleInstance<T extends Signature> {
-    private function: Func<T>;
+export class Module<T extends Signature> {
+    private template: Template<T>;
 
     private instantiatedModule: WebAssembly.Instance;
-
     private run: undefined | Function;
     private resize: undefined | Function;
+    private initialize: undefined | Function;
 
     private memory: undefined | WebAssembly.Memory;
 
-    private instance: Instance<T>;
-
+    private function: Func<T>;
     public signature: T | undefined;
-
-    private nextInstance: undefined | ModuleInstance<T>;
-
-    constructor(r: Scale<T>, f: Func<T>, i: Instance<T>) {
-        this.function = f;
-        this.instance = i;
+    constructor(template: Template<T>) {
+        this.template = template;
+        this.template.runtime.InstantiateModule()
     }
 
     init(i: Instance<T>) {

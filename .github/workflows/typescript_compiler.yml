@@ -37,18 +37,23 @@ jobs:
         include:
           - name: x86_64-unknown-linux-gnu
             os: ubuntu-20.04
+            output: js_builder-x86_64-unknown-linux-gnu
 
           - name: aarch64-unknown-linux-gnu
             os: ubuntu-20.04
+            output: js_builder-aarch64-unknown-linux-gnu
 
           - name: x86_64-apple-darwin
             os: macos-latest
+            output: js_builder-x86_64-apple-darwin
 
           - name: aarch64-apple-darwin
             os: macos-latest
+            output: js_builder-aarch64-apple-darwin
 
           - name: x86_64-pc-windows-msvc
             os: windows-latest
+            output: js_builder-x86_64-pc-windows-msvc.exe
 
     steps:
       - name: Checkout
@@ -89,5 +94,5 @@ jobs:
           default_author: github_actions
           commit: "--signoff"
           message: "Add: js_builder-${{ matrix.name }}"
-          add: compile/typescript/builder/js_builder-${{ matrix.name }}
+          add: compile/typescript/builder/${{ matrix.output }}
           pull: "--rebase --autostash"

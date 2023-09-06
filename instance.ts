@@ -25,7 +25,7 @@ const ErrNoCacheID = new Error("no cache id found in instance");
 
 export class Instance<T extends Signature> {
   private runtime: Scale<T>;
-  private id: Buffer;
+  private identifier: Buffer;
   public readonly moduleConfig: WebAssembly.Imports;
 
   private head: undefined | ModuleInstance<T>;
