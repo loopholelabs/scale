@@ -22,7 +22,7 @@ jobs:
         working-directory: compile/typescript/builder
         run: make interpreter
 
-      - name: Upload core binary to artifacts
+      - name: Upload js_interpreter.wasm to artifacts
         uses: actions/upload-artifact@v3
         with:
           name: interpreter
@@ -59,6 +59,10 @@ jobs:
           rustup default stable
           rustup target add ${{ matrix.name }}
         shell: bash
+
+      - name: Update APT Sources
+        run: sudo apt-get update
+        if: matrix.name == 'aarch64-unknown-linux-gnu'
 
       - name: Install ARM GCC toolchain
         run: sudo apt-get --assume-yes install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
