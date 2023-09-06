@@ -47,6 +47,7 @@ describe("scaleFunc", () => {
         Buffer.from(someFunction),
         "signatureHash",
         Go,
+        false,
         [],
         Buffer.from(someFunction)
       );
@@ -63,6 +64,7 @@ describe("scaleFunc", () => {
         Buffer.from(someFunction),
         "signatureHash",
         "invalid",
+        true,
         [],
         Buffer.from(someFunction)
       );
@@ -78,6 +80,7 @@ describe("scaleFunc", () => {
         Buffer.from(someFunction),
         "signatureHash",
       Go,
+      false,
       [],
       Buffer.from(someFunction)
     );

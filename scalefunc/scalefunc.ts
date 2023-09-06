@@ -16,7 +16,7 @@
 
 import sha256 from "fast-sha256";
 
-import {Decoder, Encoder} from "@loopholelabs/polyglot";
+import {Decoder, Encoder, Kind} from "@loopholelabs/polyglot";
 import fs from "fs";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -56,10 +56,12 @@ export const AcceptedLanguages: Language[] = [Go, Rust, Typescript, Javascript];
 export class Dependency {
     public Name: string;
     public Version: string;
+    public Metadata: Map<string, string> | undefined;
 
-    constructor(name: string, version: string) {
+    constructor(name: string, version: string, metadata: Map<string, string>) {
         this.Name = name;
         this.Version = version;
+        this.Metadata = metadata;
     }
 }
 
@@ -71,6 +73,7 @@ export class ScaleFunc {
     public SignatureBytes: Buffer;
     public SignatureHash: string;
     public Language: Language;
+    public Stateless: boolean;
     public Dependencies: Dependency[];
     public Function: Buffer;
     public Size: undefined | number;
@@ -84,6 +87,7 @@ export class ScaleFunc {
         signatureBytes: Buffer,
         signatureHash: string,
         language: Language,
+        stateless: boolean,
         dependencies: Dependency[],
         fn: Buffer
     ) {
@@ -94,6 +98,7 @@ export class ScaleFunc {
         this.SignatureBytes = signatureBytes;
         this.SignatureHash = signatureHash;
         this.Language = language;
+        this.Stateless = stateless;
         this.Dependencies = dependencies;
         this.Function = fn;
     }
@@ -107,6 +112,19 @@ export class ScaleFunc {
         enc.uint8Array(this.SignatureBytes);
         enc.string(this.SignatureHash);
         enc.string(this.Language as string);
+        enc.boolean(this.Stateless);
+
+        enc.array(this.Dependencies.length, Kind.Any);
+        for (const d of this.Dependencies) {
+            enc.string(d.Name);
+            enc.string(d.Version);
+            enc.map(d.Metadata?.size ?? 0, Kind.String, Kind.String);
+            for (const [k, v] of d.Metadata ?? []) {
+                enc.string(k);
+                enc.string(v);
+            }
+        }
+
         enc.uint8Array(this.Function);
 
         // Compute the hash (sha256)
@@ -136,6 +154,26 @@ export class ScaleFunc {
         const language = dec.string();
         if (!AcceptedLanguages.includes(language)) throw LanguageErr;
 
+        let stateless = false;
+        try {
+            stateless = dec.boolean();
+        } catch (_) {}
+
+        const dependenciesSize = dec.array(Kind.Any);
+        const dependencies: Dependency[] = [];
+        for (let i = 0; i < dependenciesSize; i++) {
+            const name = dec.string();
+            const version = dec.string();
+            const metadataSize = dec.map(Kind.String, Kind.String);
+            const metadata = new Map<string, string>();
+            for (let j = 0; j < metadataSize; j++) {
+                const key = dec.string();
+                const value = dec.string();
+                metadata.set(key, value);
+            }
+            dependencies.push(new Dependency(name, version, metadata));
+        }
+
         const fn = dec.uint8Array();
         const size = dec.uint32();
         const hash = dec.string();
@@ -153,7 +191,8 @@ export class ScaleFunc {
             Buffer.from(signatureBytes),
             signatureHash,
             language,
-            [],
+            stateless,
+            dependencies,
             Buffer.from(fn)
         );
         sf.Size = size;
