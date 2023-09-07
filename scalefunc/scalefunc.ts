@@ -157,7 +157,7 @@ export class ScaleFunc {
         let stateless = false;
         try {
             stateless = dec.boolean();
-        } catch (_) {}
+        } catch (_) {} // eslint-disable-line no-empty
 
         const dependenciesSize = dec.array(Kind.Any);
         const dependencies: Dependency[] = [];

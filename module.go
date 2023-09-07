@@ -102,8 +102,7 @@ func newModule[T signature.Signature](ctx context.Context, template *template[T]
 // The signature of the module must be set before calling this function
 func (m *module[T]) run(ctx context.Context) error {
 	buf := m.signature.Write()
-	ctxBufferLength := uint64(len(buf))
-	writeBuffer, err := m.resizeFunction.Call(ctx, ctxBufferLength)
+	writeBuffer, err := m.resizeFunction.Call(ctx, uint64(len(buf)))
 	if err != nil {
 		return fmt.Errorf("failed to allocate memory for function '%s': %w", m.template.identifier, err)
 	}
@@ -120,8 +119,8 @@ func (m *module[T]) run(ctx context.Context) error {
 		return fmt.Errorf("failed to run function '%s'", m.template.identifier)
 	}
 
-	offset, length := unpackUint32(packed[0])
-	buf, ok := m.instantiatedModule.Memory().Read(offset, length)
+	ptr, length := unpackUint32(packed[0])
+	buf, ok := m.instantiatedModule.Memory().Read(ptr, length)
 	if !ok {
 		return fmt.Errorf("failed to read memory for function '%s'", m.template.identifier)
 	}

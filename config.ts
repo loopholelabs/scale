@@ -30,41 +30,39 @@ class ConfigFunction {
 }
 
 export class Config<T extends Signature> {
-    private newSignature: New<T>;
-    private functions: ConfigFunction[] = [];
+    public newSignature: New<T>;
+    public functions: ConfigFunction[] = [];
 
     constructor(newSignature: New<T>) {
         this.newSignature = newSignature;
     }
 
-    public validate(): Error | null {
+    public validate() {
         if (!this) {
-            return new Error("no config provided");
+           throw new Error("no config provided");
         }
         if (this.functions.length === 0) {
-            return new Error("no functions provided");
+            throw new Error("no functions provided");
         }
 
         for (const f of this.functions) {
             if (!f.function) {
-                return new Error("invalid function");
+                throw new Error("invalid function");
             }
             for (const k in f.env) {
                 if (!validEnv(k)) {
-                    return new Error("invalid environment variable");
+                    throw new Error("invalid environment variable");
                 }
             }
         }
-
-        return null;
     }
 
-    public withSignature(newSignature: New<T>): Config<T> {
+    public WithSignature(newSignature: New<T>): Config<T> {
         this.newSignature = newSignature;
         return this;
     }
 
-    public withFunction(func: ScaleFunc, env?: { [key: string]: string }): Config<T> {
+    public WithFunction(func: ScaleFunc, env?: { [key: string]: string }): Config<T> {
         const f = new ConfigFunction(func, env);
         f.function = func;
 
@@ -76,9 +74,9 @@ export class Config<T extends Signature> {
         return this;
     }
 
-    public withFunctions(functions: ScaleFunc[], env?: { [key: string]: string }): Config<T> {
+    public WithFunctions(functions: ScaleFunc[], env?: { [key: string]: string }): Config<T> {
         for (const func of functions) {
-            this.withFunction(func, env);
+            this.WithFunction(func, env);
         }
         return this;
     }

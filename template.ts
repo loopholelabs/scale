@@ -17,19 +17,49 @@
 import { Signature  } from "@loopholelabs/scale-signature-interfaces";
 import { Scale } from "./scale";
 import {ScaleFunc} from "./scalefunc/scalefunc";
+import {DisabledWASI} from "./wasi";
+import {Tracing} from "./tracing";
+import {ModulePool} from "./pool";
+
+export async function NewTemplate<T extends Signature>(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }): Promise<Template<T>> {
+    const t = new Template<T>(runtime, scaleFunc, env);
+    await t.Ready();
+    return t;
+}
 
 export class Template<T extends Signature> {
+    private readonly ready: Promise<void>;
+
     public runtime: Scale<T>
     public identifier: string;
-    public compiled: WebAssembly.Module;
-    public env: { [key: string]: string } | undefined;
+    public compiled: WebAssembly.Module | undefined;
     public next: undefined | Template<T>;
 
-    constructor(runtime: Scale<T>, scaleFunc: ScaleFunc, compiled: WebAssembly.Module, env?: { [key: string]: string }) {
+    public modulePool: ModulePool<T> | undefined;
+    public env: { [key: string]: string } | undefined;
+
+    public wasi: DisabledWASI;
+    public tracing: Tracing;
+
+    constructor(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }) {
         this.runtime = runtime;
         this.identifier = `${scaleFunc.Name}:${scaleFunc.Tag}`;
         this.env = env;
-        this.compiled = compiled;
+
+        this.wasi = new DisabledWASI(this.env);
+        this.tracing = new Tracing(this.identifier, Buffer.alloc(16), this.runtime.TraceDataCallback);
+
+        if (scaleFunc.Stateless) {
+            this.modulePool = new ModulePool<T>(this);
+        }
+
+        this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
+            this.compiled = await WebAssembly.compile(scaleFunc.Function);
+            resolve();
+        });
     }
 
+    async Ready() {
+        await this.ready;
+    }
 }

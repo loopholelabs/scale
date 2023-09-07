@@ -33,7 +33,7 @@ export interface RequiredFunctions extends WebAssembly.ModuleImports {
     poll_oneoff(sin: number, sout: number, nsubscriptions: number, nevents: number): number
     proc_exit(rval: number): number
     path_open(fd: number, dirflags: number, path_ptr: number, path_len: number, oflags: number, fs_rights_base: number, fs_rights_inheriting: number, fd_flags: number, opened_fd_ptr: number): number
-    clock_time_get(id: number, precision: BigInt, time: number): number
+    clock_time_get(id: number, precision: bigint, time: number): number
     random_get(buf: number, buf_len: number): void
 }
 
@@ -60,24 +60,22 @@ export class DisabledWASI {
         if (!this.exports.memory) {
             throw ErrNoMemory;
         }
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return new DataView(this.exports.memory.buffer);
     }
 
     public SetInstance(instance: WebAssembly.Instance) {
         this.exports = instance.exports;
-        const start = (this.exports._start as Function | undefined);
-        if (start) {
-            start();
-        }
     }
 
     public environ_sizes_get(environCount: number, environBufSize: number): number {
-        let view = this.getDataView();
+        const view = this.getDataView();
         let count = 0;
         let size = 0;
         if (this.env !== undefined) {
-            for (let key in this.env) {
+            for (const key in this.env) {
                 count++;
                 size += key.length + 1 + this.env[key].length + 1;
             }
@@ -88,13 +86,13 @@ export class DisabledWASI {
     }
 
     public environ_get(environ: number, environBuf: number): number {
-        let view = this.getDataView();
+        const view = this.getDataView();
         let offset = 0;
         if (this.env !== undefined) {
-            for (let key in this.env) {
-                let value = this.env[key];
-                let keyLen = key.length;
-                let valueLen = value.length;
+            for (const key in this.env) {
+                const value = this.env[key];
+                const keyLen = key.length;
+                const valueLen = value.length;
                 view.setUint32(environ + offset, environBuf, true);
                 offset += 4;
                 view.setUint32(environ + offset, keyLen + 1 + valueLen + 1, true);
@@ -117,62 +115,62 @@ export class DisabledWASI {
     }
 
     public args_sizes_get(argc: number, argvBufSize: number): number {
-        let view = this.getDataView();
+        const view = this.getDataView();
         view.setUint32(argc, 0, true);
         view.setUint32(argvBufSize, 0, true);
         return DisabledWASI.ESUCCESS;
     }
 
-    public args_get(argv: number, argvBuf: number): number {
+    public args_get(_argv: number, _argvBuf: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.ESUCCESS;
     }
 
-    public fd_prestat_get(fd: number, bufPtr: number): number {
+    public fd_prestat_get(_fd: number, _bufPtr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public fd_prestat_dir_name(fd: number, pathPtr: number, pathLen: number): number {
+    public fd_prestat_dir_name(_fd: number, _pathPtr: number, _pathLen: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EINVAL;
     }
 
-    public fd_filestat_get(fd: number, bufPtr: number): number {
+    public fd_filestat_get(_fd: number, _bufPtr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public fd_fdstat_get(fd: number, bufPtr: number): number {
+    public fd_fdstat_get(_fd: number, _bufPtr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public fd_read(fd: number, iovs_ptr: number, iovs_len: number, nread_ptr: number): number {
+    public fd_read(_fd: number, _iovs_ptr: number, _iovs_len: number, _nread_ptr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public fd_write(fd: number, iovs: number, iovsLen: number, nwritten: number): number {
+    public fd_write(_fd: number, _iovs: number, _iovsLen: number, _nwritten: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public fd_close(fd: number): number {
+    public fd_close(_fd: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public fd_seek(fd: number, offset: number, whence: number, newOffsetPtr: number): number {
+    public fd_seek(_fd: number, _offset: number, _whence: number, _newOffsetPtr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public poll_oneoff(sin: number, sout: number, nsubscriptions: number, nevents: number): number {
+    public poll_oneoff(_sin: number, _sout: number, _nsubscriptions: number, _nevents: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.ENOSYS;
     }
 
-    public proc_exit(rval: number): number {
+    public proc_exit(_rval: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.ENOSYS;
     }
 
-    public path_open(fd: number, dirflags: number, path_ptr: number, path_len: number, oflags: number, fs_rights_base: number, fs_rights_inheriting: number, fd_flags: number, opened_fd_ptr: number): number {
+    public path_open(_fd: number, _dirflags: number, _path_ptr: number, _path_len: number, _oflags: number, _fs_rights_base: number, _fs_rights_inheriting: number, _fd_flags: number, _opened_fd_ptr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
         return DisabledWASI.EBADF;
     }
 
-    public clock_time_get(id: number, precision: BigInt, time: number) {
-        let buffer = this.getDataView()
+    public clock_time_get(id: number, _precision: bigint, time: number) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        const buffer = this.getDataView()
         if (id === DisabledWASI.CLOCKID_REALTIME) {
             buffer.setBigUint64(time, BigInt(new Date().getTime()) * 1000000n, true);
         } else {
@@ -182,7 +180,7 @@ export class DisabledWASI {
     }
 
     public random_get(buf: number, buf_len: number): void {
-        let buffer = this.getDataView();
+        const buffer = this.getDataView();
         for (let i = 0; i < buf_len; i++) {
             buffer.setInt8(buf+i, (Math.random() * 256) | 0);
         }

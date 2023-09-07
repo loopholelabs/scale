@@ -14,57 +14,68 @@
         limitations under the License.
 */
 
-import { Signature  } from "@loopholelabs/scale-signature-interfaces";
-import { NextFn, Scale } from "./scale";
-import { ModuleInstance } from "./module";
-
 import { randomBytes } from "crypto";
 
+import { Signature  } from "@loopholelabs/scale-signature-interfaces";
+import { NextFn, Scale } from "./scale";
+import {Func, NewFunc} from "./function";
+
 const ErrNoCompiledFunctions = new Error("no compiled functions found in runtime");
-const ErrNoCacheID = new Error("no cache id found in instance");
+
+export async function NewInstance<T extends Signature>(runtime: Scale<T>, next?: NextFn<T>): Promise<Instance<T>> {
+  const i = new Instance(runtime, next);
+  await i.Ready();
+  return i;
+}
 
 export class Instance<T extends Signature> {
+  private readonly ready: Promise<void>;
+
   private runtime: Scale<T>;
   private identifier: Buffer;
-  public readonly moduleConfig: WebAssembly.Imports;
+  private head: undefined | Func<T>;
+  next: NextFn<T>;
 
-  private head: undefined | ModuleInstance<T>;
-
-  private next: NextFn<T>;
-
-  constructor(r: Scale<T>, next: null | NextFn<T>) {
-    this.runtime = r;
-    this.id = randomBytes(16);
-    this.moduleConfig = {
-        env: {
-
-        }
-    }
-
-    if (next === null) {
-      this.next = (ctx: T) => ctx;
-    } else {
+  constructor(runtime: Scale<T>, next?: NextFn<T>) {
+    this.runtime = runtime;
+    this.identifier = randomBytes(16);
+    if (next !== undefined) {
       this.next = next;
+    } else {
+      this.next = (ctx: T) => ctx;
     }
+
+    this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
+      let previousFunction = this.head;
+      let nextTemplate = this.runtime.head;
+
+      while (nextTemplate !== undefined) {
+        const fn = await NewFunc(this, nextTemplate);
+        if (this.head === undefined) {
+            this.head = fn;
+        }
+        if (previousFunction !== undefined) {
+          previousFunction.next = fn;
+        }
+        previousFunction = fn;
+        nextTemplate = nextTemplate.next;
+      }
+
+      resolve();
+    });
+
   }
 
-  Run() {
-    if (this.runtime.head === undefined) {
+  public async Ready() {
+    await this.ready;
+  }
+
+  public async Run(signature: T) {
+    if (this.head === undefined) {
       throw ErrNoCompiledFunctions;
     }
-    const fn = this.runtime.head;
-    fn.Run(this);
-  }
-
-  SetInstance(id: string, c: Cache) {
-    this.cache.set(id, c);
-  }
-
-  GetInstance(id: string): Cache {
-    const c = this.cache.get(id);
-    if (c === undefined) {
-      throw ErrNoCacheID;
-    }
-    return c;
+    const m = await this.head.GetModule(signature);
+    m.Run();
+    this.head.PutModule(m);
   }
 }

@@ -14,75 +14,59 @@
         limitations under the License.
 */
 
-import { v4 as uuidv4 } from "uuid";
 import { Signature } from "@loopholelabs/scale-signature-interfaces";
-import { ScaleFunc } from "./scalefunc/scalefunc";
-import { Scale } from "./scale";
-import { DisabledWASI } from "./wasi";
-import {ModuleInstance} from "./module";
+import {Module, NewModule} from "./module";
 import {Instance} from "./instance";
 import {Template} from "./template";
 
 export class Func<T extends Signature> {
-    private instance: Instance<T>;
+    private readonly ready: Promise<void>;
+    public instance: Instance<T>;
     private template: Template<T>;
-    private next: undefined | Func<T>;
-    private module: ModuleInstance<T>;
+    public next: Func<T> | undefined;
+    public module: Module<T> | undefined;
 
+    constructor(instance: Instance<T>, template: Template<T>) {
+        this.instance = instance;
+        this.template = template;
 
-    constructor(r: Scale<T>, scaleFunc: ScaleFunc, compiled: WebAssembly.Module, env?: { [key: string]: string }) {
-        this.runtime = r;
-        this.identifier = `${scaleFunc.Name}:${scaleFunc.Tag}`;
-        this.scaleFunc = scaleFunc;
-        this.env = env;
-        this.compiled = compiled;
+        this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
+            if (template.modulePool === undefined) {
+                this.module = await NewModule<T>(template);
+                this.module.Register(this);
+            }
+            resolve();
+        });
     }
 
-    public RunWithModule(moduleInstance: ModuleInstance<T>) {
-        if (moduleInstance.signature === undefined) {
-            throw new Error("module instance doesn't have signature");
-        }
-        const encoded = moduleInstance.signature.Write();
-
-        const encPtr = moduleInstance.resize(encoded.length);
-
-        const memData = new Uint8Array(module.memory.buffer);
-        memData.set(encoded, encPtr);
-
-        const packed = module.run(encPtr, encoded.length);
-
-        const [ptr, len] = Func.unpackMemoryRef(packed);
-        const memDataOut = new Uint8Array(module.memory.buffer);
-        const inContextBuff = memDataOut.slice(ptr, ptr + len);
-
-        const err = i.RuntimeContext().Read(inContextBuff);
-        if (err !== undefined) {
-            throw err;
-        }
+    public async Ready(): Promise<void> {
+        await this.ready;
     }
 
-    // Pack a pointer and length into a single 64bit
-    public static packMemoryRef(ptr: number, len: number): BigInt {
-        if (ptr > 0xffffffff || len > 0xffffffff) {
-            // Error! We can't do it.
+    public async GetModule(signature: T): Promise<Module<T>> {
+        if (this.module !== undefined) {
+            this.module.SetSignature(signature);
+            return this.module;
         }
-        return (BigInt(ptr) << BigInt(32)) | BigInt(len);
+        if (this.template.modulePool === undefined) {
+            throw new Error(`cannot get module from pool for function ${this.template.identifier}: module pool is undefined`);
+        }
+        const m = await this.template.modulePool.Get();
+        m.Register(this);
+        m.SetSignature(signature);
+        return m;
     }
 
-    // Unpack a memory ref from 64bit to 2x32bits
-    public static unpackMemoryRef(packed: bigint): [number, number] {
-        const ptr = Number((packed >> BigInt(32)) & BigInt(0xffffffff));
-        const len = Number(packed & BigInt(0xffffffff));
-        return [ptr, len];
+    public PutModule(m: Module<T>){
+        if (this.template.modulePool !== undefined) {
+            m.Cleanup()
+            this.template.modulePool.Put(m);
+        }
     }
 }
 
-export async function NewFunc<T extends Signature>(r: Scale<T>, scaleFunc: ScaleFunc, moduleConfig: WebAssembly.Imports, env?: { [key: string]: string }): Promise<Func<T>> {
-    let compiled: WebAssembly.WebAssemblyInstantiatedSource;
-    try {
-        compiled = await WebAssembly.instantiate(scaleFunc.Function, moduleConfig);
-    } catch (e) {
-        throw new Error(`failed to compile wasm module: ${e}`)
-    }
-    return new Func<T>(r, scaleFunc, compiled.module, env);
+export async function NewFunc<T extends Signature>(instance: Instance<T>, template: Template<T>): Promise<Func<T>> {
+    const fn = new Func<T>(instance, template);
+    await fn.Ready();
+    return fn;
 }

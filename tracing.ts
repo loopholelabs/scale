@@ -26,7 +26,7 @@ export interface HostFunctions extends WebAssembly.ModuleImports {
 
 export type CallbackFunction = (data: string) => void
 
-export class Module {
+export class Tracing {
   private exports: WebAssembly.Exports | undefined;
 
   private invocationId: Buffer;
@@ -40,39 +40,39 @@ export class Module {
   }
 
   getFunctionNameLen(): number {
-    let enc = new TextEncoder();
-    let data = enc.encode(this.functionName);
+    const enc = new TextEncoder();
+    const data = enc.encode(this.functionName);
     return data.length;
   }
 
   getFunctionName(ptr: number) {
-    let enc = new TextEncoder();
-    let data = enc.encode(this.functionName);
-    let buffer = this.getDataView();
+    const enc = new TextEncoder();
+    const data = enc.encode(this.functionName);
+    const buffer = this.getDataView();
     for (let i=0;i<data.length;i++) {
-      let d = data.at(i);
-      if (d!=undefined) {
+      const d = data.at(i);
+      if (d !== undefined) {
         buffer.setInt8(ptr+i, d);
       }
     }
   }
 
   getInstanceId(ptr: number) {
-    let buffer = this.getDataView();
+    const buffer = this.getDataView();
     for (let i=0;i<this.invocationId.length;i++) {
-      let d = this.invocationId.at(i);
-      if (d!=undefined) {
+      const d = this.invocationId.at(i);
+      if (d !== undefined) {
         buffer.setInt8(ptr+i, d);
       }
     }
   }
 
   otelTraceJSON(ptr: number, len: number) {
-    if (this.traceCallback==undefined) return;
-    let buffer = this.getDataView();
-    let data = buffer.buffer.slice(ptr, ptr + len);
-    let dec = new TextDecoder();
-    let s = dec.decode(data);
+    if (this.traceCallback === undefined) return;
+    const buffer = this.getDataView();
+    const data = buffer.buffer.slice(ptr, ptr + len);
+    const dec = new TextDecoder();
+    const s = dec.decode(data);
     this.traceCallback(s);
   }
 
@@ -92,6 +92,8 @@ export class Module {
     if (!this.exports.memory) {
         throw ErrNoMemory;
     }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return new DataView(this.exports.memory.buffer);
   }
