@@ -2,6 +2,7 @@
 // output: local-example-latest-guest
 
 export * from "./types";
+import { ModelWithAllFieldTypes } from "./types";
 
 // Write serializes the signature into the global WRITE_BUFFER and returns the pointer to the buffer and its size
 //

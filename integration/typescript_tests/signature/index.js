@@ -33,11 +33,14 @@ module.exports = __toCommonJS(stdin_exports);
 var import_scale_signature_interfaces = require("@loopholelabs/scale-signature-interfaces");
 var import_polyglot = require("@loopholelabs/polyglot");
 __reExport(stdin_exports, require("./types"), module.exports);
+var import_types = require("./types");
 let WRITE_BUFFER = new Uint8Array().buffer;
 let READ_BUFFER = new Uint8Array().buffer;
 const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5";
 function Write(ctx) {
-  WRITE_BUFFER = ctx.encode(new Uint8Array()).buffer;
+  const enc = new import_polyglot.Encoder();
+  ctx.encode(enc);
+  WRITE_BUFFER = enc.bytes;
   const addrof = global[import_scale_signature_interfaces.Signature.TYPESCRIPT_ADDRESS_OF];
   const ptr = addrof(WRITE_BUFFER);
   const len = WRITE_BUFFER.byteLength;
@@ -45,7 +48,7 @@ function Write(ctx) {
 }
 function Read() {
   const dec = new import_polyglot.Decoder(new Uint8Array(READ_BUFFER));
-  return ModelWithAllFieldTypes.decode(dec).value;
+  return import_types.ModelWithAllFieldTypes.decode(dec).value;
 }
 function Error2(err) {
   const enc = new import_polyglot.Encoder();

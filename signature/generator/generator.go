@@ -186,9 +186,11 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 	}
 
 	typescriptFiles := []File{
+		NewFile("types.ts", "types.ts", typescriptTypes.Typescript),
 		NewFile("types.js", "types.js", typescriptTypes.Javascript),
 		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
 		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.ts", "index.ts", typescriptGuest.Typescript),
 		NewFile("index.js", "index.js", typescriptGuest.Javascript),
 		NewFile("index.js.map", "index.js.map", typescriptGuest.SourceMap),
 		NewFile("index.d.ts", "index.d.ts", typescriptGuest.Declaration),
@@ -308,9 +310,11 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 	}
 
 	typescriptFiles := []File{
+		NewFile("types.ts", "types.ts", typescriptTypes.Typescript),
 		NewFile("types.js", "types.js", typescriptTypes.Javascript),
 		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
 		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.ts", "index.ts", typescriptGuest.Typescript),
 		NewFile("index.js", "index.js", typescriptGuest.Javascript),
 		NewFile("index.js.map", "index.js.map", typescriptGuest.SourceMap),
 		NewFile("index.d.ts", "index.d.ts", typescriptGuest.Declaration),
@@ -383,9 +387,11 @@ func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 	}
 
 	typescriptFiles := []File{
+		NewFile("types.ts", "types.ts", typescriptTypes.Typescript),
 		NewFile("types.js", "types.js", typescriptTypes.Javascript),
 		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
 		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.ts", "index.ts", typescriptHost.Typescript),
 		NewFile("index.js", "index.js", typescriptHost.Javascript),
 		NewFile("index.js.map", "index.js.map", typescriptHost.SourceMap),
 		NewFile("index.d.ts", "index.d.ts", typescriptHost.Declaration),
@@ -488,9 +494,11 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 	}
 
 	typescriptFiles := []File{
+		NewFile("types.ts", "types.ts", typescriptTypes.Typescript),
 		NewFile("types.js", "types.js", typescriptTypes.Javascript),
 		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
 		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.ts", "index.ts", typescriptHost.Typescript),
 		NewFile("index.js", "index.js", typescriptHost.Javascript),
 		NewFile("index.js.map", "index.js.map", typescriptHost.SourceMap),
 		NewFile("index.d.ts", "index.d.ts", typescriptHost.Declaration),

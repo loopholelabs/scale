@@ -7,6 +7,7 @@ import { Signature as SignatureInterface } from "@loopholelabs/scale-signature-i
 import { Decoder, Encoder, Kind } from "@loopholelabs/polyglot";
 
 export * from "./types";
+import { {{ .signature_schema.Context }} } from "./types";
 
 const hash = "{{ .signature_hash }}"
 
@@ -45,7 +46,9 @@ export class Signature implements SignatureInterface {
     //
     // This method is meant to be used by the Scale Runtime to serialize the Signature
     Write(): Uint8Array {
-        return this.context.encode(new Uint8Array());
+        const enc = new Encoder();
+        this.context.encode(enc);
+        return enc.bytes;
     }
 
     // Error writes the signature into a Uint8Array and returns it

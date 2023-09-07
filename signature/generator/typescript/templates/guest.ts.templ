@@ -10,6 +10,7 @@ let WRITE_BUFFER: ArrayBuffer = new Uint8Array().buffer;
 let READ_BUFFER: ArrayBuffer = new Uint8Array().buffer;
 
 export * from "./types";
+import { {{ .signature_schema.Context }} } from "./types";
 
 const hash = "{{ .signature_hash }}"
 
@@ -17,7 +18,9 @@ const hash = "{{ .signature_hash }}"
 //
 // Users should not use this method.
 export function Write(ctx: {{ .signature_schema.Context }}): number[] {
-    WRITE_BUFFER = ctx.encode(new Uint8Array()).buffer;
+    const enc = new Encoder();
+    ctx.encode(enc);
+    WRITE_BUFFER = enc.bytes;
     const addrof = (global as any)[SignatureInterface.TYPESCRIPT_ADDRESS_OF];
     const ptr = addrof(WRITE_BUFFER);
     const len = WRITE_BUFFER.byteLength;

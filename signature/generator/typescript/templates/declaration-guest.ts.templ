@@ -2,6 +2,7 @@
 // output: {{ .package_name }}
 
 export * from "./types";
+import { {{ .signature_schema.Context }} } from "./types";
 
 // Write serializes the signature into the global WRITE_BUFFER and returns the pointer to the buffer and its size
 //

@@ -4,7 +4,7 @@
     "source": "index.ts",
     "types": "index.d.ts",
     "scripts": {
-        "test": "tsc && jest index.test.ts"
+        "test": "jest index.test.ts"
     },
     "devDependencies": {
         "@types/jest": "^29.5.2",

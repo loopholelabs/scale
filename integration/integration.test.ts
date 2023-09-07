@@ -14,7 +14,27 @@
         limitations under the License.
 */
 
+import { ScaleFunc } from "../scalefunc/scalefunc";
+import { New as NewScale } from "../scale";
 
-test("TypescriptE2E", () => {
+import fs from "fs";
+import {Config} from "../config";
+import { New as NewSignature, Signature } from "./typescript_tests/host_signature";
+import {TextDecoder, TextEncoder} from "util";
 
+window.TextEncoder = TextEncoder;
+window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+
+test("test-typescript-host-rust-guest", async () => {
+    const file = fs.readFileSync(process.cwd() + "/integration/rust.scale")
+    const sf = ScaleFunc.Decode(file);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf);
+    const s = await NewScale(config);
+
+    const i = await s.Instance();
+    const sig = NewSignature();
+
+    await i.Run(sig);
+
+    expect(sig.context.stringField).toBe("This is a Rust Function");
 });

@@ -88,8 +88,9 @@ export class Module<T extends Signature> {
                 }
 
                 resolve();
+            } else {
+                throw new Error("no compiled module found in template");
             }
-            throw new Error("no compiled module found in template");
         });
     }
 

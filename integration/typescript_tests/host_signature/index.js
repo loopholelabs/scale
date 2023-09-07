@@ -28,13 +28,14 @@ __export(stdin_exports, {
 module.exports = __toCommonJS(stdin_exports);
 var import_polyglot = require("@loopholelabs/polyglot");
 __reExport(stdin_exports, require("./types"), module.exports);
+var import_types = require("./types");
 const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5";
 function New() {
   return new Signature();
 }
 class Signature {
   constructor() {
-    this.context = new ModelWithAllFieldTypes();
+    this.context = new import_types.ModelWithAllFieldTypes();
   }
   // Read reads the context from the given Uint8Array and returns an error if one occurred
   //
@@ -42,7 +43,7 @@ class Signature {
   Read(b) {
     const dec = new import_polyglot.Decoder(b);
     try {
-      Object.assign(this.context, ModelWithAllFieldTypes.decode(dec));
+      Object.assign(this.context, import_types.ModelWithAllFieldTypes.decode(dec));
     } catch (err) {
       return err;
     }
@@ -52,7 +53,9 @@ class Signature {
   //
   // This method is meant to be used by the Scale Runtime to serialize the Signature
   Write() {
-    return this.context.encode(new Uint8Array());
+    const enc = new import_polyglot.Encoder();
+    this.context.encode(enc);
+    return enc.bytes;
   }
   // Error writes the signature into a Uint8Array and returns it
   //

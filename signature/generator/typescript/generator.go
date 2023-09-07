@@ -56,6 +56,7 @@ const (
 var generator *Generator
 
 type Transpiled struct {
+	Typescript  []byte
 	Javascript  []byte
 	SourceMap   []byte
 	Declaration []byte
@@ -200,6 +201,7 @@ func (g *Generator) GenerateTypesTranspiled(signatureSchema *signature.Schema, p
 	}
 
 	return &Transpiled{
+		Typescript:  []byte(typescriptSource),
 		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
 		SourceMap:   result.Map,
 		Declaration: []byte(formatTS(declarationBuf.String())),
@@ -284,6 +286,7 @@ func (g *Generator) GenerateGuestTranspiled(signatureSchema *signature.Schema, p
 	}
 
 	return &Transpiled{
+		Typescript:  []byte(typescriptSource),
 		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
 		SourceMap:   result.Map,
 		Declaration: []byte(formatTS(declarationBuf.String())),
@@ -356,6 +359,7 @@ func (g *Generator) GenerateHostTranspiled(signatureSchema *signature.Schema, pa
 	}
 
 	return &Transpiled{
+		Typescript:  []byte(typescriptSource),
 		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
 		SourceMap:   result.Map,
 		Declaration: []byte(formatTS(declarationBuf.String())),

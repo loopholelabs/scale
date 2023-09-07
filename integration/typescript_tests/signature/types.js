@@ -722,7 +722,7 @@ class ModelWithEmbeddedModels {
     const embeddedModelArrayWithMultipleFieldsAccessorLength = this.embeddedModelArrayWithMultipleFieldsAccessor.length;
     encoder.array(embeddedModelArrayWithMultipleFieldsAccessorLength, import_polyglot.Kind.Any);
     for (let i = 0; i < embeddedModelArrayWithMultipleFieldsAccessorLength; i += 1) {
-      let el = this.embeddedModelArrayWithMultipleFieldsAccessor[i];
+      const el = this.embeddedModelArrayWithMultipleFieldsAccessor[i];
       el.encode(encoder);
     }
   }
@@ -782,7 +782,7 @@ class ModelWithEmbeddedModelsAndDescription {
     const embeddedModelArrayWithMultipleFieldsAccessorLength = this.embeddedModelArrayWithMultipleFieldsAccessor.length;
     encoder.array(embeddedModelArrayWithMultipleFieldsAccessorLength, import_polyglot.Kind.Any);
     for (let i = 0; i < embeddedModelArrayWithMultipleFieldsAccessorLength; i += 1) {
-      let el = this.embeddedModelArrayWithMultipleFieldsAccessor[i];
+      const el = this.embeddedModelArrayWithMultipleFieldsAccessor[i];
       el.encode(encoder);
     }
   }
@@ -856,7 +856,7 @@ class ModelWithEmbeddedModelsAccessor {
     const embeddedModelArrayWithMultipleFieldsAccessorLength = this.#embeddedModelArrayWithMultipleFieldsAccessor.length;
     encoder.array(embeddedModelArrayWithMultipleFieldsAccessorLength, import_polyglot.Kind.Any);
     for (let i = 0; i < embeddedModelArrayWithMultipleFieldsAccessorLength; i += 1) {
-      let el = this.#embeddedModelArrayWithMultipleFieldsAccessor[i];
+      const el = this.#embeddedModelArrayWithMultipleFieldsAccessor[i];
       el.encode(encoder);
     }
   }
@@ -930,7 +930,7 @@ class ModelWithEmbeddedModelsAccessorAndDescription {
     const embeddedModelArrayWithMultipleFieldsAccessorLength = this.#embeddedModelArrayWithMultipleFieldsAccessor.length;
     encoder.array(embeddedModelArrayWithMultipleFieldsAccessorLength, import_polyglot.Kind.Any);
     for (let i = 0; i < embeddedModelArrayWithMultipleFieldsAccessorLength; i += 1) {
-      let el = this.#embeddedModelArrayWithMultipleFieldsAccessor[i];
+      const el = this.#embeddedModelArrayWithMultipleFieldsAccessor[i];
       el.encode(encoder);
     }
   }
@@ -1178,7 +1178,7 @@ class ModelWithAllFieldTypes {
     const modelArrayFieldLength = this.modelArrayField.length;
     encoder.array(modelArrayFieldLength, import_polyglot.Kind.Any);
     for (let i = 0; i < modelArrayFieldLength; i += 1) {
-      let el = this.modelArrayField[i];
+      const el = this.modelArrayField[i];
       el.encode(encoder);
     }
     encoder.string(this.stringField);

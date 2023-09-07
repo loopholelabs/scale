@@ -7,5 +7,5 @@
   "testMatch": [
     "**/*.test.ts"
   ],
-  "testPathIgnorePatterns": ["dist", "compile", "target", "node_modules", "integration"]
+  "testPathIgnorePatterns": ["dist", "compile", "target", "node_modules", "integration/typescript_tests"]
 }
