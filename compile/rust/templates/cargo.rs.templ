@@ -1,6 +1,6 @@
 [package]
-name = "{{ .package }}"
-version = "{{ .version }}"
+name = "compile"
+version = "0.1.0"
 edition = "2021"
 
 [lib]
@@ -8,19 +8,15 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-{{ range $dependency := .dependencies -}}
-{{ $dependency.Name }} = "{{ $dependency.Version }}"
-{{end -}}
-
-{{ if .signature_path }}
-{{ .signature_dependency }} = { package = "{{ .signature_package }}", path = "{{ .signature_path }}" }
+{{ if .signature_dependency.Path }}
+signature = { package = "{{ .signature_dependency.Package }}", path = "{{ .signature_dependency.Path }}" }
 {{ end }}
 
-{{ if .signature_version }}
-{{ .signature_dependency }} = { package = "{{ .signature_package }}", version = "{{ .signature_version }}", registry = "scale" }
+{{ if .signature_dependency.Version }}
+signature = { package = "{{ .signature_dependency.Package }}", version = "{{ .signature_dependency.Version }}", registry = "scale" }
 {{ end }}
 
-{{ .function_dependency }} = { path = "{{ .function_path }}" }
+{{ .package_schema.Name }} = { path = "{{ .function_path }}" }
 
 [profile.release]
 opt-level = 3

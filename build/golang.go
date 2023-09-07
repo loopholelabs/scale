@@ -155,25 +155,12 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	dependencies := []*scalefunc.Dependency{
-		{
-			Name:     "signature",
-			Version:  "v0.1.0",
-			Metadata: nil,
-		},
-		{
-			Name:     options.Scalefile.Name,
-			Version:  "v0.1.0",
-			Metadata: nil,
-		},
-	}
-
-	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureDependencyPath, signatureDependencyVersion, options.SourceDirectory, dependencies, "compile")
+	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureDependencyPath, signatureDependencyVersion, options.SourceDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}
 
-	mainFile, err := golang.GenerateGoMain(options.SignatureSchema, options.Scalefile, options.Version)
+	mainFile, err := golang.GenerateGoMain(options.Scalefile, options.SignatureSchema)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
 	}

@@ -11,70 +11,134 @@
 	limitations under the License.
 */
 
-package golang
+package typescript
 
 import (
-	"golang.org/x/mod/modfile"
+	"encoding/json"
+	"errors"
 )
 
+var (
+	ErrInvalidManifest = errors.New("invalid manifest")
+)
+
+type PackageJSON struct {
+	Name            string            `json:"name"`
+	Version         string            `json:"version"`
+	Description     string            `json:"description,omitempty"`
+	License         string            `json:"license,omitempty"`
+	Files           []string          `json:"files,omitempty"`
+	Main            string            `json:"main,omitempty"`
+	Browser         string            `json:"browser,omitempty"`
+	Dependencies    map[string]string `json:"dependencies,omitempty"`
+	DevDependencies map[string]string `json:"devDependencies,omitempty"`
+
+	internal map[string]interface{}
+}
+
 type Manifest struct {
-	modfile *modfile.File
+	packageJSON *PackageJSON
 }
 
 func ParseManifest(data []byte) (*Manifest, error) {
-	file, err := modfile.Parse("go.mod", data, nil)
+	pkgJSON := new(PackageJSON)
+	pkgJSON.internal = make(map[string]interface{})
+
+	err := json.Unmarshal(data, &pkgJSON.internal)
 	if err != nil {
 		return nil, err
 	}
+
+	var ok bool
+	pkgJSON.Name, ok = pkgJSON.internal["name"].(string)
+	if !ok {
+		return nil, ErrInvalidManifest
+	}
+	pkgJSON.Version, ok = pkgJSON.internal["version"].(string)
+	if !ok {
+		return nil, ErrInvalidManifest
+	}
+	pkgJSON.Description, _ = pkgJSON.internal["description"].(string)
+	pkgJSON.License, _ = pkgJSON.internal["license"].(string)
+
+	files := pkgJSON.internal["files"]
+	if files != nil {
+		pkgJSON.Files = make([]string, len(files.([]interface{})))
+		for i, v := range files.([]interface{}) {
+			pkgJSON.Files[i] = v.(string)
+		}
+	}
+
+	pkgJSON.Main, _ = pkgJSON.internal["main"].(string)
+	pkgJSON.Browser, _ = pkgJSON.internal["browser"].(string)
+
+	dependencies := pkgJSON.internal["dependencies"]
+	if dependencies != nil {
+		pkgJSON.Dependencies = make(map[string]string, len(dependencies.(map[string]interface{})))
+		for k, v := range dependencies.(map[string]interface{}) {
+			pkgJSON.Dependencies[k] = v.(string)
+		}
+	}
+
+	devDependencies := pkgJSON.internal["devDependencies"]
+	if devDependencies != nil {
+		pkgJSON.DevDependencies = make(map[string]string, len(devDependencies.(map[string]interface{})))
+		for k, v := range devDependencies.(map[string]interface{}) {
+			pkgJSON.DevDependencies[k] = v.(string)
+		}
+	}
+
 	return &Manifest{
-		modfile: file,
+		packageJSON: pkgJSON,
 	}, nil
 }
 
-func (m *Manifest) AddReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string) error {
-	return m.modfile.AddReplace(oldDependency, oldVersion, newDependency, newVersion)
-}
-
-func (m *Manifest) AddRequire(dependency string, version string) error {
-	return m.modfile.AddRequire(dependency, version)
-}
-
-func (m *Manifest) HasRequire(dependency string, version string, lax bool) bool {
-	for _, v := range m.modfile.Require {
-		if v.Mod.Path == dependency && (lax || v.Mod.Version == version) {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *Manifest) HasReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string, lax bool) bool {
-	for _, v := range m.modfile.Replace {
-		if v.Old.Path == oldDependency && v.New.Path == newDependency && (lax || (v.Old.Version == oldVersion && v.New.Version == newVersion)) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (m *Manifest) GetReplacement(dependency string) (string, string) {
-	for _, v := range m.modfile.Replace {
-		if v.Old.Path == dependency {
-			return v.New.Version, v.New.Path
-		}
-	}
-	return "", ""
-}
-
-func (m *Manifest) RemoveRequire(dependency string) error {
-	return m.modfile.DropRequire(dependency)
-}
-
-func (m *Manifest) RemoveReplacement(dependency string, version string) error {
-	return m.modfile.DropReplace(dependency, version)
-}
-
 func (m *Manifest) Write() ([]byte, error) {
-	return m.modfile.Format()
+
+	m.packageJSON.internal["name"] = m.packageJSON.Name
+	m.packageJSON.internal["version"] = m.packageJSON.Version
+
+	if m.packageJSON.Description == "" {
+		delete(m.packageJSON.internal, "description")
+	} else {
+		m.packageJSON.internal["description"] = m.packageJSON.Description
+	}
+
+	if m.packageJSON.License == "" {
+		delete(m.packageJSON.internal, "license")
+	} else {
+		m.packageJSON.internal["license"] = m.packageJSON.License
+	}
+
+	if len(m.packageJSON.Files) == 0 {
+		delete(m.packageJSON.internal, "files")
+	} else {
+		m.packageJSON.internal["files"] = m.packageJSON.Files
+	}
+
+	if m.packageJSON.Main == "" {
+		delete(m.packageJSON.internal, "main")
+	} else {
+		m.packageJSON.internal["main"] = m.packageJSON.Main
+	}
+
+	if m.packageJSON.Browser == "" {
+		delete(m.packageJSON.internal, "browser")
+	} else {
+		m.packageJSON.internal["browser"] = m.packageJSON.Browser
+	}
+
+	if len(m.packageJSON.Dependencies) == 0 {
+		delete(m.packageJSON.internal, "dependencies")
+	} else {
+		m.packageJSON.internal["dependencies"] = m.packageJSON.Dependencies
+	}
+
+	if len(m.packageJSON.DevDependencies) == 0 {
+		delete(m.packageJSON.internal, "devDependencies")
+	} else {
+		m.packageJSON.internal["devDependencies"] = m.packageJSON.DevDependencies
+	}
+
+	return json.Marshal(m.packageJSON.internal)
 }

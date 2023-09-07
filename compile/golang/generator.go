@@ -15,28 +15,24 @@ package golang
 
 import (
 	"bytes"
+	"github.com/loopholelabs/scale/version"
 	"go/format"
 	"strings"
 	"text/template"
 
 	"github.com/loopholelabs/scale/compile/golang/templates"
 	"github.com/loopholelabs/scale/scalefile"
-	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
-)
-
-const (
-	DefaultVersion = "v0.1.0"
 )
 
 var generator *Generator
 
-func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
-	return generator.GenerateGoModfile(schema, signatureImport, signatureVersion, functionImport, dependencies, packageName)
+func GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string) ([]byte, error) {
+	return generator.GenerateGoModfile(packageSchema, signatureImport, signatureVersion, functionImport)
 }
 
-func GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
-	return generator.GenerateGoMain(signature, schema, version)
+func GenerateGoMain(packageSchema *scalefile.Schema, signatureSchema *signature.Schema) ([]byte, error) {
+	return generator.GenerateGoMain(packageSchema, signatureSchema)
 }
 
 func init() {
@@ -53,7 +49,7 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
+func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string) ([]byte, error) {
 	if signatureVersion == "" && !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
 		signatureImport = "./" + signatureImport
 	}
@@ -64,16 +60,10 @@ func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport 
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"package":                  packageName,
-		"dependencies":             dependencies,
-		"old_signature_dependency": "signature",
-		"old_signature_version":    DefaultVersion,
-		"old_function_dependency":  schema.Name,
-		"old_function_version":     DefaultVersion,
-		"new_signature_dependency": signatureImport,
-		"new_signature_version":    signatureVersion,
-		"new_function_dependency":  functionImport,
-		"new_function_version":     "",
+		"package_schema":    packageSchema,
+		"signature_import":  signatureImport,
+		"signature_version": signatureVersion,
+		"function_import":   functionImport,
 	})
 	if err != nil {
 		return nil, err
@@ -82,12 +72,12 @@ func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport 
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
+func (g *Generator) GenerateGoMain(packageSchema *scalefile.Schema, signatureSchema *signature.Schema) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "main.go.templ", map[string]interface{}{
-		"version":   version,
-		"signature": signature,
-		"schema":    schema,
+		"generator_version": version.Version(),
+		"signature_schema":  signatureSchema,
+		"package_schema":    packageSchema,
 	})
 	if err != nil {
 		return nil, err

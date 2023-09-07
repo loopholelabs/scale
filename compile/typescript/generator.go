@@ -11,37 +11,13 @@
 	limitations under the License.
 */
 
-package golang
+package typescript
 
 import (
-	"bytes"
-	"go/format"
-	"strings"
 	"text/template"
 
-	"github.com/loopholelabs/scale/compile/golang/templates"
-	"github.com/loopholelabs/scale/scalefile"
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/compile/typescript/templates"
 )
-
-const (
-	DefaultVersion = "v0.1.0"
-)
-
-var generator *Generator
-
-func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
-	return generator.GenerateGoModfile(schema, signatureImport, signatureVersion, functionImport, dependencies, packageName)
-}
-
-func GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
-	return generator.GenerateGoMain(signature, schema, version)
-}
-
-func init() {
-	generator = New()
-}
 
 type Generator struct {
 	template *template.Template
@@ -49,49 +25,49 @@ type Generator struct {
 
 func New() *Generator {
 	return &Generator{
-		template: template.Must(template.New("main").ParseFS(templates.FS, "*go.templ")),
+		template: template.Must(template.New("main").ParseFS(templates.FS, "*ts.templ")),
 	}
 }
 
-func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
-	if !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
-		signatureImport = "./" + signatureImport
-	}
+//func (g *Generator) GenerateTypescriptPackageJSON(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+//	if parsedSignatureDependency.Path != "" && !strings.HasPrefix(parsedSignatureDependency.Path, "/") && !strings.HasPrefix(parsedSignatureDependency.Path, "./") && !strings.HasPrefix(parsedSignatureDependency.Path, "../") {
+//		parsedSignatureDependency.Path = "./" + parsedSignatureDependency.Path
+//	}
+//
+//	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
+//		functionPath = "./" + functionPath
+//	}
+//
+//	buf := new(bytes.Buffer)
+//	err := g.template.ExecuteTemplate(buf, "packagejson.ts.templ", map[string]interface{}{
+//		"version":              packageVersion,
+//		"package":              packageName,
+//		"dependencies":         dependencies,
+//		"signature_dependency": "signature",
+//		"signature_package":    parsedSignatureDependency.Package,
+//		"signature_path":       parsedSignatureDependency.Path,
+//		"signature_version":    parsedSignatureDependency.Version,
+//		"function_dependency":  schema.Name,
+//		"function_path":        functionPath,
+//	})
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return buf.Bytes(), nil
+//}
 
-	if !strings.HasPrefix(functionImport, "/") && !strings.HasPrefix(functionImport, "./") && !strings.HasPrefix(functionImport, "../") {
-		functionImport = "./" + functionImport
-	}
-
-	buf := new(bytes.Buffer)
-	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"package":                  packageName,
-		"dependencies":             dependencies,
-		"old_signature_dependency": "signature",
-		"old_signature_version":    DefaultVersion,
-		"old_function_dependency":  schema.Name,
-		"old_function_version":     DefaultVersion,
-		"new_signature_dependency": signatureImport,
-		"new_signature_version":    signatureVersion,
-		"new_function_dependency":  functionImport,
-		"new_function_version":     "",
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func (g *Generator) GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	err := g.template.ExecuteTemplate(buf, "main.go.templ", map[string]interface{}{
-		"version":   version,
-		"signature": signature,
-		"schema":    schema,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return format.Source(buf.Bytes())
-}
+//
+//func (g *Generator) GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, scaleVersion string) ([]byte, error) {
+//	buf := new(bytes.Buffer)
+//	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
+//		"version":   scaleVersion,
+//		"signature": signature,
+//		"schema":    schema,
+//	})
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return buf.Bytes(), nil
+//}

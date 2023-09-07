@@ -132,12 +132,12 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, signatureDependency, options.SourceDirectory, nil, "compile", "0.1.0")
+	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, signatureDependency, options.SourceDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
 	}
 
-	libFile, err := rust.GenerateRustLib(options.SignatureSchema, options.Scalefile, options.Version)
+	libFile, err := rust.GenerateRustLib(options.Scalefile)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate lib.rs file: %w", err)
 	}

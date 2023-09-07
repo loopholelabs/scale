@@ -1,10 +1,11 @@
-module {{ .package }}
+module compile
 
 go 1.20
 
-replace {{ .old_signature_dependency }} {{ .old_signature_version }} => {{ .new_signature_dependency }} {{ .new_signature_version }}
-replace {{ .old_function_dependency }} {{ .old_function_version }} => {{ .new_function_dependency }} {{ .new_function_version }}
+replace signature v0.1.0 => {{ .signature_import }} {{ .signature_version }}
+replace {{ .package_schema.Name }} v0.1.0 => {{ .function_import }}
 
-{{ range $dependency := .dependencies -}}
-    require {{ $dependency.Name }} {{ $dependency.Version }}
-{{end -}}
+require (
+    signature v0.1.0
+    {{ .package_schema.Name }} v0.1.0
+)
