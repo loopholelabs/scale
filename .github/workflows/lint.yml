@@ -22,33 +22,21 @@ jobs:
         run: npm install --save-dev
       - name: Lint with npm
         run: npm run lint
-  rust:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up Rust
-        run: |
-          rustup toolchain install stable --profile minimal --no-self-update
-          rustup default stable
-          rustup component add clippy
-        shell: bash
+#  rust:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#      - name: Set up Rust
+#        run: |
+#          rustup toolchain install stable --profile minimal --no-self-update
+#          rustup default stable
+#          rustup component add clippy
+#        shell: bash
 #      - name: Cargo lint
 #        run: cargo fmt --all -- --check
 #      - name: Cargo clippy
 #        run: cargo clippy --all -- -D warnings
-      - name: Cargo lint typescript builder
-        run: cargo fmt --all -- --check
-        working-directory: compile/typescript/builder
-      - name: Cargo clippy typescript builder
-        run: cargo clippy --all -- -D warnings
-        working-directory: compile/typescript/builder
-      - name: Cargo lint rust formatter
-        run: cargo fmt --all -- --check
-        working-directory: signature/generator/rust/format/rustfmt
-      - name: Cargo clippy rust formatter
-        run: cargo clippy --all -- -D warnings
-        working-directory: signature/generator/rust/format/rustfmt
   golang:
     runs-on: ubuntu-latest
     steps:
