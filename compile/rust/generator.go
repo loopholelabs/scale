@@ -15,9 +15,10 @@ package rust
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/version"
 	"strings"
 	"text/template"
+
+	"github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/compile/rust/templates"
 	"github.com/loopholelabs/scale/scalefile"

@@ -29,7 +29,7 @@ func New() *Generator {
 	}
 }
 
-//func (g *Generator) GenerateTypescriptPackageJSON(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+// func (g *Generator) GenerateTypescriptPackageJSON(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
 //	if parsedSignatureDependency.Path != "" && !strings.HasPrefix(parsedSignatureDependency.Path, "/") && !strings.HasPrefix(parsedSignatureDependency.Path, "./") && !strings.HasPrefix(parsedSignatureDependency.Path, "../") {
 //		parsedSignatureDependency.Path = "./" + parsedSignatureDependency.Path
 //	}
@@ -58,7 +58,7 @@ func New() *Generator {
 //}
 
 //
-//func (g *Generator) GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, scaleVersion string) ([]byte, error) {
+// func (g *Generator) GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, scaleVersion string) ([]byte, error) {
 //	buf := new(bytes.Buffer)
 //	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
 //		"version":   scaleVersion,

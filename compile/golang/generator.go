@@ -15,10 +15,11 @@ package golang
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/version"
 	"go/format"
 	"strings"
 	"text/template"
+
+	"github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/compile/golang/templates"
 	"github.com/loopholelabs/scale/scalefile"
