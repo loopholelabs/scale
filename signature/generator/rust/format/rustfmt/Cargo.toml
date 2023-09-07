@@ -1,0 +1,19 @@
+
+[package]
+name = "rustfmt"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+prettyplease = "0.2.14"
+
+signature = { package = "local_rustfmt_latest_guest", path = "../signature/guest" }
+syn = "2.0.31"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

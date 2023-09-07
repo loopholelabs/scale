@@ -3,9 +3,9 @@
   "collectCoverage": true,
   "coverageDirectory": "coverage",
   "preset": "ts-jest",
-  "testEnvironment": "node",
+  "testEnvironment": "jsdom",
   "testMatch": [
     "**/*.test.ts"
   ],
-  "testPathIgnorePatterns": ["ts/compile"]
+  "testPathIgnorePatterns": ["dist", "compile", "target", "node_modules", "integration/typescript_tests"]
 }

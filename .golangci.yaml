@@ -1,0 +1,38 @@
+linters:
+  enable:
+    - gocritic
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - megacheck
+    - revive
+    - rowserrcheck
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unused
+  disable:
+    - errcheck
+    - gocognit
+    - gocyclo
+    - goconst
+
+linters-settings:
+  gocognit:
+    # minimal code complexity to report, 30 by default (but we recommend 10-20)
+    disable: true
+  gocyclo:
+    # minimal code complexity to report, 30 by default (but we recommend 10-20)
+    min-complexity: 20
+  gofmt:
+    # simplify code: gofmt with `-s` option, true by default
+    simplify: true
+  goimports:
+    # put imports beginning with prefix after 3rd-party packages;
+    # it's a comma-separated list of prefixes
+    local-prefixes: github.com/loopholelabs/scale
+  govet:
+    # enable or disable analyzers by name
+    disable:
+      - shadow

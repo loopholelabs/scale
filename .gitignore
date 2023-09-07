@@ -1,10 +1,8 @@
 .idea
-*.bak
-.fleet
+target/
+Cargo.lock
 node_modules
+.parcel-cache
 dist
 coverage
-.parcel-cache
-*target
-Cargo.lock
-.DS_Store
+signature/integration/typescript_tests/*.js
