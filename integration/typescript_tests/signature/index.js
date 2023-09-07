@@ -41,41 +41,41 @@ function Write(ctx) {
   const enc = new import_polyglot.Encoder();
   ctx.encode(enc);
   WRITE_BUFFER = enc.bytes;
-  const addrof = global[import_scale_signature_interfaces.Signature.TYPESCRIPT_ADDRESS_OF];
+  const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
   const ptr = addrof(WRITE_BUFFER);
   const len = WRITE_BUFFER.byteLength;
   return [ptr, len];
 }
 function Read() {
   const dec = new import_polyglot.Decoder(new Uint8Array(READ_BUFFER));
-  return import_types.ModelWithAllFieldTypes.decode(dec).value;
+  return import_types.ModelWithAllFieldTypes.decode(dec);
 }
 function Error2(err) {
   const enc = new import_polyglot.Encoder();
   enc.error(err);
-  WRITE_BUFFER = enc.buffer;
-  const addrof = global[interfaces.TYPESCRIPT_ADDRESS_OF];
+  WRITE_BUFFER = enc.bytes;
+  const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
   const ptr = addrof(WRITE_BUFFER);
   const len = WRITE_BUFFER.byteLength;
   return [ptr, len];
 }
 function Resize(size) {
   READ_BUFFER = new Uint8Array(size).buffer;
-  const addrof = global[interfaces.TYPESCRIPT_ADDRESS_OF];
+  const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
   return addrof(READ_BUFFER);
 }
 function Hash() {
   const enc = new import_polyglot.Encoder();
   enc.string(hash);
-  WRITE_BUFFER = enc.buffer;
-  const addrof = global[interfaces.TYPESCRIPT_ADDRESS_OF];
+  WRITE_BUFFER = enc.bytes;
+  const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
   const ptr = addrof(WRITE_BUFFER);
   const len = WRITE_BUFFER.byteLength;
   return [ptr, len];
 }
 function Next(ctx) {
   const [ptr, len] = Write(ctx);
-  const next = global[interfaces.TYPESCRIPT_NEXT];
+  const next = global[import_scale_signature_interfaces.TYPESCRIPT_NEXT];
   next([ptr, len]);
   return Read();
 }

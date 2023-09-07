@@ -189,6 +189,25 @@ func TestGolangHostRustGuest(t *testing.T) {
 	require.Equal(t, "This is a Rust Function", sig.Context.StringField)
 }
 
+func TestTypescriptHostGolangGuest(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	schema := compileGolangGuest(t)
+	err = os.WriteFile(wd+"/golang.scale", schema.Encode(), 0644)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Remove(wd + "/golang.scale")
+		require.NoError(t, err)
+	})
+
+	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-typescript-host-golang-guest")
+	cmd.Dir = wd
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
 func TestTypescriptHostRustGuest(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)

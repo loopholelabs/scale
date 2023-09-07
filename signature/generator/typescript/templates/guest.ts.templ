@@ -3,7 +3,7 @@
 
 /* eslint no-bitwise: off */
 
-import { Signature as SignatureInterface } from "@loopholelabs/scale-signature-interfaces";
+import { Signature as SignatureInterface, TYPESCRIPT_ADDRESS_OF, TYPESCRIPT_NEXT} from "@loopholelabs/scale-signature-interfaces";
 import { Decoder, Encoder, Kind } from "@loopholelabs/polyglot";
 
 let WRITE_BUFFER: ArrayBuffer = new Uint8Array().buffer;
@@ -21,7 +21,7 @@ export function Write(ctx: {{ .signature_schema.Context }}): number[] {
     const enc = new Encoder();
     ctx.encode(enc);
     WRITE_BUFFER = enc.bytes;
-    const addrof = (global as any)[SignatureInterface.TYPESCRIPT_ADDRESS_OF];
+    const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
     const ptr = addrof(WRITE_BUFFER);
     const len = WRITE_BUFFER.byteLength;
     return [ptr, len];
@@ -32,7 +32,7 @@ export function Write(ctx: {{ .signature_schema.Context }}): number[] {
 // Users should not use this method.
 export function Read(): {{ .signature_schema.Context }} | undefined {
     const dec = new Decoder(new Uint8Array(READ_BUFFER));
-    return {{ .signature_schema.Context }}.decode(dec).value;
+    return {{ .signature_schema.Context }}.decode(dec);
 }
 
 // Error serializes an error into the global writeBuffer and returns a pointer to the buffer and its size
@@ -41,8 +41,8 @@ export function Read(): {{ .signature_schema.Context }} | undefined {
 export function Error(err: Error): number[] {
     const enc = new Encoder();
     enc.error(err);
-    WRITE_BUFFER = enc.buffer;
-    const addrof = (global as any)[interfaces.TYPESCRIPT_ADDRESS_OF];
+    WRITE_BUFFER = enc.bytes;
+    const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
     const ptr = addrof(WRITE_BUFFER);
     const len = WRITE_BUFFER.byteLength;
     return [ptr, len];
@@ -53,7 +53,7 @@ export function Error(err: Error): number[] {
 // Users should not use this method.
 export function Resize(size: number): number {
     READ_BUFFER = new Uint8Array(size).buffer;
-    const addrof = (global as any)[interfaces.TYPESCRIPT_ADDRESS_OF];
+    const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
     return addrof(READ_BUFFER);
 }
 
@@ -63,8 +63,8 @@ export function Resize(size: number): number {
 export function Hash(): number[] {
     const enc = new Encoder();
     enc.string(hash);
-    WRITE_BUFFER = enc.buffer;
-    const addrof = (global as any)[interfaces.TYPESCRIPT_ADDRESS_OF];
+    WRITE_BUFFER = enc.bytes;
+    const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
     const ptr = addrof(WRITE_BUFFER);
     const len = WRITE_BUFFER.byteLength;
     return [ptr, len];
@@ -73,7 +73,7 @@ export function Hash(): number[] {
 // Next calls the next function in the Scale Function Chain
 export function Next(ctx: {{ .signature_schema.Context }}): {{ .signature_schema.Context }} | undefined {
     const [ptr, len] = Write(ctx);
-    const next = (global as any)[interfaces.TYPESCRIPT_NEXT];
+    const next = (global as any)[TYPESCRIPT_NEXT];
     next([ptr, len]);
     return Read();
 }

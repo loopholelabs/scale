@@ -38,3 +38,17 @@ test("test-typescript-host-rust-guest", async () => {
 
     expect(sig.context.stringField).toBe("This is a Rust Function");
 });
+
+test("test-typescript-host-golang-guest", async () => {
+    const file = fs.readFileSync(process.cwd() + "/integration/golang.scale")
+    const sf = ScaleFunc.Decode(file);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf);
+    const s = await NewScale(config);
+
+    const i = await s.Instance();
+    const sig = NewSignature();
+
+    await i.Run(sig);
+
+    expect(sig.context.stringField).toBe("This is a Golang Function");
+});

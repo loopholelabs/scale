@@ -37,7 +37,7 @@ export class Signature implements SignatureInterface {
     try {
       Object.assign(this.context, ModelWithAllFieldTypes.decode(dec));
     } catch (err) {
-      return err;
+      return err as Error;
     }
     return undefined;
   }
