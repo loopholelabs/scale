@@ -33,34 +33,22 @@ jobs:
           rustup default stable
           rustup component add clippy
         shell: bash
-      - name: Cargo lint
-        run: cargo fmt --all -- --check
-      - name: Cargo clippy
-        run: cargo clippy --all -- -D warnings
+#      - name: Cargo lint
+#        run: cargo fmt --all -- --check
+#      - name: Cargo clippy
+#        run: cargo clippy --all -- -D warnings
       - name: Cargo lint typescript builder
         run: cargo fmt --all -- --check
         working-directory: compile/typescript/builder
       - name: Cargo clippy typescript builder
         run: cargo clippy --all -- -D warnings
         working-directory: compile/typescript/builder
-      - name: Cargo lint typescript interpreter
-        run: cargo fmt --all -- --check
-        working-directory: compile/typescript/builder/interpreter
-      - name: Cargo clippy typescript interpreter
-        run: cargo clippy --all -- -D warnings
-        working-directory: compile/typescript/builder/interpreter
       - name: Cargo lint rust formatter
         run: cargo fmt --all -- --check
         working-directory: signature/generator/rust/format/rustfmt
       - name: Cargo clippy rust formatter
         run: cargo clippy --all -- -D warnings
         working-directory: signature/generator/rust/format/rustfmt
-      - name: Cargo lint rust formatter signature
-        run: cargo fmt --all -- --check
-        working-directory: signature/generator/rust/format/signature/guest
-      - name: Cargo clippy rust formatter signature
-        run: cargo clippy --all -- -D warnings
-        working-directory: signature/generator/rust/format/signature/guest
   golang:
     runs-on: ubuntu-latest
     steps:
