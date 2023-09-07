@@ -180,8 +180,17 @@ func (g *Generator) GenerateTypesTranspiled(signatureSchema *signature.Schema, p
 		packageName = defaultPackageName
 	}
 
-	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "declaration.ts.templ", map[string]any{
+	headerBuf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
+		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	declarationBuf := new(bytes.Buffer)
+	err = g.templ.ExecuteTemplate(declarationBuf, "declaration.ts.templ", map[string]any{
 		"signature_schema":  signatureSchema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
@@ -191,9 +200,9 @@ func (g *Generator) GenerateTypesTranspiled(signatureSchema *signature.Schema, p
 	}
 
 	return &Transpiled{
-		Javascript:  append(result.Code, []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
+		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
 		SourceMap:   result.Map,
-		Declaration: []byte(formatTS(buf.String())),
+		Declaration: []byte(formatTS(declarationBuf.String())),
 	}, nil
 }
 
@@ -255,8 +264,17 @@ func (g *Generator) GenerateGuestTranspiled(signatureSchema *signature.Schema, p
 		packageName = defaultPackageName
 	}
 
-	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "declaration-guest.ts.templ", map[string]any{
+	headerBuf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
+		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	declarationBuf := new(bytes.Buffer)
+	err = g.templ.ExecuteTemplate(declarationBuf, "declaration-guest.ts.templ", map[string]any{
 		"signature_schema":  signatureSchema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
@@ -266,9 +284,9 @@ func (g *Generator) GenerateGuestTranspiled(signatureSchema *signature.Schema, p
 	}
 
 	return &Transpiled{
-		Javascript:  append(result.Code, []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
+		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
 		SourceMap:   result.Map,
-		Declaration: []byte(formatTS(buf.String())),
+		Declaration: []byte(formatTS(declarationBuf.String())),
 	}, nil
 }
 
@@ -318,8 +336,17 @@ func (g *Generator) GenerateHostTranspiled(signatureSchema *signature.Schema, pa
 		packageName = defaultPackageName
 	}
 
-	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "declaration-host.ts.templ", map[string]any{
+	headerBuf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
+		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	declarationBuf := new(bytes.Buffer)
+	err = g.templ.ExecuteTemplate(declarationBuf, "declaration-host.ts.templ", map[string]any{
 		"signature_schema":  signatureSchema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
@@ -329,9 +356,9 @@ func (g *Generator) GenerateHostTranspiled(signatureSchema *signature.Schema, pa
 	}
 
 	return &Transpiled{
-		Javascript:  append(result.Code, []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
+		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
 		SourceMap:   result.Map,
-		Declaration: []byte(formatTS(buf.String())),
+		Declaration: []byte(formatTS(declarationBuf.String())),
 	}, nil
 }
 

@@ -33,7 +33,7 @@ import (
 	"testing"
 )
 
-func TestGolangE2E(t *testing.T) {
+func compileGolangGuest(t *testing.T) *scalefunc.Schema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -90,23 +90,10 @@ func TestGolangE2E(t *testing.T) {
 	assert.Equal(t, scalefunc.Go, schema.Language)
 	assert.Equal(t, 0, len(schema.Dependencies))
 
-	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
-	runtime, err := scale.New(cfg)
-	require.NoError(t, err)
-
-	instance, err := runtime.Instance()
-	require.NoError(t, err)
-
-	sig := hostSignature.New()
-
-	ctx := context.Background()
-	err = instance.Run(ctx, sig)
-	require.NoError(t, err)
-
-	require.Equal(t, "This is a Golang Function", sig.Context.StringField)
+	return schema
 }
 
-func TestRustE2E(t *testing.T) {
+func compileRustGuest(t *testing.T) *scalefunc.Schema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -162,6 +149,48 @@ func TestRustE2E(t *testing.T) {
 	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
 	assert.Equal(t, scalefunc.Go, schema.Language)
 	assert.Equal(t, 0, len(schema.Dependencies))
+
+	return schema
+}
+
+func TestGolangHostGolangGuest(t *testing.T) {
+	schema := compileGolangGuest(t)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+
+	require.Equal(t, "This is a Golang Function", sig.Context.StringField)
+}
+
+func TestGolangHostRustGuest(t *testing.T) {
+	schema := compileRustGuest(t)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+
+	require.Equal(t, "This is a Rust Function", sig.Context.StringField)
+}
+
+func TestTypescriptHostRustGuest(t *testing.T) {
+	schema := compileRustGuest(t)
 
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
 	runtime, err := scale.New(cfg)
