@@ -3,25 +3,25 @@ name: Lint
 on: [pull_request]
 
 jobs:
-#  typescript:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#      - name: Setup node
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version: "20"
-#          registry-url: "https://registry.npmjs.org"
-#      - name: Cache the dependency directories
-#        uses: actions/cache@v3
-#        with:
-#          path: node_modules
-#          key: ${{ runner.os }}-${{ hashFiles('*.json') }}
-#      - name: Install dependencies with npm
-#        run: npm install --save-dev
-#      - name: Lint with npm
-#        run: npm run lint
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache the dependency directories
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ hashFiles('*.json') }}
+      - name: Install dependencies with npm
+        run: npm install --save-dev
+      - name: Lint with npm
+        run: npm run lint
 #  rust:
 #    runs-on: ubuntu-latest
 #    steps:
