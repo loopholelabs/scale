@@ -38,9 +38,6 @@ var (
 )
 
 type LocalGolangOptions struct {
-	// Version is the generator version
-	Version string
-
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 

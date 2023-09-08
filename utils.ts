@@ -14,13 +14,6 @@
 	limitations under the License.
 */
 
-export function PackUint32(ptr: number, len: number): bigint {
-	if (ptr > 0xffffffff || len > 0xffffffff) {
-		throw new Error("ptr or len is too large");
-	}
-	return (BigInt(ptr) << BigInt(32)) | BigInt(len);
-}
-
 // Unpack a memory ref from 64bit to 2x32bits
 export function UnpackUint32(packed: bigint): [number, number] {
 	const ptr = Number((packed >> BigInt(32)) & BigInt(0xffffffff));

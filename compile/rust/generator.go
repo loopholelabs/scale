@@ -73,7 +73,7 @@ func (g *Generator) GenerateRustCargofile(packageSchema *scalefile.Schema, parse
 func (g *Generator) GenerateRustLib(packageSchema *scalefile.Schema) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
-		"generator_version": version.Version(),
+		"generator_version": strings.TrimPrefix(version.Version(), "v"),
 		"package_schema":    packageSchema,
 	})
 	if err != nil {

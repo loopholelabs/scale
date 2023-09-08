@@ -37,9 +37,6 @@ var (
 )
 
 type LocalRustOptions struct {
-	// Version is the generator version
-	Version string
-
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
@@ -215,7 +212,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
 		SignatureSchema: options.SignatureSchema,
 		SignatureHash:   hex.EncodeToString(hash),
-		Language:        scalefunc.Go,
+		Language:        scalefunc.Rust,
 		Stateless:       options.Scalefile.Stateless,
 		Dependencies:    nil,
 		Function:        data,

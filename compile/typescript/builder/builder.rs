@@ -15,7 +15,7 @@
 */
 
 use binaryen::{CodegenConfig, Module};
-use std::path::Path;
+use std::io::Write;
 use wizer::Wizer;
 
 pub(crate) struct Builder<'a> {
@@ -30,7 +30,6 @@ impl<'a> Builder<'a> {
     pub fn build_interpreter(
         self,
         optimize: bool,
-        out_path: impl AsRef<Path>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut interpreter = Wizer::new()
             .wasm_bulk_memory(true)
@@ -56,7 +55,7 @@ impl<'a> Builder<'a> {
             }
         }
 
-        std::fs::write(out_path.as_ref(), interpreter)?;
+        std::io::stdout().write_all(&interpreter)?;
         Ok(())
     }
 }

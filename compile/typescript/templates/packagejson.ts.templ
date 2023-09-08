@@ -1,9 +1,14 @@
 {
-    "name": "{{ .package_name }}",
-    "version": "{{ .package_version }}",
+    "name": "compile",
+    "version": "0.1.0",
     "description": "{{ .package_schema.Description }}",
     "main": "index.ts",
     "dependencies": {
-        "signature": "
-    },
+        {{ if .signature_path }}
+        "signature": "file:{{ .signature_path}}"
+        {{ end }}
+        {{ if .signature_version }}
+        "signature": "{{ .signature_version }}"
+        {{ end }}
+    }
 }

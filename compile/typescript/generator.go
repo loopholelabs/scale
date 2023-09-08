@@ -14,10 +14,28 @@
 package typescript
 
 import (
+	"bytes"
+	"github.com/loopholelabs/scale/scalefile"
+	"github.com/loopholelabs/scale/version"
+	"strings"
 	"text/template"
 
 	"github.com/loopholelabs/scale/compile/typescript/templates"
 )
+
+var generator *Generator
+
+func GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureVersion string) ([]byte, error) {
+	return generator.GenerateTypescriptPackageJSON(packageSchema, signaturePath, signatureVersion)
+}
+
+func GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
+	return generator.GenerateTypescriptIndex(packageSchema, functionPath)
+}
+
+func init() {
+	generator = New()
+}
 
 type Generator struct {
 	template *template.Template
@@ -29,45 +47,37 @@ func New() *Generator {
 	}
 }
 
-// func (g *Generator) GenerateTypescriptPackageJSON(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
-//	if parsedSignatureDependency.Path != "" && !strings.HasPrefix(parsedSignatureDependency.Path, "/") && !strings.HasPrefix(parsedSignatureDependency.Path, "./") && !strings.HasPrefix(parsedSignatureDependency.Path, "../") {
-//		parsedSignatureDependency.Path = "./" + parsedSignatureDependency.Path
-//	}
-//
-//	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
-//		functionPath = "./" + functionPath
-//	}
-//
-//	buf := new(bytes.Buffer)
-//	err := g.template.ExecuteTemplate(buf, "packagejson.ts.templ", map[string]interface{}{
-//		"version":              packageVersion,
-//		"package":              packageName,
-//		"dependencies":         dependencies,
-//		"signature_dependency": "signature",
-//		"signature_package":    parsedSignatureDependency.Package,
-//		"signature_path":       parsedSignatureDependency.Path,
-//		"signature_version":    parsedSignatureDependency.Version,
-//		"function_dependency":  schema.Name,
-//		"function_path":        functionPath,
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return buf.Bytes(), nil
-//}
+func (g *Generator) GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureVersion string) ([]byte, error) {
+	if signaturePath != "" && !strings.HasPrefix(signaturePath, "/") && !strings.HasPrefix(signaturePath, "./") && !strings.HasPrefix(signaturePath, "../") {
+		signaturePath = "./" + signaturePath
+	}
 
-//
-// func (g *Generator) GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, scaleVersion string) ([]byte, error) {
-//	buf := new(bytes.Buffer)
-//	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
-//		"version":   scaleVersion,
-//		"signature": signature,
-//		"schema":    schema,
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return buf.Bytes(), nil
-//}
+	buf := new(bytes.Buffer)
+	err := g.template.ExecuteTemplate(buf, "packagejson.ts.templ", map[string]interface{}{
+		"package_schema":    packageSchema,
+		"signature_path":    signaturePath,
+		"signature_version": signatureVersion,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (g *Generator) GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
+	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
+		functionPath = "./" + functionPath
+	}
+	buf := new(bytes.Buffer)
+	err := g.template.ExecuteTemplate(buf, "index.ts.templ", map[string]interface{}{
+		"generator_version": strings.TrimPrefix(version.Version(), "v"),
+		"package_schema":    packageSchema,
+		"function_path":     functionPath,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}

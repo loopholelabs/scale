@@ -93,8 +93,30 @@ func ParseManifest(data []byte) (*Manifest, error) {
 	}, nil
 }
 
-func (m *Manifest) Write() ([]byte, error) {
+func (m *Manifest) AddDependency(dependency string, version string) error {
+	m.packageJSON.Dependencies[dependency] = version
+	return nil
+}
 
+func (m *Manifest) HasDependency(dependency string) bool {
+	_, ok := m.packageJSON.Dependencies[dependency]
+	return ok
+}
+
+func (m *Manifest) GetDependency(dependency string) string {
+	dep, ok := m.packageJSON.Dependencies[dependency]
+	if !ok {
+		return ""
+	}
+	return dep
+}
+
+func (m *Manifest) RemoveDependency(dependency string) error {
+	delete(m.packageJSON.Dependencies, dependency)
+	return nil
+}
+
+func (m *Manifest) Write() ([]byte, error) {
 	m.packageJSON.internal["name"] = m.packageJSON.Name
 	m.packageJSON.internal["version"] = m.packageJSON.Version
 

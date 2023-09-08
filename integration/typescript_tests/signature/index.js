@@ -39,7 +39,11 @@ let READ_BUFFER = new Uint8Array().buffer;
 const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5";
 function Write(ctx) {
   const enc = new import_polyglot.Encoder();
-  ctx.encode(enc);
+  if (ctx === void 0) {
+    enc.null();
+  } else {
+    ctx.encode(enc);
+  }
   WRITE_BUFFER = enc.bytes;
   const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
   const ptr = addrof(WRITE_BUFFER);

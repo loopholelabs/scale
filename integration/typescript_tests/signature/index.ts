@@ -17,9 +17,13 @@ const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5"
 // Write serializes the signature into the global WRITE_BUFFER and returns the pointer to the buffer and its size
 //
 // Users should not use this method.
-export function Write(ctx: ModelWithAllFieldTypes): number[] {
+export function Write(ctx?: ModelWithAllFieldTypes): number[] {
   const enc = new Encoder();
-  ctx.encode(enc);
+  if (ctx === undefined) {
+    enc.null();
+  } else {
+    ctx.encode(enc);
+  }
   WRITE_BUFFER = enc.bytes;
   const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
   const ptr = addrof(WRITE_BUFFER);
@@ -71,7 +75,7 @@ export function Hash(): number[] {
 }
 
 // Next calls the next function in the Scale Function Chain
-export function Next(ctx: ModelWithAllFieldTypes): ModelWithAllFieldTypes | undefined {
+export function Next(ctx?: ModelWithAllFieldTypes): ModelWithAllFieldTypes | undefined {
   const [ptr, len] = Write(ctx);
   const next = (global as any)[TYPESCRIPT_NEXT];
   next([ptr, len]);
