@@ -36,17 +36,15 @@ func (s *EnumSchema) Validate(knownEnums map[string]struct{}) error {
 
 	if _, ok := knownEnums[s.Name]; ok {
 		return fmt.Errorf("duplicate enum name: %s", s.Name)
-	} else {
-		knownEnums[s.Name] = struct{}{}
 	}
 
+	knownEnums[s.Name] = struct{}{}
 	visitedValues := make(map[string]struct{}, 0)
 	for i := 0; i < len(s.Values); i++ {
 		if _, ok := visitedValues[s.Values[i]]; ok {
 			return fmt.Errorf("duplicate value in %s: %s", s.Name, s.Values[i])
-		} else {
-			visitedValues[s.Values[i]] = struct{}{}
 		}
+		visitedValues[s.Values[i]] = struct{}{}
 	}
 
 	return nil

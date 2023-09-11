@@ -28,6 +28,28 @@ var (
 	ErrInvalidOrganization = errors.New("invalid organization")
 )
 
+const (
+	DefaultDirectory = ".config/scale"
+)
+
+func getNameFromName(fileName string) string {
+	split := strings.Split(fileName, "_")
+	if len(split) != 5 {
+		return ""
+	}
+
+	return split[1]
+}
+
+func getTagFromName(fileName string) string {
+	split := strings.Split(fileName, "_")
+	if len(split) != 5 {
+		return ""
+	}
+
+	return split[2]
+}
+
 func getOrgFromName(fileName string) string {
 	split := strings.Split(fileName, "_")
 	if len(split) != 5 {

@@ -1,0 +1,53 @@
+{{ define "ts_numbers_limit_validator" }}
+{{- if . }}
+    {{- if and .Maximum .Minimum }}
+        if (val > {{ .Maximum }} || val < {{ .Minimum }}) {
+            throw new Error("value must be between {{ .Minimum }} and {{ .Maximum }}");
+        }
+    {{- else if .Minimum }}
+        if (val < {{ .Minimum }}) {
+            throw new Error("value must be greater or equal to {{ .Minimum }}");
+        }
+    {{- else if .Maximum }}
+        if (val > {{ .Maximum }}) {
+            throw new Error("value must be less than or equal to {{ .Maximum }}");
+        }
+    {{- end }}
+{{- end }}
+{{ end }}
+
+{{ define "ts_regex_validator" }}
+    {{- if . }}
+        if (!/{{ .Expression }}/.test(val)) {
+            throw new Error("value must match {{ .Expression }}");
+        }
+    {{- end }}
+{{ end }}
+
+{{ define "ts_length_validator" }}
+    {{- if . }}
+        {{- if and .Maximum .Minimum }}
+            if (val.length > {{ .Maximum }} || val.length < {{ .Minimum }}) {
+                throw new Error("length must be between {{ .Minimum }} and {{ .Maximum }}");
+            }
+        {{- else if .Minimum }}
+            if (val.length < {{ .Minimum }}) {
+                throw new Error("length must be greater than or equal to {{ .Minimum }}");
+            }
+        {{- else if .Maximum }}
+            if (val.length > {{ .Maximum }}) {
+                throw new Error("length must be less than or equal to {{ .Maximum }}");
+            }
+        {{- end }}
+    {{- end }}
+{{ end }}
+
+{{ define "ts_case_modifier" }}
+    {{- if . }}
+        {{- if eq .Kind "upper" }}
+            val = val.toUpperCase();
+        {{- else if eq .Kind "lower" }}
+            val = val.toLowerCase();
+        {{- end }}
+    {{- end }}
+{{ end }}

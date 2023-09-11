@@ -1,4 +1,4 @@
-//go:build !integration
+//go:build integration && !generate
 
 /*
 	Copyright 2023 Loophole Labs
@@ -16,85 +16,454 @@
 package integration
 
 import (
-	golangCompile "github.com/loopholelabs/scale/compile/golang"
+	"context"
+	"encoding/hex"
+	"fmt"
+	"github.com/loopholelabs/scale"
+	"github.com/loopholelabs/scale/build"
+	hostSignature "github.com/loopholelabs/scale/integration/golang_tests/host_signature"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
-	signatureSchema "github.com/loopholelabs/scale/signature"
-	golangSignature "github.com/loopholelabs/scale/signature/generator/golang"
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
+	"os/exec"
 	"testing"
 )
 
-func TestExampleSignature(t *testing.T) {
-	s, err := signatureSchema.ReadSchema("signatures/example.signature")
+func TestGolangE2E(t *testing.T) {
+	wd, err := os.Getwd()
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
-	assert.Equal(t, "example", s.Name)
-	assert.Equal(t, "latest", s.Tag)
-	assert.Equal(t, "Example", s.Context)
-	assert.Equal(t, 1, len(s.Models))
-	assert.Equal(t, "Example", s.Models[0].Name)
-
-	formatted, err := golangSignature.Generate(s, "signature", "v0.1.0")
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	guest, err := golangSignature.GenerateGuest(s, "signature", "v0.1.0")
+	hash, err := s.Hash()
 	require.NoError(t, err)
 
-	signatureModfile, err := golangSignature.GenerateModfile("signature", "v1.1.1")
+	golangCompileDir := wd + "/golang_tests/compile"
+	err = os.MkdirAll(golangCompileDir, 0755)
 	require.NoError(t, err)
 
-	const golangSignatureDir = "golang_tests/signature"
+	t.Cleanup(func() {
+		err = os.RemoveAll(golangCompileDir)
+		require.NoError(t, err)
+	})
 
-	err = os.WriteFile(golangSignatureDir+"/generated.go", formatted, 0644)
-	require.NoError(t, err)
-
-	err = os.WriteFile(golangSignatureDir+"/guest.go", guest, 0644)
-	require.NoError(t, err)
-
-	err = os.WriteFile(golangSignatureDir+"/go.mod", signatureModfile, 0644)
-	require.NoError(t, err)
-
+	golangFunctionDir := wd + "/golang_tests/function"
 	scf := &scalefile.Schema{
 		Version:  scalefile.V1AlphaVersion,
 		Name:     "example",
 		Tag:      "latest",
-		Language: "go",
+		Language: string(scalefunc.Go),
 		Signature: scalefile.SignatureSchema{
-			Organization: "",
+			Organization: "local",
 			Name:         "example",
 			Tag:          "latest",
 		},
 		Function: "Example",
 	}
 
-	mainFile, err := golangCompile.GenerateGoMain(s, scf, "v0.1.0")
+	stb, err := storage.NewBuild(golangCompileDir)
 	require.NoError(t, err)
 
-	const golangCompileDir = "golang_tests/compile"
-
-	err = os.WriteFile(golangCompileDir+"/main.go", mainFile, 0644)
+	schema, err := build.LocalGolang(&build.LocalGolangOptions{
+		Version:          "test",
+		Scalefile:        scf,
+		SourceDirectory:  golangFunctionDir,
+		SignaturePath:    wd + "/golang_tests/signature",
+		SignatureVersion: "",
+		SignatureSchema:  s,
+		Storage:          stb,
+		Release:          false,
+		Target:           build.WASITarget,
+	})
 	require.NoError(t, err)
 
-	dependencies := []*scalefunc.Dependency{
-		{
-			Name:     "signature",
-			Version:  "v0.1.0",
-			Metadata: nil,
+	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
+	assert.Equal(t, scf.Name, schema.Name)
+	assert.Equal(t, scf.Tag, schema.Tag)
+	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
+	assert.Equal(t, s, schema.SignatureSchema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scalefunc.Go, schema.Language)
+	assert.Equal(t, 0, len(schema.Dependencies))
+
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+
+	require.Equal(t, "This is a Golang Function", sig.Context.StringField)
+}
+
+func TestRustE2E(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	hash, err := s.Hash()
+	require.NoError(t, err)
+
+	rustCompileDir := wd + "/rust_tests/compile"
+	err = os.MkdirAll(rustCompileDir, 0755)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.RemoveAll(rustCompileDir)
+		require.NoError(t, err)
+	})
+
+	rustFunctionDir := wd + "/rust_tests/function"
+	scf := &scalefile.Schema{
+		Version:  scalefile.V1AlphaVersion,
+		Name:     "example",
+		Tag:      "latest",
+		Language: string(scalefunc.Rust),
+		Signature: scalefile.SignatureSchema{
+			Organization: "local",
+			Name:         "example",
+			Tag:          "latest",
 		},
-		{
-			Name:     scf.Name,
-			Version:  "v0.1.0",
-			Metadata: nil,
-		},
+		Function: "example",
 	}
-	modfile, err := golangCompile.GenerateGoModfile(scf, "../signature", "", "../function", dependencies, "compile", "v0.1.0")
+
+	stb, err := storage.NewBuild(rustCompileDir)
 	require.NoError(t, err)
 
-	err = os.WriteFile(golangCompileDir+"/go.mod", modfile, 0644)
+	schema, err := build.LocalRust(&build.LocalRustOptions{
+		Version:          "test",
+		Scalefile:        scf,
+		SourceDirectory:  rustFunctionDir,
+		SignaturePackage: fmt.Sprintf("%s_%s_%s_guest", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag),
+		SignaturePath:    wd + "/rust_tests/signature",
+		SignatureVersion: "",
+		SignatureSchema:  s,
+		Storage:          stb,
+		Release:          false,
+		Target:           build.WASITarget,
+	})
 	require.NoError(t, err)
+
+	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
+	assert.Equal(t, scf.Name, schema.Name)
+	assert.Equal(t, scf.Tag, schema.Tag)
+	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
+	assert.Equal(t, s, schema.SignatureSchema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scalefunc.Go, schema.Language)
+	assert.Equal(t, 0, len(schema.Dependencies))
+
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+
+	require.Equal(t, "This is a Rust Function", sig.Context.StringField)
+}
+
+func TestGolangToGolang(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	golangSignatureDir := wd + "/golang_tests/signature"
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = golangSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "test", "./...", "-v", "--tags=integration,golang", "-run", "TestOutput")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "test", "./...", "-v", "--tags=integration,golang", "-run", "TestInput")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestRustToRust(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	rustSignatureDir := wd + "/rust_tests/signature"
+	cmd := exec.Command("cargo", "test", "test_output")
+	cmd.Dir = rustSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_input")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestTypescriptToTypescript(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	typescriptDir := wd + "/typescript_tests/signature"
+	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-output")
+	cmd.Dir = typescriptDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-input")
+	cmd.Dir = typescriptDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestGolangToRust(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	golangSignatureDir := wd + "/golang_tests/signature"
+	rustSignatureDir := wd + "/rust_tests/signature"
+
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = golangSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "test", "./...", "-v", "--tags=integration,golang", "-run", "TestOutput")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_input")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestGolangToTypescript(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	golangSignatureDir := wd + "/golang_tests/signature"
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = golangSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "test", "./...", "-v", "--tags=integration,golang", "-run", "TestOutput")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	typescriptDir := wd + "/typescript_tests/signature"
+	cmd = exec.Command("npm", "install", "--save-dev")
+	cmd.Dir = typescriptDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-input")
+	cmd.Dir = typescriptDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestRustToGolang(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	golangSignatureDir := wd + "/golang_tests/signature"
+	rustSignatureDir := wd + "/rust_tests/signature"
+
+	cmd := exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_output")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "mod", "tidy")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "test", "./...", "-v", "--tags=integration,golang", "-run", "TestInput")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestRustToTypescript(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	rustSignatureDir := wd + "/rust_tests/signature"
+	cmd := exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_output")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	typescriptDir := wd + "/typescript_tests/signature"
+	cmd = exec.Command("npm", "install", "--save-dev")
+	cmd.Dir = typescriptDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-input")
+	cmd.Dir = typescriptDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestTypescriptToGolang(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	typescriptSignatureDir := wd + "/typescript_tests/signature"
+	cmd := exec.Command("npm", "install", "--save-dev")
+	cmd.Dir = typescriptSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-output")
+	cmd.Dir = typescriptSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	golangSignatureDir := wd + "/golang_tests/signature"
+	cmd = exec.Command("go", "mod", "tidy")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("go", "test", "./...", "-v", "--tags=integration,golang", "-run", "TestInput")
+	cmd.Dir = golangSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestTypescriptToRust(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	typescriptSignatureDir := wd + "/typescript_tests/signature"
+	cmd := exec.Command("npm", "install", "--save-dev")
+	cmd.Dir = typescriptSignatureDir
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("npm", "run", "test", "--", "-t", "test-output")
+	cmd.Dir = typescriptSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	rustSignatureDir := wd + "/rust_tests/signature"
+	cmd = exec.Command("cargo", "check")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+
+	cmd = exec.Command("cargo", "test", "test_input")
+	cmd.Dir = rustSignatureDir
+	out, err = cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
 }

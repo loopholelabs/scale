@@ -18,22 +18,19 @@
 package storage
 
 import (
+	"encoding/hex"
 	"fmt"
-	"github.com/loopholelabs/scale/cli/version"
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
-	golangSignature "github.com/loopholelabs/scale/signature/generator/golang"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/loopholelabs/scale/scalefunc"
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator"
 )
 
 const (
-	DefaultSignatureDirectory = ".config/scale/signatures"
-)
-
-const (
-	PolyglotVersion = "v1.1.1"
+	SignatureDirectory = "signatures"
 )
 
 var (
@@ -41,13 +38,15 @@ var (
 )
 
 type Signature struct {
+	Name         string
+	Tag          string
 	Schema       *signature.Schema
 	Hash         string
 	Organization string
 }
 
 type SignatureStorage struct {
-	BaseDirectory string
+	Directory string
 }
 
 func init() {
@@ -55,7 +54,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	DefaultSignature, err = NewSignature(path.Join(homeDir, DefaultSignatureDirectory))
+	DefaultSignature, err = NewSignature(path.Join(homeDir, DefaultDirectory, SignatureDirectory))
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +69,7 @@ func NewSignature(baseDirectory string) (*SignatureStorage, error) {
 	}
 
 	return &SignatureStorage{
-		BaseDirectory: baseDirectory,
+		Directory: baseDirectory,
 	}, nil
 }
 
@@ -108,6 +107,8 @@ func (s *SignatureStorage) Get(name string, tag string, org string, hash string)
 		}
 
 		return &Signature{
+			Name:         name,
+			Tag:          tag,
 			Schema:       sig,
 			Hash:         hash,
 			Organization: org,
@@ -145,9 +146,11 @@ func (s *SignatureStorage) Get(name string, tag string, org string, hash string)
 	}
 
 	return &Signature{
+		Name:         name,
+		Tag:          tag,
 		Schema:       sig,
-		Hash:         getHashFromName(matches[0]),
-		Organization: getOrgFromName(matches[0]),
+		Hash:         getHashFromName(filepath.Base(matches[0])),
+		Organization: getOrgFromName(filepath.Base(matches[0])),
 	}, nil
 }
 
@@ -208,72 +211,23 @@ func (s *SignatureStorage) Path(name string, tag string, org string, hash string
 	return matches[0], nil
 }
 
-// Put stores the Scale Signature with the given name, tag, organization, and hash
-func (s *SignatureStorage) Put(name string, tag string, org string, hash string, sig *signature.Schema) error {
-	f := s.signatureName(name, tag, org, hash)
-	p := s.fullPath(f)
-	err := os.MkdirAll(p, 0755)
+// Put stores the Scale Signature with the given name, tag, organization
+func (s *SignatureStorage) Put(name string, tag string, org string, sig *signature.Schema) error {
+	hash, err := sig.Hash()
 	if err != nil {
 		return err
 	}
 
-	encoded, err := sig.Encode()
+	hashString := hex.EncodeToString(hash)
+
+	f := s.signatureName(name, tag, org, hashString)
+	directory := s.fullPath(f)
+	err = os.MkdirAll(directory, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(p, "signature"), encoded, 0644)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(path.Join(p, "golang"), 0755)
-	if err != nil {
-		return err
-	}
-
-	types, err := golangSignature.Generate(sig, "signature", version.Version)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(path.Join(p, "golang", "types.go"), types, 0644)
-	if err != nil {
-		return err
-	}
-	guest, err := golangSignature.GenerateGuest(sig, "signature", version.Version)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(path.Join(p, "golang", "guest.go"), guest, 0644)
-	if err != nil {
-		return err
-	}
-	modfile, err := golangSignature.GenerateModfile("signature", PolyglotVersion)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(path.Join(p, "golang", "go.mod"), modfile, 0644)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(path.Join(p, "golang", "host"), 0755)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(path.Join(p, "golang", "host", "types.go"), types, 0644)
-	if err != nil {
-		return err
-	}
-	host, err := golangSignature.GenerateHost(sig, "signature", version.Version)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(path.Join(p, "golang", "host", "host.go"), host, 0644)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(path.Join(p, "golang", "host", "go.mod"), modfile, 0644)
+	err = GenerateSignature(sig, name, tag, org, directory)
 	if err != nil {
 		return err
 	}
@@ -288,20 +242,23 @@ func (s *SignatureStorage) Delete(name string, tag string, org string, hash stri
 
 // List returns all the Scale Signatures stored in the storage
 func (s *SignatureStorage) List() ([]Signature, error) {
-	entries, err := os.ReadDir(s.BaseDirectory)
+	entries, err := os.ReadDir(s.Directory)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read storage directory %s: %w", s.BaseDirectory, err)
+		return nil, fmt.Errorf("failed to read storage directory %s: %w", s.Directory, err)
 	}
 	var scaleSignatureEntries []Signature
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
+
 		sig, err := signature.ReadSchema(path.Join(s.fullPath(entry.Name()), "signature"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode scale signature %s: %w", s.fullPath(entry.Name()), err)
 		}
 		scaleSignatureEntries = append(scaleSignatureEntries, Signature{
+			Name:         getNameFromName(entry.Name()),
+			Tag:          getTagFromName(entry.Name()),
 			Schema:       sig,
 			Hash:         getHashFromName(entry.Name()),
 			Organization: getOrgFromName(entry.Name()),
@@ -311,7 +268,7 @@ func (s *SignatureStorage) List() ([]Signature, error) {
 }
 
 func (s *SignatureStorage) fullPath(p string) string {
-	return path.Join(s.BaseDirectory, p)
+	return path.Join(s.Directory, p)
 }
 
 func (s *SignatureStorage) signatureName(name string, tag string, org string, hash string) string {
@@ -320,4 +277,80 @@ func (s *SignatureStorage) signatureName(name string, tag string, org string, ha
 
 func (s *SignatureStorage) signatureSearch(name string, tag string, org string) string {
 	return fmt.Sprintf("%s_%s_%s_*_signature", org, name, tag)
+}
+
+// GenerateSignature generates the signature files and writes them to
+// the given path.
+func GenerateSignature(sig *signature.Schema, name string, tag string, org string, directory string) error {
+	encoded, err := sig.Encode()
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(path.Join(directory, "signature"), encoded, 0644)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path.Join(directory, "golang", "guest"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path.Join(directory, "rust", "guest"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path.Join(directory, "golang", "host"), 0755)
+	if err != nil {
+		return err
+	}
+
+	guestPackage, err := generator.GenerateGuestLocal(&generator.Options{
+		Signature: sig,
+
+		GolangPackageImportPath: "signature",
+		GolangPackageName:       "signature",
+		GolangPackageVersion:    "v0.1.0",
+
+		RustPackageName:    fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		RustPackageVersion: "0.1.0",
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, file := range guestPackage.GolangFiles {
+		err = os.WriteFile(path.Join(directory, "golang", "guest", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, file := range guestPackage.RustFiles {
+		err = os.WriteFile(path.Join(directory, "rust", "guest", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
+		Signature:               sig,
+		GolangPackageImportPath: "signature",
+		GolangPackageName:       "signature",
+		GolangPackageVersion:    "v0.1.0",
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, file := range hostPackage.GolangFiles {
+		err = os.WriteFile(path.Join(directory, "golang", "host", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

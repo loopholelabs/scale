@@ -1,0 +1,11 @@
+{
+  "clearMocks": true,
+  "collectCoverage": true,
+  "coverageDirectory": "coverage",
+  "preset": "ts-jest",
+  "testEnvironment": "jsdom",
+  "testMatch": [
+    "**/*.test.ts"
+  ],
+  "testPathIgnorePatterns": ["dist", "compile", "target", "node_modules", "integration"]
+}

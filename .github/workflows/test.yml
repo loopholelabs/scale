@@ -1,0 +1,67 @@
+name: Test
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+
+      - name: Generate
+        run: go generate ./... -v
+
+      - name: Test
+        run: go test ./... -v
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.21"
+          check-latest: true
+          cache: true
+
+      - uses: acifani/setup-tinygo@v1
+        with:
+          tinygo-version: '0.29.0'
+
+      - name: Set up Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          rustup target add wasm32-wasi
+        shell: bash
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Generate
+        run: go generate ./... -v
+
+      - name: Install Rust dependencies
+        run: cargo check
+        working-directory: integration/rust_tests
+
+      - name: Install Node.js dependencies
+        run: npm install --save-dev
+        working-directory: integration/typescript_tests
+
+      - name: Test
+        run: go test ./... -v -tags=integration

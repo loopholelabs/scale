@@ -34,6 +34,10 @@ func Generate(schema *extension.Schema, packageName string, version string) ([]b
 	return generator.Generate(schema, packageName, version)
 }
 
+func GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+	return generator.GenerateInterfaces(schema, packageName, version)
+}
+
 func GenerateGuest(schema *extension.Schema, packageName string, version string) ([]byte, error) {
 	return generator.GenerateGuest(schema, packageName, version)
 }
@@ -79,6 +83,24 @@ func (g *Generator) Generate(schema *extension.Schema, packageName string, versi
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "types.go.templ", map[string]any{
+		"schema":  schema,
+		"version": version,
+		"package": packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return format.Source(buf.Bytes())
+}
+
+func (g *Generator) GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "interfaces.go.templ", map[string]any{
 		"schema":  schema,
 		"version": version,
 		"package": packageName,

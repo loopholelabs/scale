@@ -229,9 +229,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 	if _, ok := knownModels[m.Name]; ok {
 		return fmt.Errorf("duplicate model name: %s", m.Name)
-	} else {
-		knownModels[m.Name] = struct{}{}
 	}
+	knownModels[m.Name] = struct{}{}
 
 	knownFields := make(map[string]struct{})
 	for _, modelReference := range m.Models {
@@ -242,9 +241,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[modelReference.Name]; ok {
 			return fmt.Errorf("duplicate %s.model name: %s", m.Name, modelReference.Name)
-		} else {
-			knownFields[modelReference.Name] = struct{}{}
 		}
+		knownFields[modelReference.Name] = struct{}{}
 	}
 
 	for _, modelReferenceArray := range m.ModelArrays {
@@ -255,9 +253,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[modelReferenceArray.Name]; ok {
 			return fmt.Errorf("duplicate %s.model_array name: %s", m.Name, modelReferenceArray.Name)
-		} else {
-			knownFields[modelReferenceArray.Name] = struct{}{}
 		}
+		knownFields[modelReferenceArray.Name] = struct{}{}
 	}
 
 	for _, str := range m.Strings {
@@ -268,9 +265,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[str.Name]; ok {
 			return fmt.Errorf("duplicate %s.string name: %s", m.Name, str.Name)
-		} else {
-			knownFields[str.Name] = struct{}{}
 		}
+		knownFields[str.Name] = struct{}{}
 	}
 
 	for _, strArray := range m.StringArrays {
@@ -281,10 +277,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[strArray.Name]; ok {
 			return fmt.Errorf("duplicate %s.string_array name: %s", m.Name, strArray.Name)
-		} else {
-			knownFields[strArray.Name] = struct{}{}
 		}
-
+		knownFields[strArray.Name] = struct{}{}
 	}
 
 	for _, strMap := range m.StringMaps {
@@ -295,9 +289,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[strMap.Name]; ok {
 			return fmt.Errorf("duplicate %s.string_map name: %s", m.Name, strMap.Name)
-		} else {
-			knownFields[strMap.Name] = struct{}{}
 		}
+		knownFields[strMap.Name] = struct{}{}
 	}
 
 	for _, i32 := range m.Int32s {
@@ -308,9 +301,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[i32.Name]; ok {
 			return fmt.Errorf("duplicate %s.i32 name: %s", m.Name, i32.Name)
-		} else {
-			knownFields[i32.Name] = struct{}{}
 		}
+		knownFields[i32.Name] = struct{}{}
 	}
 
 	for _, i32Array := range m.Int32Arrays {
@@ -321,9 +313,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[i32Array.Name]; ok {
 			return fmt.Errorf("duplicate %s.i32_array name: %s", m.Name, i32Array.Name)
-		} else {
-			knownFields[i32Array.Name] = struct{}{}
 		}
+		knownFields[i32Array.Name] = struct{}{}
 	}
 
 	for _, i32Map := range m.Int32Maps {
@@ -334,9 +325,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[i32Map.Name]; ok {
 			return fmt.Errorf("duplicate %s.i32_map name: %s", m.Name, i32Map.Name)
-		} else {
-			knownFields[i32Map.Name] = struct{}{}
 		}
+		knownFields[i32Map.Name] = struct{}{}
 	}
 
 	for _, i64 := range m.Int64s {
@@ -347,9 +337,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[i64.Name]; ok {
 			return fmt.Errorf("duplicate %s.i64 name: %s", m.Name, i64.Name)
-		} else {
-			knownFields[i64.Name] = struct{}{}
 		}
+		knownFields[i64.Name] = struct{}{}
 	}
 
 	for _, i64Array := range m.Int64Arrays {
@@ -360,9 +349,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[i64Array.Name]; ok {
 			return fmt.Errorf("duplicate %s.i64_array name: %s", m.Name, i64Array.Name)
-		} else {
-			knownFields[i64Array.Name] = struct{}{}
 		}
+		knownFields[i64Array.Name] = struct{}{}
 	}
 
 	for _, i64Map := range m.Int64Maps {
@@ -373,9 +361,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[i64Map.Name]; ok {
 			return fmt.Errorf("duplicate %s.i64_map name: %s", m.Name, i64Map.Name)
-		} else {
-			knownFields[i64Map.Name] = struct{}{}
 		}
+		knownFields[i64Map.Name] = struct{}{}
 	}
 
 	for _, u32 := range m.Uint32s {
@@ -386,9 +373,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[u32.Name]; ok {
 			return fmt.Errorf("duplicate %s.u32 name: %s", m.Name, u32.Name)
-		} else {
-			knownFields[u32.Name] = struct{}{}
 		}
+		knownFields[u32.Name] = struct{}{}
 	}
 
 	for _, u32Array := range m.Uint32Arrays {
@@ -399,9 +385,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[u32Array.Name]; ok {
 			return fmt.Errorf("duplicate %s.u32_array name: %s", m.Name, u32Array.Name)
-		} else {
-			knownFields[u32Array.Name] = struct{}{}
 		}
+		knownFields[u32Array.Name] = struct{}{}
 	}
 
 	for _, u32Map := range m.Uint32Maps {
@@ -412,9 +397,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[u32Map.Name]; ok {
 			return fmt.Errorf("duplicate %s.u32_map name: %s", m.Name, u32Map.Name)
-		} else {
-			knownFields[u32Map.Name] = struct{}{}
 		}
+		knownFields[u32Map.Name] = struct{}{}
 	}
 
 	for _, u64 := range m.Uint64s {
@@ -425,9 +409,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[u64.Name]; ok {
 			return fmt.Errorf("duplicate %s.u64 name: %s", m.Name, u64.Name)
-		} else {
-			knownFields[u64.Name] = struct{}{}
 		}
+		knownFields[u64.Name] = struct{}{}
 	}
 
 	for _, u64Array := range m.Uint64Arrays {
@@ -438,9 +421,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[u64Array.Name]; ok {
 			return fmt.Errorf("duplicate %s.u64_array name: %s", m.Name, u64Array.Name)
-		} else {
-			knownFields[u64Array.Name] = struct{}{}
 		}
+		knownFields[u64Array.Name] = struct{}{}
 	}
 
 	for _, u64Map := range m.Uint64Maps {
@@ -451,9 +433,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[u64Map.Name]; ok {
 			return fmt.Errorf("duplicate %s.u64_map name: %s", m.Name, u64Map.Name)
-		} else {
-			knownFields[u64Map.Name] = struct{}{}
 		}
+		knownFields[u64Map.Name] = struct{}{}
 	}
 
 	for _, f32 := range m.Float32s {
@@ -464,9 +445,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[f32.Name]; ok {
 			return fmt.Errorf("duplicate %s.f32 name: %s", m.Name, f32.Name)
-		} else {
-			knownFields[f32.Name] = struct{}{}
 		}
+		knownFields[f32.Name] = struct{}{}
 	}
 
 	for _, f32Array := range m.Float32Arrays {
@@ -477,9 +457,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[f32Array.Name]; ok {
 			return fmt.Errorf("duplicate %s.f32_array name: %s", m.Name, f32Array.Name)
-		} else {
-			knownFields[f32Array.Name] = struct{}{}
 		}
+		knownFields[f32Array.Name] = struct{}{}
 	}
 
 	for _, f64 := range m.Float64s {
@@ -490,9 +469,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[f64.Name]; ok {
 			return fmt.Errorf("duplicate %s.f64 name: %s", m.Name, f64.Name)
-		} else {
-			knownFields[f64.Name] = struct{}{}
 		}
+		knownFields[f64.Name] = struct{}{}
 	}
 
 	for _, f64Array := range m.Float64Arrays {
@@ -503,9 +481,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[f64Array.Name]; ok {
 			return fmt.Errorf("duplicate %s.f64_array name: %s", m.Name, f64Array.Name)
-		} else {
-			knownFields[f64Array.Name] = struct{}{}
 		}
+		knownFields[f64Array.Name] = struct{}{}
 	}
 
 	for _, b := range m.Bools {
@@ -516,9 +493,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[b.Name]; ok {
 			return fmt.Errorf("duplicate %s.bool name: %s", m.Name, b.Name)
-		} else {
-			knownFields[b.Name] = struct{}{}
 		}
+		knownFields[b.Name] = struct{}{}
 	}
 
 	for _, bArray := range m.BoolArrays {
@@ -529,9 +505,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[bArray.Name]; ok {
 			return fmt.Errorf("duplicate %s.bool_array name: %s", m.Name, bArray.Name)
-		} else {
-			knownFields[bArray.Name] = struct{}{}
 		}
+		knownFields[bArray.Name] = struct{}{}
 	}
 
 	for _, b := range m.Bytes {
@@ -542,9 +517,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[b.Name]; ok {
 			return fmt.Errorf("duplicate %s.bytes name: %s", m.Name, b.Name)
-		} else {
-			knownFields[b.Name] = struct{}{}
 		}
+		knownFields[b.Name] = struct{}{}
 	}
 
 	for _, bArray := range m.BytesArrays {
@@ -555,9 +529,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[bArray.Name]; ok {
 			return fmt.Errorf("duplicate %s.bytes_array name: %s", m.Name, bArray.Name)
-		} else {
-			knownFields[bArray.Name] = struct{}{}
 		}
+		knownFields[bArray.Name] = struct{}{}
 	}
 
 	for _, enum := range m.Enums {
@@ -568,9 +541,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[enum.Name]; ok {
 			return fmt.Errorf("duplicate %s.enum name: %s", m.Name, enum.Name)
-		} else {
-			knownFields[enum.Name] = struct{}{}
 		}
+		knownFields[enum.Name] = struct{}{}
 	}
 
 	for _, enumArray := range m.EnumArrays {
@@ -581,9 +553,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[enumArray.Name]; ok {
 			return fmt.Errorf("duplicate %s.enum_array name: %s", m.Name, enumArray.Name)
-		} else {
-			knownFields[enumArray.Name] = struct{}{}
 		}
+		knownFields[enumArray.Name] = struct{}{}
 	}
 
 	for _, enumMap := range m.EnumMaps {
@@ -594,9 +565,8 @@ func (m *ModelSchema) Validate(knownModels map[string]struct{}, enums []*EnumSch
 
 		if _, ok := knownFields[enumMap.Name]; ok {
 			return fmt.Errorf("duplicate %s.enum_map name: %s", m.Name, enumMap.Name)
-		} else {
-			knownFields[enumMap.Name] = struct{}{}
 		}
+		knownFields[enumMap.Name] = struct{}{}
 	}
 
 	return nil

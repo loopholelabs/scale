@@ -1,4 +1,4 @@
-//go:build !integration
+//go:build !integration && !generate
 
 /*
 	Copyright 2022 Loophole Labs
@@ -19,31 +19,45 @@
 package scalefunc
 
 import (
-	"github.com/loopholelabs/scale/signature"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/loopholelabs/scale/signature"
 )
 
 func TestEncodeDecode(t *testing.T) {
 	s := &Schema{
 		Version:  "invalid",
 		Language: Go,
+		SignatureSchema: &signature.Schema{
+			Version: signature.V1AlphaVersion,
+			Context: "ctx",
+			Models: []*signature.ModelSchema{
+				{
+					Name:        "ctx",
+					Description: "test",
+				},
+			},
+		},
 	}
+
 	decoded := new(Schema)
 
 	encoded := s.Encode()
 	err := decoded.Decode(encoded)
-	assert.ErrorIs(t, err, VersionErr)
+	assert.ErrorIs(t, err, ErrVersion)
 
 	s.Version = V1Alpha
 	s.Language = "invalid"
 
 	encoded = s.Encode()
 	err = decoded.Decode(encoded)
-	assert.ErrorIs(t, err, LanguageErr)
+	assert.ErrorIs(t, err, ErrLanguage)
 
 	masterTestingSchema := new(signature.Schema)
 	err = masterTestingSchema.Decode([]byte(signature.MasterTestingSchema))
+	assert.NoError(t, err)
 
 	dependencies := make([]Dependency, 3)
 	dependencies[0] = Dependency{
@@ -74,8 +88,8 @@ func TestEncodeDecode(t *testing.T) {
 		Version:         V1Alpha,
 		Name:            "Test Name",
 		Tag:             "Test Tag",
-		Signature:       "Test Signature",
-		SignatureSchema: *masterTestingSchema,
+		SignatureName:   "Test Signature",
+		SignatureSchema: masterTestingSchema,
 		Dependencies:    dependencies,
 		Language:        Go,
 		Function:        []byte("Test Function Contents"),
@@ -90,11 +104,11 @@ func TestEncodeDecode(t *testing.T) {
 	assert.Equal(t, s.Tag, decoded.Tag)
 	assert.Equal(t, s.Language, decoded.Language)
 	assert.Equal(t, s.Function, decoded.Function)
-	assert.Equal(t, s.Signature, decoded.Signature)
+	assert.Equal(t, s.SignatureName, decoded.SignatureName)
 
-	encoded[decoded.Size+uint32(len(s.Checksum))-1] = 0
+	encoded[decoded.Size+uint32(len(s.Hash))-1] = 0
 	err = decoded.Decode(encoded)
-	assert.ErrorIs(t, err, ChecksumErr)
+	assert.ErrorIs(t, err, ErrHash)
 }
 
 func TestValidName(t *testing.T) {

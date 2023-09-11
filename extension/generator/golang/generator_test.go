@@ -30,12 +30,16 @@ func TestGenerator(t *testing.T) {
 
 	require.NoError(t, s.Validate())
 
+	packageName := "extfetch"
+
+	f_interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
+	require.NoError(t, err)
+	os.WriteFile("./interfaces.txt", f_interfaces, 0644)
+
 	formatted, err := Generate(s, "types", "v0.1.0")
 	require.NoError(t, err)
 
 	// Check things...
-
-	packageName := "extfetch"
 
 	os.WriteFile("./generated.txt", formatted, 0644)
 

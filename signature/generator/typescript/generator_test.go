@@ -1,4 +1,4 @@
-//go:build !integration
+//go:build !integration && !generate
 
 /*
 	Copyright 2023 Loophole Labs
@@ -16,9 +16,10 @@
 package typescript
 
 import (
-	"github.com/loopholelabs/scale/signature"
 	"os"
 	"testing"
+
+	"github.com/loopholelabs/scale/signature"
 
 	"github.com/stretchr/testify/require"
 )
@@ -28,12 +29,10 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(signature.MasterTestingSchema))
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
-	formatted, err := Generate(s, "types", "v0.1.0")
+	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
 
-	//os.WriteFile("./generated.txt", formatted, 0644)
+	// os.WriteFile("./generated.txt", formatted, 0644)
 
 	master, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)

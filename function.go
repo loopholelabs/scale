@@ -20,39 +20,69 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
 	"github.com/tetratelabs/wazero"
+
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
+	"github.com/loopholelabs/scale/scalefunc"
 )
 
-// Function is the runtime representation of a scale function.
-type Function[T signature.Signature] struct {
+// function is the runtime representation of a scale function with
+// a compiled module source.
+type function[T interfaces.Signature] struct {
+	// runtime is the scale runtime that the function belongs to
+	runtime *Scale[T]
+
+	// identifier is the identifier for the function
 	identifier string
-	compiled   wazero.CompiledModule
-	scaleFunc  *scalefunc.Schema
-	next       *Function[T]
-	modulePool *Pool[T]
+
+	// compiled is the compiled module source
+	compiled wazero.CompiledModule
+
+	// scaleFunc is the scale function definition schema
+	scaleFunc *scalefunc.Schema
+
+	// next is the (optional) next function in the chain
+	next *function[T]
+
+	// modulePool is the pool of modules for the function
+	modulePool *modulePool[T]
+
+	// env contains the (optional) environment variables for the function
+	env map[string]string
 }
 
-func (f *Function[T]) Run(ctx context.Context, signature T, i *Instance[T]) error {
-	module, err := f.modulePool.Get()
+func newFunction[T interfaces.Signature](ctx context.Context, r *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*function[T], error) {
+	compiled, err := r.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
-		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
+		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)
 	}
 
-	module.init(signature, i)
-	buf := signature.Write()
+	f := &function[T]{
+		runtime:    r,
+		identifier: fmt.Sprintf("%s:%s", scaleFunc.Name, scaleFunc.Tag),
+		compiled:   compiled,
+		scaleFunc:  scaleFunc,
+		env:        env,
+	}
+
+	f.modulePool = newModulePool[T](ctx, r, f)
+
+	return f, nil
+}
+
+func (f *function[T]) runWithModule(ctx context.Context, moduleInstance *moduleInstance[T]) error {
+	buf := moduleInstance.signature.Write()
 	ctxBufferLength := uint64(len(buf))
-	writeBuffer, err := module.resize.Call(ctx, ctxBufferLength)
+	writeBuffer, err := moduleInstance.resize.Call(ctx, ctxBufferLength)
 	if err != nil {
 		return fmt.Errorf("failed to allocate memory for function '%s': %w", f.scaleFunc.Name, err)
 	}
 
-	if !module.module.Memory().Write(uint32(writeBuffer[0]), buf) {
+	if !moduleInstance.instantiatedModule.Memory().Write(uint32(writeBuffer[0]), buf) {
 		return fmt.Errorf("failed to write memory for function '%s'", f.scaleFunc.Name)
 	}
 
-	packed, err := module.run.Call(ctx)
+	packed, err := moduleInstance.run.Call(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to run function '%s': %w", f.scaleFunc.Name, err)
 	}
@@ -61,17 +91,32 @@ func (f *Function[T]) Run(ctx context.Context, signature T, i *Instance[T]) erro
 	}
 
 	offset, length := unpackUint32(packed[0])
-	buf, ok := module.module.Memory().Read(offset, length)
+	buf, ok := moduleInstance.instantiatedModule.Memory().Read(offset, length)
 	if !ok {
 		return fmt.Errorf("failed to read memory for function '%s'", f.scaleFunc.Name)
 	}
 
-	err = signature.Read(buf)
+	err = moduleInstance.signature.Read(buf)
+	if err != nil {
+		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
+	}
+	return nil
+}
+
+func (f *function[T]) run(ctx context.Context, signature T, instance *Instance[T]) error {
+	module, err := f.modulePool.Get()
+	if err != nil {
+		return fmt.Errorf("failed to get module from pool for function %s: %w", f.scaleFunc.Name, err)
+	}
+
+	module.init(f.runtime, instance)
+	module.setSignature(signature)
+
+	err = f.runWithModule(ctx, module)
+	module.cleanup(f.runtime)
 	if err != nil {
 		return fmt.Errorf("error while running function '%s': %w", f.scaleFunc.Name, err)
 	}
 
-	module.reset()
-	f.modulePool.Put(module)
 	return nil
 }

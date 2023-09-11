@@ -1,0 +1,28 @@
+[package]
+name = "{{ .package }}"
+version = "{{ .version }}"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+{{ range $dependency := .dependencies -}}
+{{ $dependency.Name }} = "{{ $dependency.Version }}"
+{{end -}}
+
+{{ if .signature_path }}
+{{ .signature_dependency }} = { package = "{{ .signature_package }}", path = "{{ .signature_path }}" }
+{{ end }}
+
+{{ if .signature_version }}
+{{ .signature_dependency }} = { package = "{{ .signature_package }}", version = "{{ .signature_version }}", registry = "scale" }
+{{ end }}
+
+{{ .function_dependency }} = { path = "{{ .function_path }}" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

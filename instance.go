@@ -19,24 +19,27 @@ package scale
 import (
 	"context"
 	"crypto/rand"
-	"errors"
 
 	"github.com/loopholelabs/scale/signature"
 )
 
+// Instance is a single instance of a Scale Function chain
 type Instance[T signature.Signature] struct {
-	next       Next[T]
-	runtime    *Scale[T]
-	instanceID []byte
+	runtime *Scale[T]
+	id      []byte
+
+	head *moduleInstance[T]
+
+	next Next[T]
 }
 
-func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
+func newInstanceSetup[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
 	i := &Instance[T]{
-		runtime:    r,
-		instanceID: make([]byte, 16),
+		runtime: r,
+		id:      make([]byte, 16),
 	}
 
-	_, err := rand.Read(i.instanceID)
+	_, err := rand.Read(i.id)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +55,35 @@ func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
 	return i, nil
 }
 
-func (i *Instance[T]) Run(ctx context.Context, signature T) error {
-	if i.runtime.head == nil {
-		return errors.New("no available functions found")
+func newInstance[T signature.Signature](ctx context.Context, r *Scale[T], next ...Next[T]) (*Instance[T], error) {
+	i, err := newInstanceSetup[T](r, next...)
+	if err != nil {
+		return nil, err
 	}
-	return i.runtime.head.Run(ctx, signature, i)
+
+	i.head, err = newModuleInstance(ctx, i.runtime, i.runtime.head, i)
+	if err != nil {
+		return nil, err
+	}
+
+	return i, nil
+}
+
+func newPoolingInstance[T signature.Signature](r *Scale[T], next ...Next[T]) (*Instance[T], error) {
+	return newInstanceSetup[T](r, next...)
+}
+
+func (i *Instance[T]) Run(ctx context.Context, signature T) error {
+	if i.head != nil {
+		i.head.setSignature(signature)
+		return i.head.function.runWithModule(ctx, i.head)
+	}
+
+	return i.runtime.head.run(ctx, signature, i)
+}
+
+func (i *Instance[T]) Cleanup() {
+	if i.head != nil {
+		i.head.cleanup(i.runtime)
+	}
 }

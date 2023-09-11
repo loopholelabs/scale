@@ -1,0 +1,24 @@
+[package]
+edition = "2021"
+name = "{{ .package_name }}"
+version = "{{ .package_version }}"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[lib]
+path = "guest.rs"
+
+[dependencies.num_enum]
+version = "0.7.0"
+
+[dependencies.regex]
+version = "1.9.4"
+
+[dependencies.scale_signature_interfaces]
+version = "{{ .scale_signature_interfaces_version }}"
+
+[dependencies.polyglot_rs]
+version = "{{ .polyglot_version }}"

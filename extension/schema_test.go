@@ -39,7 +39,7 @@ func TestSchema(t *testing.T) {
 	// Make sure there's a global function defined...
 	assert.Equal(t, 1, len(s.Functions))
 
-	assert.Equal(t, "new", s.Functions[0].Name)
+	assert.Equal(t, "New", s.Functions[0].Name)
 	assert.Equal(t, "HttpConfig", s.Functions[0].Params)
 	assert.Equal(t, "HttpConnector", s.Functions[0].Return)
 

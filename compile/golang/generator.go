@@ -15,12 +15,14 @@ package golang
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/compile/templates"
+	"go/format"
+	"strings"
+	"text/template"
+
+	"github.com/loopholelabs/scale/compile/golang/templates"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
-	"go/format"
-	"text/template"
 )
 
 const (
@@ -29,8 +31,8 @@ const (
 
 var generator *Generator
 
-func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string, version string) ([]byte, error) {
-	return generator.GenerateGoModfile(schema, signatureImport, signatureVersion, functionImport, dependencies, packageName, version)
+func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
+	return generator.GenerateGoModfile(schema, signatureImport, signatureVersion, functionImport, dependencies, packageName)
 }
 
 func GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
@@ -51,10 +53,17 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
+	if !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
+		signatureImport = "./" + signatureImport
+	}
+
+	if !strings.HasPrefix(functionImport, "/") && !strings.HasPrefix(functionImport, "./") && !strings.HasPrefix(functionImport, "../") {
+		functionImport = "./" + functionImport
+	}
+
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"version":                  version,
 		"package":                  packageName,
 		"dependencies":             dependencies,
 		"old_signature_dependency": "signature",

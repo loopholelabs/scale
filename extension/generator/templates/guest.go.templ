@@ -14,22 +14,23 @@ var (
     readBuffer  []byte
 )
 
+//export ext_{{ .schema.Name }}_Resize
+//go:linkname ext_{{ .schema.Name }}_Resize
+func ext_{{ .schema.Name }}_Resize(size uint32) uint32 {
+	readBuffer = make([]byte, size)
+  //if uint32(cap(readBuffer)) < size {
+	//	readBuffer = append(make([]byte, 0, uint32(len(readBuffer))+size), readBuffer...)
+	//}
+	//readBuffer = readBuffer[:size]
+	return uint32(uintptr(unsafe.Pointer(&readBuffer[0])))
+}
+
 {{ $schema := .schema }}
 
 // Define any interfaces we need here...
 // Also define structs we can use to hold instanceId
 
 {{ range $ifc := .schema.Interfaces }}
-
-type {{ $ifc.Name }} interface {
-
-{{ range $fn := $ifc.Functions }}
-
-  {{ $fn.Name }}(*{{ $fn.Params }}) ({{ $fn.Return }}, error)
-
-{{ end }}
-
-}
 
 // Define concrete types with a hidden instanceId
 

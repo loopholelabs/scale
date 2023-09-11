@@ -22,19 +22,20 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"os"
+	"regexp"
+
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/loopholelabs/polyglot"
+
 	signatureSchema "github.com/loopholelabs/scale/signature"
-	"os"
-	"regexp"
-	"strings"
 )
 
 var (
-	VersionErr  = errors.New("unknown or invalid version")
-	LanguageErr = errors.New("unknown or invalid language")
-	ChecksumErr = errors.New("error while verifying checksum")
+	ErrVersion  = errors.New("unknown or invalid version")
+	ErrLanguage = errors.New("unknown or invalid language")
+	ErrHash     = errors.New("error while verifying hash")
 )
 
 var (
@@ -86,19 +87,17 @@ type Dependency struct {
 // Schema is the type used to define the requirements of a
 // scale function for a Scale Runtime
 type Schema struct {
-	Version         Version                `json:"version" yaml:"version"`
-	Name            string                 `json:"name" yaml:"name"`
-	Tag             string                 `json:"tag" yaml:"tag"`
-	Signature       string                 `json:"signature" yaml:"signature"`
-	SignatureSchema signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
-	Language        Language               `json:"language" yaml:"language"`
-	Dependencies    []Dependency           `json:"dependencies" yaml:"dependencies"`
-	Function        []byte                 `json:"function" yaml:"function"`
-	Size            uint32                 `json:"size" yaml:"size"`
-	Checksum        string                 `json:"checksum" yaml:"checksum"`
-
-	// env is used by the host at runtime to specify environment variables for the function
-	env map[string]string
+	Version         Version                 `json:"version" yaml:"version"`
+	Name            string                  `json:"name" yaml:"name"`
+	Tag             string                  `json:"tag" yaml:"tag"`
+	SignatureName   string                  `json:"signature_name" yaml:"signature_name"`
+	SignatureSchema *signatureSchema.Schema `json:"signature_schema" yaml:"signature_schema"`
+	SignatureHash   string                  `json:"signature_hash" yaml:"signature_hash"`
+	Language        Language                `json:"language" yaml:"language"`
+	Dependencies    []Dependency            `json:"dependencies" yaml:"dependencies"`
+	Function        []byte                  `json:"function" yaml:"function"`
+	Size            uint32                  `json:"size" yaml:"size"`
+	Hash            string                  `json:"hash" yaml:"hash"`
 }
 
 // Encode encodes the Schema into a byte array
@@ -109,11 +108,13 @@ func (s *Schema) Encode() []byte {
 	e.String(string(s.Version))
 	e.String(s.Name)
 	e.String(s.Tag)
-	e.String(s.Signature)
+	e.String(s.SignatureName)
 
 	f := hclwrite.NewEmptyFile()
 	gohcl.EncodeIntoBody(s.SignatureSchema, f.Body())
 	e.Bytes(f.Bytes())
+
+	e.String(s.SignatureHash)
 
 	e.String(string(s.Language))
 
@@ -133,10 +134,9 @@ func (s *Schema) Encode() []byte {
 	size := uint32(len(b.Bytes()))
 	hash := sha256.New()
 	hash.Write(b.Bytes())
-	checksum := hex.EncodeToString(hash.Sum(nil))
 
 	e.Uint32(size)
-	e.String(checksum)
+	e.String(hex.EncodeToString(hash.Sum(nil)))
 
 	return b.Bytes()
 }
@@ -160,7 +160,7 @@ func (s *Schema) Decode(data []byte) error {
 		}
 	}
 	if invalid {
-		return VersionErr
+		return ErrVersion
 	}
 
 	s.Name, err = d.String()
@@ -173,7 +173,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.Signature, err = d.String()
+	s.SignatureName, err = d.String()
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,13 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
+	s.SignatureSchema = new(signatureSchema.Schema)
 	err = s.SignatureSchema.Decode(signatureSchemaBytes)
+	if err != nil {
+		return err
+	}
+
+	s.SignatureHash, err = d.String()
 	if err != nil {
 		return err
 	}
@@ -202,7 +208,7 @@ func (s *Schema) Decode(data []byte) error {
 		}
 	}
 	if invalid {
-		return LanguageErr
+		return ErrLanguage
 	}
 
 	dependenciesSize, err := d.Slice(polyglot.AnyKind)
@@ -248,7 +254,7 @@ func (s *Schema) Decode(data []byte) error {
 		return err
 	}
 
-	s.Checksum, err = d.String()
+	s.Hash, err = d.String()
 	if err != nil {
 		return err
 	}
@@ -256,21 +262,48 @@ func (s *Schema) Decode(data []byte) error {
 	hash := sha256.New()
 	hash.Write(data[:s.Size])
 
-	if hex.EncodeToString(hash.Sum(nil)) != s.Checksum {
-		return ChecksumErr
+	if hex.EncodeToString(hash.Sum(nil)) != s.Hash {
+		return ErrHash
 	}
 
 	return nil
 }
 
-// SetEnv sets the environment variables for the Schema
-func (s *Schema) SetEnv(env map[string]string) {
-	s.env = env
-}
+// GetHash returns the hash of the Schema
+func (s *Schema) GetHash() []byte {
+	b := polyglot.GetBuffer()
+	defer polyglot.PutBuffer(b)
+	e := polyglot.Encoder(b)
+	e.String(string(s.Version))
+	e.String(s.Name)
+	e.String(s.Tag)
+	e.String(s.SignatureName)
 
-// GetEnv returns the environment variables for the Schema
-func (s *Schema) GetEnv() map[string]string {
-	return s.env
+	f := hclwrite.NewEmptyFile()
+	gohcl.EncodeIntoBody(s.SignatureSchema, f.Body())
+	e.Bytes(f.Bytes())
+
+	e.String(s.SignatureHash)
+
+	e.String(string(s.Language))
+
+	e.Slice(uint32(len(s.Dependencies)), polyglot.AnyKind)
+	for _, d := range s.Dependencies {
+		e.String(d.Name)
+		e.String(d.Version)
+		e.Map(uint32(len(d.Metadata)), polyglot.StringKind, polyglot.StringKind)
+		for k, v := range d.Metadata {
+			e.String(k)
+			e.String(v)
+		}
+	}
+
+	e.Bytes(s.Function)
+
+	hash := sha256.New()
+	hash.Write(b.Bytes())
+
+	return hash.Sum(nil)
 }
 
 // Read opens a file at the given path and returns a *ScaleFile
@@ -287,18 +320,4 @@ func Read(path string) (*Schema, error) {
 func Write(path string, scaleFunc *Schema) error {
 	data := scaleFunc.Encode()
 	return os.WriteFile(path, data, 0644)
-}
-
-// ParseFunctionName parses a function name of the form <org>/<name>:<tag> into its organization, name, and tag
-func ParseFunctionName(fn string) (string, string, string) {
-	orgSplit := strings.Split(fn, "/")
-	if len(orgSplit) == 1 {
-		orgSplit = []string{"", fn}
-	}
-	tagSplit := strings.Split(orgSplit[1], ":")
-	if len(tagSplit) == 1 {
-		tagSplit = []string{tagSplit[0], ""}
-	}
-
-	return orgSplit[0], tagSplit[0], tagSplit[1]
 }
