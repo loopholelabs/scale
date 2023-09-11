@@ -1,0 +1,116 @@
+{{ define "go_arrays_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            {{ LowerFirst .Name }} []{{ Primitive $type }}
+        {{- else }}
+            {{ .Name }} []{{ Primitive $type }}
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_arrays_new_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            {{ LowerFirst .Name }}: make([]{{ Primitive $type }}, 0, {{ .InitialSize }}),
+        {{- else }}
+            {{ .Name }}: make([]{{ Primitive $type }}, 0, {{ .InitialSize }}),
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_arrays_encode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            e.Slice(uint32(len(x.{{ LowerFirst .Name }})), {{ PolyglotPrimitive $type }})
+            for _, a := range x.{{ LowerFirst .Name }} {
+                e.{{ PolyglotPrimitiveEncode $type }}(a)
+            }
+        {{- else }}
+            e.Slice(uint32(len(x.{{ .Name }})), {{ PolyglotPrimitive $type }})
+            for _, a := range x.{{ .Name }} {
+                e.{{ PolyglotPrimitiveEncode $type }}(a)
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_arrays_decode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            sliceSize{{ LowerFirst .Name }}, err := d.Slice({{ PolyglotPrimitive .Type }})
+            if err != nil {
+                return nil, err
+            }
+
+            if uint32(len(x.{{ LowerFirst .Name }})) != sliceSize{{ LowerFirst .Name }} {
+                x.{{ LowerFirst .Name }} = make([]{{ Primitive $type }}, sliceSize{{ LowerFirst .Name }})
+            }
+
+            for i := uint32(0); i < sliceSize{{ LowerFirst .Name }}; i++ {
+                x.{{ LowerFirst .Name }}[i], err = d.{{ PolyglotPrimitiveDecode $type }}()
+                if err != nil {
+                    return nil, err
+                }
+            }
+        {{- else }}
+            sliceSize{{ .Name }}, err := d.Slice({{ PolyglotPrimitive $type }})
+            if err != nil {
+                return nil, err
+            }
+
+            if uint32(len(x.{{ .Name }})) != sliceSize{{ .Name }} {
+                x.{{ .Name }} = make([]{{ Primitive $type }}, sliceSize{{ .Name }})
+            }
+
+            for i := uint32(0); i < sliceSize{{ .Name }}; i++ {
+                x.{{ .Name }}[i], err = d.{{ PolyglotPrimitiveDecode $type }}()
+                if err != nil {
+                    return nil, err
+                }
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "go_bytesarrays_decode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            sliceSize{{ LowerFirst .Name }}, err := d.Slice({{ PolyglotPrimitive .Type }})
+            if err != nil {
+                return nil, err
+            }
+
+            if uint32(len(x.{{ LowerFirst .Name }})) != sliceSize{{ LowerFirst .Name }} {
+                x.{{ LowerFirst .Name }} = make([]{{ Primitive $type }}, sliceSize{{ LowerFirst .Name }})
+            }
+
+            for i := uint32(0); i < sliceSize{{ LowerFirst .Name }}; i++ {
+                x.{{ LowerFirst .Name }}[i], err = d.{{ PolyglotPrimitiveDecode $type }}(nil)
+                if err != nil {
+                    return nil, err
+                }
+            }
+        {{- else }}
+            sliceSize{{ .Name }}, err := d.Slice({{ PolyglotPrimitive $type }})
+            if err != nil {
+                return nil, err
+            }
+
+            if uint32(len(x.{{ .Name }})) != sliceSize{{ .Name }} {
+                x.{{ .Name }} = make([]{{ Primitive $type }}, sliceSize{{ .Name }})
+            }
+
+            for i := uint32(0); i < sliceSize{{ .Name }}; i++ {
+                x.{{ .Name }}[i], err = d.{{ PolyglotPrimitiveDecode $type }}(nil)
+                if err != nil {
+                    return nil, err
+                }
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}

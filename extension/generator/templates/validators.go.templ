@@ -1,0 +1,53 @@
+{{ define "go_numbers_limit_validator" }}
+{{- if . }}
+    {{- if and .Maximum .Minimum }}
+        if v > {{ .Maximum }} || v < {{ .Minimum }} {
+            return fmt.Errorf("value must be between {{ .Minimum }} and {{ .Maximum }}")
+        }
+    {{- else if .Minimum }}
+        if v < {{ .Minimum }} {
+            return fmt.Errorf("value must be greater than or equal to {{ .Minimum }}")
+        }
+    {{- else if .Maximum }}
+        if v > {{ .Maximum }} {
+            return fmt.Errorf("value must be less than or equal to {{ .Maximum }}")
+        }
+    {{- end }}
+{{- end }}
+{{ end }}
+
+{{ define "go_regex_validator" }}
+    {{- if . }}
+        if matched, err := regexp.MatchString(`{{ .Expression }}`, v); err != nil || !matched {
+            return fmt.Errorf("value must match {{ .Expression }}")
+        }
+    {{- end }}
+{{ end }}
+
+{{ define "go_length_validator" }}
+    {{- if . }}
+        {{- if and .Maximum .Minimum }}
+            if len(v) > {{ .Maximum }} || len(v) < {{ .Minimum }} {
+                return fmt.Errorf("length must be between {{ .Minimum }} and {{ .Maximum }}")
+            }
+        {{- else if .Minimum }}
+            if len(v) < {{ .Minimum }} {
+                return fmt.Errorf("length must be greater than or equal to {{ .Minimum }}")
+            }
+        {{- else if .Maximum }}
+            if len(v) > {{ .Maximum }} {
+                return fmt.Errorf("length must be less than or equal to {{ .Maximum }}")
+            }
+        {{- end }}
+    {{- end }}
+{{ end }}
+
+{{ define "go_case_modifier" }}
+    {{- if . }}
+        {{- if eq .Kind "upper" }}
+            v = strings.ToUpper(v)
+        {{- else if eq .Kind "lower" }}
+            v = strings.ToLower(v)
+        {{- end }}
+    {{- end }}
+{{ end }}
