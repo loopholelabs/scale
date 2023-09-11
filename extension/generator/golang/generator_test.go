@@ -36,7 +36,7 @@ func TestGenerator(t *testing.T) {
 	require.NoError(t, err)
 	os.WriteFile("./interfaces.txt", f_interfaces, 0644)
 
-	formatted, err := Generate(s, "types", "v0.1.0")
+	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
 
 	// Check things...
@@ -57,7 +57,7 @@ func TestGenerator(t *testing.T) {
 
 	os.WriteFile("./guest.txt", f_guest, 0644)
 
-	modf, err := GenerateModfile(packageName, "v0.1.0")
+	modf, err := GenerateModfile(packageName)
 	require.NoError(t, err)
 
 	os.WriteFile("./modfile.txt", modf, 0644)

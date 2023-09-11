@@ -17,6 +17,7 @@
 package extension
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -333,6 +334,200 @@ func (s *Schema) Validate() error {
 		return fmt.Errorf("unknown schema version: %s", s.Version)
 	}
 
+}
+
+// Hash returns the SHA256 hash of the schema
+func (s *Schema) Hash() ([]byte, error) {
+	d, err := s.Encode()
+	if err != nil {
+		return nil, err
+	}
+
+	h := sha256.New()
+	if _, err = h.Write(d); err != nil {
+		return nil, err
+	}
+	return h.Sum(nil), nil
+}
+
+// Clone returns a deep copy of the schema
+func (s *Schema) Clone() (*Schema, error) {
+	clone := new(Schema)
+	encoded, err := s.Encode()
+	if err != nil {
+		return nil, err
+	}
+	if err = clone.Decode(encoded); err != nil {
+		return nil, err
+	}
+	return clone, nil
+}
+
+// CloneWithDisabledAccessorsValidatorsAndModifiers returns a clone of the
+// schema with all accessors, validators, and modifiers disabled
+func (s *Schema) CloneWithDisabledAccessorsValidatorsAndModifiers() (*Schema, error) {
+	clone, err := s.Clone()
+	if err != nil {
+		return nil, err
+	}
+	clone.hasCaseModifier = false
+	clone.hasLimitValidator = false
+	clone.hasRegexValidator = false
+	clone.hasLengthValidator = false
+	for _, model := range clone.Models {
+		for _, modelReference := range model.Models {
+			modelReference.Accessor = false
+		}
+
+		for _, modelReferenceArray := range model.ModelArrays {
+			modelReferenceArray.Accessor =
+				false
+		}
+
+		for _, str := range model.Strings {
+			var accessorValue bool
+			str.Accessor = &accessorValue
+			str.CaseModifier = nil
+			str.LengthValidator = nil
+			str.RegexValidator = nil
+		}
+
+		for _, strArray := range model.StringArrays {
+			var accessorValue bool
+			strArray.Accessor = &accessorValue
+		}
+
+		for _, strMap := range model.StringMaps {
+			var accessorValue bool
+			strMap.Accessor = &accessorValue
+		}
+
+		for _, i32 := range model.Int32s {
+			var accessorValue bool
+			i32.Accessor = &accessorValue
+			i32.LimitValidator = nil
+		}
+
+		for _, i32Array := range model.Int32Arrays {
+			var accessorValue bool
+			i32Array.Accessor = &accessorValue
+		}
+
+		for _, i32Map := range model.Int32Maps {
+			var accessorValue bool
+			i32Map.Accessor = &accessorValue
+		}
+
+		for _, i64 := range model.Int64s {
+			var accessorValue bool
+			i64.Accessor = &accessorValue
+			i64.LimitValidator = nil
+		}
+
+		for _, i64Array := range model.Int64Arrays {
+			var accessorValue bool
+			i64Array.Accessor = &accessorValue
+		}
+
+		for _, i64Map := range model.Int64Maps {
+			var accessorValue bool
+			i64Map.Accessor = &accessorValue
+		}
+
+		for _, u32 := range model.Uint32s {
+			var accessorValue bool
+			u32.Accessor = &accessorValue
+			u32.LimitValidator = nil
+		}
+
+		for _, u32Array := range model.Uint32Arrays {
+			var accessorValue bool
+			u32Array.Accessor = &accessorValue
+		}
+
+		for _, u32Map := range model.Uint32Maps {
+			var accessorValue bool
+			u32Map.Accessor = &accessorValue
+		}
+
+		for _, u64 := range model.Uint64s {
+			var accessorValue bool
+			u64.Accessor = &accessorValue
+			u64.LimitValidator = nil
+		}
+
+		for _, u64Array := range model.Uint64Arrays {
+			var accessorValue bool
+			u64Array.Accessor = &accessorValue
+		}
+
+		for _, u64Map := range model.Uint64Maps {
+			var accessorValue bool
+			u64Map.Accessor = &accessorValue
+		}
+
+		for _, f32 := range model.Float32s {
+			var accessorValue bool
+			f32.Accessor = &accessorValue
+			f32.LimitValidator = nil
+		}
+
+		for _, f32Array := range model.Float32Arrays {
+			var accessorValue bool
+			f32Array.Accessor = &accessorValue
+		}
+
+		for _, f64 := range model.Float64s {
+			var accessorValue bool
+			f64.Accessor = &accessorValue
+			f64.LimitValidator = nil
+		}
+
+		for _, f64Array := range model.Float64Arrays {
+			var accessorValue bool
+			f64Array.Accessor = &accessorValue
+		}
+
+		for _, boolean := range model.Bools {
+			boolean.Accessor = false
+		}
+
+		for _, booleanArray := range model.BoolArrays {
+			booleanArray.Accessor = false
+		}
+
+		for _, b := range model.Bytes {
+			b.Accessor = false
+		}
+
+		for _, bytesArray := range model.BytesArrays {
+			bytesArray.Accessor = false
+		}
+
+		for _, enumReference := range model.Enums {
+			enumReference.Accessor = false
+		}
+
+		for _, enumReferenceArray := range model.EnumArrays {
+			enumReferenceArray.Accessor = false
+		}
+
+		for _, enumReferenceMap := range model.EnumMaps {
+			enumReferenceMap.Accessor = false
+		}
+	}
+
+	return clone, clone.validateAndNormalize()
+}
+
+// validateAndNormalize validates the Schema and normalizes it
+//
+// Note: This function modifies the Schema in-place
+func (s *Schema) validateAndNormalize() error {
+
+	// TODO...
+
+	return nil
 }
 
 func (s *Schema) HasLimitValidator() bool {
