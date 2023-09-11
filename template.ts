@@ -17,7 +17,6 @@
 import { Signature  } from "@loopholelabs/scale-signature-interfaces";
 import { Scale } from "./scale";
 import {ScaleFunc} from "./scalefunc/scalefunc";
-import {DisabledWASI} from "./wasi";
 import {Tracing} from "./tracing";
 import {ModulePool} from "./pool";
 

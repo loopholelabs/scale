@@ -19,6 +19,7 @@ package scale
 import (
 	"context"
 	"fmt"
+
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 
 	"github.com/loopholelabs/polyglot"

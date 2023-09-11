@@ -2,6 +2,7 @@ package converter
 
 import (
 	"encoding/json"
+
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 
 	"github.com/loopholelabs/polyglot"

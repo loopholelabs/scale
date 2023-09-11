@@ -20,15 +20,17 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/evanw/esbuild/pkg/api"
-	"github.com/loopholelabs/scale/compile/typescript"
-	"github.com/loopholelabs/scale/compile/typescript/builder"
 	"io"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/evanw/esbuild/pkg/api"
+
+	"github.com/loopholelabs/scale/compile/typescript"
+	"github.com/loopholelabs/scale/compile/typescript/builder"
 
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"

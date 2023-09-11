@@ -15,10 +15,11 @@ package typescript
 
 import (
 	"bytes"
-	"github.com/loopholelabs/scale/scalefile"
-	"github.com/loopholelabs/scale/version"
 	"strings"
 	"text/template"
+
+	"github.com/loopholelabs/scale/scalefile"
+	"github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/compile/typescript/templates"
 )

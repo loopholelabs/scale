@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 

@@ -21,8 +21,9 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 	"sync"
+
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
