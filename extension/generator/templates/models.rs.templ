@@ -1,0 +1,44 @@
+{{ define "rs_models_struct_reference" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            {{ SnakeCase .Name }}: Option<{{ .Reference }}>,
+        {{- else }}
+            pub {{ SnakeCase .Name }}: Option<{{ .Reference }}>,
+        {{- end -}}
+    {{- end }}
+{{ end }}
+
+{{ define "rs_models_new_struct_reference" }}
+    {{- range .Models }}
+        {{ SnakeCase .Name }}: Some({{ .Reference }}::new()),
+    {{- end }}
+{{ end }}
+
+{{ define "rs_models_encode" }}
+    {{- range .Models }}
+        self.{{ SnakeCase .Name }}.encode_self(e)?;
+    {{- end }}
+{{ end }}
+
+{{ define "rs_models_decode" }}
+    {{- range .Models }}
+        x.{{ SnakeCase .Name }} = {{ .Reference }}::decode(d)?;
+    {{- end }}
+{{ end }}
+
+{{ define "rs_models_accessor" }}
+    {{ $current_model := . }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            impl {{ $current_model.Name }} {
+                pub fn get_{{ SnakeCase .Name }}(&self) -> &Option<{{ .Reference }}> {
+                    &self.{{ SnakeCase .Name }}
+                }
+
+                pub fn set_{{ SnakeCase .Name }}(&mut self, v: Option<{{ .Reference }}>) {
+                    self.{{ SnakeCase .Name }} = v;
+                }
+            }
+        {{- end -}}
+    {{- end }}
+{{ end }}
