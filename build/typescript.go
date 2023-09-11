@@ -183,7 +183,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 			errString.WriteString(err.Text)
 			errString.WriteRune('\n')
 		}
-		return nil, fmt.Errorf("unable to compile scale function: %s", errString.String())
+		return nil, fmt.Errorf("unable to compile scale function source using esbuild: %s", errString.String())
 	}
 
 	functionDir := path.Join(build.Path, "function")
@@ -230,7 +230,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	cmd.Stdout = options.Output
 	err = cmd.Run()
 	if err != nil {
-		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+		return nil, fmt.Errorf("unable to compile scale function and update npm: %w", err)
 	}
 
 	result = api.Build(api.BuildOptions{
@@ -248,7 +248,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 			errString.WriteString(err.Text)
 			errString.WriteRune('\n')
 		}
-		return nil, fmt.Errorf("unable to compile scale function: %s", errString.String())
+		return nil, fmt.Errorf("unable to compile scale function compiler using esbuild: %s", errString.String())
 	}
 
 	jsBuilderBinary := path.Join(build.Path, "js_builder")
@@ -263,7 +263,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	cmd.Stdout = options.Output
 	err = cmd.Run()
 	if err != nil {
-		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+		return nil, fmt.Errorf("unable to compile scale function using js_builder: %w", err)
 	}
 
 	data, err := os.ReadFile(path.Join(build.Path, "scale.wasm"))
