@@ -18,7 +18,11 @@ import (
 	"go/format"
 	"text/template"
 
+	polyglotVersion "github.com/loopholelabs/polyglot/version"
+	interfacesVersion "github.com/loopholelabs/scale-signature-interfaces/version"
 	"github.com/loopholelabs/scale/extension"
+
+	scaleVersion "github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/extension/generator/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
@@ -30,8 +34,8 @@ const (
 
 var generator *Generator
 
-func Generate(schema *extension.Schema, packageName string, version string) ([]byte, error) {
-	return generator.Generate(schema, packageName, version)
+func GenerateTypes(schema *extension.Schema, packageName string) ([]byte, error) {
+	return generator.GenerateTypes(schema, packageName)
 }
 
 func GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
@@ -42,8 +46,8 @@ func GenerateGuest(schema *extension.Schema, packageName string, version string)
 	return generator.GenerateGuest(schema, packageName, version)
 }
 
-func GenerateModfile(packageName string, polyglotVersion string) ([]byte, error) {
-	return generator.GenerateModfile(packageName, polyglotVersion)
+func GenerateModfile(packageName string) ([]byte, error) {
+	return generator.GenerateModfile(packageName)
 }
 
 func GenerateHost(schema *extension.Schema, packageName string, version string) ([]byte, error) {
@@ -76,16 +80,21 @@ func New() (*Generator, error) {
 }
 
 // Generate generates the go code
-func (g *Generator) Generate(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateTypes(schema *extension.Schema, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
+	ext, err := schema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "types.go.templ", map[string]any{
-		"schema":  schema,
-		"version": version,
-		"package": packageName,
+	err = g.templ.ExecuteTemplate(buf, "types.go.templ", map[string]any{
+		"signature_schema":  ext,
+		"generator_version": scaleVersion.Version(),
+		"package_name":      packageName,
 	})
 	if err != nil {
 		return nil, err
@@ -132,11 +141,12 @@ func (g *Generator) GenerateGuest(schema *extension.Schema, packageName string, 
 }
 
 // GenerateModfile generates the modfile for the signature
-func (g *Generator) GenerateModfile(packageName string, polyglotVersion string) ([]byte, error) {
+func (g *Generator) GenerateModfile(packageImportPath string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "mod.go.templ", map[string]any{
-		"polyglot_version": polyglotVersion,
-		"package":          packageName,
+		"polyglot_version":                   polyglotVersion.Version(),
+		"scale_signature_interfaces_version": interfacesVersion.Version(),
+		"package_import_path":                packageImportPath,
 	})
 	if err != nil {
 		return nil, err
