@@ -20,12 +20,11 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-
-	"github.com/loopholelabs/scale/signature"
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
 // Instance is a single instance of a Scale Function chain
-type Instance[T signature.Signature] struct {
+type Instance[T interfaces.Signature] struct {
 	// runtime is the runtime that this instance belongs to
 	runtime *Scale[T]
 
@@ -39,7 +38,7 @@ type Instance[T signature.Signature] struct {
 	next Next[T]
 }
 
-func newInstance[T signature.Signature](ctx context.Context, runtime *Scale[T], next ...Next[T]) (*Instance[T], error) {
+func newInstance[T interfaces.Signature](ctx context.Context, runtime *Scale[T], next ...Next[T]) (*Instance[T], error) {
 	instance := &Instance[T]{
 		runtime:    runtime,
 		identifier: make([]byte, 16),

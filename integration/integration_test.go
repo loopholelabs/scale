@@ -71,6 +71,7 @@ func compileGolangGuest(t *testing.T) *scalefunc.Schema {
 	require.NoError(t, err)
 
 	schema, err := build.LocalGolang(&build.LocalGolangOptions{
+		Output:          os.Stdout,
 		Scalefile:       scf,
 		SourceDirectory: golangFunctionDir,
 		SignatureSchema: s,
@@ -130,6 +131,7 @@ func compileRustGuest(t *testing.T) *scalefunc.Schema {
 	require.NoError(t, err)
 
 	schema, err := build.LocalRust(&build.LocalRustOptions{
+		Output:          os.Stdout,
 		Scalefile:       scf,
 		SourceDirectory: rustFunctionDir,
 		SignatureSchema: s,
@@ -189,6 +191,7 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.Schema {
 	require.NoError(t, err)
 
 	schema, err := build.LocalTypescript(&build.LocalTypescriptOptions{
+		Output:          os.Stdout,
 		Scalefile:       scf,
 		SourceDirectory: typescriptFunctionDir,
 		SignatureSchema: s,
@@ -212,7 +215,7 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.Schema {
 
 func TestGolangHostGolangGuest(t *testing.T) {
 	schema := compileGolangGuest(t)
-	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
 	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
 
@@ -230,7 +233,7 @@ func TestGolangHostGolangGuest(t *testing.T) {
 
 func TestGolangHostRustGuest(t *testing.T) {
 	schema := compileRustGuest(t)
-	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
 	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
 
@@ -244,6 +247,26 @@ func TestGolangHostRustGuest(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, "This is a Rust Function", sig.Context.StringField)
+}
+
+func TestGolangHostTypescriptGuest(t *testing.T) {
+	schema := compileTypescriptGuest(t)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+	require.NotNil(t, sig)
+	require.NotNil(t, sig.Context)
+
+	require.Equal(t, "This is a Typescript Function", sig.Context.StringField)
 }
 
 func TestTypescriptHostTypescriptGuest(t *testing.T) {

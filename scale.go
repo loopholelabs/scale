@@ -21,22 +21,21 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 	"sync"
 
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
-
-	"github.com/loopholelabs/scale/signature"
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
 // by whatever adapter is being used.
-type Next[T signature.Signature] func(ctx T) (T, error)
+type Next[T interfaces.Signature] func(ctx T) (T, error)
 
 // Scale is the Scale Runtime. It is responsible for initializing
 // and managing the WASM runtime as well as the scale function chain.
-type Scale[T signature.Signature] struct {
+type Scale[T interfaces.Signature] struct {
 	runtime      wazero.Runtime
 	moduleConfig wazero.ModuleConfig
 
@@ -51,7 +50,7 @@ type Scale[T signature.Signature] struct {
 	TraceDataCallback func(data string)
 }
 
-func New[T signature.Signature](config *Config[T]) (*Scale[T], error) {
+func New[T interfaces.Signature](config *Config[T]) (*Scale[T], error) {
 	r := &Scale[T]{
 		runtime:       wazero.NewRuntimeWithConfig(config.context, wazero.NewRuntimeConfig().WithCloseOnContextDone(true)),
 		moduleConfig:  wazero.NewModuleConfig().WithSysNanotime().WithSysWalltime().WithRandSource(rand.Reader),
@@ -72,6 +71,18 @@ func (r *Scale[T]) init() error {
 	err := r.config.validate()
 	if err != nil {
 		return err
+	}
+
+	if r.config.Stdout != nil {
+		r.moduleConfig = r.moduleConfig.WithStdout(r.config.Stdout)
+	}
+
+	if r.config.Stderr != nil {
+		r.moduleConfig = r.moduleConfig.WithStderr(r.config.Stderr)
+	}
+
+	if r.config.Stdin != nil {
+		r.moduleConfig = r.moduleConfig.WithStdin(r.config.Stdin)
 	}
 
 	envHostModuleBuilder := r.runtime.NewHostModuleBuilder("env").
@@ -175,5 +186,5 @@ func (r *Scale[T]) next(ctx context.Context, module api.Module, params []uint64)
 	if err != nil {
 		return
 	}
-	module.Memory().Write(uint32(writeBuffer[0]), buf)
+	m.instantiatedModule.Memory().Write(uint32(writeBuffer[0]), buf)
 }

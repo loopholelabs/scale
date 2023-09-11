@@ -23,6 +23,7 @@ import (
 	"github.com/evanw/esbuild/pkg/api"
 	"github.com/loopholelabs/scale/compile/typescript"
 	"github.com/loopholelabs/scale/compile/typescript/builder"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -51,15 +52,15 @@ const (
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "paths": {
-      "signature": ["./"]
-    },
     "types": ["node"]
   },
 }`
 )
 
 type LocalTypescriptOptions struct {
+	// Output is the output writer for the various build commands
+	Output io.Writer
+
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
@@ -169,6 +170,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		Bundle:      true,
 		Platform:    target,
 		Format:      api.FormatCommonJS,
+		Define:      map[string]string{"global": "globalThis"},
 		TsconfigRaw: tsConfig,
 		EntryPoints: []string{path.Join(options.SourceDirectory, "index.ts")},
 	})
@@ -222,11 +224,10 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 
 	cmd := exec.Command(options.NPMBin, "install")
 	cmd.Dir = compilePath
-	output, err := cmd.CombinedOutput()
+	cmd.Stderr = options.Output
+	cmd.Stdout = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
@@ -234,6 +235,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		Bundle:      true,
 		Platform:    target,
 		Format:      api.FormatCommonJS,
+		Define:      map[string]string{"global": "globalThis"},
 		TsconfigRaw: tsConfig,
 		EntryPoints: []string{path.Join(compilePath, "index.ts")},
 	})
@@ -253,14 +255,18 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to write js_builder executable: %w", err)
 	}
 
-	cmd = exec.Command(jsBuilderBinary)
+	cmd = exec.Command(jsBuilderBinary, "-o", path.Join(build.Path, "scale.wasm"))
 	cmd.Stdin = strings.NewReader(string(result.OutputFiles[0].Contents))
-	output, err = cmd.CombinedOutput()
+	cmd.Stderr = options.Output
+	cmd.Stdout = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
+	}
+
+	data, err := os.ReadFile(path.Join(build.Path, "scale.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
 	hash, err := options.SignatureSchema.Hash()
@@ -278,6 +284,6 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		Language:        scalefunc.TypeScript,
 		Stateless:       options.Scalefile.Stateless,
 		Dependencies:    nil,
-		Function:        output,
+		Function:        data,
 	}, nil
 }

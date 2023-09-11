@@ -19,11 +19,11 @@ package scale
 import (
 	"context"
 	"errors"
+	"io"
 	"regexp"
 
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
 )
 
 var (
@@ -43,14 +43,17 @@ type configFunction struct {
 }
 
 // Config is the configuration for a Scale Runtime
-type Config[T signature.Signature] struct {
+type Config[T interfaces.Signature] struct {
 	newSignature interfaces.New[T]
 	functions    []configFunction
 	context      context.Context
+	Stdout       io.Writer
+	Stderr       io.Writer
+	Stdin        io.Reader
 }
 
 // NewConfig returns a new Scale Runtime Config
-func NewConfig[T signature.Signature](newSignature interfaces.New[T]) *Config[T] {
+func NewConfig[T interfaces.Signature](newSignature interfaces.New[T]) *Config[T] {
 	return &Config[T]{
 		newSignature: newSignature,
 	}
@@ -109,6 +112,21 @@ func (c *Config[T]) WithFunctions(function []*scalefunc.Schema, env ...map[strin
 
 func (c *Config[T]) WithContext(ctx context.Context) *Config[T] {
 	c.context = ctx
+	return c
+}
+
+func (c *Config[T]) WithStdout(w io.Writer) *Config[T] {
+	c.Stdout = w
+	return c
+}
+
+func (c *Config[T]) WithStderr(w io.Writer) *Config[T] {
+	c.Stderr = w
+	return c
+}
+
+func (c *Config[T]) WithStdin(r io.Reader) *Config[T] {
+	c.Stdin = r
 	return c
 }
 

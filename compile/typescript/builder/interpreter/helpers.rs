@@ -16,7 +16,7 @@
 
 use polyglot_rs::Encoder;
 use quickjs_wasm_sys::{
-    ext_js_undefined, size_t as JS_size_t, JSCFunctionData, JSContext, JSValue,
+    ext_js_undefined, size_t as JS_size_t, size_t, JSCFunctionData, JSContext, JSValue,
     JS_DefinePropertyValueStr, JS_FreeCString, JS_NewCFunctionData, JS_ThrowInternalError,
     JS_ToCStringLen2, JS_PROP_C_W_E,
 };
@@ -85,7 +85,7 @@ pub fn global_err(err: Box<dyn Error>) -> u64 {
         // Now pack the address and length and return...
         let ptr = GLOBAL_ERROR.as_ptr() as u64;
         let len = GLOBAL_ERROR.len() as u64;
-        return (ptr << 32) | len;
+        (ptr << 32) | len
     }
 }
 
@@ -112,4 +112,14 @@ where
     }
 
     Some(trampoline::<F>)
+}
+
+pub unsafe fn to_exception(ctx: *mut JSContext, e: JSValue) -> Result<String, anyhow::Error> {
+    let mut len: size_t = 0;
+    let ptr = JS_ToCStringLen2(ctx, &mut len, e, 0);
+    let ptr = ptr as *const u8;
+    let len = len as usize;
+    let buffer = std::slice::from_raw_parts(ptr, len);
+    let anyhow_error: anyhow::Result<&str> = std::str::from_utf8(buffer).map_err(Into::into);
+    anyhow_error.map(|s| s.to_string())
 }

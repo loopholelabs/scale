@@ -30,8 +30,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-
-	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
 const (
@@ -46,8 +44,6 @@ var (
 var (
 	TitleCaser = cases.Title(language.Und, cases.NoLower)
 )
-
-type Signature = interfaces.Signature
 
 // Schema is the top-level structure of a Scale Signature schema
 type Schema struct {

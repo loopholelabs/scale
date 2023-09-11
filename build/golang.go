@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -38,6 +39,9 @@ var (
 )
 
 type LocalGolangOptions struct {
+	// Output is the output writer for the various build commands
+	Output io.Writer
+
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
@@ -181,11 +185,10 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 
 	cmd := exec.Command(options.GoBin, "mod", "tidy")
 	cmd.Dir = compilePath
-	output, err := cmd.CombinedOutput()
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
@@ -205,12 +208,10 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 
 	cmd = exec.Command(options.TinyGoBin, buildArgs...)
 	cmd.Dir = compilePath
-
-	output, err = cmd.CombinedOutput()
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 

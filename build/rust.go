@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -37,6 +38,9 @@ var (
 )
 
 type LocalRustOptions struct {
+	// Output is the output writer for the various build commands
+	Output io.Writer
+
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
@@ -158,11 +162,10 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 
 	cmd := exec.Command(options.CargoBin, "check")
 	cmd.Dir = compilePath
-	output, err := cmd.CombinedOutput()
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
@@ -182,12 +185,10 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 
 	cmd = exec.Command(options.CargoBin, buildArgs...)
 	cmd.Dir = compilePath
-
-	output, err = cmd.CombinedOutput()
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 

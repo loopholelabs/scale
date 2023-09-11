@@ -6,8 +6,8 @@
 import { Signature as SignatureInterface, TYPESCRIPT_ADDRESS_OF, TYPESCRIPT_NEXT} from "@loopholelabs/scale-signature-interfaces";
 import { Decoder, Encoder, Kind } from "@loopholelabs/polyglot";
 
-let WRITE_BUFFER: ArrayBuffer = new Uint8Array().buffer;
-let READ_BUFFER: ArrayBuffer = new Uint8Array().buffer;
+(global as any).WRITE_BUFFER = new Uint8Array().buffer;
+(global as any).READ_BUFFER = new Uint8Array().buffer;
 
 export * from "./types";
 import { {{ .signature_schema.Context }} } from "./types";
@@ -24,10 +24,10 @@ export function Write(ctx?: {{ .signature_schema.Context }}): number[] {
     } else {
         ctx.encode(enc);
     }
-    WRITE_BUFFER = enc.bytes;
+    const len = enc.bytes.buffer.byteLength;
+    (global as any).WRITE_BUFFER = enc.bytes.buffer;
     const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-    const ptr = addrof(WRITE_BUFFER);
-    const len = WRITE_BUFFER.byteLength;
+    const ptr = addrof((global as any).WRITE_BUFFER);
     return [ptr, len];
 }
 
@@ -35,7 +35,7 @@ export function Write(ctx?: {{ .signature_schema.Context }}): number[] {
 //
 // Users should not use this method.
 export function Read(): {{ .signature_schema.Context }} | undefined {
-    const dec = new Decoder(new Uint8Array(READ_BUFFER));
+    const dec = new Decoder(new Uint8Array((global as any).READ_BUFFER));
     return {{ .signature_schema.Context }}.decode(dec);
 }
 
@@ -45,10 +45,10 @@ export function Read(): {{ .signature_schema.Context }} | undefined {
 export function Error(err: Error): number[] {
     const enc = new Encoder();
     enc.error(err);
-    WRITE_BUFFER = enc.bytes;
+    const len = enc.bytes.buffer.byteLength;
+    (global as any).WRITE_BUFFER = enc.bytes.buffer;
     const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-    const ptr = addrof(WRITE_BUFFER);
-    const len = WRITE_BUFFER.byteLength;
+    const ptr = addrof((global as any).WRITE_BUFFER);
     return [ptr, len];
 }
 
@@ -56,9 +56,9 @@ export function Error(err: Error): number[] {
 //
 // Users should not use this method.
 export function Resize(size: number): number {
-    READ_BUFFER = new Uint8Array(size).buffer;
+    (global as any).READ_BUFFER = new Uint8Array(size).buffer;
     const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-    return addrof(READ_BUFFER);
+    return addrof((global as any).READ_BUFFER);
 }
 
 // Hash returns the hash of the Scale Signature
@@ -67,10 +67,10 @@ export function Resize(size: number): number {
 export function Hash(): number[] {
     const enc = new Encoder();
     enc.string(hash);
-    WRITE_BUFFER = enc.bytes;
+    const len = enc.bytes.buffer.byteLength;
+    (global as any).WRITE_BUFFER = enc.bytes.buffer;
     const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-    const ptr = addrof(WRITE_BUFFER);
-    const len = WRITE_BUFFER.byteLength;
+    const ptr = addrof((global as any).WRITE_BUFFER);
     return [ptr, len];
 }
 

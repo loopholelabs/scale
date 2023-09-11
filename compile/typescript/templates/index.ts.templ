@@ -8,14 +8,9 @@ function PackUint32(ptr: number, len: number): bigint {
     return (BigInt(ptr) << BigInt(32)) | BigInt(len);
 }
 
-// Setup TextEncoder so it's available for Polyglot
-export class TextEncoder {
+class TextEncoder {
     public encoding = "utf-8";
     constructor() {}
-
-    public encodeInto(s: string, u: Uint8Array): any {
-        return {read: 0, written: 0};
-    }
 
     public encode(s: string): Uint8Array {
         let octets = [];
@@ -52,10 +47,8 @@ export class TextEncoder {
     }
 }
 
-export class TextDecoder {
+class TextDecoder {
     public encoding = "utf-8";
-    public fatal = false;
-    public ignoreBOM = false;
 
     constructor() {}
 
@@ -148,13 +141,11 @@ function hashFunction(): bigint {
     return PackUint32(ptr, len);
 }
 
-(global as any).Exports = {
+(global as any).exports = {
     main: mainFunction,
     initialize: initializeFunction,
     run: runFunction,
     hash: hashFunction,
     resize: resizeFunction
 }
-
-
 
