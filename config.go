@@ -49,7 +49,6 @@ type Config[T interfaces.Signature] struct {
 	context      context.Context
 	Stdout       io.Writer
 	Stderr       io.Writer
-	Stdin        io.Reader
 }
 
 // NewConfig returns a new Scale Runtime Config
@@ -122,11 +121,6 @@ func (c *Config[T]) WithStdout(w io.Writer) *Config[T] {
 
 func (c *Config[T]) WithStderr(w io.Writer) *Config[T] {
 	c.Stderr = w
-	return c
-}
-
-func (c *Config[T]) WithStdin(r io.Reader) *Config[T] {
-	c.Stdin = r
 	return c
 }
 

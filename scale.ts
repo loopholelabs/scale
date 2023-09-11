@@ -31,7 +31,7 @@ export async function New<T extends Signature>(config: Config<T>): Promise<Scale
 
 export class Scale<T extends Signature> {
     private readonly ready: Promise<void>;
-    private readonly config: Config<T>;
+    public readonly config: Config<T>;
     public head: undefined | Template<T>;
     private tail: undefined | Template<T>;
 

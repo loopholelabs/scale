@@ -81,10 +81,6 @@ func (r *Scale[T]) init() error {
 		r.moduleConfig = r.moduleConfig.WithStderr(r.config.Stderr)
 	}
 
-	if r.config.Stdin != nil {
-		r.moduleConfig = r.moduleConfig.WithStdin(r.config.Stdin)
-	}
-
 	envHostModuleBuilder := r.runtime.NewHostModuleBuilder("env").
 		NewFunctionBuilder().
 		WithGoModuleFunction(api.GoModuleFunc(r.next), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
