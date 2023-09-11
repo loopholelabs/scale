@@ -1,0 +1,90 @@
+{{ define "rs_primitives_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            {{ SnakeCase .Name }}: {{ Primitive $type }},
+        {{- else }}
+            pub {{ SnakeCase .Name }}: {{ Primitive $type }},
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "rs_primitives_new_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{ SnakeCase .Name }}: {{ .Default }},
+    {{ end }}
+{{ end }}
+
+{{ define "rs_strings_new_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{ SnakeCase .Name }}: "{{ .Default }}".to_string(),
+    {{ end }}
+{{ end }}
+
+{{ define "rs_bytes_new_struct_reference" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        {{ SnakeCase .Name }}: Vec::with_capacity({{ .InitialSize }}),
+    {{ end }}
+{{ end }}
+
+{{ define "rs_primitives_encode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        e.{{ PolyglotPrimitiveEncode $type }}(self.{{ SnakeCase .Name }})?;
+    {{- end }}
+{{ end}}
+
+{{ define "rs_ref_encode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        e.{{ PolyglotPrimitiveEncode $type }}(&self.{{ SnakeCase .Name }})?;
+    {{- end }}
+{{ end}}
+
+{{ define "rs_primitives_decode" }}
+    {{ $type := .Type }}
+    {{- range .Entries }}
+        x.{{ SnakeCase .Name }} = d.{{ PolyglotPrimitiveDecode $type }}()?;
+    {{- end }}
+{{ end}}
+
+{{ define "rs_numbers_accessor" }}
+    {{ $type := .Type }}
+    {{ $model := .Model }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+           pub  fn get_{{ SnakeCase .Name }}(&self) -> {{ Primitive $type }} {
+                self.{{ SnakeCase .Name }}
+            }
+
+            pub fn set_{{ SnakeCase .Name }}(&mut self, v: {{ Primitive $type }}) -> Result<(), Box<dyn std::error::Error>> {
+                {{- template "rs_numbers_limit_validator" .LimitValidator }}
+                self.{{ SnakeCase .Name }} = v;
+                Ok(())
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "rs_strings_accessor" }}
+    {{ $type := .Type }}
+    {{ $model := .Model }}
+    {{- range .Entries }}
+        {{- if (Deref .Accessor) }}
+            pub fn get_{{ SnakeCase .Name }}(&self) -> {{ Primitive $type }} {
+                self.{{ SnakeCase .Name }}.clone()
+            }
+
+            pub fn set_{{ SnakeCase .Name }}(&mut self, mut v: {{ Primitive $type }}) -> Result<(), Box<dyn std::error::Error>> {
+                {{- template "rs_regex_validator" .RegexValidator }}
+                {{- template "rs_length_validator" .LengthValidator }}
+                {{- template "rs_case_modifier" .CaseModifier }}
+                self.{{ SnakeCase .Name }} = v;
+                Ok(())
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
