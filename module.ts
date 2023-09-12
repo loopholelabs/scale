@@ -45,7 +45,7 @@ export class Module<T extends Signature> {
 
     constructor(template: Template<T>) {
         this.template = template;
-        this.wasi = new DisabledWASI(this.template.env);
+        this.wasi = new DisabledWASI(this.template.env, this.template.runtime.config.stdout, this.template.runtime.config.stderr);
 
         const moduleConfig = {
             wasi_snapshot_preview1: this.wasi.GetImports(),

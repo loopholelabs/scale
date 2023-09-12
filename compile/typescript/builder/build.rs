@@ -43,5 +43,9 @@ fn copy_engine_binary() {
     let output_path = format!("{}/interpreter.wasm", env::var("OUT_DIR").unwrap());
     println!("cargo:rerun-if-changed={:?}", input_path);
     println!("cargo:rerun-if-changed=build.rs");
+    println!(
+        "cargo:warning=using js_interpreter.wasm from {:?}...",
+        input_path
+    );
     fs::copy(&input_path, output_path).expect("failed to copy js_interpreter.wasm");
 }

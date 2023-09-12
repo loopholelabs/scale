@@ -20,15 +20,15 @@ import (
 	"context"
 	"fmt"
 
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
+
 	"github.com/loopholelabs/polyglot"
 
 	"github.com/google/uuid"
 	"github.com/tetratelabs/wazero/api"
-
-	"github.com/loopholelabs/scale/signature"
 )
 
-type module[T signature.Signature] struct {
+type module[T interfaces.Signature] struct {
 	// template is the template that the module
 	// was created from
 	template *template[T]
@@ -50,7 +50,7 @@ type module[T signature.Signature] struct {
 }
 
 // newModule creates a new module
-func newModule[T signature.Signature](ctx context.Context, template *template[T]) (*module[T], error) {
+func newModule[T interfaces.Signature](ctx context.Context, template *template[T]) (*module[T], error) {
 	config := template.runtime.moduleConfig.WithName(fmt.Sprintf("%s.%s", template.identifier, uuid.New().String()))
 	for k, v := range template.env {
 		config = config.WithEnv(k, v)

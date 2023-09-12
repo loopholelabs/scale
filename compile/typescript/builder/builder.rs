@@ -26,7 +26,6 @@ impl<'a> Builder<'a> {
     pub fn new(interpreter: &'a [u8]) -> Self {
         Self { interpreter }
     }
-
     pub fn build_interpreter(
         self,
         optimize: bool,

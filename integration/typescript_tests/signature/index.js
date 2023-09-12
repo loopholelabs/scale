@@ -34,43 +34,47 @@ var import_scale_signature_interfaces = require("@loopholelabs/scale-signature-i
 var import_polyglot = require("@loopholelabs/polyglot");
 __reExport(stdin_exports, require("./types"), module.exports);
 var import_types = require("./types");
-let WRITE_BUFFER = new Uint8Array().buffer;
-let READ_BUFFER = new Uint8Array().buffer;
+global.WRITE_BUFFER = new Uint8Array().buffer;
+global.READ_BUFFER = new Uint8Array().buffer;
 const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5";
 function Write(ctx) {
   const enc = new import_polyglot.Encoder();
-  ctx.encode(enc);
-  WRITE_BUFFER = enc.bytes;
+  if (ctx === void 0) {
+    enc.null();
+  } else {
+    ctx.encode(enc);
+  }
+  const len = enc.bytes.buffer.byteLength;
+  global.WRITE_BUFFER = enc.bytes.buffer;
   const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
-  const ptr = addrof(WRITE_BUFFER);
-  const len = WRITE_BUFFER.byteLength;
+  const ptr = addrof(global.WRITE_BUFFER);
   return [ptr, len];
 }
 function Read() {
-  const dec = new import_polyglot.Decoder(new Uint8Array(READ_BUFFER));
+  const dec = new import_polyglot.Decoder(new Uint8Array(global.READ_BUFFER));
   return import_types.ModelWithAllFieldTypes.decode(dec);
 }
 function Error2(err) {
   const enc = new import_polyglot.Encoder();
   enc.error(err);
-  WRITE_BUFFER = enc.bytes;
+  const len = enc.bytes.buffer.byteLength;
+  global.WRITE_BUFFER = enc.bytes.buffer;
   const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
-  const ptr = addrof(WRITE_BUFFER);
-  const len = WRITE_BUFFER.byteLength;
+  const ptr = addrof(global.WRITE_BUFFER);
   return [ptr, len];
 }
 function Resize(size) {
-  READ_BUFFER = new Uint8Array(size).buffer;
+  global.READ_BUFFER = new Uint8Array(size).buffer;
   const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
-  return addrof(READ_BUFFER);
+  return addrof(global.READ_BUFFER);
 }
 function Hash() {
   const enc = new import_polyglot.Encoder();
   enc.string(hash);
-  WRITE_BUFFER = enc.bytes;
+  const len = enc.bytes.buffer.byteLength;
+  global.WRITE_BUFFER = enc.bytes.buffer;
   const addrof = global[import_scale_signature_interfaces.TYPESCRIPT_ADDRESS_OF];
-  const ptr = addrof(WRITE_BUFFER);
-  const len = WRITE_BUFFER.byteLength;
+  const ptr = addrof(global.WRITE_BUFFER);
   return [ptr, len];
 }
 function Next(ctx) {

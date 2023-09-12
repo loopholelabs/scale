@@ -14,6 +14,8 @@
         limitations under the License.
 */
 
+import { Writer } from "./config";
+
 const ErrNoInstance = Error("no webassembly instance")
 const ErrNoMemory = Error("no exported memory in webassembly instance")
 
@@ -48,9 +50,13 @@ export class DisabledWASI {
     private exports: WebAssembly.Exports | undefined;
 
     private readonly env: { [key: string]: string } | undefined;
+    private readonly stdout: Writer | undefined;
+    private readonly stderr: Writer | undefined;
 
-    constructor(env?: { [key: string]: string }) {
+    constructor(env?: { [key: string]: string }, stdout?: Writer, stderr?: Writer) {
         this.env = env;
+        this.stdout = stdout;
+        this.stderr = stderr;
     }
 
     private getDataView(): DataView {
@@ -145,7 +151,34 @@ export class DisabledWASI {
         return DisabledWASI.EBADF;
     }
 
-    public fd_write(_fd: number, _iovs: number, _iovsLen: number, _nwritten: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
+    public fd_write(fd: number, iovsPtr: number, iovsLength: number, bytesWrittenPtr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
+        if ( (fd === 1 && this.stdout !== undefined) || (fd === 2 && this.stderr !== undefined) ) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            const iovs = new Uint32Array(this.exports.memory.buffer, iovsPtr, iovsLength * 2);
+            let text = "";
+            let totalBytesWritten = 0;
+            const decoder = new TextDecoder();
+            for(let i =0; i < iovsLength * 2; i += 2){
+                const offset = iovs[i];
+                const length = iovs[i+1];
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                const textChunk = decoder.decode(new Int8Array(this.exports.memory.buffer, offset, length));
+                text += textChunk;
+                totalBytesWritten += length;
+            }
+            const dataView = this.getDataView();
+            dataView.setInt32(bytesWrittenPtr, totalBytesWritten, true);
+            if (fd === 1 && this.stdout !== undefined) {
+                this.stdout(text);
+            } else if (fd === 2 && this.stderr !== undefined) {
+                this.stderr(text);
+            }
+
+            return DisabledWASI.ESUCCESS;
+        }
+
         return DisabledWASI.EBADF;
     }
 

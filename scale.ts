@@ -20,7 +20,6 @@ import { CallbackFunction as TraceCallbackFunction } from "./tracing";
 import {NewTemplate, Template} from "./template";
 import {Module} from "./module";
 import {Instance, NewInstance} from "./instance";
-import {PackUint32} from "./utils";
 
 export type NextFn<T extends Signature> = (ctx: T) => T;
 
@@ -32,7 +31,7 @@ export async function New<T extends Signature>(config: Config<T>): Promise<Scale
 
 export class Scale<T extends Signature> {
     private readonly ready: Promise<void>;
-    private readonly config: Config<T>;
+    public readonly config: Config<T>;
     public head: undefined | Template<T>;
     private tail: undefined | Template<T>;
 
@@ -78,8 +77,8 @@ export class Scale<T extends Signature> {
         return NewInstance(this, next);
     }
 
-    public Next(m: Module<T>): (ptr: number, len: number) => bigint {
-        return (ptr: number, len: number): bigint => {
+    public Next(m: Module<T>): (ptr: number, len: number) => void {
+        return (ptr: number, len: number): void => {
             if (m.memory === undefined) {
                 throw new Error("no memory found in module");
             }
@@ -115,8 +114,6 @@ export class Scale<T extends Signature> {
             const writeBufferPointer = m.resize(buf.length);
             const writeBuffer = new Uint8Array(m.memory.buffer);
             writeBuffer.set(buf, writeBufferPointer);
-
-            return PackUint32(writeBufferPointer, buf.length);
         }
     }
 }

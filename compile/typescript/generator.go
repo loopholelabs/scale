@@ -11,32 +11,27 @@
 	limitations under the License.
 */
 
-package golang
+package typescript
 
 import (
 	"bytes"
-	"go/format"
 	"strings"
 	"text/template"
 
-	"github.com/loopholelabs/scale/compile/golang/templates"
 	"github.com/loopholelabs/scale/scalefile"
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
-)
+	"github.com/loopholelabs/scale/version"
 
-const (
-	DefaultVersion = "v0.1.0"
+	"github.com/loopholelabs/scale/compile/typescript/templates"
 )
 
 var generator *Generator
 
-func GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
-	return generator.GenerateGoModfile(schema, signatureImport, signatureVersion, functionImport, dependencies, packageName)
+func GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureVersion string) ([]byte, error) {
+	return generator.GenerateTypescriptPackageJSON(packageSchema, signaturePath, signatureVersion)
 }
 
-func GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
-	return generator.GenerateGoMain(signature, schema, version)
+func GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
+	return generator.GenerateTypescriptIndex(packageSchema, functionPath)
 }
 
 func init() {
@@ -49,31 +44,20 @@ type Generator struct {
 
 func New() *Generator {
 	return &Generator{
-		template: template.Must(template.New("main").ParseFS(templates.FS, "*go.templ")),
+		template: template.Must(template.New("main").ParseFS(templates.FS, "*ts.templ")),
 	}
 }
 
-func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, dependencies []*scalefunc.Dependency, packageName string) ([]byte, error) {
-	if !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
-		signatureImport = "./" + signatureImport
-	}
-
-	if !strings.HasPrefix(functionImport, "/") && !strings.HasPrefix(functionImport, "./") && !strings.HasPrefix(functionImport, "../") {
-		functionImport = "./" + functionImport
+func (g *Generator) GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureVersion string) ([]byte, error) {
+	if signaturePath != "" && !strings.HasPrefix(signaturePath, "/") && !strings.HasPrefix(signaturePath, "./") && !strings.HasPrefix(signaturePath, "../") {
+		signaturePath = "./" + signaturePath
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"package":                  packageName,
-		"dependencies":             dependencies,
-		"old_signature_dependency": "signature",
-		"old_signature_version":    DefaultVersion,
-		"old_function_dependency":  schema.Name,
-		"old_function_version":     DefaultVersion,
-		"new_signature_dependency": signatureImport,
-		"new_signature_version":    signatureVersion,
-		"new_function_dependency":  functionImport,
-		"new_function_version":     "",
+	err := g.template.ExecuteTemplate(buf, "packagejson.ts.templ", map[string]interface{}{
+		"package_schema":    packageSchema,
+		"signature_path":    signaturePath,
+		"signature_version": signatureVersion,
 	})
 	if err != nil {
 		return nil, err
@@ -82,16 +66,19 @@ func (g *Generator) GenerateGoModfile(schema *scalefile.Schema, signatureImport 
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateGoMain(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
+func (g *Generator) GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
+	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
+		functionPath = "./" + functionPath
+	}
 	buf := new(bytes.Buffer)
-	err := g.template.ExecuteTemplate(buf, "main.go.templ", map[string]interface{}{
-		"version":   version,
-		"signature": signature,
-		"schema":    schema,
+	err := g.template.ExecuteTemplate(buf, "index.ts.templ", map[string]interface{}{
+		"generator_version": strings.TrimPrefix(version.Version(), "v"),
+		"package_schema":    packageSchema,
+		"function_path":     functionPath,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return format.Source(buf.Bytes())
+	return buf.Bytes(), nil
 }

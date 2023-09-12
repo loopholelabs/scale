@@ -5,12 +5,12 @@ package host
 
 import (
 	"github.com/loopholelabs/polyglot"
-	"github.com/loopholelabs/scale/signature"
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
 const hash = "8b14119da31d0ea3a5fc4013005cafa4212efb9791389c9789fd47fbd5a805b2"
 
-var _ signature.Signature = (*Signature)(nil)
+var _ interfaces.Signature = (*Signature)(nil)
 
 // sig is the host representation of the signature
 //

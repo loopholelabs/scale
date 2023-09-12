@@ -19,10 +19,13 @@ import { ScaleFunc } from "./scalefunc/scalefunc";
 
 const envStringRegex = /[^A-Za-z0-9_]/;
 
+export interface Writer {
+    (message: string): void;
+}
+
 class ConfigFunction {
     function: ScaleFunc;
     env: { [key: string]: string } | undefined;
-
     constructor(fn: ScaleFunc, env?: { [key: string]: string }) {
         this.function = fn;
         this.env = env;
@@ -32,6 +35,8 @@ class ConfigFunction {
 export class Config<T extends Signature> {
     public newSignature: New<T>;
     public functions: ConfigFunction[] = [];
+    stdout: Writer | undefined;
+    stderr: Writer | undefined;
 
     constructor(newSignature: New<T>) {
         this.newSignature = newSignature;
@@ -78,6 +83,16 @@ export class Config<T extends Signature> {
         for (const func of functions) {
             this.WithFunction(func, env);
         }
+        return this;
+    }
+
+    public WithStdout(writer: Writer): Config<T> {
+        this.stdout = writer
+        return this;
+    }
+
+    public WithStderr(writer: Writer): Config<T> {
+        this.stderr = writer
         return this;
     }
 }

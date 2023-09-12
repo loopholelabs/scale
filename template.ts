@@ -17,7 +17,6 @@
 import { Signature  } from "@loopholelabs/scale-signature-interfaces";
 import { Scale } from "./scale";
 import {ScaleFunc} from "./scalefunc/scalefunc";
-import {DisabledWASI} from "./wasi";
 import {Tracing} from "./tracing";
 import {ModulePool} from "./pool";
 
@@ -37,8 +36,6 @@ export class Template<T extends Signature> {
 
     public modulePool: ModulePool<T> | undefined;
     public env: { [key: string]: string } | undefined;
-
-    public wasi: DisabledWASI;
     public tracing: Tracing;
 
     constructor(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }) {
@@ -46,7 +43,6 @@ export class Template<T extends Signature> {
         this.identifier = `${scaleFunc.Name}:${scaleFunc.Tag}`;
         this.env = env;
 
-        this.wasi = new DisabledWASI(this.env);
         this.tracing = new Tracing(this.identifier, Buffer.alloc(16), this.runtime.TraceDataCallback);
 
         if (scaleFunc.Stateless) {

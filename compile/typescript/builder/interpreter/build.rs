@@ -14,6 +14,9 @@
     limitations under the License.
 */
 
+#[cfg(all(not(feature = "runtime_source"), feature = "embedded_source"))]
+use std::fs;
+
 fn main() {
     #[cfg(all(not(feature = "runtime_source"), feature = "embedded_source"))]
     {

@@ -18,20 +18,20 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/loopholelabs/scale/version"
+
 	"github.com/loopholelabs/scale/compile/rust/templates"
 	"github.com/loopholelabs/scale/scalefile"
-	"github.com/loopholelabs/scale/scalefunc"
-	"github.com/loopholelabs/scale/signature"
 )
 
 var generator *Generator
 
-func GenerateRustCargofile(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
-	return generator.GenerateRustCargofile(schema, parsedSignatureDependency, functionPath, dependencies, packageName, packageVersion)
+func GenerateRustCargofile(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string) ([]byte, error) {
+	return generator.GenerateRustCargofile(schema, parsedSignatureDependency, functionPath)
 }
 
-func GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, version string) ([]byte, error) {
-	return generator.GenerateRustLib(signature, schema, version)
+func GenerateRustLib(packageSchema *scalefile.Schema) ([]byte, error) {
+	return generator.GenerateRustLib(packageSchema)
 }
 
 func init() {
@@ -48,7 +48,7 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string, dependencies []*scalefunc.Dependency, packageName string, packageVersion string) ([]byte, error) {
+func (g *Generator) GenerateRustCargofile(packageSchema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string) ([]byte, error) {
 	if parsedSignatureDependency.Path != "" && !strings.HasPrefix(parsedSignatureDependency.Path, "/") && !strings.HasPrefix(parsedSignatureDependency.Path, "./") && !strings.HasPrefix(parsedSignatureDependency.Path, "../") {
 		parsedSignatureDependency.Path = "./" + parsedSignatureDependency.Path
 	}
@@ -59,14 +59,8 @@ func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, parsedSignat
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "cargo.rs.templ", map[string]interface{}{
-		"version":              packageVersion,
-		"package":              packageName,
-		"dependencies":         dependencies,
-		"signature_dependency": "signature",
-		"signature_package":    parsedSignatureDependency.Package,
-		"signature_path":       parsedSignatureDependency.Path,
-		"signature_version":    parsedSignatureDependency.Version,
-		"function_dependency":  schema.Name,
+		"signature_dependency": parsedSignatureDependency,
+		"package_schema":       packageSchema,
 		"function_path":        functionPath,
 	})
 	if err != nil {
@@ -76,12 +70,11 @@ func (g *Generator) GenerateRustCargofile(schema *scalefile.Schema, parsedSignat
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateRustLib(signature *signature.Schema, schema *scalefile.Schema, scaleVersion string) ([]byte, error) {
+func (g *Generator) GenerateRustLib(packageSchema *scalefile.Schema) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
-		"version":   scaleVersion,
-		"signature": signature,
-		"schema":    schema,
+		"generator_version": strings.TrimPrefix(version.Version(), "v"),
+		"package_schema":    packageSchema,
 	})
 	if err != nil {
 		return nil, err

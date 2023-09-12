@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -37,8 +38,8 @@ var (
 )
 
 type LocalRustOptions struct {
-	// Version is the generator version
-	Version string
+	// Output is the output writer for the various build commands
+	Output io.Writer
 
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
@@ -132,12 +133,12 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, signatureDependency, options.SourceDirectory, nil, "compile", "0.1.0")
+	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, signatureDependency, options.SourceDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
 	}
 
-	libFile, err := rust.GenerateRustLib(options.SignatureSchema, options.Scalefile, options.Version)
+	libFile, err := rust.GenerateRustLib(options.Scalefile)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate lib.rs file: %w", err)
 	}
@@ -161,11 +162,10 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 
 	cmd := exec.Command(options.CargoBin, "check")
 	cmd.Dir = compilePath
-	output, err := cmd.CombinedOutput()
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
@@ -185,12 +185,10 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 
 	cmd = exec.Command(options.CargoBin, buildArgs...)
 	cmd.Dir = compilePath
-
-	output, err = cmd.CombinedOutput()
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("unable to compile scale function: %s", output)
-		}
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
@@ -215,7 +213,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
 		SignatureSchema: options.SignatureSchema,
 		SignatureHash:   hex.EncodeToString(hash),
-		Language:        scalefunc.Go,
+		Language:        scalefunc.Rust,
 		Stateless:       options.Scalefile.Stateless,
 		Dependencies:    nil,
 		Function:        data,

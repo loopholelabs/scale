@@ -3,12 +3,14 @@ package converter
 import (
 	"encoding/json"
 
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
+
 	"github.com/loopholelabs/polyglot"
 
 	"github.com/loopholelabs/scale/signature"
 )
 
-var _ signature.Signature = (*Signature)(nil)
+var _ interfaces.Signature = (*Signature)(nil)
 
 type Signature struct {
 	buffer    *polyglot.Buffer

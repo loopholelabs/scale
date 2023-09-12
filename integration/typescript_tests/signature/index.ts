@@ -6,8 +6,8 @@
 import { Signature as SignatureInterface, TYPESCRIPT_ADDRESS_OF, TYPESCRIPT_NEXT} from "@loopholelabs/scale-signature-interfaces";
 import { Decoder, Encoder, Kind } from "@loopholelabs/polyglot";
 
-let WRITE_BUFFER: ArrayBuffer = new Uint8Array().buffer;
-let READ_BUFFER: ArrayBuffer = new Uint8Array().buffer;
+(global as any).WRITE_BUFFER = new Uint8Array().buffer;
+(global as any).READ_BUFFER = new Uint8Array().buffer;
 
 export * from "./types";
 import { ModelWithAllFieldTypes } from "./types";
@@ -17,13 +17,17 @@ const hash = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5"
 // Write serializes the signature into the global WRITE_BUFFER and returns the pointer to the buffer and its size
 //
 // Users should not use this method.
-export function Write(ctx: ModelWithAllFieldTypes): number[] {
+export function Write(ctx?: ModelWithAllFieldTypes): number[] {
   const enc = new Encoder();
-  ctx.encode(enc);
-  WRITE_BUFFER = enc.bytes;
+  if (ctx === undefined) {
+    enc.null();
+  } else {
+    ctx.encode(enc);
+  }
+  const len = enc.bytes.buffer.byteLength;
+  (global as any).WRITE_BUFFER = enc.bytes.buffer;
   const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-  const ptr = addrof(WRITE_BUFFER);
-  const len = WRITE_BUFFER.byteLength;
+  const ptr = addrof((global as any).WRITE_BUFFER);
   return [ptr, len];
 }
 
@@ -31,7 +35,7 @@ export function Write(ctx: ModelWithAllFieldTypes): number[] {
 //
 // Users should not use this method.
 export function Read(): ModelWithAllFieldTypes | undefined {
-  const dec = new Decoder(new Uint8Array(READ_BUFFER));
+  const dec = new Decoder(new Uint8Array((global as any).READ_BUFFER));
   return ModelWithAllFieldTypes.decode(dec);
 }
 
@@ -41,10 +45,10 @@ export function Read(): ModelWithAllFieldTypes | undefined {
 export function Error(err: Error): number[] {
   const enc = new Encoder();
   enc.error(err);
-  WRITE_BUFFER = enc.bytes;
+  const len = enc.bytes.buffer.byteLength;
+  (global as any).WRITE_BUFFER = enc.bytes.buffer;
   const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-  const ptr = addrof(WRITE_BUFFER);
-  const len = WRITE_BUFFER.byteLength;
+  const ptr = addrof((global as any).WRITE_BUFFER);
   return [ptr, len];
 }
 
@@ -52,9 +56,9 @@ export function Error(err: Error): number[] {
 //
 // Users should not use this method.
 export function Resize(size: number): number {
-  READ_BUFFER = new Uint8Array(size).buffer;
+  (global as any).READ_BUFFER = new Uint8Array(size).buffer;
   const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-  return addrof(READ_BUFFER);
+  return addrof((global as any).READ_BUFFER);
 }
 
 // Hash returns the hash of the Scale Signature
@@ -63,15 +67,15 @@ export function Resize(size: number): number {
 export function Hash(): number[] {
   const enc = new Encoder();
   enc.string(hash);
-  WRITE_BUFFER = enc.bytes;
+  const len = enc.bytes.buffer.byteLength;
+  (global as any).WRITE_BUFFER = enc.bytes.buffer;
   const addrof = (global as any)[TYPESCRIPT_ADDRESS_OF];
-  const ptr = addrof(WRITE_BUFFER);
-  const len = WRITE_BUFFER.byteLength;
+  const ptr = addrof((global as any).WRITE_BUFFER);
   return [ptr, len];
 }
 
 // Next calls the next function in the Scale Function Chain
-export function Next(ctx: ModelWithAllFieldTypes): ModelWithAllFieldTypes | undefined {
+export function Next(ctx?: ModelWithAllFieldTypes): ModelWithAllFieldTypes | undefined {
   const [ptr, len] = Write(ctx);
   const next = (global as any)[TYPESCRIPT_NEXT];
   next([ptr, len]);

@@ -28,7 +28,7 @@ window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 test("test-typescript-host-rust-guest", async () => {
     const file = fs.readFileSync(process.cwd() + "/integration/rust.scale")
     const sf = ScaleFunc.Decode(file);
-    const config = new Config<Signature>(NewSignature).WithFunction(sf);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
     const s = await NewScale(config);
 
     const i = await s.Instance();
@@ -42,7 +42,7 @@ test("test-typescript-host-rust-guest", async () => {
 test("test-typescript-host-golang-guest", async () => {
     const file = fs.readFileSync(process.cwd() + "/integration/golang.scale")
     const sf = ScaleFunc.Decode(file);
-    const config = new Config<Signature>(NewSignature).WithFunction(sf);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
     const s = await NewScale(config);
 
     const i = await s.Instance();
@@ -51,4 +51,18 @@ test("test-typescript-host-golang-guest", async () => {
     await i.Run(sig);
 
     expect(sig.context.stringField).toBe("This is a Golang Function");
+});
+
+test("test-typescript-host-typescript-guest", async () => {
+    const file = fs.readFileSync(process.cwd() + "/integration/typescript.scale")
+    const sf = ScaleFunc.Decode(file);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
+    const s = await NewScale(config);
+
+    const i = await s.Instance();
+    const sig = NewSignature();
+
+    await i.Run(sig);
+
+    expect(sig.context.stringField).toBe("This is a Typescript Function");
 });
