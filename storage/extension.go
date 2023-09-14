@@ -281,8 +281,8 @@ func (s *ExtensionStorage) extensionSearch(name string, tag string, org string) 
 
 // GenerateExtension generates the extension files and writes them to
 // the given path.
-func GenerateExtension(sig *extension.Schema, name string, tag string, org string, directory string) error {
-	encoded, err := sig.Encode()
+func GenerateExtension(ext *extension.Schema, name string, tag string, org string, directory string) error {
+	encoded, err := ext.Encode()
 	if err != nil {
 		return err
 	}
@@ -303,9 +303,9 @@ func GenerateExtension(sig *extension.Schema, name string, tag string, org strin
 	}
 
 	guestPackage, err := generator.GenerateGuestLocal(&generator.Options{
-		Extension:               sig,
+		Extension:               ext,
 		GolangPackageImportPath: "extension",
-		GolangPackageName:       "extension",
+		GolangPackageName:       ext.Name,
 		GolangPackageVersion:    "v0.1.0",
 	})
 	if err != nil {
@@ -320,7 +320,7 @@ func GenerateExtension(sig *extension.Schema, name string, tag string, org strin
 	}
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
-		Extension: sig,
+		Extension: ext,
 	})
 	if err != nil {
 		return err
