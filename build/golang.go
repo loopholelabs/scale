@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 
 	"github.com/loopholelabs/scale/compile/golang"
+	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
@@ -68,6 +69,8 @@ type LocalGolangOptions struct {
 
 	// Args are the optional arguments to pass to the compiler
 	Args []string
+
+	Extensions []extension.ExtensionInfo
 }
 
 func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
@@ -156,7 +159,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureDependencyPath, signatureDependencyVersion, options.SourceDirectory)
+	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureDependencyPath, signatureDependencyVersion, options.SourceDirectory, options.Extensions)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}

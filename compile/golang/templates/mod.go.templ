@@ -9,3 +9,9 @@ require (
     signature v0.1.0
     {{ .package_schema.Name }} v0.1.0
 )
+
+{{ range $extension := .extensions -}}
+		replace {{ $extension.Name }} => {{ $extension.Path }}
+
+		require {{ $extension.Name }} {{ $extension.Version }}
+{{end -}}

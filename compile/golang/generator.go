@@ -22,14 +22,15 @@ import (
 	"github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/compile/golang/templates"
+	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/signature"
 )
 
 var generator *Generator
 
-func GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string) ([]byte, error) {
-	return generator.GenerateGoModfile(packageSchema, signatureImport, signatureVersion, functionImport)
+func GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.ExtensionInfo) ([]byte, error) {
+	return generator.GenerateGoModfile(packageSchema, signatureImport, signatureVersion, functionImport, extensions)
 }
 
 func GenerateGoMain(packageSchema *scalefile.Schema, signatureSchema *signature.Schema) ([]byte, error) {
@@ -50,7 +51,7 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string) ([]byte, error) {
+func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.ExtensionInfo) ([]byte, error) {
 	if signatureVersion == "" && !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
 		signatureImport = "./" + signatureImport
 	}
@@ -62,6 +63,7 @@ func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signature
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
 		"package_schema":    packageSchema,
+		"extensions":        extensions,
 		"signature_import":  signatureImport,
 		"signature_version": signatureVersion,
 		"function_import":   functionImport,
