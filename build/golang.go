@@ -30,6 +30,7 @@ import (
 	"github.com/loopholelabs/scale/extension"
 
 	"github.com/loopholelabs/scale/compile/golang"
+	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
@@ -84,6 +85,8 @@ type LocalGolangOptions struct {
 
 	// Args are the optional arguments to pass to the compiler
 	Args []string
+
+	Extensions []extension.ExtensionInfo
 }
 
 func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
