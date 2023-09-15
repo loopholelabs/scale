@@ -28,6 +28,8 @@ import (
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+
+	"github.com/loopholelabs/scale/extension"
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented
@@ -82,7 +84,29 @@ func (r *Scale[T]) init() error {
 		r.moduleConfig = r.moduleConfig.WithStderr(r.config.stderr)
 	}
 
-	envHostModuleBuilder := r.runtime.NewHostModuleBuilder("env").
+	envModule := r.runtime.NewHostModuleBuilder("env")
+
+	// Install any extensions...
+	for name, fn := range r.config.extensions {
+		fmt.Printf("Installing module [%s]\n", name)
+		wfn := func(n string, f extension.InstallableFunc) func(context.Context, api.Module, []uint64) {
+			return func(ctx context.Context, mod api.Module, params []uint64) {
+				fmt.Printf("HOST FUNCTION CALLED %s\n", n)
+				mem := mod.Memory()
+				resize := func(name string, size uint64) (uint64, error) {
+					w, err := mod.ExportedFunction(name).Call(context.Background(), size)
+					return w[0], err
+				}
+				f(mem, resize, params)
+			}
+		}(name, fn)
+
+		envModule.NewFunctionBuilder().
+			WithGoModuleFunction(api.GoModuleFunc(wfn), []api.ValueType{api.ValueTypeI64, api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
+			WithParameterNames("instance", "pointer", "length").Export(name)
+	}
+
+	envHostModuleBuilder := envModule.
 		NewFunctionBuilder().
 		WithGoModuleFunction(api.GoModuleFunc(r.next), []api.ValueType{api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{}).
 		WithParameterNames("pointer", "length").Export("next")

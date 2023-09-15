@@ -23,6 +23,7 @@ import (
 	"regexp"
 
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
+	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefunc"
 )
 
@@ -50,6 +51,7 @@ type Config[T interfaces.Signature] struct {
 	stdout       io.Writer
 	stderr       io.Writer
 	rawOutput    bool
+	extensions   map[string]extension.InstallableFunc
 }
 
 // NewConfig returns a new Scale Runtime Config
@@ -83,6 +85,17 @@ func (c *Config[T]) validate() error {
 	}
 
 	return nil
+}
+
+func (c *Config[T]) WithExtensions(e map[string]extension.InstallableFunc) *Config[T] {
+	if c.extensions == nil {
+		c.extensions = make(map[string]extension.InstallableFunc)
+	}
+	for n, f := range e {
+		// TODO: Check for stomping etc
+		c.extensions[n] = f
+	}
+	return c
 }
 
 func (c *Config[T]) WithSignature(newSignature interfaces.New[T]) *Config[T] {
