@@ -320,7 +320,10 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 	}
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
-		Extension: ext,
+		Extension:               ext,
+		GolangPackageImportPath: "extension",
+		GolangPackageName:       ext.Name,
+		GolangPackageVersion:    "v0.1.0",
 	})
 	if err != nil {
 		return err
