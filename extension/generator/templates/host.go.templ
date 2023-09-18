@@ -8,7 +8,6 @@ import (
 	"errors"
 	"sync/atomic"
 	"sync"
-
   "github.com/loopholelabs/polyglot"
 
   "github.com/loopholelabs/scale/extension"
@@ -34,8 +33,23 @@ func hostError(mem extension.ModuleMemory, resize extension.Resizer, err error) 
 
 {{ $schema := .schema }}
 
-func InstallExtension(impl {{ .schema.Name }}Ifc) map[string]extension.InstallableFunc {
+type hostExt struct {
+  functions map[string]extension.InstallableFunc
+  host *{{ .schema.Name }}Host
+}
 
+func (he *hostExt) Init() map[string]extension.InstallableFunc {
+  return he.functions
+}
+
+func (he *hostExt) Reset() {
+  // Reset any instances that have been created.
+  {{ range $ifc := .schema.Interfaces }}
+    he.host.instances_{{ $ifc.Name }} = make(map[uint64]{{ $ifc.Name }})
+  {{ end }}
+}
+
+func New(impl {{ .schema.Name }}Ifc) extension.HostExtension {
   hostWrapper := &{{ .schema.Name }}Host{ impl: impl }
 
   fns := make(map[string]extension.InstallableFunc)
@@ -43,7 +57,6 @@ func InstallExtension(impl {{ .schema.Name }}Ifc) map[string]extension.Installab
 // Add global functions to the runtime
 {{ range $fn := .schema.Functions }}
   fns["ext_{{ $schema.Name }}_{{ $fn.Name }}"] = hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }}
-
 {{ end }}
 
 {{ range $ifc := .schema.Interfaces }}
@@ -56,7 +69,10 @@ func InstallExtension(impl {{ .schema.Name }}Ifc) map[string]extension.Installab
   {{ end }}
 {{ end }}
 
-  return fns
+  return &hostExt{
+    functions: fns,
+    host: hostWrapper,
+  }
 }
 
 type {{ .schema.Name }}Host struct {
