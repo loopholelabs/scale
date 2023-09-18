@@ -70,6 +70,13 @@ func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
 	return newInstance(r.config.context, r, next...)
 }
 
+// Reset any extensions between executions.
+func (r *Scale[T]) resetExtensions() {
+	for _, ext := range r.config.extensions {
+		ext.Reset()
+	}
+}
+
 func (r *Scale[T]) init() error {
 	err := r.config.validate()
 	if err != nil {
@@ -87,23 +94,24 @@ func (r *Scale[T]) init() error {
 	envModule := r.runtime.NewHostModuleBuilder("env")
 
 	// Install any extensions...
-	for name, fn := range r.config.extensions {
-		fmt.Printf("Installing module [%s]\n", name)
-		wfn := func(n string, f extension.InstallableFunc) func(context.Context, api.Module, []uint64) {
-			return func(ctx context.Context, mod api.Module, params []uint64) {
-				fmt.Printf("HOST FUNCTION CALLED %s\n", n)
-				mem := mod.Memory()
-				resize := func(name string, size uint64) (uint64, error) {
-					w, err := mod.ExportedFunction(name).Call(context.Background(), size)
-					return w[0], err
+	for _, ext := range r.config.extensions {
+		fns := ext.Init()
+		for name, fn := range fns {
+			wfn := func(n string, f extension.InstallableFunc) func(context.Context, api.Module, []uint64) {
+				return func(ctx context.Context, mod api.Module, params []uint64) {
+					mem := mod.Memory()
+					resize := func(name string, size uint64) (uint64, error) {
+						w, err := mod.ExportedFunction(name).Call(context.Background(), size)
+						return w[0], err
+					}
+					f(mem, resize, params)
 				}
-				f(mem, resize, params)
-			}
-		}(name, fn)
+			}(name, fn)
 
-		envModule.NewFunctionBuilder().
-			WithGoModuleFunction(api.GoModuleFunc(wfn), []api.ValueType{api.ValueTypeI64, api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
-			WithParameterNames("instance", "pointer", "length").Export(name)
+			envModule.NewFunctionBuilder().
+				WithGoModuleFunction(api.GoModuleFunc(wfn), []api.ValueType{api.ValueTypeI64, api.ValueTypeI32, api.ValueTypeI32}, []api.ValueType{api.ValueTypeI64}).
+				WithParameterNames("instance", "pointer", "length").Export(name)
+		}
 	}
 
 	envHostModuleBuilder := envModule.
