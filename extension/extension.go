@@ -8,3 +8,8 @@ type ModuleMemory interface {
 type Resizer func(name string, size uint64) (uint64, error)
 
 type InstallableFunc func(mem ModuleMemory, resize Resizer, params []uint64)
+
+type HostExtension interface {
+	Init() map[string]InstallableFunc
+	Reset()
+}

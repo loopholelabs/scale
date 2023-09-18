@@ -80,6 +80,8 @@ func newInstance[T interfaces.Signature](ctx context.Context, runtime *Scale[T],
 }
 
 func (i *Instance[T]) Run(ctx context.Context, signature T) error {
+	i.runtime.resetExtensions()
+
 	m, err := i.head.getModule(signature)
 	if err != nil {
 		return fmt.Errorf("failed to get module for function '%s': %w", i.head.template.identifier, err)
