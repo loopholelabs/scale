@@ -32,34 +32,41 @@ func TestGenerator(t *testing.T) {
 
 	packageName := "extfetch"
 
-	f_interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
+	interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
 	require.NoError(t, err)
-	os.WriteFile("./interfaces.txt", f_interfaces, 0644)
+	//	os.WriteFile("./interfaces.txt", interfaces, 0644)
+
+	expInterfaces, err := os.ReadFile("./interfaces.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expInterfaces), string(interfaces))
 
 	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
+	//  os.WriteFile("./generated.txt", formatted, 0644)
 
-	// Check things...
-
-	os.WriteFile("./generated.txt", formatted, 0644)
-
-	master, err := os.ReadFile("./generated.txt")
+	expTypes, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)
-	require.Equal(t, string(master), string(formatted))
+	require.Equal(t, string(expTypes), string(formatted))
 
-	f_host, err := GenerateHost(s, packageName, "v0.1.0")
+	host, err := GenerateHost(s, packageName, "v0.1.0")
 	require.NoError(t, err)
-
-	os.WriteFile("./host.txt", f_host, 0644)
-
-	f_guest, err := GenerateGuest(s, packageName, "v0.1.0")
+	//  os.WriteFile("./host.txt", host, 0644)
+	expHost, err := os.ReadFile("./host.txt")
 	require.NoError(t, err)
+	require.Equal(t, string(expHost), string(host))
 
-	os.WriteFile("./guest.txt", f_guest, 0644)
-
-	modf, err := GenerateModfile(packageName)
+	guest, err := GenerateGuest(s, packageName, "v0.1.0")
 	require.NoError(t, err)
+	//  os.WriteFile("./guest.txt", guest, 0644)
+	expGuest, err := os.ReadFile("./guest.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expGuest), string(guest))
 
-	os.WriteFile("./modfile.txt", modf, 0644)
+	mod, err := GenerateModfile(packageName)
+	require.NoError(t, err)
+	// os.WriteFile("./modfile.txt", mod, 0644)
+	expMod, err := os.ReadFile("./modfile.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expMod), string(mod))
 
 }
