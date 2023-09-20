@@ -3,13 +3,16 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)
 
-[Scale](https://scale.sh) is a highly-performant WebAssembly function runtime that enables composable, language-agnostic software development.
+[Scale](https://scale.sh) is a framework for building high-performance plugin systems into any application, all powered by WebAssembly.
 
-With Scale Functions you can write code in any language, then use it from any other language, environment, or runtime, with state-of-the-art sandboxing qualities, startup times, and overall performance. This initial release includes client support for [Golang](https://golang.org) and [Rust](https://www.rust-lang.org/), with runtimes for [Golang](https://golang.org) and [Typescript](https://www.typescriptlang.org/).
+With Scale Functions your users can write fully typed plugins in any language they choose, and your application can easily and safely 
+run those plugins with the Scale Runtime, which provides state-of-the-art sandboxing, low startup times, and extremely high performance.
+
+Currently, guest plugins can be written in [Golang](https://golang.org), [Rust](https://www.rust-lang.org/), and [Typescript](https://www.typescriptlang.org/), with the Runtime supporting [Golang](https://golang.org) and [Typescript](https://www.typescriptlang.org/) host applications.
 
 ## Usage and Documentation
 
-Usage instructions and documentation for the Scale Runtime is available at [https://scale.sh/docs](https://scale.sh/docs).
+Usage instructions and documentation for Scale is available at [https://scale.sh/docs](https://scale.sh/docs).
 
 ## Contributing
 
