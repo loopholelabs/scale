@@ -19,7 +19,7 @@ const hash = "{{ .signature_hash }}"
 // Users should not use this method.
 export function Write(ctx?: {{ .signature_schema.Context }}): number[] {
     const enc = new Encoder();
-    if (ctx === undefined) {
+    if (typeof ctx === "undefined") {
         enc.null();
     } else {
         ctx.encode(enc);

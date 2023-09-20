@@ -32,14 +32,14 @@ export class Instance<T extends Signature> {
   private readonly ready: Promise<void>;
 
   private runtime: Scale<T>;
-  private identifier: Buffer;
+  public identifier: Buffer;
   private head: undefined | Func<T>;
   next: NextFn<T>;
 
   constructor(runtime: Scale<T>, next?: NextFn<T>) {
     this.runtime = runtime;
     this.identifier = randomBytes(16);
-    if (next !== undefined) {
+    if (typeof next !== "undefined") {
       this.next = next;
     } else {
       this.next = (ctx: T) => ctx;
@@ -49,12 +49,12 @@ export class Instance<T extends Signature> {
       let previousFunction = this.head;
       let nextTemplate = this.runtime.head;
 
-      while (nextTemplate !== undefined) {
+      while (typeof nextTemplate !== "undefined") {
         const fn = await NewFunc(this, nextTemplate);
-        if (this.head === undefined) {
+        if (typeof this.head === "undefined") {
             this.head = fn;
         }
-        if (previousFunction !== undefined) {
+        if (typeof previousFunction !== "undefined") {
           previousFunction.next = fn;
         }
         previousFunction = fn;
@@ -71,7 +71,7 @@ export class Instance<T extends Signature> {
   }
 
   public async Run(signature: T) {
-    if (this.head === undefined) {
+    if (typeof this.head === "undefined") {
       throw ErrNoCompiledFunctions;
     }
     const m = await this.head.GetModule(signature);

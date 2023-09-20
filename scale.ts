@@ -55,11 +55,11 @@ export class Scale<T extends Signature> {
                     throw new Error(`failed to pre-compile function ${sf.function.Name}:${sf.function.Tag}: ${e}`);
                 }
 
-                if (this.head === undefined) {
+                if (typeof this.head === "undefined") {
                     this.head = t;
                 }
 
-                if (this.tail !== undefined) {
+                if (typeof this.tail !== "undefined") {
                     this.tail.next = t;
                 }
 
@@ -79,16 +79,16 @@ export class Scale<T extends Signature> {
 
     public Next(m: Module<T>): (ptr: number, len: number) => void {
         return (ptr: number, len: number): void => {
-            if (m.memory === undefined) {
+            if (typeof m.memory === "undefined") {
                 throw new Error("no memory found in module");
             }
-            if (m.resize === undefined) {
+            if (typeof m.resize === "undefined") {
                 throw new Error("no resize function found in module");
             }
-            if (m.signature === undefined) {
+            if (typeof m.signature === "undefined") {
                 throw new Error("no signature found in module");
             }
-            if (m.function === undefined) {
+            if (typeof m.function === "undefined") {
                 throw new Error("no function found in module");
             }
             let buf: Uint8Array;
@@ -97,10 +97,10 @@ export class Scale<T extends Signature> {
                 const inContextBuff = memDataOut.slice(ptr, ptr + len);
                 m.signature.Read(inContextBuff);
 
-                if (m.function.next !== undefined) {
+                if (typeof m.function.next !== "undefined") {
                     m.function.next.GetModule(m.signature).then((nextModule) => {
                       nextModule.Run();
-                      if (m.function !== undefined && m.function.next !== undefined) {
+                      if (typeof m.function !== "undefined" && typeof m.function.next !== "undefined") {
                           m.function.next.PutModule(nextModule);
                       }
                     });

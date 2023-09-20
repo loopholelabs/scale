@@ -14,6 +14,9 @@
         limitations under the License.
 */
 
+import {Module} from "./module";
+import {Signature} from "@loopholelabs/scale-signature-interfaces";
+
 const ErrNoInstance = Error("no webassembly instance")
 const ErrNoMemory = Error("no exported memory in webassembly instance")
 
@@ -26,49 +29,48 @@ export interface HostFunctions extends WebAssembly.ModuleImports {
 
 export type CallbackFunction = (data: string) => void
 
-export class Tracing {
+export class Tracing<T extends Signature> {
   private exports: WebAssembly.Exports | undefined;
 
-  private invocationId: Buffer;
-  private readonly functionName: string;
+  private readonly module: Module<T>;
   private readonly traceCallback: CallbackFunction | undefined;
 
-  constructor(functionName: string, invocationId: Buffer, traceCallback: CallbackFunction | undefined) {
-    this.invocationId = invocationId;
-    this.functionName = functionName;
+  constructor(module: Module<T>, traceCallback: CallbackFunction | undefined) {
+    this.module = module;
     this.traceCallback = traceCallback;
   }
 
   getFunctionNameLen(): number {
     const enc = new TextEncoder();
-    const data = enc.encode(this.functionName);
+    const data = enc.encode(this.module.template.identifier);
     return data.length;
   }
 
   getFunctionName(ptr: number) {
     const enc = new TextEncoder();
-    const data = enc.encode(this.functionName);
+    const data = enc.encode(this.module.template.identifier);
     const buffer = this.getDataView();
     for (let i=0;i<data.length;i++) {
       const d = data.at(i);
-      if (d !== undefined) {
+      if (typeof d !== "undefined") {
         buffer.setInt8(ptr+i, d);
       }
     }
   }
 
   getInstanceId(ptr: number) {
+    if (typeof this.module.function === "undefined") return;
     const buffer = this.getDataView();
-    for (let i=0;i<this.invocationId.length;i++) {
-      const d = this.invocationId.at(i);
-      if (d !== undefined) {
+    for (let i=0;i<this.module.function.instance.identifier.length;i++) {
+      const d = this.module.function.instance.identifier.at(i);
+      if (typeof d !== "undefined") {
         buffer.setInt8(ptr+i, d);
       }
     }
   }
 
   otelTraceJSON(ptr: number, len: number) {
-    if (this.traceCallback === undefined) return;
+    if (typeof this.traceCallback === "undefined") return;
     const buffer = this.getDataView();
     const data = buffer.buffer.slice(ptr, ptr + len);
     const dec = new TextDecoder();
@@ -97,9 +99,4 @@ export class Tracing {
     // @ts-ignore
     return new DataView(this.exports.memory.buffer);
   }
-
-  public SetInstance(instance: WebAssembly.Instance) {
-      this.exports = instance.exports;
-  }
-
 }

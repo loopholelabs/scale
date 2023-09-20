@@ -96,7 +96,7 @@
             for (let i = 0; i < {{ CamelCase .Name }}Size; i++) {
                 let key = decoder.{{ PolyglotPrimitiveDecode $type }}();
                 let val = {{ .Value }}.decode(decoder);
-                if (val !== undefined) {
+                if (typeof val !== "undefined") {
                     this.#{{ CamelCase .Name }}.set(key, val);
                 }
             }
@@ -118,7 +118,7 @@
             for (let i = 0; i < {{ CamelCase .Name }}Size; i++) {
                 let key = decoder.{{ PolyglotPrimitiveDecode $type }}();
                 let val = {{ .Value }}.decode(decoder);
-                if (val !== undefined) {
+                if (typeof val !== "undefined") {
                     this.{{ CamelCase .Name }}.set(key, val);
                 }
             }

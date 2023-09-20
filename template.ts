@@ -17,7 +17,6 @@
 import { Signature  } from "@loopholelabs/scale-signature-interfaces";
 import { Scale } from "./scale";
 import {ScaleFunc} from "./scalefunc/scalefunc";
-import {Tracing} from "./tracing";
 import {ModulePool} from "./pool";
 
 export async function NewTemplate<T extends Signature>(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }): Promise<Template<T>> {
@@ -36,14 +35,11 @@ export class Template<T extends Signature> {
 
     public modulePool: ModulePool<T> | undefined;
     public env: { [key: string]: string } | undefined;
-    public tracing: Tracing;
 
     constructor(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }) {
         this.runtime = runtime;
         this.identifier = `${scaleFunc.Name}:${scaleFunc.Tag}`;
         this.env = env;
-
-        this.tracing = new Tracing(this.identifier, Buffer.alloc(16), this.runtime.TraceDataCallback);
 
         if (scaleFunc.Stateless) {
             this.modulePool = new ModulePool<T>(this);

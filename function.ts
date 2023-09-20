@@ -31,7 +31,7 @@ export class Func<T extends Signature> {
         this.template = template;
 
         this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
-            if (template.modulePool === undefined) {
+            if (typeof template.modulePool === "undefined") {
                 this.module = await NewModule<T>(template);
                 this.module.Register(this);
             }
@@ -44,11 +44,11 @@ export class Func<T extends Signature> {
     }
 
     public async GetModule(signature: T): Promise<Module<T>> {
-        if (this.module !== undefined) {
+        if (typeof this.module !== "undefined") {
             this.module.SetSignature(signature);
             return this.module;
         }
-        if (this.template.modulePool === undefined) {
+        if (typeof this.template.modulePool === "undefined") {
             throw new Error(`cannot get module from pool for function ${this.template.identifier}: module pool is undefined`);
         }
         const m = await this.template.modulePool.Get();
@@ -58,7 +58,7 @@ export class Func<T extends Signature> {
     }
 
     public PutModule(m: Module<T>){
-        if (this.template.modulePool !== undefined) {
+        if (typeof this.template.modulePool !== "undefined") {
             m.Cleanup()
             this.template.modulePool.Put(m);
         }

@@ -63,7 +63,7 @@ import { Encoder, Decoder, Kind } from "@loopholelabs/polyglot"
                     try {
                          err = decoder.error();
                     } catch (_) {}
-                    if (err !== undefined) {
+                    if (typeof err !== "undefined") {
                          throw err;
                     }
                    {{ template "ts_models_decode" . }}

@@ -31,7 +31,7 @@ export class ModulePool<T extends Signature> {
 	public async Get(): Promise<Module<T>> {
 		if (this.objects.length > 0) {
 			const t = this.objects.pop();
-			if (t !== undefined) {
+			if (typeof t !== "undefined") {
 				return t;
 			}
 		}
