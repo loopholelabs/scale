@@ -24,7 +24,6 @@ import (
 
 	extension "github.com/loopholelabs/scale-extension-interfaces"
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
-	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefunc"
 )
 
