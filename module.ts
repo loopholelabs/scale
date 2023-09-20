@@ -13,12 +13,15 @@
         See the License for the specific language governing permissions and
         limitations under the License.
 */
+
 import {Signature} from "@loopholelabs/scale-signature-interfaces";
 import {Func} from "./function";
 import {Template} from "./template";
 import {UnpackUint32} from "./utils";
 import {Decoder} from "@loopholelabs/polyglot";
 import {DisabledWASI} from "./wasi";
+import {v4 as uuid} from "uuid";
+import {NamedLogger} from "./log/log";
 
 export async function NewModule<T extends Signature>(template: Template<T>): Promise<Module<T>> {
     const m = new Module(template);
@@ -45,7 +48,21 @@ export class Module<T extends Signature> {
 
     constructor(template: Template<T>) {
         this.template = template;
-        this.wasi = new DisabledWASI(this.template.env, this.template.runtime.config.stdout, this.template.runtime.config.stderr);
+
+        const name = `${this.template.identifier}.${uuid()}`
+
+        let stdout = this.template.runtime.config.stdout;
+        let stderr = this.template.runtime.config.stderr;
+
+        if (stdout !== undefined && !this.template.runtime.config.rawOutput) {
+            stdout = NamedLogger(name, stdout);
+        }
+
+        if (stderr !== undefined && !this.template.runtime.config.rawOutput) {
+            stderr = NamedLogger(name, stderr);
+        }
+
+        this.wasi = new DisabledWASI(this.template.env, stdout, stderr);
 
         const moduleConfig = {
             wasi_snapshot_preview1: this.wasi.GetImports(),

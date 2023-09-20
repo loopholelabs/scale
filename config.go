@@ -47,8 +47,9 @@ type Config[T interfaces.Signature] struct {
 	newSignature interfaces.New[T]
 	functions    []configFunction
 	context      context.Context
-	Stdout       io.Writer
-	Stderr       io.Writer
+	stdout       io.Writer
+	stderr       io.Writer
+	rawOutput    bool
 }
 
 // NewConfig returns a new Scale Runtime Config
@@ -115,12 +116,17 @@ func (c *Config[T]) WithContext(ctx context.Context) *Config[T] {
 }
 
 func (c *Config[T]) WithStdout(w io.Writer) *Config[T] {
-	c.Stdout = w
+	c.stdout = w
 	return c
 }
 
 func (c *Config[T]) WithStderr(w io.Writer) *Config[T] {
-	c.Stderr = w
+	c.stderr = w
+	return c
+}
+
+func (c *Config[T]) WithRawOutput(rawOutput bool) *Config[T] {
+	c.rawOutput = rawOutput
 	return c
 }
 

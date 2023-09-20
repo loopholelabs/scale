@@ -74,12 +74,12 @@ func (r *Scale[T]) init() error {
 		return err
 	}
 
-	if r.config.Stdout != nil {
-		r.moduleConfig = r.moduleConfig.WithStdout(r.config.Stdout)
+	if r.config.stdout != nil && r.config.rawOutput {
+		r.moduleConfig = r.moduleConfig.WithStdout(r.config.stdout)
 	}
 
-	if r.config.Stderr != nil {
-		r.moduleConfig = r.moduleConfig.WithStderr(r.config.Stderr)
+	if r.config.stderr != nil && r.config.rawOutput {
+		r.moduleConfig = r.moduleConfig.WithStderr(r.config.stderr)
 	}
 
 	envHostModuleBuilder := r.runtime.NewHostModuleBuilder("env").

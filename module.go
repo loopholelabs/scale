@@ -19,6 +19,7 @@ package scale
 import (
 	"context"
 	"fmt"
+	"github.com/loopholelabs/scale/log"
 
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 
@@ -51,9 +52,18 @@ type module[T interfaces.Signature] struct {
 
 // newModule creates a new module
 func newModule[T interfaces.Signature](ctx context.Context, template *template[T]) (*module[T], error) {
-	config := template.runtime.moduleConfig.WithName(fmt.Sprintf("%s.%s", template.identifier, uuid.New().String()))
+	name := fmt.Sprintf("%s.%s", template.identifier, uuid.New().String())
+	config := template.runtime.moduleConfig.WithName(name)
 	for k, v := range template.env {
 		config = config.WithEnv(k, v)
+	}
+
+	if template.runtime.config.stdout != nil && !template.runtime.config.rawOutput {
+		config = config.WithStdout(log.NewNamedLogger(name, template.runtime.config.stdout))
+	}
+
+	if template.runtime.config.stderr != nil && !template.runtime.config.rawOutput {
+		config = config.WithStderr(log.NewNamedLogger(name, template.runtime.config.stderr))
 	}
 
 	instantiatedModule, err := template.runtime.runtime.InstantiateModule(ctx, template.compiled, config)
