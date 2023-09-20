@@ -1,11 +1,17 @@
-# Scale
+<br/>
+<div align="center">
+  <a href="https://scale.sh">
+    <img src="docs/logo/dark.svg" alt="Logo" height="90">
+  </a>
+  <h3 align="center">
+    A framework for building high-performance plugin systems into any application, all powered by WebAssembly.
+  </h3>
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)
+</div>
 
-[Scale](https://scale.sh) is a framework for building high-performance plugin systems into any application, all powered by WebAssembly.
-
-With Scale Functions your users can write fully typed plugins in any language they choose, and your application can easily and safely 
+With [Scale Functions](https://scale.sh) your users can write fully typed plugins in any language they choose, and your application can easily and safely 
 run those plugins with the Scale Runtime, which provides state-of-the-art sandboxing, low startup times, and extremely high performance.
 
 Currently, guest plugins can be written in [Golang](https://golang.org), [Rust](https://www.rust-lang.org/), and [Typescript](https://www.typescriptlang.org/), with the Runtime supporting [Golang](https://golang.org) and [Typescript](https://www.typescriptlang.org/) host applications.

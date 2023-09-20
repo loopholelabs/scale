@@ -22,5 +22,5 @@ import (
 	_ "embed"
 )
 
-//go:embed js_builder-x86_64-pc-windows-msvc
+//go:embed js_builder-x86_64-pc-windows-msvc.exe
 var BuilderExecutable []byte

@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.4.1] - 2023-09-20
+
+### Fixes
+
+- Fixing a bug where the imported typescript builder was unable to find the generated builder CLI because it was called `js_builder-x86_64-pc-windows-msvc.exe` instead of `js_builder-x86_64-pc-windows-msvc`. 
+
 ## [v0.4.0] - 2023-09-20
 
 ### Features
@@ -249,7 +255,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.1...HEAD
+[v0.4.1]: https://github.com/loopholelabs/scale/compare/v0.4.1
 [v0.4.0]: https://github.com/loopholelabs/scale/compare/v0.4.0
 [v0.3.19]: https://github.com/loopholelabs/scale/compare/v0.3.19
 [v0.3.18]: https://github.com/loopholelabs/scale/compare/v0.3.18
