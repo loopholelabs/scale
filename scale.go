@@ -29,7 +29,7 @@ import (
 	"github.com/tetratelabs/wazero/api"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
 
-	"github.com/loopholelabs/scale/extension"
+	extension "github.com/loopholelabs/scale-extension-interfaces"
 )
 
 // Next is the next function in the middleware chain. It's meant to be implemented

@@ -10,7 +10,7 @@ import (
 	"sync"
   "github.com/loopholelabs/polyglot"
 
-  "github.com/loopholelabs/scale/extension"
+  extension "github.com/loopholelabs/scale-extension-interfaces"
 )
 
 const identifier = "{{ .schema.Name }}:{{ .schema.Tag }}"
@@ -49,7 +49,7 @@ func (he *hostExt) Reset() {
   {{ end }}
 }
 
-func New(impl {{ .schema.Name }}Ifc) extension.HostExtension {
+func New(impl {{ .schema.Name }}Ifc) extension.Extension {
   hostWrapper := &{{ .schema.Name }}Host{ impl: impl }
 
   fns := make(map[string]extension.InstallableFunc)
