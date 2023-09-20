@@ -19,7 +19,7 @@ import (
 	"text/template"
 
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
-	interfacesVersion "github.com/loopholelabs/scale-signature-interfaces/version"
+	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
 	"github.com/loopholelabs/scale/extension"
 
 	scaleVersion "github.com/loopholelabs/scale/version"
@@ -145,7 +145,7 @@ func (g *Generator) GenerateModfile(packageImportPath string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "mod.go.templ", map[string]any{
 		"polyglot_version":                   polyglotVersion.Version(),
-		"scale_signature_interfaces_version": interfacesVersion.Version(),
+		"scale_extension_interfaces_version": interfacesVersion.Version(),
 		"package_import_path":                packageImportPath,
 	})
 	if err != nil {
