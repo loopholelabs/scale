@@ -32,6 +32,10 @@ import (
 	"github.com/loopholelabs/scale/signature/generator/rust"
 )
 
+const (
+	DefaultGolangPackageName = "signature"
+)
+
 type GuestRegistryPackage struct {
 	GolangModule          *bytes.Buffer
 	GolangModfile         []byte
@@ -63,7 +67,6 @@ type Options struct {
 	Signature *signature.Schema
 
 	GolangPackageImportPath string
-	GolangPackageName       string
 	GolangPackageVersion    string
 
 	RustPackageName    string
@@ -80,12 +83,12 @@ func GenerateGuestRegistry(options *Options) (*GuestRegistryPackage, error) {
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.GenerateTypes(options.Signature, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(options.Signature, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangGuest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName)
+	golangGuest, err := golang.GenerateGuest(options.Signature, hashString, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -252,12 +255,12 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 	}
 	hashString := hex.EncodeToString(hash)
 
-	golangTypes, err := golang.GenerateTypes(options.Signature, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(options.Signature, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangGuest, err := golang.GenerateGuest(options.Signature, hashString, options.GolangPackageName)
+	golangGuest, err := golang.GenerateGuest(options.Signature, hashString, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -340,12 +343,12 @@ func GenerateHostRegistry(options *Options) (*HostRegistryPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.GenerateTypes(sig, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(sig, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangHost, err := golang.GenerateHost(sig, hashString, options.GolangPackageName)
+	golangHost, err := golang.GenerateHost(sig, hashString, DefaultGolangPackageName)
 
 	if err != nil {
 		return nil, err
@@ -457,12 +460,12 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		return nil, err
 	}
 
-	golangTypes, err := golang.GenerateTypes(sig, options.GolangPackageName)
+	golangTypes, err := golang.GenerateTypes(sig, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangHost, err := golang.GenerateHost(sig, hashString, options.GolangPackageName)
+	golangHost, err := golang.GenerateHost(sig, hashString, DefaultGolangPackageName)
 	if err != nil {
 		return nil, err
 	}

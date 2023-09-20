@@ -311,7 +311,6 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 		Signature: sig,
 
 		GolangPackageImportPath: "signature",
-		GolangPackageName:       "signature",
 		GolangPackageVersion:    "v0.1.0",
 
 		RustPackageName:    fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
@@ -338,7 +337,6 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
 		Signature:               sig,
 		GolangPackageImportPath: "signature",
-		GolangPackageName:       "signature",
 		GolangPackageVersion:    "v0.1.0",
 	})
 	if err != nil {

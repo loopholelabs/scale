@@ -7,8 +7,8 @@
         {{ if .signature_path }}
         "signature": "file:{{ .signature_path}}"
         {{ end }}
-        {{ if .signature_version }}
-        "signature": "{{ .signature_version }}"
+        {{ if .signature_import }}
+        "signature": "{{ .signature_import }}"
         {{ end }}
     }
 }

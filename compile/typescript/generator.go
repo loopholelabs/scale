@@ -26,8 +26,8 @@ import (
 
 var generator *Generator
 
-func GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureVersion string) ([]byte, error) {
-	return generator.GenerateTypescriptPackageJSON(packageSchema, signaturePath, signatureVersion)
+func GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureImport string) ([]byte, error) {
+	return generator.GenerateTypescriptPackageJSON(packageSchema, signaturePath, signatureImport)
 }
 
 func GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
@@ -48,16 +48,16 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureVersion string) ([]byte, error) {
+func (g *Generator) GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureImport string) ([]byte, error) {
 	if signaturePath != "" && !strings.HasPrefix(signaturePath, "/") && !strings.HasPrefix(signaturePath, "./") && !strings.HasPrefix(signaturePath, "../") {
 		signaturePath = "./" + signaturePath
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "packagejson.ts.templ", map[string]interface{}{
-		"package_schema":    packageSchema,
-		"signature_path":    signaturePath,
-		"signature_version": signatureVersion,
+		"package_schema":   packageSchema,
+		"signature_path":   signaturePath,
+		"signature_import": signatureImport,
 	})
 	if err != nil {
 		return nil, err

@@ -57,7 +57,6 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 		Signature: s,
 
 		GolangPackageImportPath: "signature",
-		GolangPackageName:       "signature",
 		GolangPackageVersion:    "v0.1.0",
 
 		RustPackageName:    "local_example_latest_guest",
@@ -90,7 +89,6 @@ func TestGenerateMasterTestingSchema(t *testing.T) {
 		Signature: s,
 
 		GolangPackageImportPath: "signature",
-		GolangPackageName:       "signature",
 		GolangPackageVersion:    "v0.1.0",
 
 		TypescriptPackageName:    "local-example-latest-host",

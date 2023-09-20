@@ -133,12 +133,15 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to parse signature dependency in package.json")
 	}
 
-	signatureVersion := ""
-	if !strings.HasPrefix(signaturePath, "file:") {
-		signatureVersion = signaturePath
+	signatureImport := ""
+	switch {
+	case strings.HasPrefix(signaturePath, "http://") || strings.HasPrefix(signaturePath, "https://"):
+		signatureImport = signaturePath
 		signaturePath = ""
-	} else {
+	case strings.HasPrefix(signaturePath, "file:"):
 		signaturePath = strings.TrimPrefix(signaturePath, "file:")
+	default:
+		return nil, fmt.Errorf("unable to parse signature dependency path: %s", signaturePath)
 	}
 
 	if signaturePath == "" && options.Scalefile.Signature.Organization == "local" {
@@ -197,7 +200,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to write index.js file for function dist: %w", err)
 	}
 
-	packageJSONFile, err := typescript.GenerateTypescriptPackageJSON(options.Scalefile, signaturePath, signatureVersion)
+	packageJSONFile, err := typescript.GenerateTypescriptPackageJSON(options.Scalefile, signaturePath, signatureImport)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate package.json file: %w", err)
 	}
