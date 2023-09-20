@@ -7,7 +7,6 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "rm -rf dist && tsc --outDir dist && cp package.json dist",
-    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache",
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
