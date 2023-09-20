@@ -62,12 +62,6 @@ type Options struct {
 }
 
 func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
-	//	hash, err := options.Extension.Hash()
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	hashString := hex.EncodeToString(hash)
-
 	golangTypes, err := golang.GenerateTypes(options.Extension, options.GolangPackageName)
 	if err != nil {
 		return nil, err
@@ -123,12 +117,6 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 }
 
 func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
-	//hash, err := options.Extension.Hash()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//hashString := hex.EncodeToString(hash)
-
 	golangTypes, err := golang.GenerateTypes(options.Extension, options.GolangPackageName)
 	if err != nil {
 		return nil, err
