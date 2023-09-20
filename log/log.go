@@ -14,17 +14,31 @@
 	limitations under the License.
 */
 
-package example
+package log
 
 import (
 	"fmt"
-	"signature"
+	"io"
 )
 
-func Example(ctx *signature.ModelWithAllFieldTypes) (*signature.ModelWithAllFieldTypes, error) {
-	fmt.Printf("This is a Golang Function")
-	if ctx != nil {
-		ctx.StringField = "This is a Golang Function"
+var _ io.Writer = (*NamedLogger)(nil)
+
+type NamedLogger struct {
+	nameTemplate      string
+	nameTemplateBytes []byte
+	writer            io.Writer
+}
+
+func NewNamedLogger(name string, writer io.Writer) *NamedLogger {
+	nameTemplate := fmt.Sprintf("%s: ", name)
+	return &NamedLogger{
+		nameTemplate:      nameTemplate,
+		nameTemplateBytes: []byte(nameTemplate),
+		writer:            writer,
 	}
-	return signature.Next(ctx)
+}
+
+func (l *NamedLogger) Write(p []byte) (int, error) {
+	_, err := l.writer.Write(append(append(l.nameTemplateBytes, p...), '\n'))
+	return len(p), err
 }

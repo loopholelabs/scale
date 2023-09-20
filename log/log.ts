@@ -14,17 +14,10 @@
 	limitations under the License.
 */
 
-package example
+import {Writer} from "../config";
 
-import (
-	"fmt"
-	"signature"
-)
-
-func Example(ctx *signature.ModelWithAllFieldTypes) (*signature.ModelWithAllFieldTypes, error) {
-	fmt.Printf("This is a Golang Function")
-	if ctx != nil {
-		ctx.StringField = "This is a Golang Function"
-	}
-	return signature.Next(ctx)
+export function NamedLogger(name: string, writer: Writer): Writer {
+    return (message: string) => {
+        writer(`${name}: ${message}`);
+    }
 }

@@ -23,7 +23,7 @@ import (
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
-// function is an instantiated function that can be run
+// function is an instantiated function that can run a module
 type function[T interfaces.Signature] struct {
 	// instance is the instance that this function belongs to
 	instance *Instance[T]

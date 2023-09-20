@@ -80,7 +80,7 @@ export class DisabledWASI {
         const view = this.getDataView();
         let count = 0;
         let size = 0;
-        if (this.env !== undefined) {
+        if (typeof this.env !== "undefined") {
             for (const key in this.env) {
                 count++;
                 size += key.length + 1 + this.env[key].length + 1;
@@ -94,7 +94,7 @@ export class DisabledWASI {
     public environ_get(environ: number, environBuf: number): number {
         const view = this.getDataView();
         let offset = 0;
-        if (this.env !== undefined) {
+        if (typeof this.env !== "undefined") {
             for (const key in this.env) {
                 const value = this.env[key];
                 const keyLen = key.length;
@@ -152,7 +152,7 @@ export class DisabledWASI {
     }
 
     public fd_write(fd: number, iovsPtr: number, iovsLength: number, bytesWrittenPtr: number): number { // eslint-disable-line @typescript-eslint/no-unused-vars
-        if ( (fd === 1 && this.stdout !== undefined) || (fd === 2 && this.stderr !== undefined) ) {
+        if ( (fd === 1 && typeof this.stdout !== "undefined") || (fd === 2 && typeof this.stderr !== "undefined") ) {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             const iovs = new Uint32Array(this.exports.memory.buffer, iovsPtr, iovsLength * 2);
@@ -170,9 +170,9 @@ export class DisabledWASI {
             }
             const dataView = this.getDataView();
             dataView.setInt32(bytesWrittenPtr, totalBytesWritten, true);
-            if (fd === 1 && this.stdout !== undefined) {
+            if (fd === 1 && typeof this.stdout !== "undefined") {
                 this.stdout(text);
-            } else if (fd === 2 && this.stderr !== undefined) {
+            } else if (fd === 2 && typeof this.stderr !== "undefined") {
                 this.stderr(text);
             }
 

@@ -95,7 +95,7 @@ describe("scaleFunc", () => {
     expect(sf.Language).toBe(sf2.Language);
     expect(sf.Function).toStrictEqual(sf2.Function);
 
-    if (sf2.Size !== undefined && sf2.Hash !== undefined) {
+    if (typeof sf2.Size !== "undefined" && typeof sf2.Hash !== "undefined") {
       buff[buff.length - 1]++; // This increments the last byte of the hash
       // Now try to decode again with a bad checksum...
       expect(() => {

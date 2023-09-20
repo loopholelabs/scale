@@ -1,14 +1,14 @@
 {
   "name": "@loopholelabs/scale",
-  "version": "0.3.20",
-  "description": "A Framework for writing High-Performance WebAssembly Functions and  Runtime",
+  "version": "0.4.0",
+  "description": "Scale is a framework for building high-performance plugin systems into any application, all powered by WebAssembly.",
   "source": "scale.ts",
   "types": "types.d.ts",
   "license": "Apache-2.0",
   "scripts": {
     "build": "rm -rf dist && tsc --outDir dist && cp package.json dist",
-    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test": "node --experimental-wasi-unstable-preview1 --trace-warnings node_modules/.bin/jest --no-cache"
   },
   "dependencies": {
     "@loopholelabs/polyglot": "^1.1.3",

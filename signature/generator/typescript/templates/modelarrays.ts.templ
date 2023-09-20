@@ -46,7 +46,7 @@
 
             for (let i = 0; i < {{ CamelCase .Name }}Size; i += 1) {
                 const x = {{ .Reference }}.decode(decoder);
-                if (x !== undefined) {
+                if (typeof x !== "undefined") {
                     this.#{{ CamelCase .Name }}[i] = x;
                 }
             }
@@ -56,7 +56,7 @@
 
             for (let i = 0; i < {{ CamelCase .Name }}Size; i += 1) {
                 const x = {{ .Reference }}.decode(decoder);
-                if (x !== undefined) {
+                if (typeof x !== "undefined") {
                     this.{{ CamelCase .Name }}[i] = x;
                 }
             }

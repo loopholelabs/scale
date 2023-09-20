@@ -13,12 +13,16 @@
         See the License for the specific language governing permissions and
         limitations under the License.
 */
+
 import {Signature} from "@loopholelabs/scale-signature-interfaces";
 import {Func} from "./function";
 import {Template} from "./template";
 import {UnpackUint32} from "./utils";
 import {Decoder} from "@loopholelabs/polyglot";
 import {DisabledWASI} from "./wasi";
+import {v4 as uuid} from "uuid";
+import {NamedLogger} from "./log/log";
+import {Tracing} from "./tracing";
 
 export async function NewModule<T extends Signature>(template: Template<T>): Promise<Module<T>> {
     const m = new Module(template);
@@ -29,9 +33,10 @@ export async function NewModule<T extends Signature>(template: Template<T>): Pro
 export class Module<T extends Signature> {
     private readonly ready: Promise<void>;
 
-    private template: Template<T>;
+    public template: Template<T>;
 
     private readonly wasi: DisabledWASI;
+    private readonly tracing: Tracing<T>;
 
     private instantiatedModule: WebAssembly.Instance | undefined;
     private run: undefined | ((ptr: number, len: number) => bigint);
@@ -45,35 +50,50 @@ export class Module<T extends Signature> {
 
     constructor(template: Template<T>) {
         this.template = template;
-        this.wasi = new DisabledWASI(this.template.env, this.template.runtime.config.stdout, this.template.runtime.config.stderr);
+
+        const name = `${this.template.identifier}.${uuid()}`
+
+        let stdout = this.template.runtime.config.stdout;
+        let stderr = this.template.runtime.config.stderr;
+
+        if (typeof stdout !== "undefined" && !this.template.runtime.config.rawOutput) {
+            stdout = NamedLogger(name, stdout);
+        }
+
+        if (typeof stderr !== "undefined" && !this.template.runtime.config.rawOutput) {
+            stderr = NamedLogger(name, stderr);
+        }
+
+        this.wasi = new DisabledWASI(this.template.env, stdout, stderr);
+        this.tracing = new Tracing(this, this.template.runtime.TraceDataCallback);
 
         const moduleConfig = {
             wasi_snapshot_preview1: this.wasi.GetImports(),
-            scale: this.template.tracing.GetImports(),
+            scale: this.tracing.GetImports(),
             env: {
                 next: this.template.runtime.Next(this),
             },
         }
 
         this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
-            if (this.template.compiled !== undefined) {
+            if (typeof this.template.compiled !== "undefined") {
                 this.instantiatedModule = await WebAssembly.instantiate(this.template.compiled, moduleConfig);
                 this.wasi.SetInstance(this.instantiatedModule);
 
                 this.run = this.instantiatedModule.exports.run as ((ptr: number, len: number) => bigint) | undefined;
-                if (this.run === undefined) {
+                if (typeof this.run === "undefined") {
                     throw new Error("no run function found in module");
                 }
                 this.resize = this.instantiatedModule.exports.resize as ((len: number) => number) | undefined;
-                if (this.resize === undefined) {
+                if (typeof this.resize === "undefined") {
                     throw new Error("no resize function found in module");
                 }
                 this.initialize = this.instantiatedModule.exports.initialize as (() => bigint) | undefined;
-                if (this.initialize === undefined) {
+                if (typeof this.initialize === "undefined") {
                     throw new Error("no initialize function found in module");
                 }
                 this.memory = this.instantiatedModule.exports.memory as WebAssembly.Memory | undefined;
-                if (this.memory === undefined) {
+                if (typeof this.memory === "undefined") {
                     throw new Error("no memory found in module");
                 }
 
@@ -99,19 +119,19 @@ export class Module<T extends Signature> {
     }
 
     public Run() {
-        if (this.signature === undefined) {
+        if (typeof this.signature === "undefined") {
             throw new Error("no signature found in module");
         }
 
-        if (this.resize === undefined) {
+        if (typeof this.resize === "undefined") {
             throw new Error("no resize function found in module");
         }
 
-        if (this.run === undefined) {
+        if (typeof this.run === "undefined") {
             throw new Error("no run function found in module");
         }
 
-        if (this.memory === undefined) {
+        if (typeof this.memory === "undefined") {
             throw new Error("no memory found in module");
         }
 
@@ -127,7 +147,7 @@ export class Module<T extends Signature> {
         const readBuffer = readBufferPointer.slice(ptr, ptr + len);
 
         const err = this.signature.Read(readBuffer);
-        if (err !== undefined) {
+        if (typeof err !== "undefined") {
             throw err;
         }
     }

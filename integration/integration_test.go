@@ -214,6 +214,7 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.Schema {
 }
 
 func TestGolangHostGolangGuest(t *testing.T) {
+	t.Log("Starting TestGolangHostGolangGuest")
 	schema := compileGolangGuest(t)
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
 	runtime, err := scale.New(cfg)
@@ -232,6 +233,7 @@ func TestGolangHostGolangGuest(t *testing.T) {
 }
 
 func TestGolangHostRustGuest(t *testing.T) {
+	t.Log("Starting TestGolangHostRustGuest")
 	schema := compileRustGuest(t)
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
 	runtime, err := scale.New(cfg)
@@ -250,6 +252,7 @@ func TestGolangHostRustGuest(t *testing.T) {
 }
 
 func TestGolangHostTypescriptGuest(t *testing.T) {
+	t.Log("Starting TestGolangHostTypescriptGuest")
 	schema := compileTypescriptGuest(t)
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
 	runtime, err := scale.New(cfg)
@@ -270,6 +273,7 @@ func TestGolangHostTypescriptGuest(t *testing.T) {
 }
 
 func TestTypescriptHostTypescriptGuest(t *testing.T) {
+	t.Log("Starting TestTypescriptHostTypescriptGuest")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -289,6 +293,7 @@ func TestTypescriptHostTypescriptGuest(t *testing.T) {
 }
 
 func TestTypescriptHostGolangGuest(t *testing.T) {
+	t.Log("Starting TestTypescriptHostGolangGuest")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -308,6 +313,7 @@ func TestTypescriptHostGolangGuest(t *testing.T) {
 }
 
 func TestTypescriptHostRustGuest(t *testing.T) {
+	t.Log("Starting TestTypescriptHostRustGuest")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -327,6 +333,7 @@ func TestTypescriptHostRustGuest(t *testing.T) {
 }
 
 func TestGolangToGolang(t *testing.T) {
+	t.Log("Starting TestGolangToGolang")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -355,6 +362,7 @@ func TestGolangToGolang(t *testing.T) {
 }
 
 func TestRustToRust(t *testing.T) {
+	t.Log("Starting TestRustToRust")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -377,6 +385,7 @@ func TestRustToRust(t *testing.T) {
 }
 
 func TestTypescriptToTypescript(t *testing.T) {
+	t.Log("Starting TestTypescriptToTypescript")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -399,6 +408,7 @@ func TestTypescriptToTypescript(t *testing.T) {
 }
 
 func TestGolangToRust(t *testing.T) {
+	t.Log("Starting TestGolangToRust")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -435,6 +445,7 @@ func TestGolangToRust(t *testing.T) {
 }
 
 func TestGolangToTypescript(t *testing.T) {
+	t.Log("Starting TestGolangToTypescript")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -470,6 +481,7 @@ func TestGolangToTypescript(t *testing.T) {
 }
 
 func TestRustToGolang(t *testing.T) {
+	t.Log("Starting TestRustToGolang")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -506,6 +518,7 @@ func TestRustToGolang(t *testing.T) {
 }
 
 func TestRustToTypescript(t *testing.T) {
+	t.Log("Starting TestRustToTypescript")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -541,6 +554,7 @@ func TestRustToTypescript(t *testing.T) {
 }
 
 func TestTypescriptToGolang(t *testing.T) {
+	t.Log("Starting TestTypescriptToGolang")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -576,6 +590,7 @@ func TestTypescriptToGolang(t *testing.T) {
 }
 
 func TestTypescriptToRust(t *testing.T) {
+	t.Log("Starting TestTypescriptToRust")
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 

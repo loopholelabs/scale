@@ -7,6 +7,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.4.0] - 2023-09-20
+
+### Features
+
+- Added support for scale signatures
+- Consolidated build pipeline into the `build` package
+- Consolidated the compiler for golang, typescript, and rust guest functions into the `compile` package
+
+### Changes
+
+- Merged various signature repositories into this repository
+- Added integration tests to the `scale` package
+
 ## [v0.3.19] - 2023-05-15
 
 ### Features
@@ -236,7 +249,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.3.19...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/loopholelabs/scale/compare/v0.4.0
 [v0.3.19]: https://github.com/loopholelabs/scale/compare/v0.3.19
 [v0.3.18]: https://github.com/loopholelabs/scale/compare/v0.3.18
 [v0.3.17]: https://github.com/loopholelabs/scale/compare/v0.3.17

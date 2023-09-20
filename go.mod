@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/BurntSushi/toml v1.3.2
-	github.com/evanw/esbuild v0.19.2
+	github.com/evanw/esbuild v0.19.3
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/hcl/v2 v2.18.0
 	github.com/loopholelabs/polyglot v1.1.3
@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tetratelabs/wazero v1.5.0
 	golang.org/x/mod v0.12.0
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.13.0
 )
 
 require (

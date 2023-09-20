@@ -37,6 +37,7 @@ export class Config<T extends Signature> {
     public functions: ConfigFunction[] = [];
     stdout: Writer | undefined;
     stderr: Writer | undefined;
+    rawOutput: boolean = false;
 
     constructor(newSignature: New<T>) {
         this.newSignature = newSignature;
@@ -93,6 +94,11 @@ export class Config<T extends Signature> {
 
     public WithStderr(writer: Writer): Config<T> {
         this.stderr = writer
+        return this;
+    }
+
+    public WithRawOutput(rawOutput: boolean): Config<T> {
+        this.rawOutput = rawOutput
         return this;
     }
 }

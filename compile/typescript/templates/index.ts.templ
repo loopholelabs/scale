@@ -18,7 +18,7 @@ class TextEncoder {
         let i = 0;
         while (i < length) {
             const codePoint = s.codePointAt(i);
-            if (codePoint !== undefined) {
+            if (typeof codePoint !== "undefined") {
                 let c = 0;
                 let bits = 0;
                 if (codePoint <= 0x0000007F) {

@@ -1,8 +1,8 @@
 [package]
 name = "scale_rs"
-version = "0.3.20"
+version = "0.4.0"
 edition = "2021"
-description = "A High-Performance WebAssembly Function Runtime"
+description = "Scale is a framework for building high-performance plugin systems into any application, all powered by WebAssembly."
 homepage = "https://scale.sh"
 repository = "https://github.com/loopholelabs/scale"
 license = "Apache-2.0"

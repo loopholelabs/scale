@@ -1,6 +1,6 @@
 {
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "target", "**/*.go", "**/*.rs", "*.go", "*.rs"],
+  "exclude": ["node_modules", "dist", "target","compile/typescript/builder", "integration", "**/*.go", "**/*.rs", "*.go", "*.rs"],
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",

@@ -21,13 +21,13 @@
 {{ define "ts_models_encode" }}
     {{- range .Models }}
         {{- if .Accessor }}
-            if (this.#{{ CamelCase .Name }} === undefined) {
+            if (typeof this.#{{ CamelCase .Name }} === "undefined") {
                 encoder.null();
             } else {
                 this.#{{ CamelCase .Name }}.encode(encoder);
             }
         {{- else }}
-            if (this.{{ CamelCase .Name }} === undefined) {
+            if (typeof this.{{ CamelCase .Name }} === "undefined") {
                 encoder.null();
             } else {
                 this.{{ CamelCase .Name }}.encode(encoder);
