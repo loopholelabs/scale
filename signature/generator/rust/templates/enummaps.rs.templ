@@ -1,0 +1,70 @@
+{{ define "rs_enummaps_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .EnumMaps }}
+        {{- if and (Deref .Accessor) (IsPrimitive .Value) }}
+            {{ SnakeCase .Name }}: HashMap<{ .Reference }}, {{ Primitive .Value }}>,
+        {{- end }}
+
+        {{- if and (Deref .Accessor) (not (IsPrimitive .Value)) }}
+            {{ SnakeCase .Name }}: HashMap<{{ .Reference }}, {{ .Value }}>,
+        {{- end }}
+
+        {{- if and (not (Deref .Accessor)) (IsPrimitive .Value) }}
+            pub {{ SnakeCase .Name }}: HashMap<{{ .Reference }}, {{ Primitive .Value }}>,
+        {{- end }}
+
+        {{- if and (not (Deref .Accessor)) (not (IsPrimitive .Value)) }}
+            pub {{ SnakeCase .Name }}: HashMap<{{ .Reference }}, {{ .Value }}>,
+        {{- end }}
+    {{- end }}
+{{ end }}
+
+{{ define "rs_enummaps_new_struct_reference" }}
+    {{ $current_model := . }}
+    {{- range .EnumMaps }}
+        {{ SnakeCase .Name }}: HashMap::new(),
+    {{ end }}
+{{ end }}
+
+{{ define "rs_enummaps_encode" }}
+    {{- range .EnumMaps }}
+        {{- if IsPrimitive .Value }}
+            e.encode_map(self.{{ SnakeCase .Name }}.len(), Kind::U32, {{ PolyglotPrimitive .Value }})?;
+            for (k, v) in &self.{{ SnakeCase .Name }} {
+                e.encode_u32(*k as u32)?;
+                {{- if eq .Value "string"}}
+                    e.{{ PolyglotPrimitiveEncode .Value }}(&v)?;
+                {{- else }}
+                    e.{{ PolyglotPrimitiveEncode .Value }}(v)?;
+                {{- end }}
+            }
+        {{- else }}
+            e.encode_map(self.{{ SnakeCase .Name }}.len(), Kind::U32, Kind::Any)?;
+            for (k, v) in &self.{{ SnakeCase .Name }} {
+                e.encode_u32(*k as u32)?;
+                v.encode_self(e)?;
+            }
+        {{- end }}
+    {{- end }}
+{{ end }}
+
+{{ define "rs_enummaps_decode" }}
+    {{ $current_model := . }}
+    {{- range .EnumMaps }}
+        {{- if IsPrimitive .Value }}
+            let size_{{ SnakeCase .Name }} = d.decode_map(Kind::U32, {{ PolyglotPrimitive .Value }})?;
+            for _ in 0..size_{{ SnakeCase .Name }} {
+                let k = {{ .Reference }}::try_from(d.decode_u32()?)?;
+                let v = d.{{ PolyglotPrimitiveDecode .Value }}()?;
+                x.{{ SnakeCase .Name }}.insert(k, v);
+            }
+        {{- else }}
+            let size_{{ SnakeCase .Name }} = d.decode_map(Kind::U32, Kind::Any)?;
+            for _ in 0..size_{{ SnakeCase .Name }} {
+                let k = {{ .Reference }}::try_from(d.decode_u32()?)?;
+                let v = {{ .Value }}::decode(d)?.ok_or(DecodingError::InvalidMap)?;
+                x.{{ SnakeCase .Name }}.insert(k, v);
+            }
+        {{- end }}
+    {{- end }}
+{{ end }}

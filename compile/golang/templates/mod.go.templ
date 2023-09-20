@@ -1,0 +1,11 @@
+module compile
+
+go 1.20
+
+replace signature v0.1.0 => {{ .signature_import }} {{ .signature_version }}
+replace {{ .package_schema.Name }} v0.1.0 => {{ .function_import }}
+
+require (
+    signature v0.1.0
+    {{ .package_schema.Name }} v0.1.0
+)

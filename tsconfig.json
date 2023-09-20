@@ -1,6 +1,6 @@
 {
-  "include": ["ts/**/*.ts"],
-  "exclude": ["node_modules", "ts/**/*.test.ts", "ts/tests", "ts/compile"],
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "target","compile/typescript/builder", "integration", "**/*.go", "**/*.rs", "*.go", "*.rs"],
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
@@ -12,7 +12,7 @@
     "sourceMap": true,
     "declaration": true,
     "paths": {
-      "scale": ["./ts"]
+      "scale": ["./"]
     },
     "types": ["node", "jest"]
   },
