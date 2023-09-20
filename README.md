@@ -1,11 +1,11 @@
 <br/>
 <div align="center">
   <a href="https://scale.sh">
-    <img src="docs/logo/dark.svg" alt="Logo" width="180" height="90">
+    <img src="docs/logo/dark.svg" alt="Logo" height="90">
   </a>
-  <p align="center">
+  <h3 align="center">
     A framework for building high-performance plugin systems into any application, all powered by WebAssembly.
-  </p>
+  </h3>
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)
