@@ -19,6 +19,7 @@ package scale
 import (
 	"context"
 	"fmt"
+
 	"github.com/loopholelabs/scale/log"
 
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
