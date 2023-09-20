@@ -1,0 +1,46 @@
+---
+title: Configuration Flags
+description: Learn how to configure the Scale CLI using command line flags, environment variables, or a configuration file.
+---
+
+The Scale CLI can be configured via a number of global configuration flags. These flags can be set in the following ways:
+
+  * [Command Line Flags](#command-line-flags)
+  * [Environment Variables](#environment-variables)
+  * [Configuration File](#configuration-file)
+
+## Command Line Flags
+
+The following global flags are available throughout the Scale CLI:
+
+| Flag | Description | Default Value |
+| --- | --- | --- |
+| `--help` | Show help for any command | `false` |
+| `--config` | The path to the Scale CLI configuration file (if it exists) | `~/.config/scale/config.yml` |
+| `--log` | The path to where the Scale CLI will log things (will be created if it does not exist) | `~/.config/scale/scale.log` |
+| `--format` | The output format for the Scale CLI (`human`, `json`, or `csv`) | `human` |
+| `--debug` | Enable debug logging | `false` |
+| `--no-color` | Disable color output | `false` |
+| `--version` | Show the version of the Scale CLI | `false` |
+| `--api-endpoint` | The URL of the Scale API endpoint | `api.scale.sh` |
+| `--auth-endpoint` | The URL of the Scale Authentication API endpoint | `auth.scale.sh` |
+| `--cache-directory` | The path to the Scale CLI cache directory (will be created if it does not exist) | `~/.config/scale/functions` |
+
+## Environment Variables
+
+The CLI will look for environment variables prefixed with `SCALE_` and convert them to the corresponding flag. For example, the environment variable `SCALE_API_ENDPOINT` will be converted to the `--api-endpoint` flag.
+
+## Configuration File
+
+The Scale CLI will look for a configuration file at `~/.config/scale/config.yml`. If it exists, it will be used to configure the Scale CLI. The configuration file can be used to set any of the global flags listed above.
+
+The configuration file itself can also be specified using the `--config` flag or the `SCALE_CONFIG` environment variable.
+
+### Example Configuration File
+
+```yaml ~/.config/scale/config.yml
+api_endpoint: api.scale.sh
+auth_endpoint: auth.scale.sh
+cache_directory: /tmp/scale/functions
+debug: true
+```
