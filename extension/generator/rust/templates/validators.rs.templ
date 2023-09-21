@@ -1,0 +1,53 @@
+{{ define "rs_numbers_limit_validator" }}
+{{- if . }}
+    {{- if and .Maximum .Minimum }}
+        if v > {{ .Maximum }} || v < {{ .Minimum }} {
+            return Err(Box::<dyn std::error::Error>::from("value must be between { .Minimum }} and {{ .Maximum }}"));
+        }
+    {{- else if .Minimum }}
+        if v < {{ .Minimum }} {
+            return Err(Box::<dyn std::error::Error>::from("value must be greater than or equal to {{ .Minimum }}"));
+        }
+    {{- else if .Maximum }}
+        if v > {{ .Maximum }} {
+            return Err(Box::<dyn std::error::Error>::from("value must be less than or equal to {{ .Maximum }}"));
+        }
+    {{- end }}
+{{- end }}
+{{ end }}
+
+{{ define "rs_regex_validator" }}
+    {{- if . }}
+        if !Regex::new("^[a-zA-Z0-9]*$")?.is_match(v.as_str()) {
+            return Err(Box::<dyn std::error::Error>::from("value must match {{ .Expression }}"));
+        }
+    {{- end }}
+{{ end }}
+
+{{ define "rs_length_validator" }}
+    {{- if . }}
+        {{- if and .Maximum .Minimum }}
+            if v.len() > {{ .Maximum }} || v.len() < {{ .Minimum }} {
+                return Err(Box::<dyn std::error::Error>::from("value must be between { .Minimum }} and {{ .Maximum }}"));
+            }
+        {{- else if .Minimum }}
+            if v.len() < {{ .Minimum }} {
+                return Err(Box::<dyn std::error::Error>::from("value must be greater than or equal to {{ .Minimum }}"));
+            }
+        {{- else if .Maximum }}
+            if v.len() > {{ .Maximum }} {
+                return Err(Box::<dyn std::error::Error>::from("value must be less than or equal to {{ .Maximum }}"));
+            }
+        {{- end }}
+    {{- end }}
+{{ end }}
+
+{{ define "rs_case_modifier" }}
+    {{- if . }}
+        {{- if eq .Kind "upper" }}
+            v = v.to_uppercase();
+        {{- else if eq .Kind "lower" }}
+            v = v.to_lowercase();
+        {{- end }}
+    {{- end }}
+{{ end }}
