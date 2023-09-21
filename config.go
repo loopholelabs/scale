@@ -48,8 +48,9 @@ type Config[T interfaces.Signature] struct {
 	newSignature interfaces.New[T]
 	functions    []configFunction
 	context      context.Context
-	Stdout       io.Writer
-	Stderr       io.Writer
+	stdout       io.Writer
+	stderr       io.Writer
+	rawOutput    bool
 	extensions   []extension.Extension
 }
 
