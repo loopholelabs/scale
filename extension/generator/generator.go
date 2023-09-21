@@ -53,6 +53,12 @@ type Options struct {
 	GolangPackageImportPath string
 	GolangPackageName       string
 	GolangPackageVersion    string
+
+	RustPackageName    string
+	RustPackageVersion string
+
+	TypescriptPackageName    string
+	TypescriptPackageVersion string
 }
 
 func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
