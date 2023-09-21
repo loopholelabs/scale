@@ -24,7 +24,7 @@ import (
 
 	scaleVersion "github.com/loopholelabs/scale/version"
 
-	"github.com/loopholelabs/scale/extension/generator/templates"
+	"github.com/loopholelabs/scale/extension/generator/golang/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
 
