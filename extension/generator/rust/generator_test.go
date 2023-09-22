@@ -16,6 +16,7 @@
 package rust
 
 import (
+	"encoding/hex"
 	"os"
 	"testing"
 
@@ -39,5 +40,15 @@ func TestGenerator(t *testing.T) {
 		require.Equal(t, string(master), string(formatted))
 	*/
 	t.Log(string(formatted))
+
+	sHash, err := s.Hash()
+	h := hex.EncodeToString(sHash)
+
+	guest, err := GenerateGuest(s, h, "guest")
+	require.NoError(t, err)
+	os.WriteFile("./guest.txt", guest, 0644)
+	expGuest, err := os.ReadFile("./guest.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expGuest), string(guest))
 
 }

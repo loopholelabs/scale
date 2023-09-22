@@ -15,9 +15,11 @@ package generator
 
 import (
 	"bytes"
+	"encoding/hex"
 
 	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/extension/generator/golang"
+	"github.com/loopholelabs/scale/extension/generator/rust"
 )
 
 type GuestRegistryPackage struct {
@@ -62,6 +64,12 @@ type Options struct {
 }
 
 func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
+	hash, err := options.Extension.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hashString := hex.EncodeToString(hash)
+
 	golangTypes, err := golang.GenerateTypes(options.Extension, options.GolangPackageName)
 	if err != nil {
 		return nil, err
@@ -89,8 +97,30 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
+	rustTypes, err := rust.GenerateTypes(options.Extension, options.RustPackageName)
+	if err != nil {
+		return nil, err
+	}
+
+	rustGuest, err := rust.GenerateGuest(options.Extension, hashString, options.RustPackageName)
+	if err != nil {
+		return nil, err
+	}
+
+	cargofile, err := rust.GenerateCargofile(options.RustPackageName, options.RustPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	rustFiles := []File{
+		NewFile("types.rs", "types.rs", rustTypes),
+		NewFile("guest.rs", "guest.rs", rustGuest),
+		NewFile("Cargo.toml", "Cargo.toml", cargofile),
+	}
+
 	return &GuestLocalPackage{
 		GolangFiles: golangFiles,
+		RustFiles:   rustFiles,
 	}, nil
 }
 
