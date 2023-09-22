@@ -297,6 +297,11 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 		return err
 	}
 
+	err = os.MkdirAll(path.Join(directory, "rust", "guest"), 0755)
+	if err != nil {
+		return err
+	}
+
 	err = os.MkdirAll(path.Join(directory, "golang", "host"), 0755)
 	if err != nil {
 		return err
@@ -317,6 +322,13 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 
 	for _, file := range guestPackage.GolangFiles {
 		err = os.WriteFile(path.Join(directory, "golang", "guest", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, file := range guestPackage.RustFiles {
+		err = os.WriteFile(path.Join(directory, "rust", "guest", file.Path()), file.Data(), 0644)
 		if err != nil {
 			return err
 		}
