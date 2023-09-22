@@ -133,25 +133,27 @@ func (g *Generator) GenerateCargofile(packageName string, packageVersion string)
 }
 
 // GenerateGuest generates the guest bindings
-func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, signatureHash string, packageName string) ([]byte, error) {
+func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.rs.templ", map[string]any{
-		"signature_schema": extensionSchema,
-		"signature_hash":   signatureHash,
+		"extension_schema": extensionSchema,
+		"extension_hash":   extensionHash,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	formatted, err := g.formatter.Format(context.Background(), buf.String())
-	if err != nil {
-		return nil, err
-	}
-
+	formatted := buf.String()
+	/*
+		formatted, err := g.formatter.Format(context.Background(), buf.String())
+		if err != nil {
+			return nil, err
+		}
+	*/
 	buf.Reset()
 	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
