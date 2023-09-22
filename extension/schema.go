@@ -568,30 +568,36 @@ function New {
 model HttpConfig {
 	int32 timeout {
 		default = 60
+		accessor = false
 	}
 }
 
 model HttpResponse {
 	string_map Headers {
 		value = "StringList"
+		accessor = false
 	}
 	int32 StatusCode {
 		default = 0
+		accessor = false
 	}
 	bytes Body {
 		initial_size = 0
+		accessor = false
 	}
 }
 
 model StringList {
   string_array Values {
     initial_size = 0
+		accessor = false
   }
 }
 
 model ConnectionDetails {
 	string url {
 		default = "https://google.com"
+		accessor = false
 	}
 }
 
