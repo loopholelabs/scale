@@ -23,7 +23,6 @@ import (
 
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
 
-	"github.com/loopholelabs/scale/signature"
 	scaleVersion "github.com/loopholelabs/scale/version"
 
 	polyglotUtils "github.com/loopholelabs/polyglot/utils"
@@ -50,8 +49,8 @@ func GenerateCargofile(packageName string, packageVersion string) ([]byte, error
 	return generator.GenerateCargofile(packageName, packageVersion)
 }
 
-func GenerateGuest(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
-	return generator.GenerateGuest(extensionSchema, extensionHash, packageName)
+func GenerateGuest(extensionSchema *extension.Schema, signatureHash string, packageName string) ([]byte, error) {
+	return generator.GenerateGuest(extensionSchema, signatureHash, packageName)
 }
 
 func init() {
@@ -117,12 +116,12 @@ func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName
 	return []byte(buf.String() + "\n\n" + formatted), nil
 }
 
-// GenerateCargofile generates the cargofile for the signature
+// GenerateCargofile generates the cargofile for the extension
 func (g *Generator) GenerateCargofile(packageName string, packageVersion string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "cargo.rs.templ", map[string]any{
 		"polyglot_version":                   strings.TrimPrefix(polyglotVersion.Version(), "v"),
-		"scale_extension_interfaces_version": strings.TrimPrefix(interfacesVersion.Version(), "v"),
+		"scale_signature_interfaces_version": strings.TrimPrefix(interfacesVersion.Version(), "v"),
 		"package_name":                       packageName,
 		"package_version":                    strings.TrimPrefix(packageVersion, "v"),
 	})
@@ -134,15 +133,15 @@ func (g *Generator) GenerateCargofile(packageName string, packageVersion string)
 }
 
 // GenerateGuest generates the guest bindings
-func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, signatureHash string, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.rs.templ", map[string]any{
-		"extension_schema": extensionSchema,
-		"extension_hash":   extensionHash,
+		"signature_schema": extensionSchema,
+		"signature_hash":   signatureHash,
 	})
 	if err != nil {
 		return nil, err
@@ -167,7 +166,7 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
 		"Primitive":               primitive,
-		"IsPrimitive":             signature.ValidPrimitiveType,
+		"IsPrimitive":             extension.ValidPrimitiveType,
 		"PolyglotPrimitive":       polyglotPrimitive,
 		"PolyglotPrimitiveEncode": polyglotPrimitiveEncode,
 		"PolyglotPrimitiveDecode": polyglotPrimitiveDecode,
