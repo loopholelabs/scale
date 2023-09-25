@@ -87,13 +87,19 @@ func New() (*Generator, error) {
 
 // GenerateTypes generates the types for the extension
 func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
+
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "types.rs.templ", map[string]any{
-		"signature_schema": extensionSchema,
+	err = g.templ.ExecuteTemplate(buf, "types.rs.templ", map[string]any{
+		"signature_schema": schema,
 		"package_name":     packageName,
 	})
 	if err != nil {
