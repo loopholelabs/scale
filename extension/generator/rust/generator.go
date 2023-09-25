@@ -16,6 +16,7 @@ package rust
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"text/template"
 
@@ -143,6 +144,8 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
+
+	fmt.Printf("Generating guest...\n")
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.rs.templ", map[string]any{
