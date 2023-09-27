@@ -1,6 +1,6 @@
 [package]
 name = "scale_rs"
-version = "0.4.1"
+version = "0.4.2"
 edition = "2021"
 description = "Scale is a framework for building high-performance plugin systems into any application, all powered by WebAssembly."
 homepage = "https://scale.sh"

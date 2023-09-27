@@ -73,7 +73,6 @@ func New(schema *signature.Schema) (*Converter, error) {
 		p.models[model.Name] = model
 		if model.Name == p.ctxName {
 			p.ctxModel = model
-			break
 		}
 	}
 	if p.ctxModel == nil {
