@@ -1,3 +1,5 @@
+//go:build !integration && !generate
+
 /*
 	Copyright 2023 Loophole Labs
 	Licensed under the Apache License, Version 2.0 (the "License");
