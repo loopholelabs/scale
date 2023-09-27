@@ -17,8 +17,8 @@
 use polyglot_rs::Encoder;
 use quickjs_wasm_sys::{
     ext_js_undefined, size_t as JS_size_t, size_t, JSCFunctionData, JSContext, JSValue,
-    JS_DefinePropertyValueStr, JS_FreeCString, JS_NewCFunctionData, JS_ThrowInternalError,
-    JS_ToCStringLen2, JS_PROP_C_W_E,
+    JS_DefinePropertyValueStr, JS_FreeCString, JS_GetException, JS_GetPropertyStr, JS_IsError,
+    JS_NewCFunctionData, JS_ThrowInternalError, JS_ToCStringLen2, JS_PROP_C_W_E, JS_TAG_UNDEFINED,
 };
 use std::error::Error;
 use std::ffi::CString;
@@ -50,10 +50,11 @@ where
     T: Write,
 {
     move |ctx: *mut JSContext, _this: JSValue, argc: c_int, argv: *mut JSValue, _magic: c_int| {
+        let mut log_line = String::new();
         let mut len: JS_size_t = 0;
         for i in 0..argc {
             if i != 0 {
-                write!(stream, " ").unwrap();
+                log_line.push(' ');
             }
 
             let str_ptr = unsafe { JS_ToCStringLen2(ctx, &mut len, *argv.offset(i as isize), 0) };
@@ -64,13 +65,14 @@ where
 
             let str_ptr = str_ptr as *const u8;
             let str_len = len as usize;
-            let buffer = unsafe { std::slice::from_raw_parts(str_ptr, str_len) };
-
-            stream.write_all(buffer).unwrap();
+            let line = unsafe {
+                std::str::from_utf8_unchecked(std::slice::from_raw_parts(str_ptr, str_len))
+            };
+            log_line.push_str(&line);
             unsafe { JS_FreeCString(ctx, str_ptr as *const i8) };
         }
 
-        writeln!(stream,).unwrap();
+        write!(stream, "{log_line}").unwrap();
         unsafe { ext_js_undefined }
     }
 }
@@ -114,7 +116,7 @@ where
     Some(trampoline::<F>)
 }
 
-pub unsafe fn to_exception(ctx: *mut JSContext, e: JSValue) -> Result<String, anyhow::Error> {
+unsafe fn get_exception(ctx: *mut JSContext, e: JSValue) -> Result<String, anyhow::Error> {
     let mut len: size_t = 0;
     let ptr = JS_ToCStringLen2(ctx, &mut len, e, 0);
     let ptr = ptr as *const u8;
@@ -122,4 +124,29 @@ pub unsafe fn to_exception(ctx: *mut JSContext, e: JSValue) -> Result<String, an
     let buffer = std::slice::from_raw_parts(ptr, len);
     let anyhow_error: anyhow::Result<&str> = std::str::from_utf8(buffer).map_err(Into::into);
     anyhow_error.map(|s| s.to_string())
+}
+
+pub unsafe fn error(ctx: *mut JSContext, during: &str) -> String {
+    let e = JS_GetException(ctx);
+    let exception =
+        get_exception(ctx, e).expect(format!("getting exception during {during} failed").as_str());
+
+    let mut stack = None;
+    let is_error = JS_IsError(ctx, e) != 0;
+    if is_error {
+        let cstring_key = CString::new("stack")
+            .expect(format!("getting new CString for JS stack during {during} failed").as_str());
+        let raw = JS_GetPropertyStr(ctx, e, cstring_key.as_ptr());
+        if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
+            stack.replace(get_exception(ctx, raw));
+        }
+    }
+    let mut err = format!("exception from js runtime during {during}: {exception}");
+    if let Some(Ok(stack)) = stack {
+        if stack.len() > 0 {
+            err.push_str(&format!("\nstack:\n{stack}"));
+        }
+    }
+
+    return err;
 }

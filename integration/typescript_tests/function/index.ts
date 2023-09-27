@@ -16,10 +16,16 @@
 
 import * as signature from "signature";
 
-export function example(ctx?: signature.ModelWithAllFieldTypes): signature.ModelWithAllFieldTypes | undefined {
+export async function example(ctx?: signature.ModelWithAllFieldTypes): Promise<signature.ModelWithAllFieldTypes | undefined> {
     console.log("This is a Typescript Function");
     if (typeof ctx !== "undefined") {
-        ctx.stringField = "This is a Typescript Function"
+        await new Promise<void>((resolve, _) => {
+            ctx.stringField = "This is a Typescript Function"
+            resolve()
+        })
     }
-    return signature.Next(ctx);
+    const p = await signature.Next(ctx);
+    console.log("This is a Typescript Function too:", p?.stringField);
+
+    return p;
 }

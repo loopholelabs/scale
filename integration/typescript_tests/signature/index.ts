@@ -75,8 +75,8 @@ export function Hash(): number[] {
 }
 
 // Next calls the next function in the Scale Function Chain
-export function Next(ctx?: ModelWithAllFieldTypes): ModelWithAllFieldTypes | undefined {
-  const [ptr, len] = Write(ctx);
+export async function Next(ctx?: ModelWithAllFieldTypes): Promise<ModelWithAllFieldTypes | undefined> {
+  const [ptr, len] = Write(await Promise.resolve(ctx));
   const next = (global as any)[TYPESCRIPT_NEXT];
   next([ptr, len]);
   return Read();

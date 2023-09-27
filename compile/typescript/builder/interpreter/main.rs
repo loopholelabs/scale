@@ -19,10 +19,10 @@ pub mod helpers;
 use once_cell::sync::OnceCell;
 use quickjs_wasm_sys::{
     ext_js_undefined, JSContext, JSRuntime, JSValue, JS_BigIntToUint64, JS_Call,
-    JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
-    JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
-    JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED,
+    JS_DefinePropertyValueStr, JS_Eval, JS_ExecutePendingJob, JS_GetArrayBuffer,
+    JS_GetGlobalObject, JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsJobPending, JS_NewContext,
+    JS_NewInt32_Ext, JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_ThrowInternalError,
+    JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E, JS_TAG_EXCEPTION,
 };
 
 use std::ffi::CString;
@@ -34,6 +34,7 @@ use std::str;
 use flate2::read::GzDecoder;
 
 static mut JS_INITIALIZED: bool = false;
+static mut JS_RUNTIME: OnceCell<*mut JSRuntime> = OnceCell::new();
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
 
 static mut ENTRY_EXPORTS: OnceCell<JSValue> = OnceCell::new();
@@ -173,26 +174,7 @@ fn initialize_runtime() {
         );
 
         if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
-            let e = JS_GetException(context);
-            let exception = helpers::to_exception(context, e)
-                .expect("getting exception during evaluation failed");
-
-            let mut stack = None;
-            let is_error = JS_IsError(context, e) != 0;
-            if is_error {
-                let cstring_key = CString::new("stack")
-                    .expect("getting new CString for JS stack during evaluation failed");
-                let raw = JS_GetPropertyStr(context, e, cstring_key.as_ptr());
-                if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
-                    stack.replace(helpers::to_exception(context, raw));
-                }
-            }
-            let mut err = format!("exception from js runtime during evaluation: {}", exception);
-            if let Some(Ok(stack)) = stack {
-                if stack.len() > 0 {
-                    err.push_str(&format!("\nstack:\n{stack}"));
-                }
-            }
+            let err = helpers::error(context, "evaluation");
             panic!("{}", err);
         }
 
@@ -217,6 +199,7 @@ fn initialize_runtime() {
 
         ENTRY_EXPORTS.set(exports).unwrap();
         JS_CONTEXT.set(context).unwrap();
+        JS_RUNTIME.set(runtime).unwrap();
         JS_INITIALIZED = true;
     }
 }
@@ -227,9 +210,24 @@ fn main() {
             initialize_runtime();
         }
 
-        let context = JS_CONTEXT.get().unwrap();
-        let exports = ENTRY_EXPORTS.get().unwrap();
-        let mainfn = ENTRY_MAIN.get().unwrap();
+        let runtime = JS_RUNTIME.get().expect("js runtime not initialized");
+        let context = JS_CONTEXT.get().expect("js context not initialized");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "main");
+                        panic!("{}", err);
+                    }
+                }
+            }
+        }
+
+        let exports = ENTRY_EXPORTS.get().expect("exports not initialized");
+        let mainfn = ENTRY_MAIN.get().expect("main not initialized");
 
         let args: Vec<JSValue> = Vec::new();
         let ret = JS_Call(
@@ -240,27 +238,22 @@ fn main() {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
-        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
-            let e = JS_GetException(*context);
-            let exception =
-                helpers::to_exception(*context, e).expect("getting exception during main failed");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "main");
+                        panic!("{}", err);
+                    }
+                }
+            }
+        }
 
-            let mut stack = None;
-            let is_error = JS_IsError(*context, e) != 0;
-            if is_error {
-                let cstring_key = CString::new("stack")
-                    .expect("getting new CString for JS stack during main failed");
-                let raw = JS_GetPropertyStr(*context, e, cstring_key.as_ptr());
-                if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
-                    stack.replace(helpers::to_exception(*context, raw));
-                }
-            }
-            let mut err = format!("exception from js runtime during main: {}", exception);
-            if let Some(Ok(stack)) = stack {
-                if stack.len() > 0 {
-                    err.push_str(&format!("\nstack:\n{stack}"));
-                }
-            }
+        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
+            let err = helpers::error(*context, "main");
             panic!("{}", err);
         }
     }
@@ -270,7 +263,22 @@ fn main() {
 #[no_mangle]
 pub extern "C" fn initialize() -> u64 {
     unsafe {
+        let runtime = JS_RUNTIME.get().expect("js runtime not initialized");
         let context = JS_CONTEXT.get().expect("js context not initialized");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "initialize");
+                        return helpers::global_err(err.into());
+                    }
+                }
+            }
+        }
+
         let exports = ENTRY_EXPORTS.get().expect("exports not initialized");
         let initfn = ENTRY_INITIALIZE.get().expect("initialize not initialized");
 
@@ -283,27 +291,22 @@ pub extern "C" fn initialize() -> u64 {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
-        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
-            let e = JS_GetException(*context);
-            let exception = helpers::to_exception(*context, e)
-                .expect("getting exception during initialize failed");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "initialize");
+                        return helpers::global_err(err.into());
+                    }
+                }
+            }
+        }
 
-            let mut stack = None;
-            let is_error = JS_IsError(*context, e) != 0;
-            if is_error {
-                let cstring_key = CString::new("stack")
-                    .expect("getting new CString for JS stack during initialize failed");
-                let raw = JS_GetPropertyStr(*context, e, cstring_key.as_ptr());
-                if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
-                    stack.replace(helpers::to_exception(*context, raw));
-                }
-            }
-            let mut err = format!("exception from js runtime during initialize: {}", exception);
-            if let Some(Ok(stack)) = stack {
-                if stack.len() > 0 {
-                    err.push_str(&format!("\nstack:\n{stack}"));
-                }
-            }
+        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
+            let err = helpers::error(*context, "initialize");
             return helpers::global_err(err.into());
         }
 
@@ -320,9 +323,23 @@ pub extern "C" fn initialize() -> u64 {
 #[no_mangle]
 pub extern "C" fn run() -> u64 {
     unsafe {
-        let context = JS_CONTEXT.get().unwrap();
-        let exports = ENTRY_EXPORTS.get().unwrap();
-        let runfn = ENTRY_RUN.get().unwrap();
+        let runtime = JS_RUNTIME.get().expect("js runtime not initialized");
+        let context = JS_CONTEXT.get().expect("js context not initialized");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "run");
+                        return helpers::global_err(err.into());
+                    }
+                }
+            }
+        }
+        let exports = ENTRY_EXPORTS.get().expect("exports not initialized");
+        let runfn = ENTRY_RUN.get().expect("run not initialized");
 
         let args: Vec<JSValue> = Vec::new();
         let ret = JS_Call(
@@ -333,27 +350,22 @@ pub extern "C" fn run() -> u64 {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
-        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
-            let e = JS_GetException(*context);
-            let exception =
-                helpers::to_exception(*context, e).expect("getting exception during run failed");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "run");
+                        return helpers::global_err(err.into());
+                    }
+                }
+            }
+        }
 
-            let mut stack = None;
-            let is_error = JS_IsError(*context, e) != 0;
-            if is_error {
-                let cstring_key = CString::new("stack")
-                    .expect("getting new CString for JS stack during run failed");
-                let raw = JS_GetPropertyStr(*context, e, cstring_key.as_ptr());
-                if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
-                    stack.replace(helpers::to_exception(*context, raw));
-                }
-            }
-            let mut err = format!("exception from js runtime during run: {}", exception);
-            if let Some(Ok(stack)) = stack {
-                if stack.len() > 0 {
-                    err.push_str(&format!("\nstack:\n{stack}"));
-                }
-            }
+        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
+            let err = helpers::error(*context, "run");
             return helpers::global_err(err.into());
         }
 
@@ -370,7 +382,22 @@ pub extern "C" fn run() -> u64 {
 #[no_mangle]
 pub extern "C" fn resize(size: u32) -> *mut u8 {
     unsafe {
-        let context = JS_CONTEXT.get().unwrap();
+        let runtime = JS_RUNTIME.get().expect("js runtime not initialized");
+        let context = JS_CONTEXT.get().expect("js context not initialized");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "resize");
+                        panic!("{}", err);
+                    }
+                }
+            }
+        }
+
         let exports = ENTRY_EXPORTS.get().unwrap();
         let resizefn = ENTRY_RESIZE.get().unwrap();
 
@@ -386,27 +413,22 @@ pub extern "C" fn resize(size: u32) -> *mut u8 {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
-        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
-            let e = JS_GetException(*context);
-            let exception =
-                helpers::to_exception(*context, e).expect("getting exception during resize failed");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = *context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = helpers::error(ctx, "resize");
+                        panic!("{}", err);
+                    }
+                }
+            }
+        }
 
-            let mut stack = None;
-            let is_error = JS_IsError(*context, e) != 0;
-            if is_error {
-                let cstring_key = CString::new("stack")
-                    .expect("getting new CString for JS stack during resize failed");
-                let raw = JS_GetPropertyStr(*context, e, cstring_key.as_ptr());
-                if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
-                    stack.replace(helpers::to_exception(*context, raw));
-                }
-            }
-            let mut err = format!("exception from js runtime during resize: {}", exception);
-            if let Some(Ok(stack)) = stack {
-                if stack.len() > 0 {
-                    err.push_str(&format!("\nstack:\n{stack}"));
-                }
-            }
+        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
+            let err = helpers::error(*context, "resize");
             panic!("{}", err);
         }
 
@@ -429,6 +451,20 @@ fn next_wrap(
     _: c_int,
 ) -> JSValue {
     unsafe {
+        let runtime = JS_RUNTIME.get().expect("js runtime not initialized");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = CString::new(helpers::error(ctx, "next")).unwrap();
+                        return JS_ThrowInternalError(ctx, err.as_ptr());
+                    }
+                }
+            }
+        }
         let ptr = JS_GetPropertyUint32(context, *js_value, 0) as u32;
         let len = JS_GetPropertyUint32(context, *js_value, 1) as u32;
         _next(ptr, len);
@@ -445,6 +481,21 @@ fn address_of_wrap(
     _: c_int,
 ) -> JSValue {
     unsafe {
+        let runtime = JS_RUNTIME.get().expect("js runtime not initialized");
+        if JS_IsJobPending(*runtime) == 1 {
+            let mut ctx = context;
+            loop {
+                match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                    0 => break,
+                    1 => (),
+                    _ => {
+                        let err = CString::new(helpers::error(ctx, "address_of")).unwrap();
+                        return JS_ThrowInternalError(ctx, err.as_ptr());
+                    }
+                }
+            }
+        }
+
         let mut len = 0;
         let addr = JS_GetArrayBuffer(context, &mut len, *js_value) as u32;
         return JS_NewUint32_Ext(context, addr);

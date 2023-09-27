@@ -77,8 +77,8 @@ function Hash() {
   const ptr = addrof(global.WRITE_BUFFER);
   return [ptr, len];
 }
-function Next(ctx) {
-  const [ptr, len] = Write(ctx);
+async function Next(ctx) {
+  const [ptr, len] = Write(await Promise.resolve(ctx));
   const next = global[import_scale_signature_interfaces.TYPESCRIPT_NEXT];
   next([ptr, len]);
   return Read();
