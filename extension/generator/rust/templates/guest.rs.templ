@@ -120,6 +120,10 @@ fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types
   }
 }
 
+{{- if (IsInterface $schema $fn.Return) }}
+fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<impl {{ $fn.Return }}>, Box<dyn std::error::Error>> {
+{{ else }}
+fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types::{{ $fn.Return }}>, Box<dyn std::error::Error>> {
 {{ end }}
 
 }
