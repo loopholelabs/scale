@@ -176,6 +176,7 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
+		"IsInterface":             isInterface,
 		"Primitive":               primitive,
 		"IsPrimitive":             extension.ValidPrimitiveType,
 		"PolyglotPrimitive":       polyglotPrimitive,
@@ -186,6 +187,15 @@ func templateFunctions() template.FuncMap {
 		"SnakeCase":               polyglotUtils.SnakeCase,
 		"Params":                  utils.Params,
 	}
+}
+
+func isInterface(schema *extension.Schema, s string) bool {
+	for _, i := range schema.Interfaces {
+		if i.Name == s {
+			return true
+		}
+	}
+	return false
 }
 
 func primitive(t string) string {

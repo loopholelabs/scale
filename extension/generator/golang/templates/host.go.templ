@@ -91,8 +91,9 @@ type {{ .schema.Name }}Host struct {
 {{ range $fn := .schema.Functions }}
 
 func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem extension.ModuleMemory, resize extension.Resizer, params []uint64) {
-	ptr := uint32(params[0])
-	length := uint32(params[1])
+
+	ptr := uint32(params[1])
+	length := uint32(params[2])
 	data, _ := mem.Read(ptr, length)
 
 	cd := &{{ $fn.Params }}{}
