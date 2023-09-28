@@ -43,8 +43,25 @@ pub unsafe fn ext_{{ .extension_schema.Name }}_Resize(size: u32) -> *const u8 {
     return READ_BUFFER.as_ptr();
 }
 
+// Define imports for instances
+
+{{ range $ifc := .extension_schema.Interfaces }}
+{{ range $fn := $ifc.Functions }}
+
+#[link(wasm_import_module = "env")]
+extern "C" {
+    #[link_name = "ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}"]
+    fn _ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
+}
+
+{{ end }}
+{{ end }}
+
+// All external interface functions defined.
+
 // Define any interfaces we need here...
 // Also define structs we can use to hold instanceId
+
 
 {{ range $ifc := .extension_schema.Interfaces }}
 
@@ -58,12 +75,6 @@ pub struct _{{ $ifc.Name }} {
 impl {{ $ifc.Name }} for _{{ $ifc.Name }} {
 
 {{ range $fn := $ifc.Functions }}
-// func (d *_{{ $ifc.Name }}) {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error) {
-// }
-
-//export ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
-//go:linkname ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}
-//func ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(instance uint64, offset uint32, length uint32) uint64
 
 {{- if (IsInterface $schema $fn.Return) }}
 fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<impl {{ $fn.Return }}>, Box<dyn std::error::Error>> {
@@ -71,8 +82,44 @@ fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<impl 
 fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types::{{ $fn.Return }}>, Box<dyn std::error::Error>> {
 {{ end }}
 
-  // TODO: Function body goes here...
-  return Ok(None);
+  unsafe {
+
+  let mut cursor = Cursor::new(Vec::new());
+
+  types::{{ $fn.Params }}::encode(Some(&params), &mut cursor);
+
+  let vec = cursor.into_inner();
+
+  WRITE_BUFFER.resize(vec.len() as usize, 0);
+  WRITE_BUFFER.copy_from_slice(&vec);
+
+  // Now make the call to the host.
+
+  let mut off = WRITE_BUFFER.as_ptr() as u32;
+  let mut l = WRITE_BUFFER.len() as u32;
+
+  {{- if (IsInterface $schema $fn.Return) }}
+    let v = _ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
+    // IF the return type is an interface return ifc, which contains hidden instanceId.
+
+    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
+
+    let c = _{{ $fn.Return }}{
+      instanceId: v,
+    };
+
+    return Ok(Some(c));
+  {{ else }}
+    _ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
+    // IF the return type is a model, we should read the data from the read buffer.
+
+    let mut cursor = Cursor::new(&mut READ_BUFFER);
+    return types::{{ $fn.Return }}::decode(&mut cursor)
+    
+    //return Ok(Some(c))
+  {{ end }}
+
+  }
 }
 
 {{ end }}
@@ -128,10 +175,10 @@ pub fn {{ $fn.Name }}(params: types::{{ $fn.Params }}) -> Result<Option<types::{
     _ext_{{ $schema.Name }}_{{ $fn.Name }}(0, off, l);
     // IF the return type is a model, we should read the data from the read buffer.
 
-    let c = {{ $fn.Return }}{}
-    // TODO: Do the decode
-    //r, err := Decode{{ $fn.Return }}(ret, readBuffer)
-    return Ok(Some(c))
+    let mut cursor = Cursor::new(&mut READ_BUFFER);
+    return types::{{ $fn.Return }}::decode(&mut cursor)
+    
+    //return Ok(Some(c))
   {{ end }}
   }
 }
