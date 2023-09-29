@@ -5,7 +5,7 @@ pub mod types;
 use crate::types::{Encode, Decode};
 
 use std::io::Cursor;
-use polyglot_rs::{Encoder};
+use polyglot_rs::{Decoder, Encoder};
 
 static HASH: &'static str = "{{ .extension_hash }}";
 
@@ -161,8 +161,18 @@ pub fn {{ $fn.Name }}(params: types::{{ $fn.Params }}) -> Result<Option<types::{
   let mut l = WRITE_BUFFER.len() as u32;
 
   {{- if (IsInterface $schema $fn.Return) }}
+    READ_BUFFER.resize(0, 0);
     let v = _ext_{{ $schema.Name }}_{{ $fn.Name }}(0, off, l);
     // IF the return type is an interface return ifc, which contains hidden instanceId.
+
+    // Check for an error
+    if READ_BUFFER.len() > 0 {
+      // Read the error and return it...
+      let mut cursor = Cursor::new(&mut READ_BUFFER);
+      if let Ok(error) = cursor.decode_error() {
+          return Err(error);
+      }
+    }
 
     // TODO: Handle error from host. In this case there'll be an error in the readBuffer
 
