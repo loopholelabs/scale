@@ -53,10 +53,18 @@ func (d *_{{ $ifc.Name }}) {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Retu
   // Now make the call to the host.
 
   {{- if (IsInterface $schema $fn.Return) }}
+    readBuffer = nil
     v := ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(d.instanceId, off, l)
     // IF the return type is an interface return ifc, which contains hidden instanceId.
 
-    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
+    // Handle error from host. In this case there'll be an error in the readBuffer
+    if (readBuffer!=nil) {
+      val, err := polyglot.GetDecoder(readBuffer).Error()
+      if err!=nil {
+        panic(err)
+      }
+      return &_{{ $fn.Return}}{}, val
+    }
 
     ret := &_{{ $fn.Return }}{
       instanceId: v,
@@ -69,6 +77,11 @@ func (d *_{{ $ifc.Name }}) {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Retu
 
     ret := &{{ $fn.Return }}{}
     r, err := Decode{{ $fn.Return }}(ret, readBuffer)
+
+    if err!=nil {
+      return {{ $fn.Return }}{}, err
+    }
+
     return *r, err
   {{ end }}
 }
@@ -102,10 +115,18 @@ func {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error) {
   // Now make the call to the host.
 
   {{- if (IsInterface $schema $fn.Return) }}
+    readBuffer = nil
     v := ext_{{ $schema.Name }}_{{ $fn.Name }}(0, off, l)
     // IF the return type is an interface return ifc, which contains hidden instanceId.
 
-    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
+    // Handle error from host. In this case there'll be an error in the readBuffer
+    if (readBuffer!=nil) {
+      val, err := polyglot.GetDecoder(readBuffer).Error()
+      if err!=nil {
+        panic(err)
+      }
+      return nil, val
+    }
 
     ret := &_{{ $fn.Return }}{
       instanceId: v,
@@ -118,6 +139,11 @@ func {{ $fn.Name }}(params *{{ $fn.Params }}) ({{ $fn.Return }}, error) {
 
     ret := &{{ $fn.Return }}{}
     r, err := Decode{{ $fn.Return }}(ret, readBuffer)
+
+    if err!=nil {
+      return {{ $fn.Return }}{}, err
+    }
+
     return *r, err
   {{ end }}
 

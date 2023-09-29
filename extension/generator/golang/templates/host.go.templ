@@ -100,12 +100,14 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem e
 	cd, err := Decode{{ $fn.Params }}(cd, data)
 	if err != nil {
 		hostError(mem, resize, err)
+    return
 	}
 
   // Call the implementation
 	r, err := h.impl.{{ $fn.Name }}(cd)
 	if err!=nil {
 		hostError(mem, resize, err)
+    return
 	}
 
 {{- if (IsInterface $schema $fn.Return) }}
@@ -127,10 +129,12 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem e
 
 	if err != nil {
 		hostError(mem, resize, err)
+    return
 	}
 
 	if !mem.Write(uint32(writeBuffer), b.Bytes()) {
 		hostError(mem, resize, err)
+    return
 	}
 
 {{ end }}
@@ -149,6 +153,7 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ 
 	h.instancesLock_{{ $ifc.Name }}.Unlock()
 	if !ok {
 		hostError(mem, resize, errors.New("Instance ID not found!"))
+    return
 	}
 
 	ptr := uint32(params[1])
@@ -159,11 +164,13 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ 
 	cd, err := Decode{{ $fn.Params }}(cd, data)
 	if err != nil {
 		hostError(mem, resize, err)
+    return
 	}
 
 	resp, err := r.{{ $fn.Name }}(cd)
 	if err != nil {
 		hostError(mem, resize, err)
+    return
 	}
 
 
@@ -186,10 +193,12 @@ func (h *{{ $schema.Name }}Host) host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ 
 
 	if err != nil {
 		hostError(mem, resize, err)
+    return
 	}
 
 	if !mem.Write(uint32(writeBuffer), b.Bytes()) {
 		hostError(mem, resize, err)
+    return
 	}
 
 {{ end }}
