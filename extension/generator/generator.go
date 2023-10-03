@@ -75,7 +75,7 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		return nil, err
 	}
 
-	golangGuest, err := golang.GenerateGuest(options.Extension, options.GolangPackageName, options.GolangPackageVersion)
+	golangGuest, err := golang.GenerateGuest(options.Extension, hashString, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -125,12 +125,18 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 }
 
 func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
+	hash, err := options.Extension.Hash()
+	if err != nil {
+		return nil, err
+	}
+	hashString := hex.EncodeToString(hash)
+
 	golangTypes, err := golang.GenerateTypes(options.Extension, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangHost, err := golang.GenerateHost(options.Extension, options.GolangPackageName, options.GolangPackageVersion)
+	golangHost, err := golang.GenerateHost(options.Extension, hashString, options.GolangPackageName, options.GolangPackageVersion)
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,6 @@
 
 {{ $schema := .extension_schema }}
+{{ $hash := .extension_hash }}
 
 pub mod types;
 use crate::types::{Encode, Decode};
@@ -36,9 +37,9 @@ pub trait {{ $ifc.Name }} {
 // resize resizes the extensions READ_BUFFER to the given size and returns the pointer to the buffer
 //
 // Users should not use this method.
-#[export_name = "ext_{{ .extension_schema.Name }}_Resize"]
+#[export_name = "ext_{{ $hash }}_Resize"]
 #[no_mangle]
-pub unsafe fn ext_{{ .extension_schema.Name }}_Resize(size: u32) -> *const u8 {
+pub unsafe fn ext_{{ $hash }}_Resize(size: u32) -> *const u8 {
     READ_BUFFER.resize(size as usize, 0);
     return READ_BUFFER.as_ptr();
 }
@@ -50,8 +51,8 @@ pub unsafe fn ext_{{ .extension_schema.Name }}_Resize(size: u32) -> *const u8 {
 
 #[link(wasm_import_module = "env")]
 extern "C" {
-    #[link_name = "ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}"]
-    fn _ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
+    #[link_name = "ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}"]
+    fn _ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
 }
 
 {{ end }}
@@ -99,10 +100,8 @@ fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types
   let mut l = WRITE_BUFFER.len() as u32;
 
   {{- if (IsInterface $schema $fn.Return) }}
-    let v = _ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
+    let v = _ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
     // IF the return type is an interface return ifc, which contains hidden instanceId.
-
-    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
 
     let c = _{{ $fn.Return }}{
       instanceId: v,
@@ -110,7 +109,7 @@ fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types
 
     return Ok(Some(c));
   {{ else }}
-    _ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
+    _ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
     // IF the return type is a model, we should read the data from the read buffer.
 
     let mut cursor = Cursor::new(&mut READ_BUFFER);
@@ -134,8 +133,8 @@ fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types
 
 #[link(wasm_import_module = "env")]
 extern "C" {
-    #[link_name = "ext_{{ $schema.Name }}_{{ $fn.Name }}"]
-    fn _ext_{{ $schema.Name }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
+    #[link_name = "ext_{{ $hash }}_{{ $fn.Name }}"]
+    fn _ext_{{ $hash }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
 }
 
 {{- if (IsInterface $schema $fn.Return) }}
@@ -162,7 +161,7 @@ pub fn {{ $fn.Name }}(params: types::{{ $fn.Params }}) -> Result<Option<types::{
 
   {{- if (IsInterface $schema $fn.Return) }}
     READ_BUFFER.resize(0, 0);
-    let v = _ext_{{ $schema.Name }}_{{ $fn.Name }}(0, off, l);
+    let v = _ext_{{ $hash }}_{{ $fn.Name }}(0, off, l);
     // IF the return type is an interface return ifc, which contains hidden instanceId.
 
     // Check for an error
@@ -174,15 +173,13 @@ pub fn {{ $fn.Name }}(params: types::{{ $fn.Params }}) -> Result<Option<types::{
       }
     }
 
-    // TODO: Handle error from host. In this case there'll be an error in the readBuffer
-
     let c = _{{ $fn.Return }}{
       instanceId: v,
     };
 
     return Ok(Some(c));
   {{ else }}
-    _ext_{{ $schema.Name }}_{{ $fn.Name }}(0, off, l);
+    _ext_{{ $hash }}_{{ $fn.Name }}(0, off, l);
     // IF the return type is a model, we should read the data from the read buffer.
 
     let mut cursor = Cursor::new(&mut READ_BUFFER);
