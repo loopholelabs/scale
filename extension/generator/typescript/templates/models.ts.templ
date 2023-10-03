@@ -1,0 +1,73 @@
+{{ define "ts_models_struct_reference" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            #{{ CamelCase .Name }}: {{ .Reference }} | undefined;
+        {{- else }}
+            {{ CamelCase .Name }}: {{ .Reference }} | undefined;
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_models_new_struct_reference" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            this.#{{ CamelCase .Name }} = new {{ .Reference }}();
+        {{- else }}
+            this.{{ CamelCase .Name }} = new {{ .Reference }}();
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_models_encode" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            if (typeof this.#{{ CamelCase .Name }} === "undefined") {
+                encoder.null();
+            } else {
+                this.#{{ CamelCase .Name }}.encode(encoder);
+            }
+        {{- else }}
+            if (typeof this.{{ CamelCase .Name }} === "undefined") {
+                encoder.null();
+            } else {
+                this.{{ CamelCase .Name }}.encode(encoder);
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_models_decode" }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            this.#{{ CamelCase .Name }} = {{ .Reference }}.decode(decoder);
+        {{- else }}
+            this.{{ CamelCase .Name }} = {{ .Reference }}.decode(decoder);
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_models_accessor" }}
+    {{ $current_model := . }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            get {{ CamelCase .Name }}(): {{  .Reference }} | undefined {
+                return this.#{{ CamelCase .Name }};
+            }
+
+            set {{ CamelCase .Name }}(val: {{ .Reference }} | undefined) {
+                this.#{{ CamelCase .Name }} = val;
+            }
+        {{- end -}}
+    {{ end }}
+{{ end }}
+
+{{ define "ts_models_accessor_declaration" }}
+    {{ $current_model := . }}
+    {{- range .Models }}
+        {{- if .Accessor }}
+            get {{ CamelCase .Name }}(): {{  .Reference }} | undefined;
+
+            set {{ CamelCase .Name }}(val: {{ .Reference }} | undefined);
+        {{- end -}}
+    {{ end }}
+{{ end }}
