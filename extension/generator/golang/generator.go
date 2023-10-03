@@ -42,16 +42,16 @@ func GenerateInterfaces(schema *extension.Schema, packageName string, version st
 	return generator.GenerateInterfaces(schema, packageName, version)
 }
 
-func GenerateGuest(schema *extension.Schema, packageName string, version string) ([]byte, error) {
-	return generator.GenerateGuest(schema, packageName, version)
+func GenerateGuest(schema *extension.Schema, extensionHash string, packageName string, version string) ([]byte, error) {
+	return generator.GenerateGuest(schema, extensionHash, packageName, version)
 }
 
 func GenerateModfile(packageName string) ([]byte, error) {
 	return generator.GenerateModfile(packageName)
 }
 
-func GenerateHost(schema *extension.Schema, packageName string, version string) ([]byte, error) {
-	return generator.GenerateHost(schema, packageName, version)
+func GenerateHost(schema *extension.Schema, extensionHash string, packageName string, version string) ([]byte, error) {
+	return generator.GenerateHost(schema, extensionHash, packageName, version)
 }
 
 func init() {
@@ -122,16 +122,17 @@ func (g *Generator) GenerateInterfaces(schema *extension.Schema, packageName str
 }
 
 // GenerateGuest generates the guest bindings
-func (g *Generator) GenerateGuest(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateGuest(schema *extension.Schema, schemaHash string, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.go.templ", map[string]any{
-		"schema":  schema,
-		"version": version,
-		"package": packageName,
+		"extension_schema": schema,
+		"extension_hash":   schemaHash,
+		"version":          version,
+		"package":          packageName,
 	})
 	if err != nil {
 		return nil, err
@@ -156,16 +157,17 @@ func (g *Generator) GenerateModfile(packageImportPath string) ([]byte, error) {
 }
 
 // GenerateHost generates the host bindings
-func (g *Generator) GenerateHost(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateHost(schema *extension.Schema, schemaHash string, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "host.go.templ", map[string]any{
-		"schema":  schema,
-		"version": version,
-		"package": packageName,
+		"extension_schema": schema,
+		"extension_hash":   schemaHash,
+		"version":          version,
+		"package":          packageName,
 	})
 	if err != nil {
 		return nil, err
