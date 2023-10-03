@@ -16,7 +16,6 @@ package rust
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -53,8 +52,8 @@ func GenerateCargofile(packageName string, packageVersion string) ([]byte, error
 	return generator.GenerateCargofile(packageName, packageVersion)
 }
 
-func GenerateGuest(extensionSchema *extension.Schema, signatureHash string, packageName string) ([]byte, error) {
-	return generator.GenerateGuest(extensionSchema, signatureHash, packageName)
+func GenerateGuest(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+	return generator.GenerateGuest(extensionSchema, extensionHash, packageName)
 }
 
 func init() {
@@ -133,8 +132,6 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
-
-	fmt.Printf("Generating guest...\n")
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.rs.templ", map[string]any{
