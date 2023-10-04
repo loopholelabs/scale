@@ -67,6 +67,10 @@ func GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byt
 	return generator.GenerateTypes(extensionSchema, packageName)
 }
 
+func GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+	return generator.GenerateInterfaces(schema, packageName, version)
+}
+
 // GenerateTypesTranspiled generates the types for the extension and transpiles it to javascript
 func GenerateTypesTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string) (*Transpiled, error) {
 	typescriptSource, err := generator.GenerateTypes(extensionSchema, packageName)
@@ -159,6 +163,24 @@ func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName
 	return []byte(formatTS(buf.String())), nil
 }
 
+func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string, version string) ([]byte, error) {
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "interfaces.ts.templ", map[string]any{
+		"extension_schema":  extensionSchema,
+		"generator_version": version,
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(formatTS(buf.String())), nil
+}
+
 // GenerateTypesTranspiled takes the typescript source for the generated types and transpiles it to javascript
 func (g *Generator) GenerateTypesTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
 	result := api.Transform(typescriptSource, api.TransformOptions{
@@ -232,8 +254,8 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.ts.templ", map[string]any{
-		"signature_schema":  extensionSchema,
-		"signature_hash":    extensionHash,
+		"extension_schema":  extensionSchema,
+		"extension_hash":    extensionHash,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
