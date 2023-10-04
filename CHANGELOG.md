@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.4.3] - 2023-08-04
+
+### Fixes
+
+- Fixing a bug where the `converter` package would not handle multiple embedded models correctly [#110](#110)
+
 ## [v0.4.2] - 2023-09-27
 
 ### Fixes
