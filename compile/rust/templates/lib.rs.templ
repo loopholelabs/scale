@@ -20,7 +20,7 @@ pub unsafe extern "C" fn run() -> u64 {
     let (ptr, len) = match signature::read() {
         Ok(opt) => {
             let output_opt = match opt {
-                Some(mut input) => { {{ .package_schema.Name }}::{{ .package_schema.Function }}(Some(&mut input)) },
+                Some(input) => { {{ .package_schema.Name }}::{{ .package_schema.Function }}(Some(input)) },
                 None => { {{ .package_schema.Name }}::{{ .package_schema.Function }}(None) }
             };
             match output_opt {
