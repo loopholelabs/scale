@@ -77,20 +77,23 @@ type HttpFetchHost struct {
 // Global functions
 
 func (h *HttpFetchHost) host_ext_HttpFetch_New(mem extension.ModuleMemory, resize extension.Resizer, params []uint64) {
-	ptr := uint32(params[0])
-	length := uint32(params[1])
+
+	ptr := uint32(params[1])
+	length := uint32(params[2])
 	data, _ := mem.Read(ptr, length)
 
 	cd := &HttpConfig{}
 	cd, err := DecodeHttpConfig(cd, data)
 	if err != nil {
 		hostError(mem, resize, err)
+		return
 	}
 
 	// Call the implementation
 	r, err := h.impl.New(cd)
 	if err != nil {
 		hostError(mem, resize, err)
+		return
 	}
 
 	id := atomic.AddUint64(&h.gid_HttpConnector, 1)
@@ -109,6 +112,7 @@ func (h *HttpFetchHost) host_ext_HttpFetch_HttpConnector_Fetch(mem extension.Mod
 	h.instancesLock_HttpConnector.Unlock()
 	if !ok {
 		hostError(mem, resize, errors.New("Instance ID not found!"))
+		return
 	}
 
 	ptr := uint32(params[1])
@@ -119,11 +123,13 @@ func (h *HttpFetchHost) host_ext_HttpFetch_HttpConnector_Fetch(mem extension.Mod
 	cd, err := DecodeConnectionDetails(cd, data)
 	if err != nil {
 		hostError(mem, resize, err)
+		return
 	}
 
 	resp, err := r.Fetch(cd)
 	if err != nil {
 		hostError(mem, resize, err)
+		return
 	}
 
 	b := polyglot.NewBuffer()
@@ -133,10 +139,12 @@ func (h *HttpFetchHost) host_ext_HttpFetch_HttpConnector_Fetch(mem extension.Mod
 
 	if err != nil {
 		hostError(mem, resize, err)
+		return
 	}
 
 	if !mem.Write(uint32(writeBuffer), b.Bytes()) {
 		hostError(mem, resize, err)
+		return
 	}
 
 }
