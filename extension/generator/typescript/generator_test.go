@@ -29,15 +29,43 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(extension.MasterTestingSchema))
 	require.NoError(t, err)
 
+	packageName := "fetch"
+
+	interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
+	require.NoError(t, err)
+	//os.WriteFile("./interfaces.txt", interfaces, 0644)
+
+	expInterfaces, err := os.ReadFile("./interfaces.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expInterfaces), string(interfaces))
+
 	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
+	//os.WriteFile("./generated.txt", formatted, 0644)
 
-	// os.WriteFile("./generated.txt", formatted, 0644)
-
-	master, err := os.ReadFile("./generated.txt")
+	expTypes, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)
-	require.Equal(t, string(master), string(formatted))
+	require.Equal(t, string(expTypes), string(formatted))
 
-	t.Log(string(formatted))
+	host, err := GenerateHost(s, packageName, "v0.1.0")
+	require.NoError(t, err)
+	//os.WriteFile("./host.txt", host, 0644)
+	expHost, err := os.ReadFile("./host.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expHost), string(host))
+
+	guest, err := GenerateGuest(s, packageName, "v0.1.0")
+	require.NoError(t, err)
+	//os.WriteFile("./guest.txt", guest, 0644)
+	expGuest, err := os.ReadFile("./guest.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expGuest), string(guest))
+
+	mod, err := GeneratePackageJSON(packageName, "v0.1.0")
+	require.NoError(t, err)
+	//os.WriteFile("./packagejson.txt", mod, 0644)
+	expMod, err := os.ReadFile("./packagejson.txt")
+	require.NoError(t, err)
+	require.Equal(t, string(expMod), string(mod))
 
 }
