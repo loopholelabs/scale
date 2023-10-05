@@ -196,6 +196,8 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 	switch options.Target {
 	case WASITarget:
 		target = "wasi"
+	case WASMTarget:
+		target = "wasm"
 	default:
 		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}

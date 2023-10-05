@@ -167,6 +167,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	switch options.Target {
 	case WASITarget:
 		target = api.PlatformNode
+	case WASMTarget:
+		target = api.PlatformBrowser
 	default:
 		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}

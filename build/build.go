@@ -20,4 +20,5 @@ type Target int
 
 const (
 	WASITarget Target = iota
+	WASMTarget
 )
