@@ -2,7 +2,7 @@
 // output: local_rustfmt_latest_guest
 
 pub mod types;
-use crate::types::{Decode, Encode};
+use crate::types::{Context, Decode, Encode};
 
 use polyglot_rs::Encoder;
 use std::io::Cursor;
@@ -93,10 +93,13 @@ pub unsafe fn hash() -> (u32, u32) {
 
 // next calls the next function in the Scale Function Chain
 pub fn next(
-    ctx: Option<&mut types::Context>,
+    ctx: Option<types::Context>,
 ) -> Result<Option<types::Context>, Box<dyn std::error::Error>> {
     unsafe {
-        let (ptr, len) = write(ctx);
+        let (ptr, len) = match ctx {
+            Some(ctx) => write(&mut ctx),
+            None => write(None),
+        };
         _next(ptr, len);
         read()
     }

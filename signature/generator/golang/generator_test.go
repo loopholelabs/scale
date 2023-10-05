@@ -38,5 +38,5 @@ func TestGenerator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(master), string(formatted))
 
-	t.Log(string(formatted))
+	// t.Log(string(formatted))
 }
