@@ -7,6 +7,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.4.4] - 2023-08-05
+
+### Features
+
+- Added ability to compile with WASM-32 support (no WASI)
+
+### Fixes
+
+- Fixed a bug where the signature generation would not generate typescript signatures
+
 ## [v0.4.3] - 2023-08-04
 
 ### Changes
@@ -271,7 +281,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.3...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.4...HEAD
+[v0.4.4]: https://github.com/loopholelabs/scale/compare/v0.4.4
 [v0.4.3]: https://github.com/loopholelabs/scale/compare/v0.4.3
 [v0.4.2]: https://github.com/loopholelabs/scale/compare/v0.4.2
 [v0.4.1]: https://github.com/loopholelabs/scale/compare/v0.4.1
