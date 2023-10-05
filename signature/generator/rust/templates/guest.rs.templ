@@ -93,9 +93,16 @@ pub unsafe fn hash() -> (u32, u32) {
 }
 
 // next calls the next function in the Scale Function Chain
-pub fn next(ctx: Option<&mut types::{{ .signature_schema.Context }}>) -> Result<Option<types::{{ .signature_schema.Context }}>, Box<dyn std::error::Error>> {
+pub fn next(ctx: Option<types::{{ .signature_schema.Context }}>) -> Result<Option<types::{{ .signature_schema.Context }}>, Box<dyn std::error::Error>> {
     unsafe {
-        let (ptr, len) = write(ctx);
+        let (ptr, len) = match ctx {
+            Some(mut ctx) => {
+                write(Some(&mut ctx))
+            }
+            None => {
+                write(None)
+            }
+        };
         _next(ptr, len);
         read()
     }
