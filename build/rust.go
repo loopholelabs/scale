@@ -173,6 +173,8 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 	switch options.Target {
 	case WASITarget:
 		target = "wasm32-wasi"
+	case WASMTarget:
+		target = "wasm32-unknown-unknown"
 	default:
 		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}

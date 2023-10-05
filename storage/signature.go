@@ -30,6 +30,7 @@ import (
 )
 
 const (
+	defaultVersion     = "v0.1.0"
 	SignatureDirectory = "signatures"
 )
 
@@ -311,10 +312,13 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 		Signature: sig,
 
 		GolangPackageImportPath: "signature",
-		GolangPackageVersion:    "v0.1.0",
+		GolangPackageVersion:    defaultVersion,
 
 		RustPackageName:    fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
-		RustPackageVersion: "0.1.0",
+		RustPackageVersion: defaultVersion,
+
+		TypescriptPackageName:    fmt.Sprintf("%s-%s-%s-guest", org, name, tag),
+		TypescriptPackageVersion: defaultVersion,
 	})
 	if err != nil {
 		return err
@@ -335,9 +339,13 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 	}
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
-		Signature:               sig,
+		Signature: sig,
+
 		GolangPackageImportPath: "signature",
-		GolangPackageVersion:    "v0.1.0",
+		GolangPackageVersion:    defaultVersion,
+
+		TypescriptPackageName:    fmt.Sprintf("%s-%s-%s-host", org, name, tag),
+		TypescriptPackageVersion: defaultVersion,
 	})
 	if err != nil {
 		return err
