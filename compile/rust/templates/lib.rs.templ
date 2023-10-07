@@ -8,10 +8,14 @@ pub unsafe extern "C" fn initialize() -> u64 {
     {{ if .package_schema.Initialize }}
     return match {{ .package_schema.Name }}::{{ .package_schema.Initialize }}() {
         Ok(_) => { 0 },
-        Err(err) => { packUint32(signature.Error(err)) }
+        Err(err) => {
+            let (ptr, len) = signature::error(err);
+            pack_uint32(ptr, len)
+        }
     };
-    {{ end }}
+    {{ else }}
     0
+    {{ end }}
 }
 
 #[cfg_attr(target_arch = "wasm32", export_name = "run")]

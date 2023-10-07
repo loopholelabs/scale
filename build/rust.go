@@ -160,15 +160,6 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to create lib.rs file: %w", err)
 	}
 
-	cmd := exec.Command(options.CargoBin, "check")
-	cmd.Dir = compilePath
-	cmd.Stdout = options.Output
-	cmd.Stderr = options.Output
-	err = cmd.Run()
-	if err != nil {
-		return nil, fmt.Errorf("unable to compile scale function: %w", err)
-	}
-
 	var target string
 	switch options.Target {
 	case WASITarget:
@@ -177,6 +168,16 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		target = "wasm32-unknown-unknown"
 	default:
 		return nil, fmt.Errorf("unknown build target %d", options.Target)
+	}
+
+	cmd := exec.Command(options.CargoBin, "check", "--target", target)
+	cmd.Dir = compilePath
+	cmd.Stdout = options.Output
+	cmd.Stderr = options.Output
+	cmd.Env = os.Environ()
+	err = cmd.Run()
+	if err != nil {
+		return nil, fmt.Errorf("unable to compile scale function: %w", err)
 	}
 
 	buildArgs := append([]string{"build"}, options.Args...)
@@ -189,6 +190,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 	cmd.Dir = compilePath
 	cmd.Stdout = options.Output
 	cmd.Stderr = options.Output
+	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)

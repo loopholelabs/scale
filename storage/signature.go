@@ -303,7 +303,17 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 		return err
 	}
 
+	err = os.MkdirAll(path.Join(directory, "typescript", "guest"), 0755)
+	if err != nil {
+		return err
+	}
+
 	err = os.MkdirAll(path.Join(directory, "golang", "host"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path.Join(directory, "typescript", "host"), 0755)
 	if err != nil {
 		return err
 	}
@@ -338,6 +348,18 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 		}
 	}
 
+	for _, file := range guestPackage.TypescriptFiles {
+		err = os.WriteFile(path.Join(directory, "typescript", "guest", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = os.WriteFile(path.Join(directory, "typescript", "guest.tar.gz"), guestPackage.TypescriptPackage.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
 		Signature: sig,
 
@@ -356,6 +378,18 @@ func GenerateSignature(sig *signature.Schema, name string, tag string, org strin
 		if err != nil {
 			return err
 		}
+	}
+
+	for _, file := range hostPackage.TypescriptFiles {
+		err = os.WriteFile(path.Join(directory, "typescript", "host", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = os.WriteFile(path.Join(directory, "typescript", "host.tar.gz"), hostPackage.TypescriptPackage.Bytes(), 0644)
+	if err != nil {
+		return err
 	}
 
 	return nil

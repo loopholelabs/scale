@@ -187,6 +187,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 	cmd.Dir = compilePath
 	cmd.Stdout = options.Output
 	cmd.Stderr = options.Output
+	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
@@ -212,6 +213,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 	cmd.Dir = compilePath
 	cmd.Stdout = options.Output
 	cmd.Stderr = options.Output
+	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("unable to compile scale function: %w", err)
