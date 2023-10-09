@@ -233,6 +233,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	cmd.Dir = compilePath
 	cmd.Stderr = options.Output
 	cmd.Stdout = options.Output
+	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("unable to compile scale function and update npm: %w", err)
@@ -266,6 +267,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	cmd.Stdin = strings.NewReader(string(result.OutputFiles[0].Contents))
 	cmd.Stderr = options.Output
 	cmd.Stdout = options.Output
+	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("unable to compile scale function using js_builder: %w", err)

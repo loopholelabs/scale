@@ -7,7 +7,25 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [v0.4.4] - 2023-08-05
+## [v0.4.5] - 2023-10-09
+
+### Features
+
+- Environment Variables set during the scale function build command now get passed properly to the downstream commands
+- The build system now allows for wasi and wasm targets depending on the user's choice
+
+### Fixes
+
+- Using init function for Rust plugins now properly builds and does not cause builds to break
+- The Rust build step now properly verifies the build target with Cargo
+- The storage manager now properly generates TypeScript signatures for both the guest and the host
+
+### Changes
+
+- The TypeScript manifest generator for builds and signatures now returns a pretty-printed package.json
+- The signature builder now returns the tar.gz format for TypeScript signatures as well as the raw files
+
+## [v0.4.4] - 2023-10-05
 
 ### Features
 
@@ -17,7 +35,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Fixed a bug where the signature generation would not generate typescript signatures
 
-## [v0.4.3] - 2023-08-04
+## [v0.4.3] - 2023-10-04
 
 ### Changes
 
@@ -281,7 +299,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release of the Scale Runtime library.
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.4...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v0.4.5...HEAD
+[v0.4.5]: https://github.com/loopholelabs/scale/compare/v0.4.5
 [v0.4.4]: https://github.com/loopholelabs/scale/compare/v0.4.4
 [v0.4.3]: https://github.com/loopholelabs/scale/compare/v0.4.3
 [v0.4.2]: https://github.com/loopholelabs/scale/compare/v0.4.2
