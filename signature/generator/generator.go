@@ -46,9 +46,10 @@ type GuestRegistryPackage struct {
 }
 
 type GuestLocalPackage struct {
-	GolangFiles     []File
-	RustFiles       []File
-	TypescriptFiles []File
+	GolangFiles       []File
+	RustFiles         []File
+	TypescriptFiles   []File
+	TypescriptPackage *bytes.Buffer
 }
 
 type HostRegistryPackage struct {
@@ -59,8 +60,9 @@ type HostRegistryPackage struct {
 }
 
 type HostLocalPackage struct {
-	GolangFiles     []File
-	TypescriptFiles []File
+	GolangFiles       []File
+	TypescriptFiles   []File
+	TypescriptPackage *bytes.Buffer
 }
 
 type Options struct {
@@ -324,10 +326,50 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		NewFile("package.json", "package.json", packageJSON),
 	}
 
+	typescriptBuffer := new(bytes.Buffer)
+	gzipTypescriptWriter := gzip.NewWriter(typescriptBuffer)
+	tarTypescriptWriter := tar.NewWriter(gzipTypescriptWriter)
+
+	var header *tar.Header
+	for _, file := range typescriptFiles {
+		header, err = tar.FileInfoHeader(file, file.Name())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
+		}
+
+		header.Name = path.Join("package", header.Name)
+
+		err = tarTypescriptWriter.WriteHeader(header)
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar header for %s: %w", file.Name(), err)
+		}
+		_, err = tarTypescriptWriter.Write(file.Data())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar data for %s: %w", file.Name(), err)
+		}
+	}
+
+	err = tarTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	err = gzipTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
+	}
+
 	return &GuestLocalPackage{
-		GolangFiles:     golangFiles,
-		RustFiles:       rustFiles,
-		TypescriptFiles: typescriptFiles,
+		GolangFiles:       golangFiles,
+		RustFiles:         rustFiles,
+		TypescriptFiles:   typescriptFiles,
+		TypescriptPackage: typescriptBuffer,
 	}, nil
 }
 
@@ -508,8 +550,48 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		NewFile("package.json", "package.json", packageJSON),
 	}
 
+	typescriptBuffer := new(bytes.Buffer)
+	gzipTypescriptWriter := gzip.NewWriter(typescriptBuffer)
+	tarTypescriptWriter := tar.NewWriter(gzipTypescriptWriter)
+
+	var header *tar.Header
+	for _, file := range typescriptFiles {
+		header, err = tar.FileInfoHeader(file, file.Name())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
+		}
+
+		header.Name = path.Join("package", header.Name)
+
+		err = tarTypescriptWriter.WriteHeader(header)
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar header for %s: %w", file.Name(), err)
+		}
+		_, err = tarTypescriptWriter.Write(file.Data())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar data for %s: %w", file.Name(), err)
+		}
+	}
+
+	err = tarTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	err = gzipTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
+	}
+
 	return &HostLocalPackage{
-		GolangFiles:     golangFiles,
-		TypescriptFiles: typescriptFiles,
+		GolangFiles:       golangFiles,
+		TypescriptFiles:   typescriptFiles,
+		TypescriptPackage: typescriptBuffer,
 	}, nil
 }

@@ -162,5 +162,5 @@ func (m *Manifest) Write() ([]byte, error) {
 		m.packageJSON.internal["devDependencies"] = m.packageJSON.DevDependencies
 	}
 
-	return json.Marshal(m.packageJSON.internal)
+	return json.MarshalIndent(m.packageJSON.internal, "", "\t")
 }
