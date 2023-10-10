@@ -16,6 +16,7 @@
 
 import { Signature, New } from "@loopholelabs/scale-signature-interfaces";
 import { V1BetaSchema } from "./scalefunc/scalefunc";
+import { Extension } from "@loopholelabs/scale-extension-interfaces";
 
 const envStringRegex = /[^A-Za-z0-9_]/;
 
@@ -38,6 +39,7 @@ export class Config<T extends Signature> {
     stdout: Writer | undefined;
     stderr: Writer | undefined;
     rawOutput: boolean = false;
+    public extensions: Extension[] = [];
 
     constructor(newSignature: New<T>) {
         this.newSignature = newSignature;
@@ -85,6 +87,11 @@ export class Config<T extends Signature> {
             this.WithFunction(func, env);
         }
         return this;
+    }
+
+    public WithExtension(e: Extension): Config<T> {
+      this.extensions.push(e);
+      return this;
     }
 
     public WithStdout(writer: Writer): Config<T> {

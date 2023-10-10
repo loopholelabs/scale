@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@loopholelabs/polyglot": "^1.1.3",
+    "@loopholelabs/scale-extension-interfaces": "^0.1.2",
     "@loopholelabs/scale-signature-interfaces": "^0.1.7",
     "buffer": "^6.0.3",
     "fast-sha256": "^1.3.0",
