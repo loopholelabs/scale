@@ -20,6 +20,7 @@ import (
 	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/extension/generator/golang"
 	"github.com/loopholelabs/scale/extension/generator/rust"
+	"github.com/loopholelabs/scale/extension/generator/typescript"
 )
 
 type GuestRegistryPackage struct {
@@ -157,7 +158,35 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		NewFile("go.mod", "go.mod", modfile),
 	}
 
+	typescriptTypes, err := typescript.GenerateTypesTranspiled(options.Extension, options.TypescriptPackageName, "types.js")
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptHost, err := typescript.GenerateHostTranspiled(options.Extension, hashString, options.TypescriptPackageName, "index.js")
+	if err != nil {
+		return nil, err
+	}
+
+	packageJSON, err := typescript.GeneratePackageJSON(options.TypescriptPackageName, options.TypescriptPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptFiles := []File{
+		NewFile("types.ts", "types.ts", typescriptTypes.Typescript),
+		NewFile("types.js", "types.js", typescriptTypes.Javascript),
+		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
+		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.ts", "index.ts", typescriptHost.Typescript),
+		NewFile("index.js", "index.js", typescriptHost.Javascript),
+		NewFile("index.js.map", "index.js.map", typescriptHost.SourceMap),
+		NewFile("index.d.ts", "index.d.ts", typescriptHost.Declaration),
+		NewFile("package.json", "package.json", packageJSON),
+	}
+
 	return &HostLocalPackage{
-		GolangFiles: golangFiles,
+		GolangFiles:     golangFiles,
+		TypescriptFiles: typescriptFiles,
 	}, nil
 }
