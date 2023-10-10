@@ -24,10 +24,12 @@ import (
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
 
 	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
+	"github.com/loopholelabs/scale/signature"
 	scaleVersion "github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/extension/generator/typescript/templates"
+	"github.com/loopholelabs/scale/signature/generator/typescript"
 
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
@@ -111,6 +113,7 @@ func GenerateHost(extensionSchema *extension.Schema, extensionHash string, packa
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func GenerateHostTranspiled(extensionSchema *extension.Schema, extensionHash string, packageName string, sourceName string) (*Transpiled, error) {
 	typescriptSource, err := generator.GenerateHost(extensionSchema, extensionHash, packageName)
+
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +130,8 @@ func init() {
 
 // Generator is the typescript generator
 type Generator struct {
-	templ *template.Template
+	templ     *template.Template
+	signature *typescript.Generator
 }
 
 // New creates a new typescript generator
@@ -137,8 +141,14 @@ func New() (*Generator, error) {
 		return nil, err
 	}
 
+	sig, err := typescript.New()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Generator{
-		templ: templ,
+		templ:     templ,
+		signature: sig,
 	}, nil
 }
 
@@ -146,31 +156,35 @@ func New() (*Generator, error) {
 //
 // This is not transpiled to javascript and does not include source maps or type definitions
 func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
-	if packageName == "" {
-		packageName = defaultPackageName
+	signatureSchema := &signature.Schema{
+		Version: extensionSchema.Version,
+		Enums:   extensionSchema.Enums,
+		Models:  extensionSchema.Models,
 	}
 
-	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "types.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
-		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
+	signatureSchema.SetHasLengthValidator(extensionSchema.HasLengthValidator())
+	signatureSchema.SetHasCaseModifier(extensionSchema.HasCaseModifier())
+	signatureSchema.SetHasLimitValidator(extensionSchema.HasLimitValidator())
+	signatureSchema.SetHasRegexValidator(extensionSchema.HasRegexValidator())
+
+	s, err := g.signature.GenerateTypes(signatureSchema, packageName)
+
+	return s, err
+}
+
+func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string, version string) ([]byte, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
 	if err != nil {
 		return nil, err
 	}
 
-	return []byte(formatTS(buf.String())), nil
-}
-
-func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string, version string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "interfaces.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+	err = g.templ.ExecuteTemplate(buf, "interfaces.ts.templ", map[string]any{
+		"extension_schema":  schema,
 		"generator_version": version,
 		"package_name":      packageName,
 	})
@@ -183,50 +197,27 @@ func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packag
 
 // GenerateTypesTranspiled takes the typescript source for the generated types and transpiles it to javascript
 func (g *Generator) GenerateTypesTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
-	result := api.Transform(typescriptSource, api.TransformOptions{
-		Loader:      api.LoaderTS,
-		Format:      api.FormatCommonJS,
-		Sourcemap:   api.SourceMapExternal,
-		SourceRoot:  sourceName,
-		TsconfigRaw: tsConfig,
-	})
-
-	if len(result.Errors) > 0 {
-		var errString strings.Builder
-		for _, err := range result.Errors {
-			errString.WriteString(err.Text)
-			errString.WriteRune('\n')
-		}
-		return nil, errors.New(errString.String())
-	}
-	if packageName == "" {
-		packageName = defaultPackageName
+	signatureSchema := &signature.Schema{
+		Version: extensionSchema.Version,
+		Enums:   extensionSchema.Enums,
+		Models:  extensionSchema.Models,
 	}
 
-	headerBuf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
-		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
+	signatureSchema.SetHasLengthValidator(extensionSchema.HasLengthValidator())
+	signatureSchema.SetHasCaseModifier(extensionSchema.HasCaseModifier())
+	signatureSchema.SetHasLimitValidator(extensionSchema.HasLimitValidator())
+	signatureSchema.SetHasRegexValidator(extensionSchema.HasRegexValidator())
 
-	declarationBuf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(declarationBuf, "declaration.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
-		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
+	st, err := g.signature.GenerateTypesTranspiled(signatureSchema, packageName, sourceName, typescriptSource)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Transpiled{
-		Typescript:  []byte(typescriptSource),
-		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
-		SourceMap:   result.Map,
-		Declaration: []byte(formatTS(declarationBuf.String())),
+		Typescript:  st.Typescript,
+		Javascript:  st.Javascript,
+		SourceMap:   st.SourceMap,
+		Declaration: st.Declaration,
 	}, nil
 }
 
@@ -319,13 +310,18 @@ func (g *Generator) GenerateGuestTranspiled(extensionSchema *extension.Schema, p
 //
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func (g *Generator) GenerateHost(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "host.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+	err = g.templ.ExecuteTemplate(buf, "host.ts.templ", map[string]any{
+		"extension_schema":  schema,
 		"extension_hash":    extensionHash,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
@@ -341,6 +337,11 @@ func (g *Generator) GenerateHost(extensionSchema *extension.Schema, extensionHas
 //
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	result := api.Transform(typescriptSource, api.TransformOptions{
 		Loader:      api.LoaderTS,
 		Format:      api.FormatCommonJS,
@@ -362,7 +363,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 	}
 
 	headerBuf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
+	err = g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
 		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -372,7 +373,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 
 	declarationBuf := new(bytes.Buffer)
 	err = g.templ.ExecuteTemplate(declarationBuf, "declaration-host.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+		"extension_schema":  schema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -390,6 +391,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
+		"IsInterface":             isInterface,
 		"Primitive":               primitive,
 		"IsPrimitive":             extension.ValidPrimitiveType,
 		"PolyglotPrimitive":       polyglotPrimitive,
@@ -400,6 +402,15 @@ func templateFunctions() template.FuncMap {
 		"Params":                  utils.Params,
 		"Constructor":             constructor,
 	}
+}
+
+func isInterface(schema *extension.Schema, s string) bool {
+	for _, i := range schema.Interfaces {
+		if i.Name == s {
+			return true
+		}
+	}
+	return false
 }
 
 func primitive(t string) string {

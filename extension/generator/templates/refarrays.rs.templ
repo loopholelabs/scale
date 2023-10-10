@@ -1,9 +1,0 @@
-{{ define "rs_refarrays_encode" }}
-    {{ $type := .Type }}
-    {{- range .Entries }}
-        e.encode_array(self.{{ SnakeCase .Name }}.len(), {{ PolyglotPrimitive $type }})?;
-        for a in &self.{{ SnakeCase .Name }} {
-            e.{{ PolyglotPrimitiveEncode $type }}(&a)?;
-        }
-    {{- end }}
-{{ end }}
