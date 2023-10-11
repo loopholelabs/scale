@@ -9,3 +9,26 @@ import { Decoder, Encoder, Kind } from "@loopholelabs/polyglot";
 export * from "./types";
 
 const hash = "{{ .extension_hash }}"
+
+// Interface to the extension impl. This is what the implementor should create
+
+export interface {{ .extension_schema.Name }}Ifc {
+{{ range $fn := .extension_schema.Functions }}
+  {{ $fn.Name }}(params: {{ $fn.Params }}): {{ $fn.Return }};
+{{ end }}
+}
+
+
+{{ range $ifc := .extension_schema.Interfaces }}
+
+export interface {{ $ifc.Name }} {
+
+{{ range $fn := $ifc.Functions }}
+
+  {{ $fn.Name }}(params: {{ $fn.Params }}): {{ $fn.Return }};
+
+{{ end }}
+
+}
+
+{{ end }}
