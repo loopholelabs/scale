@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixes
+
+- Added an `index.ts` file to the `scalefunc` and `log` packages in TypeScript to make importing them more ergonomic
+
 ## [v0.4.5] - 2023-10-09
 
 ### Features
