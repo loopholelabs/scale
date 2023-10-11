@@ -27,9 +27,10 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/loopholelabs/scale/signature"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/loopholelabs/scale/signature"
 )
 
 const (
@@ -40,7 +41,6 @@ var (
 	ErrInvalidName         = errors.New("invalid name")
 	ErrInvalidFunctionName = errors.New("invalid function name")
 	ErrInvalidTag          = errors.New("invalid tag")
-	ErrNoInstanceId        = errors.New("Extension has no int32 InstanceId defined")
 )
 
 var (
