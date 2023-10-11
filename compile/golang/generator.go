@@ -29,7 +29,7 @@ import (
 
 var generator *Generator
 
-func GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.ExtensionInfo) ([]byte, error) {
+func GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.Info) ([]byte, error) {
 	return generator.GenerateGoModfile(packageSchema, signatureImport, signatureVersion, functionImport, extensions)
 }
 
@@ -51,7 +51,7 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.ExtensionInfo) ([]byte, error) {
+func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.Info) ([]byte, error) {
 	if signatureVersion == "" && !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
 		signatureImport = "./" + signatureImport
 	}

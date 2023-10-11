@@ -70,7 +70,7 @@ type LocalGolangOptions struct {
 	// Args are the optional arguments to pass to the compiler
 	Args []string
 
-	Extensions []extension.ExtensionInfo
+	Extensions []extension.Info
 }
 
 func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
