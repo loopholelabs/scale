@@ -19,6 +19,7 @@ import (
 	"text/template"
 
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
+
 	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
 	"github.com/loopholelabs/scale/extension"
 
