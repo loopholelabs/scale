@@ -107,10 +107,10 @@ export class Module<T extends Signature> {
         for (const ext of this.template.runtime.config.extensions) {
           const fns = ext.Init();
           for (const [n, fn] of fns) {
-            envValue[n] = (instance: number, ptr: number, len: number): number => {
+            envValue[n] = (instance: number, ptr: number, len: number): bigint => {
               const params: number[] = [instance, ptr, len];
               fn(mem, resize, params);
-              return params[0];
+              return BigInt(params[0]);
             };
           }
         }
