@@ -1,6 +1,6 @@
 package extension
 
-type ExtensionInfo struct {
+type Info struct {
 	Name    string
 	Path    string
 	Version string
