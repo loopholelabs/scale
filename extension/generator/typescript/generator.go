@@ -111,6 +111,9 @@ func GenerateHost(extensionSchema *extension.Schema, extensionHash string, packa
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func GenerateHostTranspiled(extensionSchema *extension.Schema, extensionHash string, packageName string, sourceName string) (*Transpiled, error) {
 	typescriptSource, err := generator.GenerateHost(extensionSchema, extensionHash, packageName)
+
+	fmt.Printf("\n# Typescript %s\n", typescriptSource)
+
 	if err != nil {
 		return nil, err
 	}
@@ -146,13 +149,18 @@ func New() (*Generator, error) {
 //
 // This is not transpiled to javascript and does not include source maps or type definitions
 func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "types.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+	err = g.templ.ExecuteTemplate(buf, "types.ts.templ", map[string]any{
+		"extension_schema":  schema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -164,13 +172,18 @@ func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName
 }
 
 func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string, version string) ([]byte, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "interfaces.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+	err = g.templ.ExecuteTemplate(buf, "interfaces.ts.templ", map[string]any{
+		"extension_schema":  schema,
 		"generator_version": version,
 		"package_name":      packageName,
 	})
@@ -183,6 +196,11 @@ func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packag
 
 // GenerateTypesTranspiled takes the typescript source for the generated types and transpiles it to javascript
 func (g *Generator) GenerateTypesTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	result := api.Transform(typescriptSource, api.TransformOptions{
 		Loader:      api.LoaderTS,
 		Format:      api.FormatCommonJS,
@@ -204,7 +222,7 @@ func (g *Generator) GenerateTypesTranspiled(extensionSchema *extension.Schema, p
 	}
 
 	headerBuf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
+	err = g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
 		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -214,7 +232,7 @@ func (g *Generator) GenerateTypesTranspiled(extensionSchema *extension.Schema, p
 
 	declarationBuf := new(bytes.Buffer)
 	err = g.templ.ExecuteTemplate(declarationBuf, "declaration.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+		"extension_schema":  schema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -319,13 +337,18 @@ func (g *Generator) GenerateGuestTranspiled(extensionSchema *extension.Schema, p
 //
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func (g *Generator) GenerateHost(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "host.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+	err = g.templ.ExecuteTemplate(buf, "host.ts.templ", map[string]any{
+		"extension_schema":  schema,
 		"extension_hash":    extensionHash,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
@@ -341,6 +364,11 @@ func (g *Generator) GenerateHost(extensionSchema *extension.Schema, extensionHas
 //
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
+	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
+	if err != nil {
+		return nil, err
+	}
+
 	result := api.Transform(typescriptSource, api.TransformOptions{
 		Loader:      api.LoaderTS,
 		Format:      api.FormatCommonJS,
@@ -362,7 +390,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 	}
 
 	headerBuf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
+	err = g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
 		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -372,7 +400,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 
 	declarationBuf := new(bytes.Buffer)
 	err = g.templ.ExecuteTemplate(declarationBuf, "declaration-host.ts.templ", map[string]any{
-		"extension_schema":  extensionSchema,
+		"extension_schema":  schema,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
