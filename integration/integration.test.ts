@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import { ScaleFunc } from "../scalefunc/scalefunc";
+import { ScaleFunc } from "../scalefunc";
 import { New as NewScale } from "../scale";
 
 import fs from "fs";

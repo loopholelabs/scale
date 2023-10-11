@@ -1,5 +1,5 @@
 /*
-	Copyright 2023 Loophole Labs
+	Copyright 2022 Loophole Labs
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -14,10 +14,4 @@
 	limitations under the License.
 */
 
-import {Writer} from "scale";
-
-export function NamedLogger(name: string, writer: Writer): Writer {
-    return (message: string) => {
-        writer(`${name}: ${message}`);
-    }
-}
+export * from "./log";

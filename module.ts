@@ -21,7 +21,7 @@ import {UnpackUint32} from "./utils";
 import {Decoder} from "@loopholelabs/polyglot";
 import {DisabledWASI} from "./wasi";
 import {v4 as uuid} from "uuid";
-import {NamedLogger} from "./log/log";
+import {NamedLogger} from "./log";
 import {Tracing} from "./tracing";
 
 export async function NewModule<T extends Signature>(template: Template<T>): Promise<Module<T>> {
