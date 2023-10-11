@@ -42,6 +42,8 @@ func TestGenerator(t *testing.T) {
 	t.Log(string(formatted))
 
 	sHash, err := s.Hash()
+	require.NoError(t, err)
+
 	h := hex.EncodeToString(sHash)
 
 	guest, err := GenerateGuest(s, h, "guest")

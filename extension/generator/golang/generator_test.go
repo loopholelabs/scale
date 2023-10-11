@@ -20,8 +20,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/loopholelabs/scale/extension"
 	"github.com/stretchr/testify/require"
+
+	"github.com/loopholelabs/scale/extension"
 )
 
 func TestGenerator(t *testing.T) {
@@ -50,6 +51,8 @@ func TestGenerator(t *testing.T) {
 	require.Equal(t, string(expTypes), string(formatted))
 
 	sHash, err := s.Hash()
+	require.NoError(t, err)
+
 	hash := hex.EncodeToString(sHash)
 
 	host, err := GenerateHost(s, hash, packageName, "v0.1.0")
