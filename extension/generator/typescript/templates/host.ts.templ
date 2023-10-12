@@ -8,11 +8,11 @@
 
 import { Extension as ExtensionInterface, ModuleMemory, Resizer } from "@loopholelabs/scale-extension-interfaces";
 import { Decoder, Encoder, Kind } from "@loopholelabs/polyglot";
+import * as types from "./types";
 
 export * from "./types";
 
 const hash = "{{ .extension_hash }}";
-
 
 
 // Write an error to the scale function guest buffer.
@@ -52,7 +52,7 @@ export function New(impl: {{ .extension_schema.Name }}Ifc): ExtensionInterface {
 
 // Add global functions to the runtime
 {{ range $fn := .extension_schema.Functions }}
-  fns.set("ext_{{ $hash }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }});
+  fns.set("ext_{{ $hash }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }}.bind(hostWrapper));
 {{ end }}
 
 {{ range $ifc := .extension_schema.Interfaces }}
@@ -60,7 +60,7 @@ export function New(impl: {{ .extension_schema.Name }}Ifc): ExtensionInterface {
 
   {{ range $fn := $ifc.Functions }}
 
-  fns.set("ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }});
+  fns.set("ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}.bind(hostWrapper));
 
   {{ end }}
 {{ end }}
@@ -72,8 +72,8 @@ class {{ .extension_schema.Name }}Host {
   impl: {{ .extension_schema.Name }}Ifc
 
 {{ range $ifc := .extension_schema.Interfaces }}
-  gid_{{ $ifc.Name }}: number = 0;
-  instances_{{ $ifc.Name }}: Map<number, {{ $ifc.Name }}> = new Map<number, {{ $ifc.Name }}>();
+  gid_{{ $ifc.Name }}: bigint = 0n;
+  instances_{{ $ifc.Name }}: Map<bigint, {{ $ifc.Name }}> = new Map<bigint, {{ $ifc.Name }}>();
 {{ end }}
 
   constructor(i: {{ .extension_schema.Name }}Ifc) {
@@ -83,10 +83,25 @@ class {{ .extension_schema.Name }}Host {
   // Global functions...
   {{ range $fn := .extension_schema.Functions }}
 
-  host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem: ModuleMemory, resize: Resizer, params: number[]): bigint {
+  host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem: ModuleMemory, resize: Resizer, params: number[]) {
     console.log("Called host_ext_{{ $schema.Name }}_{{ $fn.Name}}");
 
-    // TODO...
+    const d = mem.Read(params[1], params[2]);
+    const c = types.{{ $fn.Params }}.decode(new Decoder(d));
+    const r = this.impl.{{ $fn.Name }}(c);
+
+    {{- if (IsInterface $schema $fn.Return) }}
+      const id = this.gid_{{ $fn.Return }}++;
+      this.instances_{{ $fn.Return }}.set(id, r); 
+      params[0] = id;
+      return;
+    {{ else }}
+      const enc = new Encoder();
+      r.encode(enc);
+      const ptr = resize("ext_{{ $hash }}_Resize", enc.bytes.length);
+      mem.Write(ptr, enc.bytes);
+      return;
+    {{ end }}
   }
 
   {{ end }}
@@ -97,9 +112,28 @@ class {{ .extension_schema.Name }}Host {
 {{ range $fn := $ifc.Functions }}
 
   host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(mem: ModuleMemory, resize: Resizer, params: number[]): bigint {
-    console.log("Called host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name}}");
+    console.log("Called host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name}}", params[0]);
 
-    // TODO...
+    const d = mem.Read(params[1], params[2]);
+    const c = types.{{ $fn.Params }}.decode(new Decoder(d));
+
+    // Do lookup...
+    const inst = this.instances_{{ $ifc.Name }}.get(params[0]);
+
+    const r = inst.{{ $fn.Name }}(c);
+
+    {{- if (IsInterface $schema $fn.Return) }}
+      const id = this.gid_{{ $fn.Return }}++;
+      this.instances_{{ $fn.Return }}.set(id, r); 
+      params[0] = id;
+      return;
+    {{ else }}
+      const enc = new Encoder();
+      r.encode(enc);
+      const ptr = resize("ext_{{ $hash }}_Resize", enc.bytes.length);
+      mem.Write(ptr, enc.bytes);
+      return;
+    {{ end }}
   }
 {{ end }}
 {{ end }}
