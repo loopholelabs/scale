@@ -418,6 +418,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
+		"IsInterface":             isInterface,
 		"Primitive":               primitive,
 		"IsPrimitive":             extension.ValidPrimitiveType,
 		"PolyglotPrimitive":       polyglotPrimitive,
@@ -428,6 +429,15 @@ func templateFunctions() template.FuncMap {
 		"Params":                  utils.Params,
 		"Constructor":             constructor,
 	}
+}
+
+func isInterface(schema *extension.Schema, s string) bool {
+	for _, i := range schema.Interfaces {
+		if i.Name == s {
+			return true
+		}
+	}
+	return false
 }
 
 func primitive(t string) string {
