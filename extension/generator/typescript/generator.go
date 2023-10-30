@@ -15,6 +15,7 @@ package typescript
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -269,12 +270,15 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 		packageName = defaultPackageName
 	}
 
+	extensionId := "0x" + extensionHash[0:8]
+
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.ts.templ", map[string]any{
 		"extension_schema":  extensionSchema,
 		"extension_hash":    extensionHash,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
+		"extension_id":      extensionId,
 	})
 	if err != nil {
 		return nil, err
@@ -424,6 +428,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
+		"CallId":                  callId,
 		"IsInterface":             isInterface,
 		"Primitive":               primitive,
 		"IsPrimitive":             extension.ValidPrimitiveType,
@@ -435,6 +440,19 @@ func templateFunctions() template.FuncMap {
 		"Params":                  utils.Params,
 		"Constructor":             constructor,
 	}
+}
+
+func callId(schemaHash string, ifc string, fn string) string {
+	callName := fmt.Sprintf("%s %s %s", schemaHash, ifc, fn)
+	// Calc hash...
+	h := sha256.New()
+	if _, err := h.Write([]byte(callName)); err != nil {
+		panic(err)
+	}
+	hexstring := hex.EncodeToString(h.Sum(nil))
+	id := "0x" + hexstring[0:8]
+	fmt.Printf("callId %s %s %s -> %s = %s\n", schemaHash, ifc, fn, hexstring, id)
+	return id
 }
 
 func isInterface(schema *extension.Schema, s string) bool {

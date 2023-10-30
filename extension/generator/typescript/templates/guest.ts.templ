@@ -19,8 +19,10 @@ function ext_{{ $hash }}_Resize(len: number): number {
 }
 
 // Register it...
-function ext_{{ $hash }}_init() {
-  (global as anhy).registerResize(BigInt(0), ext_{{ $hash }}_Resize);
+function ext_init() {
+  let id = BigInt({{ .extension_id }});
+  // TODO: This ID needs to come from config etc
+  (global as anhy).registerResize(id, ext_{{ $hash }}_Resize);
 }
 
 {{ $schema := .extension_schema }}
@@ -45,9 +47,7 @@ class _{{ $ifc.Name }} {
     params.encode(e);
     writeBuffer = e.bytes.buffer;
 
-    // TODO: Ask generator for this... (Use hash)
-    let callID = BigInt(1);
-
+    let callID = BigInt({{ CallId $hash $ifc.Name $fn.Name }});
     let ev = (global as any).scale_ext_mux([callID, this.instanceId, (global as any).scale_address_of(writeBuffer), writeBuffer.byteLength]);
 
     {{- if (IsInterface $schema $fn.Return) }}
@@ -78,8 +78,8 @@ class _{{ $ifc.Name }} {
 export function {{ $fn.Name }}(params: types.{{ $fn.Params }}): types.{{ $fn.Return }} {
   // First encode the params...
 
-  // TODO: Clean this up
-  ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_init();
+  // Make sure this is registered for incoming resize calls.
+  ext_init();
 
   readBuffer = new Uint8Array(0).buffer;
 
@@ -87,9 +87,7 @@ export function {{ $fn.Name }}(params: types.{{ $fn.Params }}): types.{{ $fn.Ret
   params.encode(e);
   writeBuffer = e.bytes.buffer;
 
-  // TODO: Ask generator for this... (Use hash)
-  let callID = BigInt(0);
-
+  let callID = BigInt({{ CallId $hash "" $fn.Name }});
   let ev = (global as any).scale_ext_mux([callID, 0, (global as any).scale_address_of(writeBuffer), writeBuffer.byteLength]);
 
   {{- if (IsInterface $schema $fn.Return) }}

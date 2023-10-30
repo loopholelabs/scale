@@ -292,28 +292,29 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	wfile.Debug = &debug.WasmDebug{}
 	wfile.Debug.ParseNameSectionData(wfile.GetCustomSectionData("name"))
 
-	// TODO: This config needs to come from generated extension bits...
+	// TODO: This config needs to come from the generated extension bits...
 	conf_imp := customs.RemapMuxImport{
 		Source: customs.Import{
 			Module: "env",
 			Name:   "ext_mux",
 		},
 		Mapper: map[uint64]customs.Import{
-			0: {
+			0xc05ac91f: {
 				Module: "env",
 				Name:   "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_New",
 			},
-			1: {
+			0x56801ac2: {
 				Module: "env",
 				Name:   "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_HttpConnector_Fetch",
 			},
 		},
 	}
 
+	// TODO: Needs to come from extensions...
 	conf_exp := customs.RemapMuxExport{
 		Source: "ext_resize",
 		Mapper: map[uint64]string{
-			0: "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_Resize",
+			0x5c7d2239: "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_Resize",
 		},
 	}
 
