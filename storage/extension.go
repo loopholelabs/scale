@@ -302,6 +302,11 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 		return err
 	}
 
+	err = os.MkdirAll(path.Join(directory, "typescript", "guest"), 0755)
+	if err != nil {
+		return err
+	}
+
 	err = os.MkdirAll(path.Join(directory, "golang", "host"), 0755)
 	if err != nil {
 		return err
@@ -318,8 +323,10 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 		GolangPackageName:       ext.Name,
 		GolangPackageVersion:    "v0.1.0",
 
-		RustPackageName:    fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
-		RustPackageVersion: "0.1.0",
+		RustPackageName:          fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		RustPackageVersion:       "0.1.0",
+		TypescriptPackageName:    fmt.Sprintf("%s-%s-%s-host", org, name, tag),
+		TypescriptPackageVersion: defaultVersion,
 	})
 	if err != nil {
 		return err
@@ -337,6 +344,18 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 		if err != nil {
 			return err
 		}
+	}
+
+	for _, file := range guestPackage.TypescriptFiles {
+		err = os.WriteFile(path.Join(directory, "typescript", "guest", file.Path()), file.Data(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = os.WriteFile(path.Join(directory, "typescript", "guest.tar.gz"), guestPackage.TypescriptPackage.Bytes(), 0644)
+	if err != nil {
+		return err
 	}
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{

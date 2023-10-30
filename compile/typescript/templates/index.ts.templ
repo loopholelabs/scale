@@ -141,11 +141,32 @@ function hashFunction(): bigint {
     return PackUint32(ptr, len);
 }
 
+// Map for extensions -> resize function
+let resizerMap:any = {};
+
+function extResizeFunction(id: bigint, len:number): number {
+  let rs = resizerMap[id];
+
+  if (typeof(rs)!=='undefined') {
+    return rs(len);
+  }
+
+  // Error - host tried to call an extension not present
+  throw (new Error("Extension " + id + " not found"));
+}
+
+// Register an extension resize function
+function registerResizeFunction(id: bigint, r: any) {
+  resizerMap[id] = r;
+}
+
+(global as any).registerResize = registerResizeFunction;
+
 (global as any).exports = {
     main: mainFunction,
     initialize: initializeFunction,
     run: runFunction,
     hash: hashFunction,
-    resize: resizeFunction
+    resize: resizeFunction,
+    ext_resize: extResizeFunction
 }
-

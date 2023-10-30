@@ -17,6 +17,7 @@
 package build
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -36,6 +37,10 @@ import (
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
+
+	"github.com/loopholelabs/wasm-toolkit/pkg/customs"
+	"github.com/loopholelabs/wasm-toolkit/pkg/wasm/debug"
+	"github.com/loopholelabs/wasm-toolkit/pkg/wasm/wasmfile"
 )
 
 var (
@@ -272,10 +277,60 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	if err != nil {
 		return nil, fmt.Errorf("unable to compile scale function using js_builder: %w", err)
 	}
-
-	data, err := os.ReadFile(path.Join(build.Path, "scale.wasm"))
+	/*
+		data, err := os.ReadFile(path.Join(build.Path, "scale.wasm"))
+		if err != nil {
+			return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
+		}
+	*/
+	// Do the extension transform here...
+	wfile, err := wasmfile.New(path.Join(build.Path, "scale.wasm"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
+	}
+
+	wfile.Debug = &debug.WasmDebug{}
+	wfile.Debug.ParseNameSectionData(wfile.GetCustomSectionData("name"))
+
+	// TODO: This config needs to come from generated extension bits...
+	conf_imp := customs.RemapMuxImport{
+		Source: customs.Import{
+			Module: "env",
+			Name:   "ext_mux",
+		},
+		Mapper: map[uint64]customs.Import{
+			0: {
+				Module: "env",
+				Name:   "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_New",
+			},
+			1: {
+				Module: "env",
+				Name:   "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_HttpConnector_Fetch",
+			},
+		},
+	}
+
+	conf_exp := customs.RemapMuxExport{
+		Source: "ext_resize",
+		Mapper: map[uint64]string{
+			0: "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_Resize",
+		},
+	}
+
+	err = customs.MuxImport(wfile, conf_imp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse extension remap")
+	}
+
+	err = customs.MuxExport(wfile, conf_exp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse extension remap")
+	}
+
+	var wasm_bin bytes.Buffer
+	err = wfile.EncodeBinary(&wasm_bin)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse extension remap")
 	}
 
 	hash, err := options.SignatureSchema.Hash()
@@ -293,6 +348,6 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		Language:        scalefunc.TypeScript,
 		Stateless:       options.Scalefile.Stateless,
 		Dependencies:    nil,
-		Function:        data,
+		Function:        wasm_bin.Bytes(),
 	}, nil
 }

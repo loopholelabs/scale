@@ -2,6 +2,8 @@ module github.com/loopholelabs/scale
 
 go 1.20
 
+replace github.com/loopholelabs/wasm-toolkit => /home/jimmy/code/wasm-toolkit
+
 require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/evanw/esbuild v0.19.4
@@ -22,6 +24,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b301bf4 // indirect
+	github.com/loopholelabs/wasm-toolkit v0.0.4 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect

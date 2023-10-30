@@ -18,11 +18,11 @@ pub mod helpers;
 
 use once_cell::sync::OnceCell;
 use quickjs_wasm_sys::{
-    ext_js_undefined, JSContext, JSRuntime, JSValue, JS_BigIntToUint64, JS_Call,
+    ext_js_undefined, JSContext, JSRuntime, JSValue, JS_BigIntToUint64, JS_NewBigUint64, JS_Call,
     JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
     JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
     JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, 
+    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED,
 };
 
 use std::ffi::CString;
@@ -454,10 +454,11 @@ fn next_wrap(
 #[link(wasm_import_module = "env")]
 extern "C" {
     #[link_name = "ext_mux"]
-    fn _ext_mux(id: u64, ptr: u32, size: u32) -> u64;
+    fn _ext_mux(id: u64, instance: u64, ptr: u32, size: u32) -> u64;
 }
 
 // Wrap the exported ext_mux function so it can be called from the js runtime
+// from JS, it should be called as scale_ext_mux(id: bigint, instance: bigint, ptr: number, len: number) -> bigint
 fn ext_mux_wrap(
     context: *mut JSContext,
     _: JSValue,
@@ -466,16 +467,22 @@ fn ext_mux_wrap(
     _: c_int,
 ) -> JSValue {
     unsafe {
-        let id = JS_GetPropertyUint32(context, *js_value, 0) as u64;      // TODO: Use bigint?
-        let ptr = JS_GetPropertyUint32(context, *js_value, 1) as u32;
-        let len = JS_GetPropertyUint32(context, *js_value, 2) as u32;
-        let v = _ext_mux(id, ptr, len);
-        // TODO: Wrap the response and return
-        // ext_js_undefined
-        return JS_NewBigUint64(context, v)
+        let js_id = JS_GetPropertyUint32(context, *js_value, 0);
+        let mut id: u64 = 0; 
+        JS_BigIntToUint64(context, &mut id, js_id);
+
+        let js_instance = JS_GetPropertyUint32(context, *js_value, 1);
+        let mut instance: u64 = 0; 
+        JS_BigIntToUint64(context, &mut instance, js_instance);
+
+        let ptr = JS_GetPropertyUint32(context, *js_value, 2) as u32;
+        let len = JS_GetPropertyUint32(context, *js_value, 3) as u32;
+        let v = _ext_mux(id, instance, ptr, len);
+        return JS_NewBigUint64(context, v);
     }
 }
 
+// from ext_resize(id: bigint, size: number) -> number
 #[export_name = "ext_resize"]
 #[no_mangle]
 pub extern "C" fn ext_resize(id: u64, size: u32) -> *mut u8 {
@@ -485,8 +492,8 @@ pub extern "C" fn ext_resize(id: u64, size: u32) -> *mut u8 {
         let extresizefn = ENTRY_EXT_RESIZE.get().unwrap();
 
         let mut args: Vec<JSValue> = Vec::new();
-        let jvalid = JS_NewInt32_Ext(*context, id as u32);    // TODO: Use bigint?
-        args.push(jvalid);
+        let jval_id = JS_NewBigUint64(*context, id);
+        args.push(jval_id);
         let jval = JS_NewInt32_Ext(*context, size as i32);
         args.push(jval);
 

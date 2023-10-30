@@ -15,6 +15,7 @@ package typescript
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -111,8 +112,6 @@ func GenerateHost(extensionSchema *extension.Schema, extensionHash string, packa
 // Note: the given schema should already be normalized, validated, and modified to have its accessors and validators disabled
 func GenerateHostTranspiled(extensionSchema *extension.Schema, extensionHash string, packageName string, sourceName string) (*Transpiled, error) {
 	typescriptSource, err := generator.GenerateHost(extensionSchema, extensionHash, packageName)
-
-	fmt.Printf("\n# Typescript %s\n", typescriptSource)
 
 	if err != nil {
 		return nil, err
@@ -315,9 +314,16 @@ func (g *Generator) GenerateGuestTranspiled(extensionSchema *extension.Schema, p
 		return nil, err
 	}
 
+	extensionHashBytes, err := extensionSchema.Hash()
+	if err != nil {
+		return nil, err
+	}
+	extensionHash := hex.EncodeToString(extensionHashBytes)
+
 	declarationBuf := new(bytes.Buffer)
 	err = g.templ.ExecuteTemplate(declarationBuf, "declaration-guest.ts.templ", map[string]any{
 		"extension_schema":  extensionSchema,
+		"extension_hash":    extensionHash,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
