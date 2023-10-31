@@ -42,7 +42,6 @@ import (
 	extGen "github.com/loopholelabs/scale/extension/generator/typescript"
 
 	"github.com/loopholelabs/wasm-toolkit/pkg/customs"
-	"github.com/loopholelabs/wasm-toolkit/pkg/wasm/debug"
 	"github.com/loopholelabs/wasm-toolkit/pkg/wasm/wasmfile"
 )
 
@@ -292,9 +291,6 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
-	wfile.Debug = &debug.WasmDebug{}
-	wfile.Debug.ParseNameSectionData(wfile.GetCustomSectionData("name"))
-
 	conf_imp := customs.RemapMuxImport{
 		Source: customs.Import{
 			Module: "env",
@@ -309,7 +305,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	}
 
 	et := storage.DefaultExtension
-	// FIXME: support nonstandard storage dir
+	// FIXME: support nonstandard storage dir?
 
 	// Go through extensions and add the required mappings for wasm adjustment.
 	for _, ext := range options.Scalefile.Extensions {
