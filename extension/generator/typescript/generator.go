@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -442,6 +443,15 @@ func templateFunctions() template.FuncMap {
 	}
 }
 
+func GetCallId(schemaHash string, ifc string, fn string) uint64 {
+	i := callId(schemaHash, ifc, fn)
+	id, err := strconv.ParseUint(i[2:], 16, 64)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 func callId(schemaHash string, ifc string, fn string) string {
 	callName := fmt.Sprintf("%s %s %s", schemaHash, ifc, fn)
 	// Calc hash...
@@ -450,9 +460,7 @@ func callId(schemaHash string, ifc string, fn string) string {
 		panic(err)
 	}
 	hexstring := hex.EncodeToString(h.Sum(nil))
-	id := "0x" + hexstring[0:8]
-	fmt.Printf("callId %s %s %s -> %s = %s\n", schemaHash, ifc, fn, hexstring, id)
-	return id
+	return "0x" + hexstring[0:8]
 }
 
 func isInterface(schema *extension.Schema, s string) bool {

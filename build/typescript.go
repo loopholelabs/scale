@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/evanw/esbuild/pkg/api"
@@ -37,6 +38,8 @@ import (
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
+
+	extGen "github.com/loopholelabs/scale/extension/generator/typescript"
 
 	"github.com/loopholelabs/wasm-toolkit/pkg/customs"
 	"github.com/loopholelabs/wasm-toolkit/pkg/wasm/debug"
@@ -292,30 +295,59 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 	wfile.Debug = &debug.WasmDebug{}
 	wfile.Debug.ParseNameSectionData(wfile.GetCustomSectionData("name"))
 
-	// TODO: This config needs to come from the generated extension bits...
 	conf_imp := customs.RemapMuxImport{
 		Source: customs.Import{
 			Module: "env",
 			Name:   "ext_mux",
 		},
-		Mapper: map[uint64]customs.Import{
-			0xc05ac91f: {
-				Module: "env",
-				Name:   "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_New",
-			},
-			0x56801ac2: {
-				Module: "env",
-				Name:   "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_HttpConnector_Fetch",
-			},
-		},
+		Mapper: map[uint64]customs.Import{},
 	}
 
-	// TODO: Needs to come from extensions...
 	conf_exp := customs.RemapMuxExport{
 		Source: "ext_resize",
-		Mapper: map[uint64]string{
-			0x5c7d2239: "ext_5c7d22390f9101d459292d76c11b5e9f66c327b1766aae34b9cc75f9f40e8206_Resize",
-		},
+		Mapper: map[uint64]string{},
+	}
+
+	et := storage.DefaultExtension
+	// FIXME: support nonstandard storage dir
+
+	// Go through extensions and add the required mappings for wasm adjustment.
+	for _, ext := range options.Scalefile.Extensions {
+		extSchema, err := et.Get(ext.Name, ext.Tag, ext.Organization, "")
+		if err != nil {
+			return nil, fmt.Errorf("unable to get extension")
+		}
+		h, err := extSchema.Schema.Hash()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get extension hash")
+		}
+		hash := hex.EncodeToString(h)
+		id, err := strconv.ParseUint(hash[0:8], 16, 64)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get extension hash")
+		}
+		conf_exp.Mapper[id] = fmt.Sprintf("ext_%s_Resize", hash)
+
+		// Now go through all functions in the extension...
+		for _, f := range extSchema.Schema.Functions {
+			fname := fmt.Sprintf("ext_%s_%s", hash, f.Name)
+			fid := extGen.GetCallId(hash, "", f.Name)
+			conf_imp.Mapper[fid] = customs.Import{
+				Module: "env",
+				Name:   fname,
+			}
+		}
+
+		for _, ifc := range extSchema.Schema.Interfaces {
+			for _, f := range ifc.Functions {
+				fname := fmt.Sprintf("ext_%s_%s_%s", hash, ifc.Name, f.Name)
+				fid := extGen.GetCallId(hash, ifc.Name, f.Name)
+				conf_imp.Mapper[fid] = customs.Import{
+					Module: "env",
+					Name:   fname,
+				}
+			}
+		}
 	}
 
 	err = customs.MuxImport(wfile, conf_imp)
