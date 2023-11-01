@@ -3,7 +3,7 @@ title: Overview
 description: Learn how Scale Signatures work and how they're used in Scale Functions.
 ---
 
-Signatures are one of the core concepts behind Scale Functions.
+Signatures are one of the core concepts behind Scale Functions. They allow developers to define the inputs and outputs of their plugins in a type-safe way. This feature is especially useful when working with Golang, as it enables developers to leverage the language's strong typing system.
 
 They are used to define the inputs and outputs of a function using a declarative syntax we call the **Scale Signature DSL**,
 and once they are parsed by our compiler we are able to generated cross-language type safety.
@@ -24,6 +24,48 @@ allow them to be used seamlessly from popular Frameworks and Libraries.
     We are working on a way to allow users to publish their own Signatures! If you are interested in this feature,
     please join the `#scale` channel in our [Discord](https://loopholelabs/discord) and let us know!\
 </Note>
+
+## Getting Started
+
+To start using Scale Signatures in Golang, you'll need to have the Scale framework installed and set up. If you haven't done this yet, please refer to the [Getting Started guide](https://scale.sh/docs/getting-started/overview).
+
+## Defining a Signature
+
+Defining a Scale Signature in Golang involves creating a struct that represents the input and output of your function. Here's a basic example:
+
+```go
+type MyFunctionSignature struct {
+    Input  struct {
+        Param1 string
+        Param2 int
+    }
+    Output struct {
+        Result string
+    }
+}
+```
+
+In this example, `MyFunctionSignature` is a Scale Signature that defines a function with a string and an integer as inputs, and a string as output.
+
+## Using a Signature
+
+To use a Scale Signature in Golang, you need to define a function that matches the signature. Here's an example:
+
+```go
+func MyFunction(ctx context.Context, input *MyFunctionSignature.Input) (*MyFunctionSignature.Output, error) {
+    // Your function implementation goes here
+}
+```
+
+In this example, `MyFunction` is a function that matches the `MyFunctionSignature` Scale Signature.
+
+## Next Steps
+
+Now that you know how to define and use Scale Signatures in Golang, you can start integrating them into your Scale plugins. For more advanced usage, please refer to the [Scale API Reference](https://scale.sh/docs/api-reference).
+
+---
+
+See also:
 
 ## Chaining Functions
 
