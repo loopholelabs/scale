@@ -28,6 +28,10 @@ func Scale(ctx *signature.Context) (*signature.Context, error) {
 
 The above example is a simple HTTP Function that responds with "Hello, World!" to any request.
 
+By default, the generated function will be configured to use the `HTTP Signature`,
+which provides an interface for handling HTTP requests and responses. To learn more about the `HTTP Signature` and the
+interfaces it provides, you can check out the [HTTP Signature Reference](/signatures/http). Learn more about Signatures in the [Signatures Overview](/signatures/overview).
+
 Compiling these Functions requires the appropriate toolchain to be installed on your machine.
 
 <Snippet file="install-golang-toolchain.mdx" />
