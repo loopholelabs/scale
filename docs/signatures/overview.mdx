@@ -26,37 +26,43 @@ To start using Scale Signatures in Golang, you'll need to have the Scale framewo
 
 ## Defining a Signature
 
-Defining a Scale Signature in Golang involves creating a struct that represents the input and output of your function. Here's a basic example:
+Defining a Scale Signature in Golang involves creating a struct that represents the input and output of your function. Here's the default output of the `scale signature new` command:
 
 ```go
-type MyFunctionSignature struct {
-    Input  struct {
-        Param1 string
-        Param2 int
-    }
-    Output struct {
-        Result string
-    }
+version = "v1alpha"
+context = "context"
+model Context {
+  string MyString {
+    default = "DefaultValue"
+  }
 }
 ```
 
-In this example, `MyFunctionSignature` is a Scale Signature that defines a function with a string and an integer as inputs, and a string as output.
+In this example, `Context` is a Scale Signature that defines a struct  with a string and a default string value.
 
 ## Using a Signature
 
 To use a Scale Signature in Golang, you need to define a function that matches the signature. Here's an example:
 
+
 ```go
-func MyFunction(ctx context.Context, input *MyFunctionSignature.Input) (*MyFunctionSignature.Output, error) {
+
+import (
+    signature "./path/to/your/scale.signature"
+)
+
+func scale(ctx *signature.Context) (*signature.Context, error) {
     // Your function implementation goes here
 }
 ```
 
-In this example, `MyFunction` is a function that matches the `MyFunctionSignature` Scale Signature.
+In fact, once you have a scalefile, this can be done for you, with the `scale signature use <name:tag>` command. Once this is done, you can use the types defined in your signature file for input and output of your scale function.
+
+All of the commands for working with signatures are in the [CLI API reference](/cli/reference/signatures).
 
 ## Next Steps
 
-Now that you know how to define and use Scale Signatures in Golang, you can start integrating them into your Scale plugins. For more advanced usage, please refer to the [Scale API Reference](https://scale.sh/docs/api-reference).
+Now that you know the basics of Scale Signatures in Golang, you can start integrating them into your Scale plugins/functions. For more info, please refer to the [API Reference](/cli/reference/signatures).
 
 ---
 
