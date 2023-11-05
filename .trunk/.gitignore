@@ -5,6 +5,3 @@
 plugins
 user_trunk.yaml
 user.yaml
-configs/.markdownlint.yaml
-configs/svgo.config.js
-
