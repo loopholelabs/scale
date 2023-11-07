@@ -16,9 +16,33 @@
 
 package extension
 
+import (
+	"fmt"
+	"github.com/loopholelabs/scale/signature"
+)
+
 type FunctionSchema struct {
 	Name        string `hcl:"name,label"`
 	Description string `hcl:"description,optional"`
 	Params      string `hcl:"params,optional"`
 	Return      string `hcl:"return,optional"`
+}
+
+func (s *FunctionSchema) Normalize() {
+	s.Name = signature.TitleCaser.String(s.Name)
+	s.Params = signature.TitleCaser.String(s.Params)
+	s.Return = signature.TitleCaser.String(s.Return)
+}
+
+func (s *FunctionSchema) Validate(knownFunctions map[string]struct{}) error {
+	if !signature.ValidLabel.MatchString(s.Name) {
+		return fmt.Errorf("invalid function name: %s", s.Name)
+	}
+
+	if _, ok := knownFunctions[s.Name]; ok {
+		return fmt.Errorf("duplicate function name: %s", s.Name)
+	}
+	knownFunctions[s.Name] = struct{}{}
+
+	return nil
 }
