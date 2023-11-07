@@ -39,7 +39,7 @@ var (
 )
 
 type configFunction struct {
-	function *scalefunc.Schema
+	function *scalefunc.V1BetaSchema
 	env      map[string]string
 }
 
@@ -97,7 +97,7 @@ func (c *Config[T]) WithSignature(newSignature interfaces.New[T]) *Config[T] {
 	return c
 }
 
-func (c *Config[T]) WithFunction(function *scalefunc.Schema, env ...map[string]string) *Config[T] {
+func (c *Config[T]) WithFunction(function *scalefunc.V1BetaSchema, env ...map[string]string) *Config[T] {
 	f := configFunction{
 		function: function,
 	}
@@ -110,7 +110,7 @@ func (c *Config[T]) WithFunction(function *scalefunc.Schema, env ...map[string]s
 	return c
 }
 
-func (c *Config[T]) WithFunctions(function []*scalefunc.Schema, env ...map[string]string) *Config[T] {
+func (c *Config[T]) WithFunctions(function []*scalefunc.V1BetaSchema, env ...map[string]string) *Config[T] {
 	for _, f := range function {
 		c.WithFunction(f, env...)
 	}

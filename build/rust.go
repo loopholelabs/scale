@@ -25,6 +25,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/loopholelabs/scale/compile/rust"
 	"github.com/loopholelabs/scale/scalefile"
@@ -35,11 +36,14 @@ import (
 
 var (
 	ErrNoCargo = errors.New("cargo not found in PATH. Please install cargo: https://doc.rust-lang.org/cargo/getting-started/installation.html")
+
+	ErrNoSignatureDependencyCargoToml      = errors.New("signature dependency not found in Cargo.toml file")
+	ErrInvalidSignatureDependencyCargoToml = errors.New("unable to parse signature dependency in Cargo.toml file")
 )
 
 type LocalRustOptions struct {
-	// Output is the output writer for the various build commands
-	Output io.Writer
+	// Stdout is the output writer for the various build commands
+	Stdout io.Writer
 
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
@@ -66,7 +70,7 @@ type LocalRustOptions struct {
 	Args []string
 }
 
-func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
+func LocalRust(options *LocalRustOptions) (*scalefunc.V1BetaSchema, error) {
 	var err error
 	if options.CargoBin != "" {
 		stat, err := os.Stat(options.CargoBin)
@@ -106,23 +110,47 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 	}
 
 	if !manifest.HasDependency("signature") {
-		return nil, fmt.Errorf("signature dependency not found in Cargo.toml")
+		return nil, ErrNoSignatureDependencyCargoToml
 	}
 
-	signatureDependency := manifest.GetDependency("signature")
-	if signatureDependency == nil {
-		return nil, fmt.Errorf("unable to parse signature dependency in Cargo.toml")
+	parsedSignatureDependency := manifest.GetDependency("signature")
+	if parsedSignatureDependency == nil {
+		return nil, ErrInvalidSignatureDependencyCargoToml
 	}
 
-	if (signatureDependency.Registry == "scale" && options.Scalefile.Signature.Organization == "local") || (signatureDependency.Registry == "" && options.Scalefile.Signature.Organization != "local") {
-		return nil, fmt.Errorf("scalefile's signature block does not match Cargo.toml")
+	signatureInfo := &rust.SignatureInfo{
+		PackageName: parsedSignatureDependency.Package,
 	}
 
-	if signatureDependency.Registry == "" && !filepath.IsAbs(signatureDependency.Path) {
-		signatureDependency.Path, err = filepath.Abs(path.Join(options.SourceDirectory, signatureDependency.Path))
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse signature dependency path: %w", err)
+	switch options.Scalefile.Signature.Organization {
+	case "local":
+		signatureInfo.Local = true
+		if parsedSignatureDependency.Registry != "" {
+			return nil, fmt.Errorf("scalefile's signature block does not match Cargo.toml: signature import registry is %s for a local signature", parsedSignatureDependency.Registry)
 		}
+		if !filepath.IsAbs(parsedSignatureDependency.Path) {
+			parsedSignatureDependency.Path, err = filepath.Abs(path.Join(options.SourceDirectory, parsedSignatureDependency.Path))
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse signature dependency path: %w", err)
+			}
+		}
+		signatureInfo.ImportPath = parsedSignatureDependency.Path
+	default:
+		signatureInfo.Local = false
+		if parsedSignatureDependency.Registry == "" {
+			return nil, fmt.Errorf("scalefile's signature block does not match Cargo.toml: signature import registry is empty for a signature with organization %s", options.Scalefile.Signature.Organization)
+		}
+
+		if parsedSignatureDependency.Registry != "scale" {
+			return nil, fmt.Errorf("scalefile's signature block does not match Cargo.toml: signature import registry is %s for a signature with organization %s", parsedSignatureDependency.Registry, options.Scalefile.Signature.Organization)
+		}
+
+		signatureInfo.ImportVersion = parsedSignatureDependency.Version
+	}
+
+	functionInfo := &rust.FunctionInfo{
+		PackageName: strings.ToLower(options.Scalefile.Name),
+		ImportPath:  options.SourceDirectory,
 	}
 
 	build, err := options.Storage.Mkdir()
@@ -133,7 +161,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	cargofile, err := rust.GenerateRustCargofile(options.Scalefile, signatureDependency, options.SourceDirectory)
+	cargofile, err := rust.GenerateRustCargofile(signatureInfo, functionInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
 	}
@@ -172,8 +200,8 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 
 	cmd := exec.Command(options.CargoBin, "check", "--target", target)
 	cmd.Dir = compilePath
-	cmd.Stdout = options.Output
-	cmd.Stderr = options.Output
+	cmd.Stdout = options.Stdout
+	cmd.Stderr = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -188,8 +216,8 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 
 	cmd = exec.Command(options.CargoBin, buildArgs...)
 	cmd.Dir = compilePath
-	cmd.Stdout = options.Output
-	cmd.Stderr = options.Output
+	cmd.Stdout = options.Stdout
+	cmd.Stderr = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -205,21 +233,25 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
-	hash, err := options.SignatureSchema.Hash()
+	signatureHash, err := options.SignatureSchema.Hash()
 	if err != nil {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
 
-	return &scalefunc.Schema{
-		Version:         scalefunc.V1Alpha,
-		Name:            options.Scalefile.Name,
-		Tag:             options.Scalefile.Tag,
-		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
-		SignatureSchema: options.SignatureSchema,
-		SignatureHash:   hex.EncodeToString(hash),
-		Language:        scalefunc.Rust,
-		Stateless:       options.Scalefile.Stateless,
-		Dependencies:    nil,
-		Function:        data,
+	return &scalefunc.V1BetaSchema{
+		Name: options.Scalefile.Name,
+		Tag:  options.Scalefile.Tag,
+		Signature: scalefunc.V1BetaSignature{
+			Name:         options.Scalefile.Signature.Name,
+			Organization: options.Scalefile.Signature.Organization,
+			Tag:          options.Scalefile.Signature.Tag,
+			Schema:       options.SignatureSchema,
+			Hash:         hex.EncodeToString(signatureHash),
+		},
+		Extensions: []scalefunc.V1BetaExtension{},
+		Language:   scalefunc.Rust,
+		Manifest:   cargoFileData,
+		Stateless:  options.Scalefile.Stateless,
+		Function:   data,
 	}, nil
 }

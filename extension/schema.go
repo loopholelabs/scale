@@ -54,8 +54,6 @@ var (
 
 type Schema struct {
 	Version            string                   `hcl:"version,attr"`
-	Name               string                   `hcl:"name,attr"`
-	Tag                string                   `hcl:"tag,attr"`
 	Interfaces         []*InterfaceSchema       `hcl:"interface,block"`
 	Functions          []*FunctionSchema        `hcl:"function,block"`
 	Enums              []*signature.EnumSchema  `hcl:"enum,block"`
@@ -99,14 +97,6 @@ func (s *Schema) Encode() ([]byte, error) {
 func (s *Schema) Validate() error {
 	switch s.Version {
 	case V1AlphaVersion:
-		if !ValidLabel.MatchString(s.Name) {
-			return ErrInvalidName
-		}
-
-		if InvalidString.MatchString(s.Tag) {
-			return ErrInvalidTag
-		}
-
 		// Transform all model names and references to TitleCase (e.g. "myModel" -> "MyModel")
 		for _, model := range s.Models {
 			model.Normalize()

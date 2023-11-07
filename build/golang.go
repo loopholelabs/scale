@@ -20,14 +20,15 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/loopholelabs/scale/extension"
 	"io"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/loopholelabs/scale/compile/golang"
-	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
@@ -37,20 +38,32 @@ import (
 var (
 	ErrNoGo     = errors.New("go not found in PATH. Please install go: https://golang.org/doc/install")
 	ErrNoTinyGo = errors.New("tinygo not found in PATH. Please install tinygo: https://tinygo.org/getting-started/")
+
+	ErrNoSignatureDependencyGoMod      = errors.New("signature dependency not found in go.mod file")
+	ErrInvalidSignatureDependencyGoMod = errors.New("unable to parse signature dependency in go.mod file")
 )
 
 type LocalGolangOptions struct {
-	// Output is the output writer for the various build commands
-	Output io.Writer
+	// Stdout is the output writer for the various build commands
+	Stdout io.Writer
 
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
+	// SignatureSchema is the schema of the signature
+	//
+	// Note: The SignatureSchema is only used to embed type information into the scale function,
+	// and not as part of the build process
+	SignatureSchema *signature.Schema
+
+	// ExtensionSchemas are the schemas of the extensions
+	//
+	// Note: The ExtensionSchemas are only used to embed extension information into the scale function,
+	// and not as part of the build process
+	ExtensionSchemas []*extension.Schema
+
 	// SourceDirectory is the directory where the source code is located
 	SourceDirectory string
-
-	// SignatureSchema is the schema of the signature
-	SignatureSchema *signature.Schema
 
 	// Storage is the storage handler to use for the build
 	Storage *storage.BuildStorage
@@ -69,11 +82,9 @@ type LocalGolangOptions struct {
 
 	// Args are the optional arguments to pass to the compiler
 	Args []string
-
-	Extensions []extension.Info
 }
 
-func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
+func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 	var err error
 	if options.GoBin != "" {
 		stat, err := os.Stat(options.GoBin)
@@ -128,27 +139,58 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 	}
 
 	if !manifest.HasRequire("signature", "v0.1.0", true) {
-		return nil, fmt.Errorf("signature dependency not found in go.mod")
+		return nil, ErrNoSignatureDependencyGoMod
 	}
 
 	if !manifest.HasReplacement("signature", "", "", "", true) {
-		return nil, fmt.Errorf("signature dependency not found in go.mod")
+		return nil, ErrNoSignatureDependencyGoMod
 	}
 
-	signatureDependencyVersion, signatureDependencyPath := manifest.GetReplacement("signature")
-	if signatureDependencyVersion != "" && signatureDependencyPath != "" {
-		return nil, fmt.Errorf("unable to parse signature dependency in go.mod")
+	signatureInfo := new(golang.SignatureInfo)
+
+	signatureInfo.ImportVersion, signatureInfo.ImportPath = manifest.GetReplacement("signature")
+	if signatureInfo.ImportVersion != "" && signatureInfo.ImportPath != "" {
+		return nil, ErrInvalidSignatureDependencyGoMod
 	}
 
-	if (signatureDependencyVersion != "" && options.Scalefile.Signature.Organization == "local") || (signatureDependencyVersion == "" && options.Scalefile.Signature.Organization != "local") {
-		return nil, fmt.Errorf("scalefile's signature block does not match go.mod")
-	}
-
-	if signatureDependencyVersion == "" && !filepath.IsAbs(signatureDependencyPath) {
-		signatureDependencyPath, err = filepath.Abs(path.Join(options.SourceDirectory, signatureDependencyPath))
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse signature dependency path: %w", err)
+	switch options.Scalefile.Signature.Organization {
+	case "local":
+		signatureInfo.Local = true
+		if signatureInfo.ImportVersion != "" {
+			return nil, fmt.Errorf("scalefile's signature block does not match go.mod: signature import version is %s for a local signature", signatureInfo.ImportVersion)
 		}
+
+		if !filepath.IsAbs(signatureInfo.ImportPath) {
+			signatureInfo.ImportPath, err = filepath.Abs(path.Join(options.SourceDirectory, signatureInfo.ImportPath))
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse signature dependency path: %w", err)
+			}
+		}
+	default:
+		signatureInfo.Local = false
+		if signatureInfo.ImportVersion == "" {
+			return nil, fmt.Errorf("scalefile's signature block does not match go.mod: signature import version is empty for a signature with organization %s", options.Scalefile.Signature.Organization)
+		}
+	}
+
+	extensions := make([]scalefunc.V1BetaExtension, 0, len(options.Scalefile.Extensions))
+
+	for _, ext := range options.Scalefile.Extensions {
+		switch ext.Organization {
+		case "local":
+			extensions = append(extensions, scalefunc.V1BetaExtension{
+				Name:         ext.Name,
+				Organization: ext.Organization,
+				Tag:          ext.Tag,
+				Schema:       nil,
+				Hash:         "",
+			})
+		}
+	}
+
+	functionInfo := &golang.FunctionInfo{
+		PackageName: strings.ToLower(options.Scalefile.Name),
+		ImportPath:  options.SourceDirectory,
 	}
 
 	build, err := options.Storage.Mkdir()
@@ -159,12 +201,12 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	modfile, err := golang.GenerateGoModfile(options.Scalefile, signatureDependencyPath, signatureDependencyVersion, options.SourceDirectory, options.Extensions)
+	modfile, err := golang.GenerateGoModfile(signatureInfo, functionInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}
 
-	mainFile, err := golang.GenerateGoMain(options.Scalefile, options.SignatureSchema)
+	mainFile, err := golang.GenerateGoMain(options.Scalefile, functionInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
 	}
@@ -188,8 +230,8 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 
 	cmd := exec.Command(options.GoBin, "mod", "tidy")
 	cmd.Dir = compilePath
-	cmd.Stdout = options.Output
-	cmd.Stderr = options.Output
+	cmd.Stdout = options.Stdout
+	cmd.Stderr = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -206,7 +248,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}
 
-	buildArgs := append([]string{"build", "-o", "scale.wasm"}, options.Args...)
+	buildArgs := append([]string{"build", "-o", "scale.wasm", "-gc=conservative", "-opt=s", "-panic=abort"}, options.Args...)
 	if options.Release {
 		buildArgs = append(buildArgs, "-no-debug")
 	}
@@ -214,8 +256,8 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 
 	cmd = exec.Command(options.TinyGoBin, buildArgs...)
 	cmd.Dir = compilePath
-	cmd.Stdout = options.Output
-	cmd.Stderr = options.Output
+	cmd.Stdout = options.Stdout
+	cmd.Stderr = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -227,21 +269,25 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
-	hash, err := options.SignatureSchema.Hash()
+	signatureHash, err := options.SignatureSchema.Hash()
 	if err != nil {
-		return nil, fmt.Errorf("unable to hash signature: %w", err)
+		return nil, fmt.Errorf("unable to signatureHash signature: %w", err)
 	}
 
-	return &scalefunc.Schema{
-		Version:         scalefunc.V1Alpha,
-		Name:            options.Scalefile.Name,
-		Tag:             options.Scalefile.Tag,
-		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
-		SignatureSchema: options.SignatureSchema,
-		SignatureHash:   hex.EncodeToString(hash),
-		Language:        scalefunc.Go,
-		Stateless:       options.Scalefile.Stateless,
-		Dependencies:    nil,
-		Function:        data,
+	return &scalefunc.V1BetaSchema{
+		Name: options.Scalefile.Name,
+		Tag:  options.Scalefile.Tag,
+		Signature: scalefunc.V1BetaSignature{
+			Name:         options.Scalefile.Signature.Name,
+			Organization: options.Scalefile.Signature.Organization,
+			Tag:          options.Scalefile.Signature.Tag,
+			Schema:       options.SignatureSchema,
+			Hash:         hex.EncodeToString(signatureHash),
+		},
+		Extensions: options.ExtensionSchemas,
+		Language:   scalefunc.Go,
+		Manifest:   modfileData,
+		Stateless:  options.Scalefile.Stateless,
+		Function:   data,
 	}, nil
 }

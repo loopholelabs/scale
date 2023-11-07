@@ -60,8 +60,8 @@ const (
 )
 
 type LocalTypescriptOptions struct {
-	// Output is the output writer for the various build commands
-	Output io.Writer
+	// Stdout is the output writer for the various build commands
+	Stdout io.Writer
 
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
@@ -231,8 +231,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 
 	cmd := exec.Command(options.NPMBin, "install")
 	cmd.Dir = compilePath
-	cmd.Stderr = options.Output
-	cmd.Stdout = options.Output
+	cmd.Stderr = options.Stdout
+	cmd.Stdout = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -265,8 +265,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 
 	cmd = exec.Command(jsBuilderBinary, "-o", path.Join(build.Path, "scale.wasm"))
 	cmd.Stdin = strings.NewReader(string(result.OutputFiles[0].Contents))
-	cmd.Stderr = options.Output
-	cmd.Stdout = options.Output
+	cmd.Stderr = options.Stdout
+	cmd.Stdout = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {

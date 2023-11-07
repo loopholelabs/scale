@@ -1,17 +1,15 @@
 module compile
 
 go 1.20
+{{ if .signature.Local }}
+replace signature v0.1.0 => {{ .signature.ImportPath }}
+{{ else }}
+replace signature v0.1.0 => {{ .signature.ImportPath }} {{ .signature.ImportVersion }}
+{{ end }}
 
-replace signature v0.1.0 => {{ .signature_import }} {{ .signature_version }}
-replace {{ .package_schema.Name }} v0.1.0 => {{ .function_import }}
+replace {{ .function.PackageName }} v0.1.0 => {{ .function.ImportPath }}
 
 require (
     signature v0.1.0
-    {{ .package_schema.Name }} v0.1.0
+    {{ .function.PackageName }} v0.1.0
 )
-
-{{ range $extension := .extensions -}}
-		replace {{ $extension.Name }} => {{ $extension.Path }}
-
-		require {{ $extension.Name }} {{ $extension.Version }}
-{{end -}}

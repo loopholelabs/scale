@@ -16,25 +16,22 @@ package golang
 import (
 	"bytes"
 	"go/format"
-	"strings"
 	"text/template"
 
 	"github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/compile/golang/templates"
-	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefile"
-	"github.com/loopholelabs/scale/signature"
 )
 
 var generator *Generator
 
-func GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.Info) ([]byte, error) {
-	return generator.GenerateGoModfile(packageSchema, signatureImport, signatureVersion, functionImport, extensions)
+func GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateGoModfile(signatureInfo, functionInfo)
 }
 
-func GenerateGoMain(packageSchema *scalefile.Schema, signatureSchema *signature.Schema) ([]byte, error) {
-	return generator.GenerateGoMain(packageSchema, signatureSchema)
+func GenerateGoMain(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateGoMain(scalefileSchema, functionInfo)
 }
 
 func init() {
@@ -51,22 +48,14 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signatureImport string, signatureVersion string, functionImport string, extensions []extension.Info) ([]byte, error) {
-	if signatureVersion == "" && !strings.HasPrefix(signatureImport, "/") && !strings.HasPrefix(signatureImport, "./") && !strings.HasPrefix(signatureImport, "../") {
-		signatureImport = "./" + signatureImport
-	}
-
-	if !strings.HasPrefix(functionImport, "/") && !strings.HasPrefix(functionImport, "./") && !strings.HasPrefix(functionImport, "../") {
-		functionImport = "./" + functionImport
-	}
+func (g *Generator) GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
+	signatureInfo.normalize()
+	functionInfo.normalize()
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"package_schema":    packageSchema,
-		"extensions":        extensions,
-		"signature_import":  signatureImport,
-		"signature_version": signatureVersion,
-		"function_import":   functionImport,
+		"function":  functionInfo,
+		"signature": signatureInfo,
 	})
 	if err != nil {
 		return nil, err
@@ -75,12 +64,14 @@ func (g *Generator) GenerateGoModfile(packageSchema *scalefile.Schema, signature
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateGoMain(packageSchema *scalefile.Schema, signatureSchema *signature.Schema) ([]byte, error) {
+func (g *Generator) GenerateGoMain(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	functionInfo.normalize()
+
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "main.go.templ", map[string]interface{}{
-		"generator_version": version.Version(),
-		"signature_schema":  signatureSchema,
-		"package_schema":    packageSchema,
+		"generatorVersion": version.Version(),
+		"scalefileSchema":  scalefileSchema,
+		"function":         functionInfo,
 	})
 	if err != nil {
 		return nil, err

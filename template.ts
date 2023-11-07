@@ -16,10 +16,10 @@
 
 import { Signature  } from "@loopholelabs/scale-signature-interfaces";
 import { Scale } from "./scale";
-import {ScaleFunc} from "./scalefunc/scalefunc";
+import {V1AlphaSchema, V1BetaSchema} from "./scalefunc/scalefunc";
 import {ModulePool} from "./pool";
 
-export async function NewTemplate<T extends Signature>(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }): Promise<Template<T>> {
+export async function NewTemplate<T extends Signature>(runtime: Scale<T>, scaleFunc: V1BetaSchema, env?: { [key: string]: string }): Promise<Template<T>> {
     const t = new Template<T>(runtime, scaleFunc, env);
     await t.Ready();
     return t;
@@ -36,7 +36,7 @@ export class Template<T extends Signature> {
     public modulePool: ModulePool<T> | undefined;
     public env: { [key: string]: string } | undefined;
 
-    constructor(runtime: Scale<T>, scaleFunc: ScaleFunc, env?: { [key: string]: string }) {
+    constructor(runtime: Scale<T>, scaleFunc: V1BetaSchema, env?: { [key: string]: string }) {
         this.runtime = runtime;
         this.identifier = `${scaleFunc.Name}:${scaleFunc.Tag}`;
         this.env = env;
