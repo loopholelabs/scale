@@ -56,7 +56,8 @@ type LocalGolangOptions struct {
 	// and not as part of the build process
 	SignatureSchema *signature.Schema
 
-	// ExtensionSchemas are the schemas of the extensions
+	// ExtensionSchemas are the schemas of the extensions. The array must be in the same order as the extensions
+	// are defined in the scalefile
 	//
 	// Note: The ExtensionSchemas are only used to embed extension information into the scale function,
 	// and not as part of the build process
@@ -123,6 +124,10 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		}
 	}
 
+	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
+		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
+	}
+
 	_, err = os.Stat(options.SourceDirectory)
 	if err != nil {
 		return nil, fmt.Errorf("unable to find source directory %s: %w", options.SourceDirectory, err)
@@ -170,21 +175,6 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		signatureInfo.Local = false
 		if signatureInfo.ImportVersion == "" {
 			return nil, fmt.Errorf("scalefile's signature block does not match go.mod: signature import version is empty for a signature with organization %s", options.Scalefile.Signature.Organization)
-		}
-	}
-
-	extensions := make([]scalefunc.V1BetaExtension, 0, len(options.Scalefile.Extensions))
-
-	for _, ext := range options.Scalefile.Extensions {
-		switch ext.Organization {
-		case "local":
-			extensions = append(extensions, scalefunc.V1BetaExtension{
-				Name:         ext.Name,
-				Organization: ext.Organization,
-				Tag:          ext.Tag,
-				Schema:       nil,
-				Hash:         "",
-			})
 		}
 	}
 
@@ -271,20 +261,38 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 
 	signatureHash, err := options.SignatureSchema.Hash()
 	if err != nil {
-		return nil, fmt.Errorf("unable to signatureHash signature: %w", err)
+		return nil, fmt.Errorf("unable to hash signature: %w", err)
+	}
+
+	sig := scalefunc.V1BetaSignature{
+		Name:         options.Scalefile.Signature.Name,
+		Organization: options.Scalefile.Signature.Organization,
+		Tag:          options.Scalefile.Signature.Tag,
+		Schema:       options.SignatureSchema,
+		Hash:         hex.EncodeToString(signatureHash),
+	}
+
+	exts := make([]scalefunc.V1BetaExtension, len(options.Scalefile.Extensions))
+	for i, ext := range options.Scalefile.Extensions {
+		extensionHash, err := options.ExtensionSchemas[i].Hash()
+		if err != nil {
+			return nil, fmt.Errorf("unable to hash extension %s: %w", ext.Name, err)
+		}
+
+		exts[i] = scalefunc.V1BetaExtension{
+			Name:         ext.Name,
+			Organization: ext.Organization,
+			Tag:          ext.Tag,
+			Schema:       options.ExtensionSchemas[i],
+			Hash:         hex.EncodeToString(extensionHash),
+		}
 	}
 
 	return &scalefunc.V1BetaSchema{
-		Name: options.Scalefile.Name,
-		Tag:  options.Scalefile.Tag,
-		Signature: scalefunc.V1BetaSignature{
-			Name:         options.Scalefile.Signature.Name,
-			Organization: options.Scalefile.Signature.Organization,
-			Tag:          options.Scalefile.Signature.Tag,
-			Schema:       options.SignatureSchema,
-			Hash:         hex.EncodeToString(signatureHash),
-		},
-		Extensions: options.ExtensionSchemas,
+		Name:       options.Scalefile.Name,
+		Tag:        options.Scalefile.Tag,
+		Signature:  sig,
+		Extensions: exts,
 		Language:   scalefunc.Go,
 		Manifest:   modfileData,
 		Stateless:  options.Scalefile.Stateless,
