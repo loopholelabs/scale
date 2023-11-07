@@ -18,7 +18,6 @@ package extension
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -26,10 +25,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/loopholelabs/scale/signature"
 	"os"
-)
-
-var (
-	ErrInvalidFunctionName = errors.New("invalid function name")
 )
 
 type Schema struct {

@@ -16,8 +16,38 @@
 
 package extension
 
+import (
+	"fmt"
+	"github.com/loopholelabs/scale/signature"
+)
+
 type InterfaceSchema struct {
 	Name        string            `hcl:"name,label"`
 	Description string            `hcl:"description,optional"`
 	Functions   []*FunctionSchema `hcl:"function,block"`
+}
+
+func (s *InterfaceSchema) Normalize() {
+	s.Name = signature.TitleCaser.String(s.Name)
+	for _, function := range s.Functions {
+		function.Normalize()
+	}
+}
+
+func (s *InterfaceSchema) Validate(knownInterfaces map[string]map[string]struct{}) error {
+	if !signature.ValidLabel.MatchString(s.Name) {
+		return fmt.Errorf("invalid interface name: %s", s.Name)
+	}
+
+	if _, ok := knownInterfaces[s.Name]; ok {
+		return fmt.Errorf("duplicate interface name: %s", s.Name)
+	}
+	knownInterfaces[s.Name] = make(map[string]struct{})
+	for _, function := range s.Functions {
+		if err := function.Validate(knownInterfaces[s.Name]); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
