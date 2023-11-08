@@ -117,15 +117,15 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		}
 	}
 
+	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
+		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
+	}
+
 	if !filepath.IsAbs(options.SourceDirectory) {
 		options.SourceDirectory, err = filepath.Abs(options.SourceDirectory)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse source directory: %w", err)
 		}
-	}
-
-	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
-		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
 	}
 
 	_, err = os.Stat(options.SourceDirectory)

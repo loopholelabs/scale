@@ -16,7 +16,7 @@
 
 import { Signature  } from "@loopholelabs/scale-signature-interfaces";
 import { Scale } from "./scale";
-import {V1AlphaSchema, V1BetaSchema} from "./scalefunc/scalefunc";
+import {V1BetaSchema} from "./scalefunc/scalefunc";
 import {ModulePool} from "./pool";
 
 export async function NewTemplate<T extends Signature>(runtime: Scale<T>, scaleFunc: V1BetaSchema, env?: { [key: string]: string }): Promise<Template<T>> {

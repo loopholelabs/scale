@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/loopholelabs/scale/extension"
 	"io"
 	"os"
 	"os/exec"
@@ -48,11 +49,21 @@ type LocalRustOptions struct {
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
+	// SignatureSchema is the schema of the signature
+	//
+	// Note: The SignatureSchema is only used to embed type information into the scale function,
+	// and not as part of the build process
+	SignatureSchema *signature.Schema
+
+	// ExtensionSchemas are the schemas of the extensions. The array must be in the same order as the extensions
+	// are defined in the scalefile
+	//
+	// Note: The ExtensionSchemas are only used to embed extension information into the scale function,
+	// and not as part of the build process
+	ExtensionSchemas []*extension.Schema
+
 	// SourceDirectory is the directory where the source code is located
 	SourceDirectory string
-
-	// SignatureSchema is the schema of the signature
-	SignatureSchema *signature.Schema
 
 	// Storage is the storage handler to use for the build
 	Storage *storage.BuildStorage
@@ -85,6 +96,10 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.V1BetaSchema, error) {
 		if err != nil {
 			return nil, ErrNoCargo
 		}
+	}
+
+	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
+		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
 	}
 
 	if !filepath.IsAbs(options.SourceDirectory) {
@@ -238,17 +253,35 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.V1BetaSchema, error) {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
 
+	sig := scalefunc.V1BetaSignature{
+		Name:         options.Scalefile.Signature.Name,
+		Organization: options.Scalefile.Signature.Organization,
+		Tag:          options.Scalefile.Signature.Tag,
+		Schema:       options.SignatureSchema,
+		Hash:         hex.EncodeToString(signatureHash),
+	}
+
+	exts := make([]scalefunc.V1BetaExtension, len(options.Scalefile.Extensions))
+	for i, ext := range options.Scalefile.Extensions {
+		extensionHash, err := options.ExtensionSchemas[i].Hash()
+		if err != nil {
+			return nil, fmt.Errorf("unable to hash extension %s: %w", ext.Name, err)
+		}
+
+		exts[i] = scalefunc.V1BetaExtension{
+			Name:         ext.Name,
+			Organization: ext.Organization,
+			Tag:          ext.Tag,
+			Schema:       options.ExtensionSchemas[i],
+			Hash:         hex.EncodeToString(extensionHash),
+		}
+	}
+
 	return &scalefunc.V1BetaSchema{
-		Name: options.Scalefile.Name,
-		Tag:  options.Scalefile.Tag,
-		Signature: scalefunc.V1BetaSignature{
-			Name:         options.Scalefile.Signature.Name,
-			Organization: options.Scalefile.Signature.Organization,
-			Tag:          options.Scalefile.Signature.Tag,
-			Schema:       options.SignatureSchema,
-			Hash:         hex.EncodeToString(signatureHash),
-		},
-		Extensions: []scalefunc.V1BetaExtension{},
+		Name:       options.Scalefile.Name,
+		Tag:        options.Scalefile.Tag,
+		Signature:  sig,
+		Extensions: exts,
 		Language:   scalefunc.Rust,
 		Manifest:   cargoFileData,
 		Stateless:  options.Scalefile.Stateless,

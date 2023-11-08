@@ -24,9 +24,6 @@ type SignatureInfo struct {
 
 	// ImportPath is the import path for the signature, if the signature is local this will be a path on disk
 	ImportPath string
-
-	// ImportVersion is the version of the signature to import, if the signature is local this will be ignored
-	ImportVersion string
 }
 
 func (s *SignatureInfo) normalize() {
