@@ -309,12 +309,12 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 
 	guestPackage, err := generator.GenerateGuestLocal(&generator.Options{
 		Extension:               ext,
-		GolangPackageImportPath: "extension",
-		GolangPackageName:       ext.Name,
-		GolangPackageVersion:    "v0.1.0",
+		GolangPackageImportPath: fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		GolangPackageName:       fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		GolangPackageVersion:    defaultVersion,
 
 		RustPackageName:    fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
-		RustPackageVersion: "0.1.0",
+		RustPackageVersion: defaultVersion,
 	})
 	if err != nil {
 		return err
@@ -336,9 +336,9 @@ func GenerateExtension(ext *extension.Schema, name string, tag string, org strin
 
 	hostPackage, err := generator.GenerateHostLocal(&generator.Options{
 		Extension:               ext,
-		GolangPackageImportPath: "extension",
-		GolangPackageName:       ext.Name,
-		GolangPackageVersion:    "v0.1.0",
+		GolangPackageImportPath: fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		GolangPackageName:       fmt.Sprintf("%s_%s_%s_guest", org, name, tag),
+		GolangPackageVersion:    defaultVersion,
 	})
 	if err != nil {
 		return err

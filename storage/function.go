@@ -36,7 +36,7 @@ var (
 )
 
 type Function struct {
-	Schema       *scalefunc.Schema
+	Schema       *scalefunc.V1BetaSchema
 	Hash         string
 	Organization string
 }
@@ -147,7 +147,7 @@ func (s *FunctionStorage) Get(name string, tag string, org string, hash string) 
 }
 
 // Put stores the Scale Function with the given name, tag, organization, and hash
-func (s *FunctionStorage) Put(name string, tag string, org string, sf *scalefunc.Schema) error {
+func (s *FunctionStorage) Put(name string, tag string, org string, sf *scalefunc.V1BetaSchema) error {
 	f := s.functionName(name, tag, org, hex.EncodeToString(sf.GetHash()))
 	p := s.fullPath(f)
 	return os.WriteFile(p, sf.Encode(), 0644)
