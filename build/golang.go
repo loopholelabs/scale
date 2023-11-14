@@ -20,13 +20,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/scale/extension"
 	"io"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/loopholelabs/scale/extension"
 
 	"github.com/loopholelabs/scale/compile/golang"
 	"github.com/loopholelabs/scale/scalefile"

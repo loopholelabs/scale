@@ -18,6 +18,13 @@ package integration
 import (
 	"context"
 	"encoding/hex"
+	"os"
+	"os/exec"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/loopholelabs/scale"
 	"github.com/loopholelabs/scale/build"
 	hostSignature "github.com/loopholelabs/scale/integration/golang_tests/host_signature"
@@ -25,11 +32,6 @@ import (
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"os"
-	"os/exec"
-	"testing"
 )
 
 func compileGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {

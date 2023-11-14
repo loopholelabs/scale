@@ -19,8 +19,9 @@
 package scalefunc
 
 import (
-	"github.com/loopholelabs/scale/signature"
 	"testing"
+
+	"github.com/loopholelabs/scale/signature"
 
 	"github.com/stretchr/testify/assert"
 )

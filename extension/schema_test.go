@@ -19,8 +19,9 @@
 package extension
 
 import (
-	"github.com/loopholelabs/scale/signature"
 	"testing"
+
+	"github.com/loopholelabs/scale/signature"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

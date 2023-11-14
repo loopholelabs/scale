@@ -22,14 +22,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/loopholelabs/polyglot"
-	extensionSchema "github.com/loopholelabs/scale/extension"
-	signatureSchema "github.com/loopholelabs/scale/signature"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/loopholelabs/polyglot"
+
+	extensionSchema "github.com/loopholelabs/scale/extension"
+	signatureSchema "github.com/loopholelabs/scale/signature"
 )
 
 var (

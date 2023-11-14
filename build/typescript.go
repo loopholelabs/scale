@@ -20,13 +20,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/scale/extension"
 	"io"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/loopholelabs/scale/extension"
 
 	"github.com/evanw/esbuild/pkg/api"
 
@@ -165,10 +166,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.V1BetaSchema, 
 		signatureInfo.Local = true
 		if !strings.HasPrefix(signatureInfo.ImportPath, "file:") {
 			return nil, fmt.Errorf("scalefile's signature block does not match package.json: signature import path is %s for a local signature", signatureInfo.ImportPath)
-		} else {
-			signatureInfo.ImportPath = strings.TrimPrefix(signatureInfo.ImportPath, "file:")
 		}
-
+		signatureInfo.ImportPath = strings.TrimPrefix(signatureInfo.ImportPath, "file:")
 		if !filepath.IsAbs(signatureInfo.ImportPath) {
 			signatureInfo.ImportPath, err = filepath.Abs(path.Join(options.SourceDirectory, signatureInfo.ImportPath))
 			if err != nil {

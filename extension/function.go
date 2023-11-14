@@ -18,6 +18,7 @@ package extension
 
 import (
 	"fmt"
+
 	"github.com/loopholelabs/scale/signature"
 )
 

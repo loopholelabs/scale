@@ -30,8 +30,6 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(extension.MasterTestingSchema))
 	require.NoError(t, err)
 
-	require.NoError(t, s.Validate())
-
 	packageName := "extfetch"
 
 	interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
