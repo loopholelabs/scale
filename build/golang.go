@@ -197,7 +197,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}
 
-	mainFile, err := golang.GenerateGoMain(options.Scalefile, functionInfo)
+	mainFile, err := golang.GenerateGoMain(options.Scalefile, options.SignatureSchema, functionInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate main.go file: %w", err)
 	}
@@ -239,7 +239,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		return nil, fmt.Errorf("unknown build target %d", options.Target)
 	}
 
-	buildArgs := append([]string{"build", "-o", "scale.wasm", "-gc=conservative", "-opt=s", "-panic=abort"}, options.Args...)
+	buildArgs := append([]string{"build", "-o", "scale.wasm", "-gc=conservative", "-opt=s"}, options.Args...)
 	if options.Release {
 		buildArgs = append(buildArgs, "-no-debug")
 	}

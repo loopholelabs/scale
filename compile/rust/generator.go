@@ -30,8 +30,8 @@ func GenerateRustCargofile(signatureInfo *SignatureInfo, functionInfo *FunctionI
 	return generator.GenerateRustCargofile(signatureInfo, functionInfo)
 }
 
-func GenerateRustLib(scalefileSchema *scalefile.Schema) ([]byte, error) {
-	return generator.GenerateRustLib(scalefileSchema)
+func GenerateRustLib(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateRustLib(scalefileSchema, functionInfo)
 }
 
 func init() {
@@ -64,11 +64,12 @@ func (g *Generator) GenerateRustCargofile(signatureInfo *SignatureInfo, function
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateRustLib(scalefileSchema *scalefile.Schema) ([]byte, error) {
+func (g *Generator) GenerateRustLib(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
 		"generatorVersion": strings.TrimPrefix(version.Version(), "v"),
 		"scalefileSchema":  scalefileSchema,
+		"function":         functionInfo,
 	})
 	if err != nil {
 		return nil, err

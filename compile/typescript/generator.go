@@ -30,8 +30,8 @@ func GenerateTypescriptPackageJSON(signatureInfo *SignatureInfo) ([]byte, error)
 	return generator.GenerateTypescriptPackageJSON(signatureInfo)
 }
 
-func GenerateTypescriptIndex(packageSchema *scalefile.Schema, function *FunctionInfo) ([]byte, error) {
-	return generator.GenerateTypescriptIndex(packageSchema, function)
+func GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateTypescriptIndex(packageSchema, functionInfo)
 }
 
 func init() {
@@ -62,14 +62,14 @@ func (g *Generator) GenerateTypescriptPackageJSON(signatureInfo *SignatureInfo) 
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateTypescriptIndex(scalefileSchema *scalefile.Schema, function *FunctionInfo) ([]byte, error) {
-	function.normalize()
+func (g *Generator) GenerateTypescriptIndex(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	functionInfo.normalize()
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "index.ts.templ", map[string]interface{}{
 		"generatorVersion": strings.TrimPrefix(version.Version(), "v"),
 		"scalefileSchema":  scalefileSchema,
-		"function":         function,
+		"function":         functionInfo,
 	})
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-////go:build integration && !generate
+//go:build integration && !generate
 
 /*
 	Copyright 2023 Loophole Labs
@@ -211,7 +211,7 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	assert.Equal(t, scf.Signature.Tag, schema.Signature.Tag)
 	assert.Equal(t, s, schema.Signature.Schema)
 	assert.Equal(t, hex.EncodeToString(hash), schema.Signature.Hash)
-	assert.Equal(t, scalefunc.Rust, schema.Language)
+	assert.Equal(t, scalefunc.TypeScript, schema.Language)
 	assert.Equal(t, 0, len(schema.Extensions))
 
 	return schema

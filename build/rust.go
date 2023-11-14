@@ -182,7 +182,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.V1BetaSchema, error) {
 		return nil, fmt.Errorf("unable to generate cargo.toml file: %w", err)
 	}
 
-	libFile, err := rust.GenerateRustLib(options.Scalefile)
+	libFile, err := rust.GenerateRustLib(options.Scalefile, functionInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate lib.rs file: %w", err)
 	}

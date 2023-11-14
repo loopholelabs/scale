@@ -25,7 +25,7 @@ func initialize() uint64 {
 //go:export run
 func run() uint64 {
     var err error
-    ctx := signature.New{{ .scalefileSchema.Context }}()
+    ctx := signature.New{{ .signatureSchema.Context }}()
     ctx, err = signature.Read(ctx)
     if err != nil {
         return packUint32(signature.Error(err))
