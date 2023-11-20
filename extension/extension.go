@@ -29,6 +29,7 @@ import (
 	"github.com/loopholelabs/scale/signature"
 )
 
+// Schema is the top-level structure of a Scale Extension schema
 type Schema struct {
 	Version            string                   `hcl:"version,attr"`
 	Interfaces         []*InterfaceSchema       `hcl:"interface,block"`
