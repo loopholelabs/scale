@@ -16,10 +16,11 @@ package rust
 import (
 	"bytes"
 	"context"
-	"github.com/loopholelabs/scale/signature"
-	"github.com/loopholelabs/scale/signature/generator/rust"
 	"strings"
 	"text/template"
+
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/rust"
 
 	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
 

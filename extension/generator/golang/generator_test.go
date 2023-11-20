@@ -34,7 +34,7 @@ func TestGenerator(t *testing.T) {
 
 	interfaces, err := GenerateInterfaces(s, packageName)
 	require.NoError(t, err)
-	//os.WriteFile("./interfaces.txt", interfaces, 0644)
+	// os.WriteFile("./interfaces.txt", interfaces, 0644)
 
 	expInterfaces, err := os.ReadFile("./interfaces.txt")
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestGenerator(t *testing.T) {
 
 	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
-	//os.WriteFile("./generated.txt", formatted, 0644)
+	// os.WriteFile("./generated.txt", formatted, 0644)
 
 	expTypes, err := os.ReadFile("./generated.txt")
 	require.NoError(t, err)
@@ -55,21 +55,21 @@ func TestGenerator(t *testing.T) {
 
 	host, err := GenerateHost(s, hash, packageName)
 	require.NoError(t, err)
-	//os.WriteFile("./host.txt", host, 0644)
+	// os.WriteFile("./host.txt", host, 0644)
 	expHost, err := os.ReadFile("./host.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(expHost), string(host))
 
 	guest, err := GenerateGuest(s, hash, packageName)
 	require.NoError(t, err)
-	//os.WriteFile("./guest.txt", guest, 0644)
+	// os.WriteFile("./guest.txt", guest, 0644)
 	expGuest, err := os.ReadFile("./guest.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(expGuest), string(guest))
 
 	mod, err := GenerateModfile(packageName)
 	require.NoError(t, err)
-	//os.WriteFile("./modfile.txt", mod, 0644)
+	// os.WriteFile("./modfile.txt", mod, 0644)
 	expMod, err := os.ReadFile("./modfile.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(expMod), string(mod))
