@@ -320,19 +320,25 @@ export class V1BetaSchema {
         const version = dec.string() as Version;
         switch (version) {
             case V1Alpha:
-               const v1Alpha = V1AlphaSchema.Decode(data);
-                let orgSplit = v1Alpha.SignatureName.split("/");
+                // eslint-disable-next-line no-case-declarations
+                const v1Alpha = V1AlphaSchema.Decode(data);
+
+                // eslint-disable-next-line no-case-declarations
+                const orgSplit = v1Alpha.SignatureName.split("/");
                 if (orgSplit.length === 1) {
                     orgSplit.unshift("");
                 }
 
-                let tagSplit = orgSplit[1].split(":");
+                // eslint-disable-next-line no-case-declarations
+                const tagSplit = orgSplit[1].split(":");
                 if (tagSplit.length === 1) {
                     tagSplit.push("");
                 }
 
-               const v1BetaSignature = new V1BetaSignature(tagSplit[0], orgSplit[0], tagSplit[1], v1Alpha.SignatureBytes, v1Alpha.SignatureHash);
-               return new V1BetaSchema(v1Alpha.Name, v1Alpha.Tag, v1BetaSignature, [], v1Alpha.Language, Buffer.from([]), v1Alpha.Stateless, v1Alpha.Function);
+                // eslint-disable-next-line no-case-declarations
+                const v1BetaSignature = new V1BetaSignature(tagSplit[0], orgSplit[0], tagSplit[1], v1Alpha.SignatureBytes, v1Alpha.SignatureHash);
+
+                return new V1BetaSchema(v1Alpha.Name, v1Alpha.Tag, v1BetaSignature, [], v1Alpha.Language, Buffer.from([]), v1Alpha.Stateless, v1Alpha.Function);
             case V1Beta:
                 break;
             default:
@@ -342,8 +348,8 @@ export class V1BetaSchema {
         const name = dec.string();
         const tag = dec.string();
         const signatureName = dec.string();
-        let signatureOrg = dec.string();
-        let signatureTag = dec.string();
+        const signatureOrg = dec.string();
+        const signatureTag = dec.string();
         const signatureBytes = dec.uint8Array();
         const signatureHash = dec.string();
 

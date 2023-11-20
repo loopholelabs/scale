@@ -20,12 +20,8 @@ import {
   V1AlphaSchema,
   Go,
   VersionErr,
-  LanguageErr,
-  ChecksumErr,
-  V1Alpha,
   ValidString, V1BetaSchema, V1BetaSignature,
 } from "./scalefunc";
-import exp from "constants";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Buffer = require("buffer/").Buffer;
