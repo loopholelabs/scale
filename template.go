@@ -48,7 +48,7 @@ type template[T interfaces.Signature] struct {
 }
 
 // newTemplate creates a new template from a scale function schema
-func newTemplate[T interfaces.Signature](ctx context.Context, runtime *Scale[T], scaleFunc *scalefunc.Schema, env map[string]string) (*template[T], error) {
+func newTemplate[T interfaces.Signature](ctx context.Context, runtime *Scale[T], scaleFunc *scalefunc.V1AlphaSchema, env map[string]string) (*template[T], error) {
 	compiled, err := runtime.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)

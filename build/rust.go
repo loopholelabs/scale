@@ -66,7 +66,7 @@ type LocalRustOptions struct {
 	Args []string
 }
 
-func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
+func LocalRust(options *LocalRustOptions) (*scalefunc.V1AlphaSchema, error) {
 	var err error
 	if options.CargoBin != "" {
 		stat, err := os.Stat(options.CargoBin)
@@ -210,8 +210,7 @@ func LocalRust(options *LocalRustOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
 
-	return &scalefunc.Schema{
-		Version:         scalefunc.V1Alpha,
+	return &scalefunc.V1AlphaSchema{
 		Name:            options.Scalefile.Name,
 		Tag:             options.Scalefile.Tag,
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),

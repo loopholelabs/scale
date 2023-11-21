@@ -85,7 +85,7 @@ type LocalTypescriptOptions struct {
 	NPMBin string
 }
 
-func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error) {
+func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.V1AlphaSchema, error) {
 	var err error
 	if options.NPMBin != "" {
 		stat, err := os.Stat(options.NPMBin)
@@ -293,8 +293,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
 
-	return &scalefunc.Schema{
-		Version:         scalefunc.V1Alpha,
+	return &scalefunc.V1AlphaSchema{
 		Name:            options.Scalefile.Name,
 		Tag:             options.Scalefile.Tag,
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),

@@ -70,7 +70,7 @@ type LocalGolangOptions struct {
 	Args []string
 }
 
-func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
+func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1AlphaSchema, error) {
 	var err error
 	if options.GoBin != "" {
 		stat, err := os.Stat(options.GoBin)
@@ -229,8 +229,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.Schema, error) {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
 
-	return &scalefunc.Schema{
-		Version:         scalefunc.V1Alpha,
+	return &scalefunc.V1AlphaSchema{
 		Name:            options.Scalefile.Name,
 		Tag:             options.Scalefile.Tag,
 		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),

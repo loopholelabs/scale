@@ -28,10 +28,14 @@ export const VersionErr = new Error("unknown or invalid version");
 export const LanguageErr = new Error("unknown or invalid language");
 export const ChecksumErr = new Error("error while verifying checksum");
 
+// Version is the version of ScaleFunc
 export type Version = string;
 
 // V1Alpha is the V1 Alpha definition of a ScaleFunc
 export const V1Alpha: Version = "v1alpha";
+
+// V1Beta is the V1 Beta definition of a ScaleFunc
+export const V1Beta: Version = "v1beta";
 
 export type Language = string;
 
@@ -47,13 +51,14 @@ export const Typescript: Language = "ts";
 // Javascript is the Javascript Source Language for Scale Functions
 export const Javascript: Language = "js";
 
-// AcceptedVersions is an array of acceptable Versions
-export const AcceptedVersions: Version[] = [V1Alpha];
-
 // AcceptedLanguages is an array of acceptable Languages
 export const AcceptedLanguages: Language[] = [Go, Rust, Typescript, Javascript];
 
-export class Dependency {
+export function ValidString(str: string): boolean {
+    return !InvalidStringRegex.test(str);
+}
+
+export class V1AlphaDependency {
     public Name: string;
     public Version: string;
     public Metadata: Map<string, string> | undefined;
@@ -65,8 +70,7 @@ export class Dependency {
     }
 }
 
-export class ScaleFunc {
-    public Version: Version;
+export class V1AlphaSchema {
     public Name: string;
     public Tag: string;
     public SignatureName: string;
@@ -74,13 +78,12 @@ export class ScaleFunc {
     public SignatureHash: string;
     public Language: Language;
     public Stateless: boolean;
-    public Dependencies: Dependency[];
+    public Dependencies: V1AlphaDependency[];
     public Function: Buffer;
     public Size: undefined | number;
     public Hash: undefined | string;
 
     constructor(
-        version: Version,
         name: string,
         tag: string,
         signatureName: string,
@@ -88,10 +91,9 @@ export class ScaleFunc {
         signatureHash: string,
         language: Language,
         stateless: boolean,
-        dependencies: Dependency[],
+        dependencies: V1AlphaDependency[],
         fn: Buffer
     ) {
-        this.Version = version;
         this.Name = name;
         this.Tag = tag;
         this.SignatureName = signatureName;
@@ -103,9 +105,11 @@ export class ScaleFunc {
         this.Function = fn;
     }
 
+    // Deprecated: Use V1BetaSchema instead
     Encode(): Uint8Array {
         const enc = new Encoder();
-        enc.string(this.Version as string);
+        enc.string(V1Alpha as string);
+
         enc.string(this.Name);
         enc.string(this.Tag);
         enc.string(this.SignatureName);
@@ -127,8 +131,6 @@ export class ScaleFunc {
 
         enc.uint8Array(this.Function);
 
-        // Compute the hash (sha256)
-
         const size = enc.bytes.length;
         const hashed = sha256(enc.bytes);
         const hex = Buffer.from(hashed).toString("hex");
@@ -139,11 +141,11 @@ export class ScaleFunc {
         return enc.bytes;
     }
 
-    static Decode(data: Uint8Array): ScaleFunc {
+    static Decode(data: Uint8Array): V1AlphaSchema {
         const dec = new Decoder(data);
 
         const version = dec.string() as Version;
-        if (!AcceptedVersions.includes(version)) throw VersionErr;
+        if (version !== V1Alpha) throw VersionErr;
 
         const name = dec.string();
         const tag = dec.string();
@@ -160,7 +162,7 @@ export class ScaleFunc {
         } catch (_) {} // eslint-disable-line no-empty
 
         const dependenciesSize = dec.array(Kind.Any);
-        const dependencies: Dependency[] = [];
+        const dependencies: V1AlphaDependency[] = [];
         for (let i = 0; i < dependenciesSize; i++) {
             const name = dec.string();
             const version = dec.string();
@@ -171,7 +173,7 @@ export class ScaleFunc {
                 const value = dec.string();
                 metadata.set(key, value);
             }
-            dependencies.push(new Dependency(name, version, metadata));
+            dependencies.push(new V1AlphaDependency(name, version, metadata));
         }
 
         const fn = dec.uint8Array();
@@ -183,8 +185,7 @@ export class ScaleFunc {
 
         if (hex !== hash) throw ChecksumErr;
 
-        const sf = new ScaleFunc(
-            version,
+        const sf = new V1AlphaSchema(
             name,
             tag,
             signatureName,
@@ -201,14 +202,18 @@ export class ScaleFunc {
     }
 }
 
-export function ValidString(str: string): boolean {
-    return !InvalidStringRegex.test(str);
+export function ReadV1Alpha(path: string): V1AlphaSchema {
+    return V1AlphaSchema.Decode(fs.readFileSync(path, null));
 }
 
-export function Read(path: string): ScaleFunc {
-    return ScaleFunc.Decode(fs.readFileSync(path, null));
-}
-
-export function Write(path: string, scaleFunc: ScaleFunc) {
+export function WriteV1Alpha(path: string, scaleFunc: V1AlphaSchema) {
     fs.writeFileSync(path, scaleFunc.Encode());
+}
+
+export function Read(path: string): V1AlphaSchema {
+  return ReadV1Alpha(path);
+}
+
+export function Write(path: string, scaleFunc: V1AlphaSchema) {
+  WriteV1Alpha(path, scaleFunc);
 }
