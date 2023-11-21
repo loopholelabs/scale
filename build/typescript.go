@@ -114,6 +114,16 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to find source directory %s: %w", options.SourceDirectory, err)
 	}
 
+	cmd := exec.Command(options.NPMBin, "install")
+	cmd.Dir = options.SourceDirectory
+	cmd.Stderr = options.Output
+	cmd.Stdout = options.Output
+	cmd.Env = os.Environ()
+	err = cmd.Run()
+	if err != nil {
+		return nil, fmt.Errorf("unable to npm install the dependencies of the scale function: %w", err)
+	}
+
 	packageJSONData, err := os.ReadFile(path.Join(options.SourceDirectory, "package.json"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to read Cargo.toml file: %w", err)
@@ -229,7 +239,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to create index.ts file: %w", err)
 	}
 
-	cmd := exec.Command(options.NPMBin, "install")
+	cmd = exec.Command(options.NPMBin, "install")
 	cmd.Dir = compilePath
 	cmd.Stderr = options.Output
 	cmd.Stdout = options.Output
