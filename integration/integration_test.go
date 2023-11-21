@@ -18,7 +18,13 @@ package integration
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
+	"os"
+	"os/exec"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/loopholelabs/scale"
 	"github.com/loopholelabs/scale/build"
 	hostSignature "github.com/loopholelabs/scale/integration/golang_tests/host_signature"
@@ -26,14 +32,9 @@ import (
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
 	"github.com/loopholelabs/scale/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"os"
-	"os/exec"
-	"testing"
 )
 
-func compileGolangGuest(t *testing.T) *scalefunc.Schema {
+func compileGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -71,7 +72,7 @@ func compileGolangGuest(t *testing.T) *scalefunc.Schema {
 	require.NoError(t, err)
 
 	schema, err := build.LocalGolang(&build.LocalGolangOptions{
-		Output:          os.Stdout,
+		Stdout:          os.Stdout,
 		Scalefile:       scf,
 		SourceDirectory: golangFunctionDir,
 		SignatureSchema: s,
@@ -81,19 +82,20 @@ func compileGolangGuest(t *testing.T) *scalefunc.Schema {
 	})
 	require.NoError(t, err)
 
-	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
 	assert.Equal(t, scf.Name, schema.Name)
 	assert.Equal(t, scf.Tag, schema.Tag)
-	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
-	assert.Equal(t, s, schema.SignatureSchema)
-	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scf.Signature.Name, schema.Signature.Name)
+	assert.Equal(t, scf.Signature.Organization, schema.Signature.Organization)
+	assert.Equal(t, scf.Signature.Tag, schema.Signature.Tag)
+	assert.Equal(t, s, schema.Signature.Schema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.Signature.Hash)
 	assert.Equal(t, scalefunc.Go, schema.Language)
-	assert.Equal(t, 0, len(schema.Dependencies))
+	assert.Equal(t, 0, len(schema.Extensions))
 
 	return schema
 }
 
-func compileRustGuest(t *testing.T) *scalefunc.Schema {
+func compileRustGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -131,7 +133,7 @@ func compileRustGuest(t *testing.T) *scalefunc.Schema {
 	require.NoError(t, err)
 
 	schema, err := build.LocalRust(&build.LocalRustOptions{
-		Output:          os.Stdout,
+		Stdout:          os.Stdout,
 		Scalefile:       scf,
 		SourceDirectory: rustFunctionDir,
 		SignatureSchema: s,
@@ -141,19 +143,20 @@ func compileRustGuest(t *testing.T) *scalefunc.Schema {
 	})
 	require.NoError(t, err)
 
-	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
 	assert.Equal(t, scf.Name, schema.Name)
 	assert.Equal(t, scf.Tag, schema.Tag)
-	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
-	assert.Equal(t, s, schema.SignatureSchema)
-	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scf.Signature.Name, schema.Signature.Name)
+	assert.Equal(t, scf.Signature.Organization, schema.Signature.Organization)
+	assert.Equal(t, scf.Signature.Tag, schema.Signature.Tag)
+	assert.Equal(t, s, schema.Signature.Schema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.Signature.Hash)
 	assert.Equal(t, scalefunc.Rust, schema.Language)
-	assert.Equal(t, 0, len(schema.Dependencies))
+	assert.Equal(t, 0, len(schema.Extensions))
 
 	return schema
 }
 
-func compileTypescriptGuest(t *testing.T) *scalefunc.Schema {
+func compileTypescriptGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -191,7 +194,7 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.Schema {
 	require.NoError(t, err)
 
 	schema, err := build.LocalTypescript(&build.LocalTypescriptOptions{
-		Output:          os.Stdout,
+		Stdout:          os.Stdout,
 		Scalefile:       scf,
 		SourceDirectory: typescriptFunctionDir,
 		SignatureSchema: s,
@@ -201,14 +204,15 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.Schema {
 	})
 	require.NoError(t, err)
 
-	assert.Equal(t, scalefunc.V1Alpha, schema.Version)
 	assert.Equal(t, scf.Name, schema.Name)
 	assert.Equal(t, scf.Tag, schema.Tag)
-	assert.Equal(t, fmt.Sprintf("%s/%s:%s", scf.Signature.Organization, scf.Signature.Name, scf.Signature.Tag), schema.SignatureName)
-	assert.Equal(t, s, schema.SignatureSchema)
-	assert.Equal(t, hex.EncodeToString(hash), schema.SignatureHash)
+	assert.Equal(t, scf.Signature.Name, schema.Signature.Name)
+	assert.Equal(t, scf.Signature.Organization, schema.Signature.Organization)
+	assert.Equal(t, scf.Signature.Tag, schema.Signature.Tag)
+	assert.Equal(t, s, schema.Signature.Schema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.Signature.Hash)
 	assert.Equal(t, scalefunc.TypeScript, schema.Language)
-	assert.Equal(t, 0, len(schema.Dependencies))
+	assert.Equal(t, 0, len(schema.Extensions))
 
 	return schema
 }

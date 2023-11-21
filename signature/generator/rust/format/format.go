@@ -30,7 +30,7 @@ type Formatter struct {
 }
 
 func New() (*Formatter, error) {
-	s := new(scalefunc.V1AlphaSchema)
+	s := new(scalefunc.V1BetaSchema)
 	err := s.Decode(localRustfmtLatest)
 	if err != nil {
 		return nil, err

@@ -14,7 +14,7 @@
         limitations under the License.
 */
 
-import { ScaleFunc } from "../scalefunc";
+import {V1BetaSchema} from "../scalefunc/scalefunc";
 import { New as NewScale } from "../scale";
 
 import fs from "fs";
@@ -27,7 +27,7 @@ window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
 test("test-typescript-host-rust-guest", async () => {
     const file = fs.readFileSync(process.cwd() + "/integration/rust.scale")
-    const sf = ScaleFunc.Decode(file);
+    const sf = V1BetaSchema.Decode(file);
     const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
     const s = await NewScale(config);
 
@@ -41,7 +41,7 @@ test("test-typescript-host-rust-guest", async () => {
 
 test("test-typescript-host-golang-guest", async () => {
     const file = fs.readFileSync(process.cwd() + "/integration/golang.scale")
-    const sf = ScaleFunc.Decode(file);
+    const sf = V1BetaSchema.Decode(file);
     const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
     const s = await NewScale(config);
 
@@ -55,7 +55,7 @@ test("test-typescript-host-golang-guest", async () => {
 
 test("test-typescript-host-typescript-guest", async () => {
     const file = fs.readFileSync(process.cwd() + "/integration/typescript.scale")
-    const sf = ScaleFunc.Decode(file);
+    const sf = V1BetaSchema.Decode(file);
     const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
     const s = await NewScale(config);
 

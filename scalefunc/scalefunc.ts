@@ -202,18 +202,214 @@ export class V1AlphaSchema {
     }
 }
 
+// Deprecated: Use V1BetaSchema instead
 export function ReadV1Alpha(path: string): V1AlphaSchema {
     return V1AlphaSchema.Decode(fs.readFileSync(path, null));
 }
 
+// Deprecated: Use V1BetaSchema instead
 export function WriteV1Alpha(path: string, scaleFunc: V1AlphaSchema) {
     fs.writeFileSync(path, scaleFunc.Encode());
 }
 
-export function Read(path: string): V1AlphaSchema {
-  return ReadV1Alpha(path);
+export class V1BetaExtension {
+    public Name: string;
+    public Organization: string;
+    public Tag: string;
+    public Schema: Buffer;
+    public Hash: string;
+
+    constructor(name: string, organization: string, tag: string, schema: Buffer, hash: string) {
+        this.Name = name;
+        this.Organization = organization;
+        this.Tag = tag;
+        this.Schema = schema;
+        this.Hash = hash;
+    }
 }
 
-export function Write(path: string, scaleFunc: V1AlphaSchema) {
-  WriteV1Alpha(path, scaleFunc);
+export class V1BetaSignature {
+    public Name: string;
+    public Organization: string;
+    public Tag: string;
+    public Schema: Buffer;
+    public Hash: string;
+
+    constructor(name: string, organization: string, tag: string, schema: Buffer, hash: string) {
+        this.Name = name;
+        this.Organization = organization;
+        this.Tag = tag;
+        this.Schema = schema;
+        this.Hash = hash;
+    }
+}
+
+export class V1BetaSchema {
+    public Name: string;
+    public Tag: string;
+    public Signature: V1BetaSignature;
+    public Extensions: V1BetaExtension[];
+    public Language: Language;
+    public Manifest: Buffer;
+    public Stateless: boolean;
+    public Function: Buffer;
+    public Size: undefined | number;
+    public Hash: undefined | string;
+
+    constructor(
+        name: string,
+        tag: string,
+        signature: V1BetaSignature,
+        extensions: V1BetaExtension[],
+        language: Language,
+        manifest: Buffer,
+        stateless: boolean,
+        fn: Buffer
+    ) {
+        this.Name = name;
+        this.Tag = tag;
+        this.Signature = signature;
+        this.Extensions = extensions;
+        this.Language = language;
+        this.Manifest = manifest;
+        this.Stateless = stateless;
+        this.Function = fn;
+    }
+
+    Encode(): Uint8Array {
+        const enc = new Encoder();
+        enc.string(V1Beta as string);
+
+        enc.string(this.Name);
+        enc.string(this.Tag);
+
+        enc.string(this.Signature.Name);
+        enc.string(this.Signature.Organization);
+        enc.string(this.Signature.Tag);
+        enc.uint8Array(this.Signature.Schema);
+        enc.string(this.Signature.Hash);
+
+        enc.array(this.Extensions.length, Kind.Any);
+        for (const ext of this.Extensions) {
+            enc.string(ext.Name);
+            enc.string(ext.Organization);
+            enc.string(ext.Tag);
+            enc.uint8Array(ext.Schema);
+            enc.string(ext.Hash);
+        }
+
+        enc.string(this.Language as string);
+        enc.uint8Array(this.Manifest);
+        enc.boolean(this.Stateless);
+
+        enc.uint8Array(this.Function);
+
+        const size = enc.bytes.length;
+        const hashed = sha256(enc.bytes);
+        const hex = Buffer.from(hashed).toString("hex");
+
+        enc.uint32(size);
+        enc.string(hex);
+
+        return enc.bytes;
+    }
+
+    static Decode(data: Uint8Array): V1BetaSchema {
+        const dec = new Decoder(data);
+
+        const version = dec.string() as Version;
+        switch (version) {
+            case V1Alpha:
+                // eslint-disable-next-line no-case-declarations
+                const v1Alpha = V1AlphaSchema.Decode(data);
+
+                // eslint-disable-next-line no-case-declarations
+                const orgSplit = v1Alpha.SignatureName.split("/");
+                if (orgSplit.length === 1) {
+                    orgSplit.unshift("");
+                }
+
+                // eslint-disable-next-line no-case-declarations
+                const tagSplit = orgSplit[1].split(":");
+                if (tagSplit.length === 1) {
+                    tagSplit.push("");
+                }
+
+                // eslint-disable-next-line no-case-declarations
+                const v1BetaSignature = new V1BetaSignature(tagSplit[0], orgSplit[0], tagSplit[1], v1Alpha.SignatureBytes, v1Alpha.SignatureHash);
+
+                return new V1BetaSchema(v1Alpha.Name, v1Alpha.Tag, v1BetaSignature, [], v1Alpha.Language, Buffer.from([]), v1Alpha.Stateless, v1Alpha.Function);
+            case V1Beta:
+                break;
+            default:
+                throw VersionErr;
+        }
+
+        const name = dec.string();
+        const tag = dec.string();
+        const signatureName = dec.string();
+        const signatureOrg = dec.string();
+        const signatureTag = dec.string();
+        const signatureBytes = dec.uint8Array();
+        const signatureHash = dec.string();
+
+        const v1BetaSignature = new V1BetaSignature(signatureName, signatureOrg, signatureTag, Buffer.from(signatureBytes), signatureHash);
+
+        const extensionsSize = dec.array(Kind.Any);
+        const extensions: V1BetaExtension[] = [];
+        for (let i = 0; i < extensionsSize; i++) {
+            const name = dec.string();
+            const organization = dec.string();
+            const tag = dec.string();
+            const schema = dec.uint8Array();
+            const hash = dec.string();
+            extensions.push(new V1BetaExtension(name, organization, tag, Buffer.from(schema), hash));
+        }
+
+        const language = dec.string();
+        if (!AcceptedLanguages.includes(language)) throw LanguageErr;
+
+        const manifest = dec.uint8Array();
+
+        const stateless = dec.boolean();
+
+        const fn = dec.uint8Array();
+        const size = dec.uint32();
+        const hash = dec.string();
+
+        const hashed = sha256(data.slice(0, size));
+        const hex = Buffer.from(hashed).toString("hex");
+
+        if (hex !== hash) throw ChecksumErr;
+
+        const sf = new V1BetaSchema(
+            name,
+            tag,
+            v1BetaSignature,
+            extensions,
+            language,
+            Buffer.from(manifest),
+            stateless,
+            Buffer.from(fn)
+        );
+        sf.Size = size;
+        sf.Hash = hash;
+        return sf;
+    }
+}
+
+export function ReadV1Beta(path: string): V1BetaSchema {
+    return V1BetaSchema.Decode(fs.readFileSync(path, null));
+}
+
+export function WriteV1Beta(path: string, scaleFunc: V1BetaSchema) {
+    fs.writeFileSync(path, scaleFunc.Encode());
+}
+
+export function Read(path: string): V1BetaSchema {
+    return ReadV1Beta(path);
+}
+
+export function Write(path: string, scaleFunc: V1BetaSchema) {
+    WriteV1Beta(path, scaleFunc);
 }

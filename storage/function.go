@@ -36,7 +36,7 @@ var (
 )
 
 type Function struct {
-	Schema       *scalefunc.V1AlphaSchema
+	Schema       *scalefunc.V1BetaSchema
 	Hash         string
 	Organization string
 }

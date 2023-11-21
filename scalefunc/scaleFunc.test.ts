@@ -19,7 +19,8 @@ import { TextEncoder, TextDecoder } from "util";
 import {
   V1AlphaSchema,
   Go,
-  ValidString,
+  VersionErr,
+  ValidString, V1BetaSchema, V1BetaSignature,
 } from "./scalefunc";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -35,12 +36,27 @@ describe("encode_decode", () => {
   const encodedManifest = enc.encode("encoded manifest");
 
   it("v1Alpha", () => {
+    expect(() => {
+      const v1BetaSignature = new V1BetaSignature("Test Signature", "", "", Buffer.from(encodedSignature), "Test Signature Hash");
+      const v1Beta = new V1BetaSchema("", "", v1BetaSignature, [], Go, Buffer.from(encodedManifest), false, Buffer.from(encodedFunction));
+
+      const encoded = v1Beta.Encode();
+      V1AlphaSchema.Decode(encoded);
+    }).toThrow(VersionErr);
+  });
+
+  it("v1Beta", () => {
     const v1Alpha = new V1AlphaSchema("", "", "", Buffer.from(encodedSignature), "Test Signature Hash", Go, false, Buffer.from(encodedFunction), Buffer.from(encodedManifest));
     const encoded = v1Alpha.Encode();
 
-    const decoded = V1AlphaSchema.Decode(encoded);
+    const v1Beta = V1BetaSchema.Decode(encoded);
 
-    expect(decoded.Language).toBe(v1Alpha.Language);
+    expect(v1Beta.Name).toBe(v1Alpha.Name);
+    expect(v1Beta.Tag).toBe(v1Alpha.Tag);
+    expect(v1Beta.Signature.Name).toBe(v1Alpha.SignatureName);
+    expect(v1Beta.Language).toBe(v1Alpha.Language);
+    expect(v1Beta.Function).toStrictEqual(v1Alpha.Function);
+    expect(v1Beta.Stateless).toBe(v1Alpha.Stateless);
   })
 });
 
