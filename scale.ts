@@ -45,7 +45,7 @@ export class Scale<T extends Signature> {
             const testSignature = this.config.newSignature();
             for (let i = 0; i < this.config.functions.length; i++) {
                 const sf = this.config.functions[i];
-                if (testSignature.Hash() != sf.function.SignatureHash) {
+                if (testSignature.Hash() != sf.function.Signature.Hash) {
                     throw new Error(`passed in function ${sf.function.Name}:${sf.function.Tag} has an invalid signature`);
                 }
                 let t: Template<T>;
