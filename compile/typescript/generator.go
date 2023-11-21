@@ -26,12 +26,12 @@ import (
 
 var generator *Generator
 
-func GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureImport string) ([]byte, error) {
-	return generator.GenerateTypescriptPackageJSON(packageSchema, signaturePath, signatureImport)
+func GenerateTypescriptPackageJSON(signatureInfo *SignatureInfo) ([]byte, error) {
+	return generator.GenerateTypescriptPackageJSON(signatureInfo)
 }
 
-func GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
-	return generator.GenerateTypescriptIndex(packageSchema, functionPath)
+func GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateTypescriptIndex(packageSchema, functionInfo)
 }
 
 func init() {
@@ -48,16 +48,12 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateTypescriptPackageJSON(packageSchema *scalefile.Schema, signaturePath string, signatureImport string) ([]byte, error) {
-	if signaturePath != "" && !strings.HasPrefix(signaturePath, "/") && !strings.HasPrefix(signaturePath, "./") && !strings.HasPrefix(signaturePath, "../") {
-		signaturePath = "./" + signaturePath
-	}
+func (g *Generator) GenerateTypescriptPackageJSON(signatureInfo *SignatureInfo) ([]byte, error) {
+	signatureInfo.normalize()
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "packagejson.ts.templ", map[string]interface{}{
-		"package_schema":   packageSchema,
-		"signature_path":   signaturePath,
-		"signature_import": signatureImport,
+		"signature": signatureInfo,
 	})
 	if err != nil {
 		return nil, err
@@ -66,15 +62,14 @@ func (g *Generator) GenerateTypescriptPackageJSON(packageSchema *scalefile.Schem
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateTypescriptIndex(packageSchema *scalefile.Schema, functionPath string) ([]byte, error) {
-	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
-		functionPath = "./" + functionPath
-	}
+func (g *Generator) GenerateTypescriptIndex(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	functionInfo.normalize()
+
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "index.ts.templ", map[string]interface{}{
-		"generator_version": strings.TrimPrefix(version.Version(), "v"),
-		"package_schema":    packageSchema,
-		"function_path":     functionPath,
+		"generatorVersion": strings.TrimPrefix(version.Version(), "v"),
+		"scalefileSchema":  scalefileSchema,
+		"function":         functionInfo,
 	})
 	if err != nil {
 		return nil, err

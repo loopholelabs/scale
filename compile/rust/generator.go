@@ -26,12 +26,12 @@ import (
 
 var generator *Generator
 
-func GenerateRustCargofile(schema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string) ([]byte, error) {
-	return generator.GenerateRustCargofile(schema, parsedSignatureDependency, functionPath)
+func GenerateRustCargofile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateRustCargofile(signatureInfo, functionInfo)
 }
 
-func GenerateRustLib(packageSchema *scalefile.Schema) ([]byte, error) {
-	return generator.GenerateRustLib(packageSchema)
+func GenerateRustLib(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
+	return generator.GenerateRustLib(scalefileSchema, functionInfo)
 }
 
 func init() {
@@ -48,20 +48,14 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateRustCargofile(packageSchema *scalefile.Schema, parsedSignatureDependency *ParsedDependency, functionPath string) ([]byte, error) {
-	if parsedSignatureDependency.Path != "" && !strings.HasPrefix(parsedSignatureDependency.Path, "/") && !strings.HasPrefix(parsedSignatureDependency.Path, "./") && !strings.HasPrefix(parsedSignatureDependency.Path, "../") {
-		parsedSignatureDependency.Path = "./" + parsedSignatureDependency.Path
-	}
-
-	if !strings.HasPrefix(functionPath, "/") && !strings.HasPrefix(functionPath, "./") && !strings.HasPrefix(functionPath, "../") {
-		functionPath = "./" + functionPath
-	}
+func (g *Generator) GenerateRustCargofile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
+	signatureInfo.normalize()
+	functionInfo.normalize()
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "cargo.rs.templ", map[string]interface{}{
-		"signature_dependency": parsedSignatureDependency,
-		"package_schema":       packageSchema,
-		"function_path":        functionPath,
+		"signature": signatureInfo,
+		"function":  functionInfo,
 	})
 	if err != nil {
 		return nil, err
@@ -70,11 +64,12 @@ func (g *Generator) GenerateRustCargofile(packageSchema *scalefile.Schema, parse
 	return buf.Bytes(), nil
 }
 
-func (g *Generator) GenerateRustLib(packageSchema *scalefile.Schema) ([]byte, error) {
+func (g *Generator) GenerateRustLib(scalefileSchema *scalefile.Schema, functionInfo *FunctionInfo) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "lib.rs.templ", map[string]interface{}{
-		"generator_version": strings.TrimPrefix(version.Version(), "v"),
-		"package_schema":    packageSchema,
+		"generatorVersion": strings.TrimPrefix(version.Version(), "v"),
+		"scalefileSchema":  scalefileSchema,
+		"function":         functionInfo,
 	})
 	if err != nil {
 		return nil, err
