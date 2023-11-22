@@ -19,6 +19,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/rust"
+
 	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
 
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
@@ -64,12 +67,18 @@ func init() {
 // Generator is the rust generator
 type Generator struct {
 	templ     *template.Template
+	signature *rust.Generator
 	formatter *format.Formatter
 }
 
 // New creates a new rust generator
 func New() (*Generator, error) {
 	templ, err := template.New("").Funcs(templateFunctions()).ParseFS(templates.FS, "*.rs.templ")
+	if err != nil {
+		return nil, err
+	}
+
+	sig, err := rust.New()
 	if err != nil {
 		return nil, err
 	}
@@ -81,45 +90,25 @@ func New() (*Generator, error) {
 
 	return &Generator{
 		templ:     templ,
+		signature: sig,
 		formatter: formatter,
 	}, nil
 }
 
 // GenerateTypes generates the types for the extension
 func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
-
-	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
-	if err != nil {
-		return nil, err
+	signatureSchema := &signature.Schema{
+		Version: extensionSchema.Version,
+		Enums:   extensionSchema.Enums,
+		Models:  extensionSchema.Models,
 	}
 
-	if packageName == "" {
-		packageName = defaultPackageName
-	}
+	signatureSchema.SetHasLengthValidator(extensionSchema.HasLengthValidator())
+	signatureSchema.SetHasCaseModifier(extensionSchema.HasCaseModifier())
+	signatureSchema.SetHasLimitValidator(extensionSchema.HasLimitValidator())
+	signatureSchema.SetHasRegexValidator(extensionSchema.HasRegexValidator())
 
-	buf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(buf, "types.rs.templ", map[string]any{
-		"signature_schema": schema,
-		"package_name":     packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	formatted, err := g.formatter.Format(context.Background(), buf.String())
-	if err != nil {
-		return nil, err
-	}
-
-	buf.Reset()
-	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
-		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return []byte(buf.String() + "\n\n" + formatted), nil
+	return g.signature.GenerateTypes(signatureSchema, packageName)
 }
 
 // GenerateCargofile generates the cargofile for the extension
@@ -153,13 +142,10 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 		return nil, err
 	}
 
-	formatted := buf.String()
-	/*
-		formatted, err := g.formatter.Format(context.Background(), buf.String())
-		if err != nil {
-			return nil, err
-		}
-	*/
+	formatted, err := g.formatter.Format(context.Background(), buf.String())
+	if err != nil {
+		return nil, err
+	}
 	buf.Reset()
 	err = g.templ.ExecuteTemplate(buf, "header.rs.templ", map[string]any{
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
