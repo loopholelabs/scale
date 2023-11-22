@@ -18,12 +18,14 @@ import (
 	"go/format"
 	"text/template"
 
+	"github.com/loopholelabs/scale/signature"
+	"github.com/loopholelabs/scale/signature/generator/golang"
+	scaleVersion "github.com/loopholelabs/scale/version"
+
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
 
 	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
 	"github.com/loopholelabs/scale/extension"
-
-	scaleVersion "github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/extension/generator/golang/templates"
 	"github.com/loopholelabs/scale/signature/generator/utils"
@@ -35,24 +37,24 @@ const (
 
 var generator *Generator
 
-func GenerateTypes(schema *extension.Schema, packageName string) ([]byte, error) {
-	return generator.GenerateTypes(schema, packageName)
+func GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
+	return generator.GenerateTypes(extensionSchema, packageName)
 }
 
-func GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
-	return generator.GenerateInterfaces(schema, packageName, version)
-}
-
-func GenerateGuest(schema *extension.Schema, extensionHash string, packageName string, version string) ([]byte, error) {
-	return generator.GenerateGuest(schema, extensionHash, packageName, version)
+func GenerateInterfaces(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
+	return generator.GenerateInterfaces(extensionSchema, packageName)
 }
 
 func GenerateModfile(packageName string) ([]byte, error) {
 	return generator.GenerateModfile(packageName)
 }
 
-func GenerateHost(schema *extension.Schema, extensionHash string, packageName string, version string) ([]byte, error) {
-	return generator.GenerateHost(schema, extensionHash, packageName, version)
+func GenerateGuest(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+	return generator.GenerateGuest(extensionSchema, extensionHash, packageName)
+}
+
+func GenerateHost(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+	return generator.GenerateHost(extensionSchema, extensionHash, packageName)
 }
 
 func init() {
@@ -65,7 +67,8 @@ func init() {
 
 // Generator is the go generator
 type Generator struct {
-	templ *template.Template
+	templ     *template.Template
+	signature *golang.Generator
 }
 
 // New creates a new go generator
@@ -75,65 +78,44 @@ func New() (*Generator, error) {
 		return nil, err
 	}
 
+	sig, err := golang.New()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Generator{
-		templ: templ,
+		templ:     templ,
+		signature: sig,
 	}, nil
 }
 
-// Generate generates the go code
-func (g *Generator) GenerateTypes(schema *extension.Schema, packageName string) ([]byte, error) {
-	if packageName == "" {
-		packageName = defaultPackageName
+// GenerateTypes generates the types for the extension
+func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
+	signatureSchema := &signature.Schema{
+		Version: extensionSchema.Version,
+		Enums:   extensionSchema.Enums,
+		Models:  extensionSchema.Models,
 	}
 
-	ext, err := schema.CloneWithDisabledAccessorsValidatorsAndModifiers()
-	if err != nil {
-		return nil, err
-	}
+	signatureSchema.SetHasLengthValidator(extensionSchema.HasLengthValidator())
+	signatureSchema.SetHasCaseModifier(extensionSchema.HasCaseModifier())
+	signatureSchema.SetHasLimitValidator(extensionSchema.HasLimitValidator())
+	signatureSchema.SetHasRegexValidator(extensionSchema.HasRegexValidator())
 
-	buf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(buf, "types.go.templ", map[string]any{
-		"signature_schema":  ext,
-		"generator_version": scaleVersion.Version(),
-		"package_name":      packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return format.Source(buf.Bytes())
+	return g.signature.GenerateTypes(signatureSchema, packageName)
 }
 
-func (g *Generator) GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
+// GenerateInterfaces generates the interfaces for the extension
+func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "interfaces.go.templ", map[string]any{
-		"schema":  schema,
-		"version": version,
-		"package": packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return format.Source(buf.Bytes())
-}
-
-// GenerateGuest generates the guest bindings
-func (g *Generator) GenerateGuest(schema *extension.Schema, schemaHash string, packageName string, version string) ([]byte, error) {
-	if packageName == "" {
-		packageName = defaultPackageName
-	}
-
-	buf := new(bytes.Buffer)
-	err := g.templ.ExecuteTemplate(buf, "guest.go.templ", map[string]any{
-		"extension_schema": schema,
-		"extension_hash":   schemaHash,
-		"version":          version,
-		"package":          packageName,
+		"extension_schema":  extensionSchema,
+		"generator_version": scaleVersion.Version(),
+		"package_name":      packageName,
 	})
 	if err != nil {
 		return nil, err
@@ -157,18 +139,38 @@ func (g *Generator) GenerateModfile(packageImportPath string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// GenerateGuest generates the guest bindings
+func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
+	if packageName == "" {
+		packageName = defaultPackageName
+	}
+
+	buf := new(bytes.Buffer)
+	err := g.templ.ExecuteTemplate(buf, "guest.go.templ", map[string]any{
+		"extension_hash":    extensionHash,
+		"extension_schema":  extensionSchema,
+		"generator_version": scaleVersion.Version(),
+		"package_name":      packageName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return format.Source(buf.Bytes())
+}
+
 // GenerateHost generates the host bindings
-func (g *Generator) GenerateHost(schema *extension.Schema, schemaHash string, packageName string, version string) ([]byte, error) {
+func (g *Generator) GenerateHost(extensionSchema *extension.Schema, extensionHash string, packageName string) ([]byte, error) {
 	if packageName == "" {
 		packageName = defaultPackageName
 	}
 
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "host.go.templ", map[string]any{
-		"extension_schema": schema,
-		"extension_hash":   schemaHash,
-		"version":          version,
-		"package":          packageName,
+		"extension_hash":    extensionHash,
+		"extension_schema":  extensionSchema,
+		"generator_version": scaleVersion.Version(),
+		"package_name":      packageName,
 	})
 	if err != nil {
 		return nil, err

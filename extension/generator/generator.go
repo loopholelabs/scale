@@ -54,7 +54,6 @@ type Options struct {
 
 	GolangPackageImportPath string
 	GolangPackageName       string
-	GolangPackageVersion    string
 
 	RustPackageName    string
 	RustPackageVersion string
@@ -75,12 +74,12 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		return nil, err
 	}
 
-	golangGuest, err := golang.GenerateGuest(options.Extension, hashString, options.GolangPackageName, options.GolangPackageVersion)
+	golangGuest, err := golang.GenerateGuest(options.Extension, hashString, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangInterfaces, err := golang.GenerateInterfaces(options.Extension, options.GolangPackageName, options.GolangPackageVersion)
+	golangInterfaces, err := golang.GenerateInterfaces(options.Extension, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
@@ -136,12 +135,12 @@ func GenerateHostLocal(options *Options) (*HostLocalPackage, error) {
 		return nil, err
 	}
 
-	golangHost, err := golang.GenerateHost(options.Extension, hashString, options.GolangPackageName, options.GolangPackageVersion)
+	golangHost, err := golang.GenerateHost(options.Extension, hashString, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}
 
-	golangInterfaces, err := golang.GenerateInterfaces(options.Extension, options.GolangPackageName, options.GolangPackageVersion)
+	golangInterfaces, err := golang.GenerateInterfaces(options.Extension, options.GolangPackageName)
 	if err != nil {
 		return nil, err
 	}

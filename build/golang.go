@@ -30,7 +30,6 @@ import (
 	"github.com/loopholelabs/scale/extension"
 
 	"github.com/loopholelabs/scale/compile/golang"
-	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
@@ -122,7 +121,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 	}
 
 	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
-		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
+		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile %d %d", len(options.ExtensionSchemas), len(options.Scalefile.Extensions))
 	}
 
 	if !filepath.IsAbs(options.SourceDirectory) {
@@ -195,7 +194,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	modfile, err := golang.GenerateGoModfile(signatureInfo, functionInfo)
+	modfile, err := golang.GenerateGoModfile(signatureInfo, functionInfo, options.Extensions)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}

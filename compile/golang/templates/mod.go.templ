@@ -9,6 +9,10 @@ replace signature v0.1.0 => {{ .signature.ImportPath }} {{ .signature.ImportVers
 
 replace {{ .function.PackageName }} v0.1.0 => {{ .function.ImportPath }}
 
+{{ range $extension := .extensions }}
+  replace {{ $extension.Name }} => {{ $extension.Path }}
+{{ end }}
+
 require (
     signature v0.1.0
     {{ .function.PackageName }} v0.1.0

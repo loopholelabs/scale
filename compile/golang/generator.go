@@ -18,6 +18,7 @@ import (
 	"go/format"
 	"text/template"
 
+	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/signature"
 
 	"github.com/loopholelabs/scale/version"
@@ -28,8 +29,8 @@ import (
 
 var generator *Generator
 
-func GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
-	return generator.GenerateGoModfile(signatureInfo, functionInfo)
+func GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo, extensionInfo []extension.Info) ([]byte, error) {
+	return generator.GenerateGoModfile(signatureInfo, functionInfo, extensionInfo)
 }
 
 func GenerateGoMain(scalefileSchema *scalefile.Schema, signatureSchema *signature.Schema, functionInfo *FunctionInfo) ([]byte, error) {
@@ -50,14 +51,15 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
+func (g *Generator) GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo, extensionInfo []extension.Info) ([]byte, error) {
 	signatureInfo.normalize()
 	functionInfo.normalize()
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"function":  functionInfo,
-		"signature": signatureInfo,
+		"function":   functionInfo,
+		"signature":  signatureInfo,
+		"extensions": extensionInfo,
 	})
 	if err != nil {
 		return nil, err

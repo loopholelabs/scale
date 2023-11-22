@@ -53,12 +53,6 @@ type ExtensionSchema struct {
 	Tag          string `hcl:"tag,attr"`
 }
 
-type ExtensionSchema struct {
-	Organization string `hcl:"organization,optional"`
-	Name         string `hcl:"name,attr"`
-	Tag          string `hcl:"tag,attr"`
-}
-
 type Schema struct {
 	Version     string            `hcl:"version,attr"`
 	Name        string            `hcl:"name,attr"`
@@ -69,7 +63,7 @@ type Schema struct {
 	Function    string            `hcl:"function,attr"`
 	Initialize  string            `hcl:"initialize,attr"`
 	Description string            `hcl:"description,optional"`
-	Extensions  []ExtensionSchema `hcl:"extension,optional"`
+	Extensions  []ExtensionSchema `hcl:"extension,block"`
 }
 
 func ReadSchema(path string) (*Schema, error) {

@@ -18,44 +18,20 @@ package extension
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"os"
-	"regexp"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"github.com/loopholelabs/scale/signature"
 )
 
-const (
-	V1AlphaVersion = "v1alpha"
-)
-
-var (
-	ErrInvalidName         = errors.New("invalid name")
-	ErrInvalidFunctionName = errors.New("invalid function name")
-	ErrInvalidTag          = errors.New("invalid tag")
-)
-
-var (
-	ValidLabel    = regexp.MustCompile(`^[A-Za-z0-9]*$`)
-	InvalidString = regexp.MustCompile(`[^A-Za-z0-9-.]`)
-)
-
-var (
-	TitleCaser = cases.Title(language.Und, cases.NoLower)
-)
-
+// Schema is the top-level structure of a Scale Extension schema
 type Schema struct {
 	Version            string                   `hcl:"version,attr"`
-	Name               string                   `hcl:"name,attr"`
-	Tag                string                   `hcl:"tag,attr"`
 	Interfaces         []*InterfaceSchema       `hcl:"interface,block"`
 	Functions          []*FunctionSchema        `hcl:"function,block"`
 	Enums              []*signature.EnumSchema  `hcl:"enum,block"`
@@ -66,6 +42,7 @@ type Schema struct {
 	hasCaseModifier    bool
 }
 
+// ReadSchema reads a Scale Extension schema from a file at the given path
 func ReadSchema(path string) (*Schema, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -76,6 +53,9 @@ func ReadSchema(path string) (*Schema, error) {
 	return s, s.Decode(data)
 }
 
+// Decode decodes the given byte slice into the Schema
+//
+// Note: This function modifies the Schema in-place and validates/normalizes it as well.
 func (s *Schema) Decode(data []byte) error {
 	file, diag := hclsyntax.ParseConfig(data, "", hcl.Pos{Line: 1, Column: 1})
 	if diag.HasErrors() {
@@ -87,34 +67,45 @@ func (s *Schema) Decode(data []byte) error {
 		return diag.Errs()[0]
 	}
 
+	err := s.validateAndNormalize()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
+// Encode encodes the Schema into a byte slice
 func (s *Schema) Encode() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	gohcl.EncodeIntoBody(s, f.Body())
 	return f.Bytes(), nil
 }
 
-func (s *Schema) Validate() error {
+// validateAndNormalize validates the Schema and normalizes it
+//
+// Note: This function modifies the Schema in-place
+func (s *Schema) validateAndNormalize() error {
 	switch s.Version {
-	case V1AlphaVersion:
-		if !ValidLabel.MatchString(s.Name) {
-			return ErrInvalidName
-		}
-
-		if InvalidString.MatchString(s.Tag) {
-			return ErrInvalidTag
-		}
-
+	case signature.V1AlphaVersion:
 		// Transform all model names and references to TitleCase (e.g. "myModel" -> "MyModel")
 		for _, model := range s.Models {
 			model.Normalize()
 		}
 
-		// Transform all model names and references to TitleCase (e.g. "myModel" -> "MyModel")
+		// Transform all enum names to TitleCase (e.g. "myModel" -> "MyModel")
 		for _, enum := range s.Enums {
 			enum.Normalize()
+		}
+
+		// Transform all function names and references to TitleCase (e.g. "myFunction" -> "MyFunction")
+		for _, function := range s.Functions {
+			function.Normalize()
+		}
+
+		// Transform all interface names and references to TitleCase (e.g. "myInterface" -> "MyInterface")
+		for _, inter := range s.Interfaces {
+			inter.Normalize()
 		}
 
 		// Validate all models
@@ -130,6 +121,22 @@ func (s *Schema) Validate() error {
 		knownEnums := make(map[string]struct{})
 		for _, enum := range s.Enums {
 			err := enum.Validate(knownEnums)
+			if err != nil {
+				return err
+			}
+		}
+
+		knownFunctions := make(map[string]struct{})
+		for _, function := range s.Functions {
+			err := function.Validate(knownFunctions)
+			if err != nil {
+				return err
+			}
+		}
+
+		knownInterfaces := make(map[string]map[string]struct{})
+		for _, inter := range s.Interfaces {
+			err := inter.Validate(knownInterfaces)
 			if err != nil {
 				return err
 			}
@@ -262,69 +269,37 @@ func (s *Schema) Validate() error {
 			}
 		}
 
-		// Map of interfaces, and check for name collisions.
-		knownInterfaces := make(map[string]struct{})
-		for _, inter := range s.Interfaces {
-			_, dupe := knownModels[inter.Name]
-			if dupe {
-				return fmt.Errorf("interface name collides with a model %s", inter.Name)
-			}
-			_, dupe = knownInterfaces[inter.Name]
-			if dupe {
-				return fmt.Errorf("interface name collides with an interface %s", inter.Name)
-			}
-			knownInterfaces[inter.Name] = struct{}{}
-		}
-
-		for _, inter := range s.Interfaces {
-			for _, f := range inter.Functions {
-				// Make sure the function name is ok
-				if !ValidLabel.MatchString(f.Name) {
-					return ErrInvalidFunctionName
+		// Ensure all model and enum references are valid
+		for _, function := range s.Functions {
+			if function.Params != "" {
+				if _, ok := knownModels[function.Params]; !ok {
+					return fmt.Errorf("unknown %s.params: %s", function.Name, function.Params)
 				}
+			}
 
-				// Make sure the params exist as model.
-				if f.Params != "" {
-					f.Params = TitleCaser.String(f.Params)
-					if _, ok := knownModels[f.Params]; !ok {
-						return fmt.Errorf("unknown params in function %s: %s", f.Name, f.Params)
-					}
-				}
-
-				// Return can either be a model or interface
-				if f.Return != "" {
-					f.Return = TitleCaser.String(f.Return)
-					_, foundModel := knownModels[f.Return]
-					_, foundInterface := knownInterfaces[f.Return]
-					if !foundModel && !foundInterface {
-						return fmt.Errorf("unknown return in function %s: %s", f.Name, f.Return)
+			if function.Return != "" {
+				if _, ok := knownModels[function.Return]; !ok {
+					if _, ok = knownInterfaces[function.Return]; !ok {
+						return fmt.Errorf("unknown %s.return: %s", function.Name, function.Return)
 					}
 				}
 			}
 		}
 
-		// Check any global functions
-		for _, f := range s.Functions {
-			// Make sure the function name is ok
-			if !ValidLabel.MatchString(f.Name) {
-				return ErrInvalidFunctionName
-			}
-
-			// Make sure the params exist as model.
-			if f.Params != "" {
-				f.Params = TitleCaser.String(f.Params)
-				if _, ok := knownModels[f.Params]; !ok {
-					return fmt.Errorf("unknown params in function %s: %s", f.Name, f.Params)
+		for _, inter := range s.Interfaces {
+			for _, function := range inter.Functions {
+				if function.Params != "" {
+					if _, ok := knownModels[function.Params]; !ok {
+						return fmt.Errorf("unknown %s.%s.params: %s", inter.Name, function.Name, function.Params)
+					}
 				}
-			}
 
-			// Return can either be a model or interface
-			if f.Return != "" {
-				f.Return = TitleCaser.String(f.Return)
-				_, foundModel := knownModels[f.Return]
-				_, foundInterface := knownInterfaces[f.Return]
-				if !foundModel && !foundInterface {
-					return fmt.Errorf("unknown return in function %s: %s", f.Name, f.Return)
+				if function.Return != "" {
+					if _, ok := knownModels[function.Return]; !ok {
+						if _, ok = knownInterfaces[function.Return]; !ok {
+							return fmt.Errorf("unknown %s.%s.return: %s", inter.Name, function.Name, function.Return)
+						}
+					}
 				}
 			}
 		}
@@ -520,16 +495,6 @@ func (s *Schema) CloneWithDisabledAccessorsValidatorsAndModifiers() (*Schema, er
 	return clone, clone.validateAndNormalize()
 }
 
-// validateAndNormalize validates the Schema and normalizes it
-//
-// Note: This function modifies the Schema in-place
-func (s *Schema) validateAndNormalize() error {
-
-	// TODO...
-
-	return nil
-}
-
 func (s *Schema) HasLimitValidator() bool {
 	return s.hasLimitValidator
 }
@@ -557,8 +522,6 @@ func ValidPrimitiveType(t string) bool {
 
 const MasterTestingSchema = `
 version = "v1alpha"
-name = "HttpFetch"
-tag = "alpha"
 
 function New {
 	params = "HttpConfig"
