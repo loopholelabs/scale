@@ -1,14 +1,12 @@
 {
     "name": "compile",
     "version": "0.1.0",
-    "description": "{{ .package_schema.Description }}",
     "main": "index.ts",
     "dependencies": {
-        {{ if .signature_path }}
-        "signature": "file:{{ .signature_path}}"
-        {{ end }}
-        {{ if .signature_import }}
-        "signature": "{{ .signature_import }}"
+        {{ if .signature.Local }}
+        "signature": "file:{{ .signature.ImportPath }}"
+        {{ else }}
+        "signature": "{{ .signature.ImportPath }}"
         {{ end }}
     }
 }

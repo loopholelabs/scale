@@ -119,7 +119,7 @@ func (r *Scale[T]) init() error {
 
 	testSignature := r.config.newSignature()
 	for _, sf := range r.config.functions {
-		if testSignature.Hash() != "" && testSignature.Hash() != sf.function.SignatureHash {
+		if testSignature.Hash() != "" && testSignature.Hash() != sf.function.Signature.Hash {
 			return fmt.Errorf("passed in function '%s:%s' has an invalid signatures", sf.function.Name, sf.function.Tag)
 		}
 

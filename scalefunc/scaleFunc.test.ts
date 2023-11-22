@@ -17,13 +17,10 @@
 import { TextEncoder, TextDecoder } from "util";
 
 import {
-  ScaleFunc,
+  V1AlphaSchema,
   Go,
   VersionErr,
-  LanguageErr,
-  ChecksumErr,
-  V1Alpha,
-  ValidString,
+  ValidString, V1BetaSchema, V1BetaSignature,
 } from "./scalefunc";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -32,79 +29,35 @@ const Buffer = require("buffer/").Buffer;
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
-describe("scaleFunc", () => {
+describe("encode_decode", () => {
   const enc = new TextEncoder(); // always utf-8
+  const encodedSignature = enc.encode("encoded signature");
+  const encodedFunction = enc.encode("encoded function");
+  const encodedManifest = enc.encode("encoded manifest");
 
-  const someFunction = enc.encode("Hello world some function here");
-
-  it("Can encode and decode", () => {
+  it("v1Alpha", () => {
     expect(() => {
-      const sfInvalid = new ScaleFunc(
-        "invalid",
-        "name",
-        "tag",
-        "signature",
-        Buffer.from(someFunction),
-        "signatureHash",
-        Go,
-        false,
-        [],
-        Buffer.from(someFunction)
-      );
-      const b = sfInvalid.Encode();
-      ScaleFunc.Decode(b);
+      const v1BetaSignature = new V1BetaSignature("Test Signature", "", "", Buffer.from(encodedSignature), "Test Signature Hash");
+      const v1Beta = new V1BetaSchema("", "", v1BetaSignature, [], Go, Buffer.from(encodedManifest), false, Buffer.from(encodedFunction));
+
+      const encoded = v1Beta.Encode();
+      V1AlphaSchema.Decode(encoded);
     }).toThrow(VersionErr);
-
-    expect(() => {
-      const sfInvalid = new ScaleFunc(
-        V1Alpha,
-        "name",
-        "tag",
-        "signature",
-        Buffer.from(someFunction),
-        "signatureHash",
-        "invalid",
-        true,
-        [],
-        Buffer.from(someFunction)
-      );
-      const b = sfInvalid.Encode();
-      ScaleFunc.Decode(b);
-    }).toThrow(LanguageErr);
-
-    const sf = new ScaleFunc(
-      V1Alpha,
-      "Test name",
-      "Test tag",
-      "Test Signature",
-        Buffer.from(someFunction),
-        "signatureHash",
-      Go,
-      false,
-      [],
-      Buffer.from(someFunction)
-    );
-
-    const buff = sf.Encode();
-    const sf2 = ScaleFunc.Decode(buff);
-
-    expect(sf.Version).toBe(sf2.Version);
-    expect(sf.Name).toBe(sf2.Name);
-    expect(sf.Tag).toBe(sf2.Tag);
-    expect(sf.SignatureName).toBe(sf2.SignatureName);
-    expect(sf.Language).toBe(sf2.Language);
-    expect(sf.Function).toStrictEqual(sf2.Function);
-
-    if (typeof sf2.Size !== "undefined" && typeof sf2.Hash !== "undefined") {
-      buff[buff.length - 1]++; // This increments the last byte of the hash
-      // Now try to decode again with a bad checksum...
-      expect(() => {
-        ScaleFunc.Decode(buff);
-      }).toThrow(ChecksumErr);
-    } else {
-      throw new Error("Size or Checksum were not set!");
-    }
   });
+
+  it("v1Beta", () => {
+    const v1Alpha = new V1AlphaSchema("", "", "", Buffer.from(encodedSignature), "Test Signature Hash", Go, false, Buffer.from(encodedFunction), Buffer.from(encodedManifest));
+    const encoded = v1Alpha.Encode();
+
+    const v1Beta = V1BetaSchema.Decode(encoded);
+
+    expect(v1Beta.Name).toBe(v1Alpha.Name);
+    expect(v1Beta.Tag).toBe(v1Alpha.Tag);
+    expect(v1Beta.Signature.Name).toBe(v1Alpha.SignatureName);
+    expect(v1Beta.Language).toBe(v1Alpha.Language);
+    expect(v1Beta.Function).toStrictEqual(v1Alpha.Function);
+    expect(v1Beta.Stateless).toBe(v1Alpha.Stateless);
+  })
 });
 
 

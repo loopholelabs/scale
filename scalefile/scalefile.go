@@ -42,21 +42,28 @@ var (
 )
 
 type SignatureSchema struct {
-	Organization string `hcl:"organization,optional"`
+	Organization string `hcl:"organization,attr"`
+	Name         string `hcl:"name,attr"`
+	Tag          string `hcl:"tag,attr"`
+}
+
+type ExtensionSchema struct {
+	Organization string `hcl:"organization,attr"`
 	Name         string `hcl:"name,attr"`
 	Tag          string `hcl:"tag,attr"`
 }
 
 type Schema struct {
-	Version     string          `hcl:"version,attr"`
-	Name        string          `hcl:"name,attr"`
-	Tag         string          `hcl:"tag,attr"`
-	Language    string          `hcl:"language,attr"`
-	Signature   SignatureSchema `hcl:"signature,block"`
-	Stateless   bool            `hcl:"stateless,optional"`
-	Function    string          `hcl:"function,attr"`
-	Initialize  string          `hcl:"initialize,attr"`
-	Description string          `hcl:"description,optional"`
+	Version     string            `hcl:"version,attr"`
+	Name        string            `hcl:"name,attr"`
+	Tag         string            `hcl:"tag,attr"`
+	Language    string            `hcl:"language,attr"`
+	Signature   SignatureSchema   `hcl:"signature,block"`
+	Stateless   bool              `hcl:"stateless,optional"`
+	Function    string            `hcl:"function,attr"`
+	Initialize  string            `hcl:"initialize,attr"`
+	Description string            `hcl:"description,optional"`
+	Extensions  []ExtensionSchema `hcl:"extension,optional"`
 }
 
 func ReadSchema(path string) (*Schema, error) {

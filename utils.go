@@ -16,31 +16,6 @@
 
 package scale
 
-import "strings"
-
-type Parsed struct {
-	Organization string
-	Name         string
-	Tag          string
-}
-
-// Parse parses a function or signature name of the form <org>/<name>:<tag> into its organization, name, and tag
-func Parse(name string) *Parsed {
-	orgSplit := strings.Split(name, "/")
-	if len(orgSplit) == 1 {
-		orgSplit = []string{"", name}
-	}
-	tagSplit := strings.Split(orgSplit[1], ":")
-	if len(tagSplit) == 1 {
-		tagSplit = []string{tagSplit[0], ""}
-	}
-	return &Parsed{
-		Organization: orgSplit[0],
-		Name:         tagSplit[0],
-		Tag:          tagSplit[1],
-	}
-}
-
 func unpackUint32(packed uint64) (uint32, uint32) {
 	return uint32(packed >> 32), uint32(packed)
 }

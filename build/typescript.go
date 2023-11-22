@@ -27,6 +27,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/loopholelabs/scale/extension"
+
 	"github.com/evanw/esbuild/pkg/api"
 
 	"github.com/loopholelabs/scale/compile/typescript"
@@ -60,17 +62,27 @@ const (
 )
 
 type LocalTypescriptOptions struct {
-	// Output is the output writer for the various build commands
-	Output io.Writer
+	// Stdout is the output writer for the various build commands
+	Stdout io.Writer
 
 	// Scalefile is the scalefile to be built
 	Scalefile *scalefile.Schema
 
+	// SignatureSchema is the schema of the signature
+	//
+	// Note: The SignatureSchema is only used to embed type information into the scale function,
+	// and not as part of the build process
+	SignatureSchema *signature.Schema
+
+	// ExtensionSchemas are the schemas of the extensions. The array must be in the same order as the extensions
+	// are defined in the scalefile
+	//
+	// Note: The ExtensionSchemas are only used to embed extension information into the scale function,
+	// and not as part of the build process
+	ExtensionSchemas []*extension.Schema
+
 	// SourceDirectory is the directory where the source code is located
 	SourceDirectory string
-
-	// SignatureSchema is the schema of the signature
-	SignatureSchema *signature.Schema
 
 	// Storage is the storage handler to use for the build
 	Storage *storage.BuildStorage
@@ -85,7 +97,7 @@ type LocalTypescriptOptions struct {
 	NPMBin string
 }
 
-func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error) {
+func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.V1BetaSchema, error) {
 	var err error
 	if options.NPMBin != "" {
 		stat, err := os.Stat(options.NPMBin)
@@ -102,6 +114,10 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		}
 	}
 
+	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
+		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
+	}
+
 	if !filepath.IsAbs(options.SourceDirectory) {
 		options.SourceDirectory, err = filepath.Abs(options.SourceDirectory)
 		if err != nil {
@@ -116,8 +132,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 
 	cmd := exec.Command(options.NPMBin, "install")
 	cmd.Dir = options.SourceDirectory
-	cmd.Stderr = options.Output
-	cmd.Stdout = options.Output
+	cmd.Stderr = options.Stdout
+	cmd.Stdout = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -138,31 +154,36 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("signature dependency not found in package.json")
 	}
 
-	signaturePath := manifest.GetDependency("signature")
-	if signaturePath == "" {
+	signatureInfo := new(typescript.SignatureInfo)
+
+	signatureInfo.ImportPath = manifest.GetDependency("signature")
+	if signatureInfo.ImportPath == "" {
 		return nil, fmt.Errorf("unable to parse signature dependency in package.json")
 	}
 
-	signatureImport := ""
-	switch {
-	case strings.HasPrefix(signaturePath, "http://") || strings.HasPrefix(signaturePath, "https://"):
-		signatureImport = signaturePath
-		signaturePath = ""
-	case strings.HasPrefix(signaturePath, "file:"):
-		signaturePath = strings.TrimPrefix(signaturePath, "file:")
-	default:
-		return nil, fmt.Errorf("unable to parse signature dependency path: %s", signaturePath)
-	}
-
-	if signaturePath == "" && options.Scalefile.Signature.Organization == "local" {
-		return nil, fmt.Errorf("scalefile's signature block does not match package.json")
-	}
-
-	if signaturePath != "" && !filepath.IsAbs(signaturePath) {
-		signaturePath, err = filepath.Abs(path.Join(options.SourceDirectory, signaturePath))
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse signature dependency path: %w", err)
+	switch options.Scalefile.Signature.Organization {
+	case "local":
+		signatureInfo.Local = true
+		if !strings.HasPrefix(signatureInfo.ImportPath, "file:") {
+			return nil, fmt.Errorf("scalefile's signature block does not match package.json: signature import path is %s for a local signature", signatureInfo.ImportPath)
 		}
+		signatureInfo.ImportPath = strings.TrimPrefix(signatureInfo.ImportPath, "file:")
+		if !filepath.IsAbs(signatureInfo.ImportPath) {
+			signatureInfo.ImportPath, err = filepath.Abs(path.Join(options.SourceDirectory, signatureInfo.ImportPath))
+			if err != nil {
+				return nil, fmt.Errorf("unable to parse signature dependency path: %w", err)
+			}
+		}
+	default:
+		signatureInfo.Local = false
+		if !(strings.HasPrefix(signatureInfo.ImportPath, "http://") || strings.HasPrefix(signatureInfo.ImportPath, "https://")) {
+			return nil, fmt.Errorf("scalefile's signature block does not match package.json: signature import path is %s for a signature with organization %s", signatureInfo.ImportPath, options.Scalefile.Signature.Organization)
+		}
+	}
+
+	functionInfo := &typescript.FunctionInfo{
+		PackageName: strings.ToLower(options.Scalefile.Name),
+		ImportPath:  options.SourceDirectory,
 	}
 
 	build, err := options.Storage.Mkdir()
@@ -212,12 +233,12 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to write index.js file for function dist: %w", err)
 	}
 
-	packageJSONFile, err := typescript.GenerateTypescriptPackageJSON(options.Scalefile, signaturePath, signatureImport)
+	packageJSONFile, err := typescript.GenerateTypescriptPackageJSON(signatureInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate package.json file: %w", err)
 	}
 
-	indexFile, err := typescript.GenerateTypescriptIndex(options.Scalefile, functionDir)
+	indexFile, err := typescript.GenerateTypescriptIndex(options.Scalefile, functionInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate index.ts file: %w", err)
 	}
@@ -241,8 +262,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 
 	cmd = exec.Command(options.NPMBin, "install")
 	cmd.Dir = compilePath
-	cmd.Stderr = options.Output
-	cmd.Stdout = options.Output
+	cmd.Stderr = options.Stdout
+	cmd.Stdout = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -275,8 +296,8 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 
 	cmd = exec.Command(jsBuilderBinary, "-o", path.Join(build.Path, "scale.wasm"))
 	cmd.Stdin = strings.NewReader(string(result.OutputFiles[0].Contents))
-	cmd.Stderr = options.Output
-	cmd.Stdout = options.Output
+	cmd.Stderr = options.Stdout
+	cmd.Stdout = options.Stdout
 	cmd.Env = os.Environ()
 	err = cmd.Run()
 	if err != nil {
@@ -288,21 +309,44 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.Schema, error)
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
 	}
 
-	hash, err := options.SignatureSchema.Hash()
+	signatureHash, err := options.SignatureSchema.Hash()
 	if err != nil {
 		return nil, fmt.Errorf("unable to hash signature: %w", err)
 	}
 
-	return &scalefunc.Schema{
-		Version:         scalefunc.V1Alpha,
-		Name:            options.Scalefile.Name,
-		Tag:             options.Scalefile.Tag,
-		SignatureName:   fmt.Sprintf("%s/%s:%s", options.Scalefile.Signature.Organization, options.Scalefile.Signature.Name, options.Scalefile.Signature.Tag),
-		SignatureSchema: options.SignatureSchema,
-		SignatureHash:   hex.EncodeToString(hash),
-		Language:        scalefunc.TypeScript,
-		Stateless:       options.Scalefile.Stateless,
-		Dependencies:    nil,
-		Function:        data,
+	sig := scalefunc.V1BetaSignature{
+		Name:         options.Scalefile.Signature.Name,
+		Organization: options.Scalefile.Signature.Organization,
+		Tag:          options.Scalefile.Signature.Tag,
+		Schema:       options.SignatureSchema,
+		Hash:         hex.EncodeToString(signatureHash),
+	}
+
+	exts := make([]scalefunc.V1BetaExtension, len(options.Scalefile.Extensions))
+	for i, ext := range options.Scalefile.Extensions {
+		extensionHash, err := options.ExtensionSchemas[i].Hash()
+		if err != nil {
+			return nil, fmt.Errorf("unable to hash extension %s: %w", ext.Name, err)
+		}
+
+		exts[i] = scalefunc.V1BetaExtension{
+			Name:         ext.Name,
+			Organization: ext.Organization,
+			Tag:          ext.Tag,
+			Schema:       options.ExtensionSchemas[i],
+			Hash:         hex.EncodeToString(extensionHash),
+		}
+	}
+
+	return &scalefunc.V1BetaSchema{
+		Name:       options.Scalefile.Name,
+		Tag:        options.Scalefile.Tag,
+		Signature:  sig,
+		Extensions: exts,
+		Language:   scalefunc.TypeScript,
+		Manifest:   packageJSONData,
+		Stateless:  options.Scalefile.Stateless,
+		Function:   data,
 	}, nil
+
 }

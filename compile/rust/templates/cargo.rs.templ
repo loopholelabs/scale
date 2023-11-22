@@ -8,15 +8,13 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-{{ if .signature_dependency.Path }}
-signature = { package = "{{ .signature_dependency.Package }}", path = "{{ .signature_dependency.Path }}" }
+{{ if .signature.Local }}
+signature = { package = "{{ .signature.PackageName }}", path = "{{ .signature.ImportPath }}" }
+{{ else }}
+signature = { package = "{{ .signature.PackageName }}", version = "{{ .signature.ImportVersion }}", registry = "scale" }
 {{ end }}
 
-{{ if .signature_dependency.Version }}
-signature = { package = "{{ .signature_dependency.Package }}", version = "{{ .signature_dependency.Version }}", registry = "scale" }
-{{ end }}
-
-{{ .package_schema.Name }} = { path = "{{ .function_path }}" }
+{{ .function.PackageName }} = { path = "{{ .function.ImportPath }}" }
 
 [profile.release]
 opt-level = 3

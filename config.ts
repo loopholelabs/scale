@@ -15,7 +15,7 @@
 */
 
 import { Signature, New } from "@loopholelabs/scale-signature-interfaces";
-import { ScaleFunc } from "./scalefunc/scalefunc";
+import { V1BetaSchema } from "./scalefunc/scalefunc";
 
 const envStringRegex = /[^A-Za-z0-9_]/;
 
@@ -24,9 +24,9 @@ export interface Writer {
 }
 
 class ConfigFunction {
-    function: ScaleFunc;
+    function: V1BetaSchema;
     env: { [key: string]: string } | undefined;
-    constructor(fn: ScaleFunc, env?: { [key: string]: string }) {
+    constructor(fn: V1BetaSchema, env?: { [key: string]: string }) {
         this.function = fn;
         this.env = env;
     }
@@ -68,7 +68,7 @@ export class Config<T extends Signature> {
         return this;
     }
 
-    public WithFunction(func: ScaleFunc, env?: { [key: string]: string }): Config<T> {
+    public WithFunction(func: V1BetaSchema, env?: { [key: string]: string }): Config<T> {
         const f = new ConfigFunction(func, env);
         f.function = func;
 
@@ -80,7 +80,7 @@ export class Config<T extends Signature> {
         return this;
     }
 
-    public WithFunctions(functions: ScaleFunc[], env?: { [key: string]: string }): Config<T> {
+    public WithFunctions(functions: V1BetaSchema[], env?: { [key: string]: string }): Config<T> {
         for (const func of functions) {
             this.WithFunction(func, env);
         }
