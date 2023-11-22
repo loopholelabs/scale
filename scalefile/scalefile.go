@@ -53,12 +53,6 @@ type ExtensionSchema struct {
 	Tag          string `hcl:"tag,attr"`
 }
 
-type ExtensionSchema struct {
-	Organization string `hcl:"organization,optional"`
-	Name         string `hcl:"name,attr"`
-	Tag          string `hcl:"tag,attr"`
-}
-
 type Schema struct {
 	Version     string            `hcl:"version,attr"`
 	Name        string            `hcl:"name,attr"`

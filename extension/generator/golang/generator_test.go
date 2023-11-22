@@ -69,7 +69,7 @@ func TestGenerator(t *testing.T) {
 
 	mod, err := GenerateModfile(packageName)
 	require.NoError(t, err)
-	//	os.WriteFile("./modfile.txt", mod, 0644)
+	// os.WriteFile("./modfile.txt", mod, 0644)
 	expMod, err := os.ReadFile("./modfile.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(expMod), string(mod))
