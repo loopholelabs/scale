@@ -121,7 +121,7 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 	}
 
 	if len(options.ExtensionSchemas) != len(options.Scalefile.Extensions) {
-		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile %d %d", len(options.ExtensionSchemas), len(options.Scalefile.Extensions))
+		return nil, fmt.Errorf("number of extension schemas does not match number of extensions in scalefile")
 	}
 
 	if !filepath.IsAbs(options.SourceDirectory) {
