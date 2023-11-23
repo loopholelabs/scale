@@ -61,7 +61,7 @@ model stringval {
 }	
 `
 
-func compileGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {
+func compileExtGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -152,7 +152,7 @@ func compileGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	return schema
 }
 
-func compileRustGuest(t *testing.T) *scalefunc.V1BetaSchema {
+func compileExtRustGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -255,7 +255,7 @@ func TestExtGolangHostGolangGuest(t *testing.T) {
 	e := hostExtension.New(ext_impl)
 
 	t.Log("Starting TestExtGolangHostGolangGuest")
-	schema := compileGolangGuest(t)
+	schema := compileExtGolangGuest(t)
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr).WithExtension(e)
 	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
@@ -278,7 +278,7 @@ func TestExtGolangHostRustGuest(t *testing.T) {
 	e := hostExtension.New(ext_impl)
 
 	t.Log("Starting TestGolangHostRustGuest")
-	schema := compileRustGuest(t)
+	schema := compileExtRustGuest(t)
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr).WithExtension(e)
 	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
