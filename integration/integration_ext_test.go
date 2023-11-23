@@ -147,7 +147,7 @@ func compileExtRustGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	})
 
 	ex := new(extension.Schema)
-	err = ex.Decode([]byte(extension_schema))
+	err = ex.Decode([]byte(extensionSchema))
 
 	rustFunctionDir := wd + "/rust_ext_tests/function"
 	scf := &scalefile.Schema{
