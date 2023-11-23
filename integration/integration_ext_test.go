@@ -56,7 +56,7 @@ func compileExtGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	})
 
 	ex := new(extension.Schema)
-	err = ex.Decode([]byte(extension_schema))
+	err = ex.Decode([]byte(extensionSchema))
 
 	require.NoError(t, err)
 

@@ -23,7 +23,7 @@ import (
 	"github.com/loopholelabs/scale/extension/generator"
 )
 
-const extension_schema = `	version = "v1alpha"
+const extensionSchema = `	version = "v1alpha"
 	
 function New {
 	params = "stringval"
@@ -54,7 +54,7 @@ func TestGenerateExtensionTestingSchema(t *testing.T) {
 	require.NoError(t, err)
 
 	s := new(extension.Schema)
-	err = s.Decode([]byte(extension_schema))
+	err = s.Decode([]byte(extensionSchema))
 	require.NoError(t, err)
 
 	guest, err := generator.GenerateGuestLocal(&generator.Options{
