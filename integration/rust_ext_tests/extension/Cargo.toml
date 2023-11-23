@@ -1,0 +1,24 @@
+[package]
+edition = "2021"
+name = "local_inttest_latest_guest"
+version = "0.1.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[lib]
+path = "guest.rs"
+
+[dependencies.num_enum]
+version = "0.7.0"
+
+[dependencies.regex]
+version = "1.9.4"
+
+[dependencies.scale_signature_interfaces]
+version = "0.1.0"
+
+[dependencies.polyglot_rs]
+version = "1.1.3"
