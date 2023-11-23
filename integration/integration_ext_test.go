@@ -35,32 +35,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const extension_schema = `	version = "v1alpha"
-	
-function New {
-	params = "stringval"
-	return = "Example"	
-}
-
-interface Example {
-	function Hello {
-		params = "stringval"
-		return = "stringval"
-	}
-}
-
-function World {
-	params = "stringval"
-	return = "stringval"
-}
-
-model stringval {
-	string value {
-		default = ""
-	}
-}	
-`
-
 func compileExtGolangGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
