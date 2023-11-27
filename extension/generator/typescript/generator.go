@@ -197,55 +197,27 @@ func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packag
 
 // GenerateTypesTranspiled takes the typescript source for the generated types and transpiles it to javascript
 func (g *Generator) GenerateTypesTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string, typescriptSource string) (*Transpiled, error) {
-	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
-	if err != nil {
-		return nil, err
+	signatureSchema := &signature.Schema{
+		Version: extensionSchema.Version,
+		Enums:   extensionSchema.Enums,
+		Models:  extensionSchema.Models,
 	}
 
-	result := api.Transform(typescriptSource, api.TransformOptions{
-		Loader:      api.LoaderTS,
-		Format:      api.FormatCommonJS,
-		Sourcemap:   api.SourceMapExternal,
-		SourceRoot:  sourceName,
-		TsconfigRaw: tsConfig,
-	})
+	signatureSchema.SetHasLengthValidator(extensionSchema.HasLengthValidator())
+	signatureSchema.SetHasCaseModifier(extensionSchema.HasCaseModifier())
+	signatureSchema.SetHasLimitValidator(extensionSchema.HasLimitValidator())
+	signatureSchema.SetHasRegexValidator(extensionSchema.HasRegexValidator())
 
-	if len(result.Errors) > 0 {
-		var errString strings.Builder
-		for _, err := range result.Errors {
-			errString.WriteString(err.Text)
-			errString.WriteRune('\n')
-		}
-		return nil, errors.New(errString.String())
-	}
-	if packageName == "" {
-		packageName = defaultPackageName
-	}
-
-	headerBuf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(headerBuf, "header.ts.templ", map[string]any{
-		"generator_version": strings.Trim(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	declarationBuf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(declarationBuf, "declaration.ts.templ", map[string]any{
-		"extension_schema":  schema,
-		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
+	st, err := g.signature.GenerateTypesTranspiled(signatureSchema, packageName, sourceName, typescriptSource)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Transpiled{
-		Typescript:  []byte(typescriptSource),
-		Javascript:  append(append([]byte(headerBuf.String()+"\n\n"), result.Code...), []byte(fmt.Sprintf("//# sourceMappingURL=%s.map", sourceName))...),
-		SourceMap:   result.Map,
-		Declaration: []byte(formatTS(declarationBuf.String())),
+		Typescript:  st.Typescript,
+		Javascript:  st.Javascript,
+		SourceMap:   st.SourceMap,
+		Declaration: st.Declaration,
 	}, nil
 }
 
