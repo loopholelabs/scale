@@ -48,7 +48,7 @@ type SignatureSchema struct {
 }
 
 type ExtensionSchema struct {
-	Organization string `hcl:"organization,optional"`
+	Organization string `hcl:"organization,attr"`
 	Name         string `hcl:"name,attr"`
 	Tag          string `hcl:"tag,attr"`
 }
