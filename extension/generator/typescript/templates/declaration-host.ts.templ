@@ -6,11 +6,11 @@ import { Extension as ExtensionInterface } from "@loopholelabs/scale-extension-i
 export * from "./types";
 
 
-export declare function New(impl: {{ .extension_schema.Name }}Ifc): ExtensionInterface;
+export declare function New(impl: Interface): ExtensionInterface;
 
 // Interface to the extension impl. This is what the implementor should create
 
-export declare interface {{ .extension_schema.Name }}Ifc {
+export declare interface Interface {
 {{ range $fn := .extension_schema.Functions }}
   {{ $fn.Name }}(params: {{ $fn.Params }}): {{ $fn.Return }};
 {{ end }}

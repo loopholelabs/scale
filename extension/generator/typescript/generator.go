@@ -112,8 +112,6 @@ func GenerateHost(extensionSchema *extension.Schema, extensionHash string, packa
 func GenerateHostTranspiled(extensionSchema *extension.Schema, extensionHash string, packageName string, sourceName string) (*Transpiled, error) {
 	typescriptSource, err := generator.GenerateHost(extensionSchema, extensionHash, packageName)
 
-	fmt.Printf("\n# Typescript %s\n", typescriptSource)
-
 	if err != nil {
 		return nil, err
 	}

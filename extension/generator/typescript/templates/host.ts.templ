@@ -26,9 +26,9 @@ function hostError(mem: ModuleMemory, resize: Resizer, err: Error) {
 
 class hostExt {
   functions: Map<string, InstallableFunc>;
-  host: {{ .extension_schema.Name }}Host;
+  host: Host;
 
-  constructor(fns: Map<string, InstallableFunc>, h: {{ .extension_schema.Name }}Host) {
+  constructor(fns: Map<string, InstallableFunc>, h: Host) {
     this.functions = fns;
     this.host = h;
   }
@@ -45,14 +45,14 @@ class hostExt {
   }
 }
 
-export function New(impl: {{ .extension_schema.Name }}Ifc): ExtensionInterface {
-  let hostWrapper = new {{ .extension_schema.Name }}Host(impl);
+export function New(impl: Interface): ExtensionInterface {
+  let hostWrapper = new Host(impl);
 
   let fns = new Map<string, InstallableFunc>();
 
 // Add global functions to the runtime
 {{ range $fn := .extension_schema.Functions }}
-  fns.set("ext_{{ $hash }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $schema.Name }}_{{ $fn.Name }}.bind(hostWrapper));
+  fns.set("ext_{{ $hash }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $hash }}_{{ $fn.Name }}.bind(hostWrapper));
 {{ end }}
 
 {{ range $ifc := .extension_schema.Interfaces }}
@@ -60,7 +60,7 @@ export function New(impl: {{ .extension_schema.Name }}Ifc): ExtensionInterface {
 
   {{ range $fn := $ifc.Functions }}
 
-  fns.set("ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}.bind(hostWrapper));
+  fns.set("ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}", hostWrapper.host_ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}.bind(hostWrapper));
 
   {{ end }}
 {{ end }}
@@ -68,23 +68,22 @@ export function New(impl: {{ .extension_schema.Name }}Ifc): ExtensionInterface {
   return new hostExt(fns, hostWrapper);
 }
 
-class {{ .extension_schema.Name }}Host {
-  impl: {{ .extension_schema.Name }}Ifc
+class Host {
+  impl: Interface
 
 {{ range $ifc := .extension_schema.Interfaces }}
   gid_{{ $ifc.Name }}: bigint = 0n;
   instances_{{ $ifc.Name }}: Map<bigint, {{ $ifc.Name }}> = new Map<bigint, {{ $ifc.Name }}>();
 {{ end }}
 
-  constructor(i: {{ .extension_schema.Name }}Ifc) {
+  constructor(i: Interface) {
     this.impl = i;
   }
 
   // Global functions...
   {{ range $fn := .extension_schema.Functions }}
 
-  host_ext_{{ $schema.Name }}_{{ $fn.Name}}(mem: ModuleMemory, resize: Resizer, params: number[]) {
-    console.log("Called host_ext_{{ $schema.Name }}_{{ $fn.Name}}");
+  host_ext_{{ $hash }}_{{ $fn.Name}}(mem: ModuleMemory, resize: Resizer, params: number[]) {
 
     const d = mem.Read(params[1], params[2]);
     const c = types.{{ $fn.Params }}.decode(new Decoder(d));
@@ -111,8 +110,7 @@ class {{ .extension_schema.Name }}Host {
 
 {{ range $fn := $ifc.Functions }}
 
-  host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name }}(mem: ModuleMemory, resize: Resizer, params: number[]): bigint {
-    console.log("Called host_ext_{{ $schema.Name }}_{{ $ifc.Name }}_{{ $fn.Name}}", params[0]);
+  host_ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(mem: ModuleMemory, resize: Resizer, params: number[]): bigint {
 
     const d = mem.Read(params[1], params[2]);
     const c = types.{{ $fn.Params }}.decode(new Decoder(d));
@@ -145,7 +143,7 @@ class {{ .extension_schema.Name }}Host {
 
 // Interface to the extension impl. This is what the implementor should create
 
-export interface {{ .extension_schema.Name }}Ifc {
+export interface Interface {
 {{ range $fn := .extension_schema.Functions }}
   {{ $fn.Name }}(params: {{ $fn.Params }}): {{ $fn.Return }};
 {{ end }}
