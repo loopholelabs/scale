@@ -24,10 +24,12 @@ import (
 	polyglotVersion "github.com/loopholelabs/polyglot/version"
 
 	interfacesVersion "github.com/loopholelabs/scale-extension-interfaces/version"
+	"github.com/loopholelabs/scale/signature"
 	scaleVersion "github.com/loopholelabs/scale/version"
 
 	"github.com/loopholelabs/scale/extension"
 	"github.com/loopholelabs/scale/extension/generator/typescript/templates"
+	"github.com/loopholelabs/scale/signature/generator/typescript"
 
 	"github.com/loopholelabs/scale/signature/generator/utils"
 )
@@ -128,7 +130,8 @@ func init() {
 
 // Generator is the typescript generator
 type Generator struct {
-	templ *template.Template
+	templ     *template.Template
+	signature *typescript.Generator
 }
 
 // New creates a new typescript generator
@@ -138,8 +141,14 @@ func New() (*Generator, error) {
 		return nil, err
 	}
 
+	sig, err := typescript.New()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Generator{
-		templ: templ,
+		templ:     templ,
+		signature: sig,
 	}, nil
 }
 
@@ -147,26 +156,20 @@ func New() (*Generator, error) {
 //
 // This is not transpiled to javascript and does not include source maps or type definitions
 func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byte, error) {
-	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
-	if err != nil {
-		return nil, err
+	signatureSchema := &signature.Schema{
+		Version: extensionSchema.Version,
+		Enums:   extensionSchema.Enums,
+		Models:  extensionSchema.Models,
 	}
 
-	if packageName == "" {
-		packageName = defaultPackageName
-	}
+	signatureSchema.SetHasLengthValidator(extensionSchema.HasLengthValidator())
+	signatureSchema.SetHasCaseModifier(extensionSchema.HasCaseModifier())
+	signatureSchema.SetHasLimitValidator(extensionSchema.HasLimitValidator())
+	signatureSchema.SetHasRegexValidator(extensionSchema.HasRegexValidator())
 
-	buf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(buf, "types.ts.templ", map[string]any{
-		"extension_schema":  schema,
-		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
-		"package_name":      packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
+	s, err := g.signature.GenerateTypes(signatureSchema, packageName)
 
-	return []byte(formatTS(buf.String())), nil
+	return s, err
 }
 
 func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string, version string) ([]byte, error) {
