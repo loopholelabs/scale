@@ -67,8 +67,8 @@ export class Module<T extends Signature> {
         this.wasi = new DisabledWASI(this.template.env, stdout, stderr);
         this.tracing = new Tracing(this, this.template.runtime.TraceDataCallback);
 
-        const envValue:any = {};
-        
+        const envValue:WebAssembly.ModuleImports = {};
+
         envValue["next"] = this.template.runtime.Next(this);
 
         const mem = function(m: Module<T>) {
@@ -119,7 +119,7 @@ export class Module<T extends Signature> {
           wasi_snapshot_preview1: this.wasi.GetImports(),
           scale: this.tracing.GetImports(),
           env: envValue,
-      }
+        }
 
         this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
             if (typeof this.template.compiled !== "undefined") {
