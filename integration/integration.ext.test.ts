@@ -19,17 +19,41 @@ import { New as NewScale } from "../scale";
 
 import fs from "fs";
 import {Config} from "../config";
+
+import { New as NewExtension, Interface, Example, Stringval } from "./typescript_ext_tests/host_extension";
+
 import { New as NewSignature, Signature } from "./typescript_tests/host_signature";
 import {TextDecoder, TextEncoder} from "util";
 
 window.TextEncoder = TextEncoder;
 window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
 
+class ExampleImpl implements Example {
+  public Hello(p: Stringval): Stringval {
+    let sv = new Stringval();
+    sv.value = "Return Hello";
+    return sv;
+  }
+}
+
+class ExtImpl implements Interface {
+  public New(p: Stringval): Example {
+    return new ExampleImpl();
+  }
+  public World(p: Stringval): Stringval {
+    let sv = new Stringval();
+    sv.value = "Return World";
+    return sv;
+  }
+}
+
 test("test-ext-typescript-host-rust-guest", async () => {
-  /*
+    const impl = new ExtImpl();
+    const ex = NewExtension(impl);
+
     const file = fs.readFileSync(process.cwd() + "/integration/rust.scale")
     const sf = V1BetaSchema.Decode(file);
-    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error).WithExtension(ex);
     const s = await NewScale(config);
 
     const i = await s.Instance();
@@ -37,15 +61,17 @@ test("test-ext-typescript-host-rust-guest", async () => {
 
     await i.Run(sig);
 
-    expect(sig.context.stringField).toBe("This is a Rust Function");
-  */
+    expect(sig.context.stringField).toBe("This is a Rust Function. Extension New().Hello()=Return Hello World()=Return World");
 });
 
 test("test-ext-typescript-host-golang-guest", async () => {
-    /*
+    
+    const impl = new ExtImpl();
+    const ex = NewExtension(impl);
+
     const file = fs.readFileSync(process.cwd() + "/integration/golang.scale")
     const sf = V1BetaSchema.Decode(file);
-    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error);
+    const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error).WithExtension(ex)
     const s = await NewScale(config);
 
     const i = await s.Instance();
@@ -53,6 +79,5 @@ test("test-ext-typescript-host-golang-guest", async () => {
 
     await i.Run(sig);
 
-    expect(sig.context.stringField).toBe("This is a Golang Function");
-    */
+    expect(sig.context.stringField).toBe("This is a Golang Function. Extension New().Hello()=Return Hello World()=Return World");
 });

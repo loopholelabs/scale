@@ -24,7 +24,7 @@ import (
 )
 
 const extensionSchema = `	version = "v1alpha"
-	
+
 function New {
 	params = "stringval"
 	return = "Example"	
@@ -89,7 +89,7 @@ func TestGenerateExtensionTestingSchema(t *testing.T) {
 		GolangPackageImportPath: "extension",
 		GolangPackageName:       "local_inttest_latest_host",
 
-		TypescriptPackageName:    "local-example-latest-host",
+		TypescriptPackageName:    "local-inttest-latest-host",
 		TypescriptPackageVersion: "v0.1.0",
 	})
 	require.NoError(t, err)

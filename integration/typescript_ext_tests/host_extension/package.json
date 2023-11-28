@@ -1,5 +1,5 @@
 {
-    "name": "local-example-latest-host",
+    "name": "local-inttest-latest-host",
     "version": "0.1.0",
     "source": "index.ts",
     "types": "index.d.ts",
