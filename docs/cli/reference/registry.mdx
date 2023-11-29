@@ -6,6 +6,8 @@ description: How to use the `registry` command in the Scale CLI.
 
 The `registry` command is used to interact with the [Scale Registry](/registry/overview). `reg` is an alias for `registry`.
 
+The 'registry' is used with both [functions](/getting-started/quick-start#create-a-new-function) and [signatures](/signatures/overview), and, as such, the aliases `fn` and `sig` can be used, respectively.
+
 This reference page assumes you have already [installed the Scale CLI](/cli/installation),
 and are [authenticated](/cli/auth) with your Scale account.
 
@@ -14,12 +16,14 @@ and are [authenticated](/cli/auth) with your Scale account.
     please join the `#scale` channel on our [Discord](https://loopholelabs.io/discord).
 </Note>
 
+# Functions
+
 ## Push a Function
 
-To push a function to the registry, use the `registry push` command:
+To push a function to the registry, use the `push` command:
 
 ```bash
-scale registry push [<name>:<tag> | [<org>/<name>:<tag>]
+scale registry function push [<name>:<tag> | [<org>/<name>:<tag>]
 ```
 
 The function must be built and available locally in the function cache to be pushed to the registry.
@@ -28,37 +32,33 @@ The `--override-name`, `--override-org`, and `--override-tag` flags can be used 
 
 The `--public` flag can be used to make the function public, meaning it can be pulled by anyone.
 
-<Info>
-    The `scale push` command is an alias for `scale registry push`. You can use either command to push a function to the registry.
-</Info>
-
 ## Pull a Function
 
-To pull a function from the registry, use the `registry pull` command:
+To pull a function from the registry, use the `pull` command:
 
 ```bash
-scale registry pull [<org>/<name>:<tag>]
+scale registry function pull [<org>/<name>:<tag>]
 ```
 
 The function will be pulled from the registry and stored in the function cache. If the function is already in the cache,
 it will not be overwritten unless the `--force` flag is used.
 
-## List
+## List a Function
 
-To list all functions in your user's organization in the Scale Registry, use the `registry list` command:
+To list all functions in your user's organization in the Scale Registry, use the `list` command:
 
 ```bash
-scale registry list
+scale registry function list
 ```
 
 The `--org` flag can be used to list functions in a specific organization, but it must be an organization you are a member of otherwise only
 public functions in that organization will be listed.
 
-## Delete
+## Delete a Function
 
-To delete a function from the Scale Registry, use the `registry delete` command:
+To delete a function from the Scale Registry, use the `delete` command:
 
 ```bash
-scale registry delete [<org>/<name>:<tag>]
+scale registry function delete [<org>/<name>:<tag>]
 ```
 
