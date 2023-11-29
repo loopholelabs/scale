@@ -194,7 +194,24 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 		_ = options.Storage.Delete(build)
 	}()
 
-	modfile, err := golang.GenerateGoModfile(signatureInfo, functionInfo, options.Extensions)
+	// Copy over any replacements from the go.mod
+	replacements := make([]golang.GoModReplacement, 0)
+
+	r := manifest.GetReplacements()
+	for _, resp := range r {
+		// Check if the target is a local dir...
+		newPath := resp.New.Path
+
+		if !filepath.IsAbs(newPath) {
+			newPath = filepath.Join(options.SourceDirectory, newPath)
+		}
+		replacements = append(replacements, golang.GoModReplacement{
+			Name: resp.Old.String(),
+			Path: newPath,
+		})
+	}
+
+	modfile, err := golang.GenerateGoModfile(signatureInfo, functionInfo, replacements)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate go.mod file: %w", err)
 	}

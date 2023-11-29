@@ -31,6 +31,10 @@ func ParseManifest(data []byte) (*Manifest, error) {
 	}, nil
 }
 
+func (m *Manifest) GetReplacements() []*modfile.Replace {
+	return m.modfile.Replace
+}
+
 func (m *Manifest) AddReplacement(oldDependency string, oldVersion string, newDependency string, newVersion string) error {
 	return m.modfile.AddReplace(oldDependency, oldVersion, newDependency, newVersion)
 }
