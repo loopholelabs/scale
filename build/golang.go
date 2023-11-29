@@ -206,8 +206,8 @@ func LocalGolang(options *LocalGolangOptions) (*scalefunc.V1BetaSchema, error) {
 			newPath = filepath.Join(options.SourceDirectory, newPath)
 		}
 		replacements = append(replacements, golang.GoModReplacement{
-			Name: resp.Old.String(),
-			Path: newPath,
+			Name: fmt.Sprintf("%s %s", resp.Old.Path, resp.Old.Version),
+			Path: fmt.Sprintf("%s %s", newPath, resp.New.Version),
 		})
 	}
 
