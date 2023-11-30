@@ -63,7 +63,7 @@ type Schema struct {
 	Function    string            `hcl:"function,attr"`
 	Initialize  string            `hcl:"initialize,attr"`
 	Description string            `hcl:"description,optional"`
-	Extensions  []ExtensionSchema `hcl:"extension,optional"`
+	Extensions  []ExtensionSchema `hcl:"extension,block"`
 }
 
 func ReadSchema(path string) (*Schema, error) {

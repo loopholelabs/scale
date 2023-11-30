@@ -28,8 +28,13 @@ import (
 
 var generator *Generator
 
-func GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
-	return generator.GenerateGoModfile(signatureInfo, functionInfo)
+type GoModReplacement struct {
+	Name string
+	Path string
+}
+
+func GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo, replacements []GoModReplacement) ([]byte, error) {
+	return generator.GenerateGoModfile(signatureInfo, functionInfo, replacements)
 }
 
 func GenerateGoMain(scalefileSchema *scalefile.Schema, signatureSchema *signature.Schema, functionInfo *FunctionInfo) ([]byte, error) {
@@ -50,14 +55,15 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo) ([]byte, error) {
+func (g *Generator) GenerateGoModfile(signatureInfo *SignatureInfo, functionInfo *FunctionInfo, replacements []GoModReplacement) ([]byte, error) {
 	signatureInfo.normalize()
 	functionInfo.normalize()
 
 	buf := new(bytes.Buffer)
 	err := g.template.ExecuteTemplate(buf, "mod.go.templ", map[string]interface{}{
-		"function":  functionInfo,
-		"signature": signatureInfo,
+		"function":     functionInfo,
+		"signature":    signatureInfo,
+		"replacements": replacements,
 	})
 	if err != nil {
 		return nil, err

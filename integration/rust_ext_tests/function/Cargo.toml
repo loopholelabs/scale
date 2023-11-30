@@ -1,0 +1,16 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+signature = { package = "local_example_latest_guest", path = "../signature"}
+extension = { package = "local_inttest_latest_guest", path = "../extension"}
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

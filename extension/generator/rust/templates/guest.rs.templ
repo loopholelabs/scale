@@ -1,0 +1,213 @@
+
+{{ $schema := .extension_schema }}
+{{ $hash := .extension_hash }}
+
+pub mod types;
+use crate::types::{Encode, Decode};
+
+use std::io::Cursor;
+use polyglot_rs::{Decoder, Encoder};
+
+static HASH: &'static str = "{{ .extension_hash }}";
+
+static mut READ_BUFFER: Vec<u8> = Vec::new();
+static mut WRITE_BUFFER: Vec<u8> = Vec::new();
+
+// Interfaces
+
+{{ range $ifc := .extension_schema.Interfaces }}
+
+// Interface for {{ $ifc.Name }}
+
+pub trait {{ $ifc.Name }} {
+
+{{ range $fn := $ifc.Functions }}
+
+{{- if (IsInterface $schema $fn.Return) }}
+  fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<impl types::{{ $fn.Return }}>, Box<dyn std::error::Error>>;
+{{ else }}
+  fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types::{{ $fn.Return }}>, Box<dyn std::error::Error>>;
+{{ end }}
+{{ end }}
+
+}
+
+{{ end }}
+
+// resize resizes the extensions READ_BUFFER to the given size and returns the pointer to the buffer
+//
+// Users should not use this method.
+#[export_name = "ext_{{ $hash }}_Resize"]
+#[no_mangle]
+pub unsafe fn ext_{{ $hash }}_Resize(size: u32) -> *const u8 {
+    READ_BUFFER.resize(size as usize, 0);
+    return READ_BUFFER.as_ptr();
+}
+
+// Define imports for instances
+
+{{ range $ifc := .extension_schema.Interfaces }}
+{{ range $fn := $ifc.Functions }}
+
+#[link(wasm_import_module = "env")]
+extern "C" {
+    #[link_name = "ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}"]
+    fn _ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
+}
+
+{{ end }}
+{{ end }}
+
+// All external interface functions defined.
+
+// Define any interfaces we need here...
+// Also define structs we can use to hold instanceId
+
+
+{{ range $ifc := .extension_schema.Interfaces }}
+
+// Define concrete types with a hidden instanceId {{ $ifc.Name }}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct _{{ $ifc.Name }} {
+    pub instanceId: u64,
+}
+
+impl {{ $ifc.Name }} for _{{ $ifc.Name }} {
+
+{{ range $fn := $ifc.Functions }}
+
+{{- if (IsInterface $schema $fn.Return) }}
+fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<impl {{ $fn.Return }}>, Box<dyn std::error::Error>> {
+{{ else }}
+fn {{ $fn.Name }}(&self, params: types::{{ $fn.Params }}) -> Result<Option<types::{{ $fn.Return }}>, Box<dyn std::error::Error>> {
+{{ end }}
+
+  unsafe {
+
+  let mut cursor = Cursor::new(Vec::new());
+
+  types::{{ $fn.Params }}::encode(Some(&params), &mut cursor);
+
+  let vec = cursor.into_inner();
+
+  WRITE_BUFFER.resize(vec.len() as usize, 0);
+  WRITE_BUFFER.copy_from_slice(&vec);
+
+  // Now make the call to the host.
+
+  let mut off = WRITE_BUFFER.as_ptr() as u32;
+  let mut l = WRITE_BUFFER.len() as u32;
+
+  {{- if (IsInterface $schema $fn.Return) }}
+    let v = _ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
+    // IF the return type is an interface return ifc, which contains hidden instanceId.
+
+    let c = _{{ $fn.Return }}{
+      instanceId: v,
+    };
+
+    return Ok(Some(c));
+  {{ else }}
+    _ext_{{ $hash }}_{{ $ifc.Name }}_{{ $fn.Name }}(self.instanceId, off, l);
+    // IF the return type is a model, we should read the data from the read buffer.
+
+    let mut cursor = Cursor::new(&mut READ_BUFFER);
+    return types::{{ $fn.Return }}::decode(&mut cursor)
+    
+    //return Ok(Some(c))
+  {{ end }}
+
+  }
+}
+
+{{ end }}
+
+}
+
+{{ end }}
+
+// Define any global functions here...
+
+{{ range $fn := .extension_schema.Functions }}
+
+#[link(wasm_import_module = "env")]
+extern "C" {
+    #[link_name = "ext_{{ $hash }}_{{ $fn.Name }}"]
+    fn _ext_{{ $hash }}_{{ $fn.Name }}(instance: u64, ptr: u32, size: u32) -> u64;
+}
+
+{{- if (IsInterface $schema $fn.Return) }}
+pub fn {{ $fn.Name }}(params: types::{{ $fn.Params }}) -> Result<Option<impl {{ $fn.Return }}>, Box<dyn std::error::Error>> {
+{{ else }}
+pub fn {{ $fn.Name }}(params: types::{{ $fn.Params }}) -> Result<Option<types::{{ $fn.Return }}>, Box<dyn std::error::Error>> {
+{{ end }}
+
+  unsafe {
+
+  let mut cursor = Cursor::new(Vec::new());
+
+  types::{{ $fn.Params }}::encode(Some(&params), &mut cursor);
+
+  let vec = cursor.into_inner();
+
+  WRITE_BUFFER.resize(vec.len() as usize, 0);
+  WRITE_BUFFER.copy_from_slice(&vec);
+
+  // Now make the call to the host.
+
+  let mut off = WRITE_BUFFER.as_ptr() as u32;
+  let mut l = WRITE_BUFFER.len() as u32;
+
+  {{- if (IsInterface $schema $fn.Return) }}
+    READ_BUFFER.resize(0, 0);
+    let v = _ext_{{ $hash }}_{{ $fn.Name }}(0, off, l);
+    // IF the return type is an interface return ifc, which contains hidden instanceId.
+
+    // Check for an error
+    if READ_BUFFER.len() > 0 {
+      // Read the error and return it...
+      let mut cursor = Cursor::new(&mut READ_BUFFER);
+      if let Ok(error) = cursor.decode_error() {
+          return Err(error);
+      }
+    }
+
+    let c = _{{ $fn.Return }}{
+      instanceId: v,
+    };
+
+    return Ok(Some(c));
+  {{ else }}
+    _ext_{{ $hash }}_{{ $fn.Name }}(0, off, l);
+    // IF the return type is a model, we should read the data from the read buffer.
+
+    let mut cursor = Cursor::new(&mut READ_BUFFER);
+    return types::{{ $fn.Return }}::decode(&mut cursor)
+    
+    //return Ok(Some(c))
+  {{ end }}
+  }
+}
+
+{{ end }}
+
+// error serializes an error into the global WRITE_BUFFER and returns a pointer to the buffer and its size
+//
+// Users should not use this method.
+pub unsafe fn error(error: Box<dyn std::error::Error>) -> (u32, u32) {
+    let mut cursor = Cursor::new(Vec::new());
+    return match cursor.encode_error(error) {
+        Ok(_) => {
+            let vec = cursor.into_inner();
+
+            WRITE_BUFFER.resize(vec.len() as usize, 0);
+            WRITE_BUFFER.copy_from_slice(&vec);
+
+            (WRITE_BUFFER.as_ptr() as u32, WRITE_BUFFER.len() as u32)
+        }
+        Err(_) => {
+            (0, 0)
+        }
+    };
+}

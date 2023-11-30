@@ -1,6 +1,7 @@
 module compile
 
 go 1.20
+
 {{ if .signature.Local }}
 replace signature v0.1.0 => {{ .signature.ImportPath }}
 {{ else }}
@@ -8,6 +9,10 @@ replace signature v0.1.0 => {{ .signature.ImportPath }} {{ .signature.ImportVers
 {{ end }}
 
 replace {{ .function.PackageName }} v0.1.0 => {{ .function.ImportPath }}
+
+{{ range $replacements := .replacements }}
+  replace {{ $replacements.Name }} => {{ $replacements.Path }}
+{{ end }}
 
 require (
     signature v0.1.0

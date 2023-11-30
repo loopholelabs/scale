@@ -458,9 +458,19 @@ func (s *Schema) HasLimitValidator() bool {
 	return s.hasLimitValidator
 }
 
+// SetHasLimitValidator sets the hasLimitValidator flag
+func (s *Schema) SetHasLimitValidator(value bool) {
+	s.hasLimitValidator = value
+}
+
 // HasLengthValidator returns true if the schema has a length validator
 func (s *Schema) HasLengthValidator() bool {
 	return s.hasLengthValidator
+}
+
+// SetHasLengthValidator sets the hasLengthValidator flag
+func (s *Schema) SetHasLengthValidator(value bool) {
+	s.hasLengthValidator = value
 }
 
 // HasRegexValidator returns true if the schema has a regex validator
@@ -468,9 +478,19 @@ func (s *Schema) HasRegexValidator() bool {
 	return s.hasRegexValidator
 }
 
+// SetHasRegexValidator sets the hasRegexValidator flag
+func (s *Schema) SetHasRegexValidator(value bool) {
+	s.hasRegexValidator = value
+}
+
 // HasCaseModifier returns true if the schema has a case modifier
 func (s *Schema) HasCaseModifier() bool {
 	return s.hasCaseModifier
+}
+
+// SetHasCaseModifier sets the hasCaseModifier flag
+func (s *Schema) SetHasCaseModifier(value bool) {
+	s.hasCaseModifier = value
 }
 
 func ValidPrimitiveType(t string) bool {
