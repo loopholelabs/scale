@@ -109,6 +109,15 @@
               ]
             },
             {
+              "group": "Signatures",
+              "pages": [
+                "registry/api-reference/signatures/upload-signature",
+                "registry/api-reference/signatures/pull-signature",
+                "registry/api-reference/signatures/list-signatures",
+                "registry/api-reference/signatures/delete-signature"
+              ]
+            },
+            {
               "group": "Access",
               "pages": [
                 "registry/api-reference/access/create-apikey",
