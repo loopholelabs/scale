@@ -1,606 +1,1436 @@
-openapi: 3.0.0
+schemes:
+  - https
+swagger: '2.0'
 info:
-    description: API for Scale, V1
-    title: Scale API V1
-    termsOfService: https://loopholelabs.io/privacy
-    contact:
-        name: API Support
-        email: admin@loopholelabs.io
-    license:
-        name: Apache 2.0
-        url: https://www.apache.org/licenses/LICENSE-2.0.html
-    version: "1.0"
+  description: 'API for Scale, V1'
+  title: Scale API V1
+  termsOfService: 'https://loopholelabs.io/privacy'
+  contact:
+    name: API Support
+    email: admin@loopholelabs.io
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+  version: '1.0'
+host: api.scale.sh
+basePath: /v1
 paths:
-    /access/apikey:
-        get:
-            description: Lists all the API Keys for the authenticated user. If the user's session
-                is tied to an organization, only the API Keys for that organization will
-                be returned.
-            tags:
-                - access
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/models.GetAPIKeyResponse"
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-        post:
-            description: Creates a new API Key with the given `name` scoped to all the
-                organizations the user is a member or owner of. If the user's session is
-                already tied to an organization, the new API Key will be scoped to that
-                organization.
-            tags:
-                - access
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/models.CreateAPIKeyRequest"
-                description: Create API Key Request
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.CreateAPIKeyResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    "/access/apikey/{nameorid}":
-        get:
-            description: Gets information about a specific API Key given its `name` or `id`. If
-                the user's session is tied to an organization, the API Key must be for
-                that organization.
-            tags:
-                - access
-            parameters:
-                - description: API Key Name or ID
-                  name: nameorid
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.GetAPIKeyResponse"
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-        delete:
-            description: Deletes an API Key given its `name` or `id`. If the user's session is
-                tied to an organization, the API Key must be for that organization.
-            tags:
-                - access
-            parameters:
-                - description: API Key Name or ID
-                  name: nameorid
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    /health:
-        get:
-            description: Returns the health and status of the various services that make up the
-                API.
-            tags:
-                - health
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.GetHealthResponse"
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    /registry/function:
-        get:
-            description: Lists all the functions in the default organization.
-            tags:
-                - registry
-                - function
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/models.GetFunctionResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-        post:
-            description: Uploads a function to the Scale Registry. If the session is scoped to an
-                organization, the function will be uploaded to that `organization`,
-                otherwise the function will be uploaded to the user's default
-                `organization`.
-            tags:
-                - registry
-                - function
-            requestBody:
-                content:
-                    multipart/form-data:
-                        schema:
-                            type: object
-                            properties:
-                                public:
-                                    description: public
-                                    type: boolean
-                                organization:
-                                    description: organization
-                                    type: string
-                                function:
-                                    description: function
-                                    type: string
-                                    format: binary
-                            required:
-                                - function
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.CreateFunctionResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "412":
-                    description: Precondition Failed
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    "/registry/function/{name}/{tag}":
-        get:
-            description: Retrieves a function from the default organization given its `name` and
-                `tag`. If the session is scoped to the same `organization`, functions
-                that are not public will be returned, otherwise only public functions
-                will be returned.
-            tags:
-                - registry
-                - function
-            parameters:
-                - description: name
-                  name: name
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-                - description: tag
-                  name: tag
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.GetFunctionResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    "/registry/function/{organization}":
-        get:
-            description: Lists all the functions in the given `organization`. If the session is
-                scoped to the same `organization`, functions that are not public will be
-                returned, otherwise only public functions from the `organization` will
-                be returned.
-            tags:
-                - registry
-                - function
-            parameters:
-                - description: organization
-                  name: organization
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                type: array
-                                items:
-                                    $ref: "#/components/schemas/models.GetFunctionResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    "/registry/function/{organization}/{name}/{tag}":
-        get:
-            description: Retrieves a function from the given `organization` given its `name` and
-                `tag`. If the session is scoped to the same `organization`, functions
-                that are not public will be returned, otherwise only public functions
-                will be returned.
-            tags:
-                - registry
-                - function
-            parameters:
-                - description: organization
-                  name: organization
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-                - description: name
-                  name: name
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-                - description: tag
-                  name: tag
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.GetFunctionResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-        delete:
-            description: Deletes a function from the given `organization` given its `name` and
-                `tag`. If the session is scoped to an organization it must be the same
-                as the organization of the function.
-            tags:
-                - registry
-                - function
-            parameters:
-                - description: organization
-                  name: organization
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-                - description: name
-                  name: name
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-                - description: tag
-                  name: tag
-                  in: path
-                  required: true
-                  schema:
-                      type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "404":
-                    description: Not Found
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-    /userinfo:
-        post:
-            description: Checks if a user is logged in and returns the user's information.
-            tags:
-                - userinfo
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/models.UserInfoResponse"
-                "400":
-                    description: Bad Request
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "401":
-                    description: Unauthorized
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-                "500":
-                    description: Internal Server Error
-                    content:
-                        application/json:
-                            schema:
-                                type: string
-servers:
-    - url: https://localhost:8080/v1
-components:
-    schemas:
-        models.CreateAPIKeyRequest:
-            type: object
-            properties:
-                name:
-                    type: string
-        models.CreateAPIKeyResponse:
-            type: object
-            properties:
-                apikey:
-                    type: string
-                created_at:
-                    type: string
-                id:
-                    type: string
-                name:
-                    type: string
-                organization:
-                    type: string
-        models.CreateFunctionResponse:
-            type: object
-            properties:
-                hash:
-                    type: string
-                name:
-                    type: string
-                organization:
-                    type: string
-                public:
-                    type: boolean
-                tag:
-                    type: string
-        models.GetAPIKeyResponse:
-            type: object
-            properties:
-                created_at:
-                    type: string
-                id:
-                    type: string
-                name:
-                    type: string
-                organization:
-                    type: string
-        models.GetFunctionResponse:
-            type: object
-            properties:
-                hash:
-                    type: string
-                name:
-                    type: string
-                organization:
-                    type: string
-                presigned_url:
-                    type: string
-                public:
-                    type: boolean
-                tag:
-                    type: string
-        models.GetHealthResponse:
-            type: object
-            properties:
-                database:
-                    type: boolean
-        models.UserInfoResponse:
-            type: object
-            properties:
-                email:
-                    type: string
-                member_organizations:
-                    type: array
-                    items:
-                        type: string
-                organization:
-                    type: string
-                owned_organizations:
-                    type: array
-                    items:
-                        type: string
+  /access/apikey:
+    get:
+      description: >-
+        Lists all the API Keys for the authenticated user. Only the API Keys for
+        the organization that the current session is scoped to will be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - apikey
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.GetAPIKeyResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    post:
+      description: >-
+        Creates a new API Key with the given `name` scoped to all the
+        organizations the user is a member or owner of. If the user's session is
+        already tied to an organization, the new API Key will be scoped to that
+        organization.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - apikey
+      parameters:
+        - description: Create API Key Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.CreateAPIKeyRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CreateAPIKeyResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/access/apikey/{nameorid}':
+    get:
+      description: >-
+        Gets information about a specific API Key given its `name` or `id`. The
+        API Key must be part of the organization that the current session is
+        scoped to.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - apikey
+      parameters:
+        - type: string
+          description: API Key Name or ID
+          name: nameorid
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAPIKeyResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    delete:
+      description: >-
+        Deletes an API Key given its `name` or `id`. The API Key must be part of
+        the organization that the current session is scoped to.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - apikey
+      parameters:
+        - type: string
+          description: API Key Name or ID
+          name: nameorid
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /access/invite:
+    get:
+      description: Lists all the Organization Invites for the authenticated user.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.OrganizationInviteResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/access/invite/{organization}':
+    post:
+      description: Accept an Organization Invite given its `organization`.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      parameters:
+        - type: string
+          description: Organization Name
+          name: organization
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    delete:
+      description: Declines an Organization Invite given its `organization`.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      parameters:
+        - type: string
+          description: Organization Name
+          name: organization
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /access/organization:
+    get:
+      description: >-
+        Lists all the Organizations for the authenticated user. Only the
+        Organizations that the user is a member of will be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.OrganizationResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    post:
+      description: >-
+        Creates a new Organization with the given `name`, and adds the user to
+        it.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      parameters:
+        - description: Create Organization Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.CreateOrganizationRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.OrganizationResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /access/organization/invite:
+    get:
+      description: >-
+        Lists all the Organization Invites for the authenticated user. Only the
+        Organizations Invites for the Organization the session is scoped to will
+        be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.OrganizationResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    post:
+      description: >-
+        Creates a new Organization Invite for the user with the given `email`
+        for the Organization the session is scoped to.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      parameters:
+        - description: Create Invite Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.CreateOrganizationInviteRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.OrganizationInviteResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/access/organization/invite/{email}':
+    delete:
+      description: >-
+        Deletes an Organization Invite given its `email`. The current session
+        must be scoped to the Organization.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      parameters:
+        - type: string
+          description: Organization Invite Email
+          name: email
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+        '501':
+          description: Not Implemented
+          schema:
+            type: string
+  '/access/organization/{name}':
+    delete:
+      description: >-
+        Deletes an Organization given its `name`. The user must be a member of
+        the Organization.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - access
+        - organization
+      parameters:
+        - type: string
+          description: Organization Name
+          name: name
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+        '501':
+          description: Not Implemented
+          schema:
+            type: string
+  /cloud/deployment:
+    get:
+      description: Lists all available deployments
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - deployment
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.DeploymentResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    post:
+      description: >-
+        Creates a new deployment from a set of scale functions that have already
+        been created in the registry. If the scale functions are not public or
+        if their given organizations do not match the organization that this
+        session is scoped to, an error will be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - deployment
+      parameters:
+        - description: Create Deployment Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.CreateDeploymentRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DeploymentResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/cloud/deployment/{identifier}':
+    delete:
+      description: Deletes a deployment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - deployment
+      parameters:
+        - type: string
+          description: identifier
+          name: identifier
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '412':
+          description: Precondition Failed
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /cloud/detach:
+    post:
+      description: Detaches a domain from an cloud function
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - domain
+        - detach
+      parameters:
+        - description: Detach Domain Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.DetachDomainRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DeploymentResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /cloud/domain:
+    post:
+      description: Creates a new domain.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - domain
+      parameters:
+        - description: Create Domain Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.CreateDomainRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CreateDomainResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '412':
+          description: Precondition Failed
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /cloud/domain/attach:
+    post:
+      description: Attaches an existing domain to an existing function deployment
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - domain
+      parameters:
+        - description: Attach Domain Request
+          name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/models.AttachDomainRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DeploymentResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /domain:
+    get:
+      description: Lists all domains.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - domain
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.DomainResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/domain/{domain}':
+    get:
+      description: Gets the current status of a domain.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - domain
+      parameters:
+        - type: string
+          description: domain
+          name: domain
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DomainResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    delete:
+      description: Deletes a domain.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - cloud
+        - domain
+      parameters:
+        - type: string
+          description: domain
+          name: domain
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '412':
+          description: Precondition Failed
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /health:
+    get:
+      description: >-
+        Returns the health and status of the various services that make up the
+        API.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - health
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.HealthResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /registry/function:
+    post:
+      description: Uploads a function to the registry
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      tags:
+        - registry
+        - function
+      parameters:
+        - type: boolean
+          description: public
+          name: public
+          in: formData
+        - type: file
+          description: function
+          name: function
+          in: formData
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.FunctionResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '412':
+          description: Precondition Failed
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/registry/function/{org}':
+    get:
+      description: >-
+        Lists all the functions in the given `org`. If the session is scoped to
+        the same `org`, functions that are not public will be returned,
+        otherwise only public functions will be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - registry
+        - function
+      parameters:
+        - type: string
+          description: org
+          name: org
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.FunctionResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/registry/function/{org}/{name}/{tag}':
+    get:
+      description: >-
+        Retrieves a function from the given `org` given its `name` and `tag`. If
+        the session is scoped to the same `org`, functions that are not public
+        will be returned, otherwise only public functions will be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - registry
+        - function
+      parameters:
+        - type: string
+          description: org
+          name: org
+          in: path
+          required: true
+        - type: string
+          description: name
+          name: name
+          in: path
+          required: true
+        - type: string
+          description: tag
+          name: tag
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetFunctionResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    delete:
+      description: >-
+        Deletes a function given its `name` and `tag`. The function must be a
+        part of the same org that the session is scoped to.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - registry
+        - function
+      parameters:
+        - type: string
+          description: org
+          name: org
+          in: path
+          required: true
+        - type: string
+          description: name
+          name: name
+          in: path
+          required: true
+        - type: string
+          description: tag
+          name: tag
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /registry/signature:
+    post:
+      description: >-
+        Creates a new signature. If the session is scoped to an organization,
+        the signature will be created in that `organization`, otherwise the
+        signature will be created to the user's default `organization`.
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      tags:
+        - registry
+        - signature
+      parameters:
+        - type: file
+          description: signature
+          name: signature
+          in: formData
+          required: true
+        - type: string
+          description: name
+          name: name
+          in: formData
+          required: true
+        - type: string
+          description: tag
+          name: tag
+          in: formData
+          required: true
+        - type: boolean
+          description: public
+          name: public
+          in: formData
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SignatureResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '412':
+          description: Precondition Failed
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/registry/signature/{org}':
+    get:
+      description: >-
+        Lists all the signatures in the given `org`. If the session is scoped to
+        the same `org`, signatures that are not public will be returned,
+        otherwise only public signatures will be returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - registry
+        - signature
+      parameters:
+        - type: string
+          description: org
+          name: org
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/models.SignatureResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  '/registry/signature/{org}/{name}/{tag}':
+    get:
+      description: >-
+        Retrieves a signature from the given `org` given its `name` and `tag`.
+        If the session is scoped to the same `org`, signatures that are not
+        public will be returned, otherwise only public signatures will be
+        returned.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - registry
+        - signature
+      parameters:
+        - type: string
+          description: org
+          name: org
+          in: path
+          required: true
+        - type: string
+          description: name
+          name: name
+          in: path
+          required: true
+        - type: string
+          description: tag
+          name: tag
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SignatureResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+    delete:
+      description: >-
+        Deletes a signature given its `name` and `tag`. The signature must be a
+        part of the same org that the session is scoped to.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - registry
+        - signature
+      parameters:
+        - type: string
+          description: org
+          name: org
+          in: path
+          required: true
+        - type: string
+          description: name
+          name: name
+          in: path
+          required: true
+        - type: string
+          description: tag
+          name: tag
+          in: path
+          required: true
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '404':
+          description: Not Found
+          schema:
+            type: string
+        '412':
+          description: Precondition Failed
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+  /userinfo:
+    post:
+      description: Checks if a user is logged in and returns the user's information.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - userinfo
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserInfoResponse'
+        '400':
+          description: Bad Request
+          schema:
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            type: string
+        '500':
+          description: Internal Server Error
+          schema:
+            type: string
+definitions:
+  models.AttachDomainRequest:
+    type: object
+    properties:
+      deployment:
+        type: string
+      domain:
+        type: string
+      force:
+        type: boolean
+  models.CreateAPIKeyRequest:
+    type: object
+    properties:
+      name:
+        type: string
+  models.CreateAPIKeyResponse:
+    type: object
+    properties:
+      apikey:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organization:
+        type: string
+  models.CreateDeploymentRequest:
+    type: object
+    properties:
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/models.DeploymentFunction'
+      name:
+        type: string
+  models.CreateDomainRequest:
+    type: object
+    properties:
+      domain:
+        type: string
+  models.CreateDomainResponse:
+    type: object
+    properties:
+      cname:
+        type: string
+      domain:
+        type: string
+      txt_cname:
+        type: string
+  models.CreateOrganizationInviteRequest:
+    type: object
+    properties:
+      email:
+        type: string
+  models.CreateOrganizationRequest:
+    type: object
+    properties:
+      name:
+        type: string
+  models.DeploymentFunction:
+    type: object
+    properties:
+      name:
+        type: string
+      organization:
+        type: string
+      tag:
+        type: string
+  models.DeploymentResponse:
+    type: object
+    properties:
+      attached_domain:
+        type: array
+        items:
+          type: string
+      created_at:
+        type: string
+      functions:
+        type: array
+        items:
+          $ref: '#/definitions/models.FunctionResponse'
+      identifier:
+        type: string
+      root_domain:
+        type: string
+      subdomain:
+        type: string
+  models.DetachDomainRequest:
+    type: object
+    properties:
+      domain:
+        type: string
+      force:
+        type: boolean
+  models.DomainResponse:
+    type: object
+    properties:
+      cname:
+        type: string
+      deployment:
+        $ref: '#/definitions/models.DeploymentResponse'
+      domain:
+        type: string
+      state:
+        $ref: '#/definitions/models.DomainVerificationState'
+      txt_cname:
+        type: string
+  models.DomainVerificationState:
+    type: string
+    enum:
+      - pending
+      - issuing
+      - ready
+      - attached
+    x-enum-varnames:
+      - DomainVerificationStatePending
+      - DomainVerificationStateIssuing
+      - DomainVerificationStateReady
+      - DomainVerificationStateAttached
+  models.FunctionResponse:
+    type: object
+    properties:
+      hash:
+        type: string
+      name:
+        type: string
+      organization:
+        type: string
+      public:
+        type: boolean
+      signature:
+        type: string
+      tag:
+        type: string
+      version:
+        type: string
+  models.GetAPIKeyResponse:
+    type: object
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      organization:
+        type: string
+  models.GetFunctionResponse:
+    type: object
+    properties:
+      function:
+        $ref: '#/definitions/models.FunctionResponse'
+      presigned_url:
+        type: string
+  models.HealthResponse:
+    type: object
+    properties:
+      database:
+        type: boolean
+  models.OrganizationInviteResponse:
+    type: object
+    properties:
+      created_at:
+        type: string
+      declined:
+        type: boolean
+      email:
+        type: string
+      organization:
+        type: string
+  models.OrganizationResponse:
+    type: object
+    properties:
+      created_at:
+        type: string
+      default:
+        type: boolean
+      id:
+        type: string
+  models.SignatureResponse:
+    type: object
+    properties:
+      context:
+        type: string
+      golang_import_path_guest:
+        type: string
+      golang_import_path_host:
+        type: string
+      golang_registry:
+        type: string
+      hash:
+        type: string
+      name:
+        type: string
+      organization:
+        type: string
+      public:
+        type: boolean
+      rust_import_path_guest:
+        type: string
+      rust_registry:
+        type: string
+      schema:
+        type: string
+      tag:
+        type: string
+      version:
+        type: string
+  models.UserInfoResponse:
+    type: object
+    properties:
+      email:
+        type: string
+      organization:
+        type: string
+      organizations:
+        type: array
+        items:
+          type: string
+
