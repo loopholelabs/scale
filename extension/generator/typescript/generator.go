@@ -15,8 +15,11 @@ package typescript
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -243,10 +246,13 @@ func (g *Generator) GenerateGuest(extensionSchema *extension.Schema, extensionHa
 		packageName = defaultPackageName
 	}
 
+	extensionID := "0x" + extensionHash[0:8]
+
 	buf := new(bytes.Buffer)
 	err := g.templ.ExecuteTemplate(buf, "guest.ts.templ", map[string]any{
 		"extension_schema":  extensionSchema,
 		"extension_hash":    extensionHash,
+		"extension_id":      extensionID,
 		"generator_version": strings.TrimPrefix(scaleVersion.Version(), "v"),
 		"package_name":      packageName,
 	})
@@ -391,6 +397,7 @@ func (g *Generator) GenerateHostTranspiled(extensionSchema *extension.Schema, pa
 
 func templateFunctions() template.FuncMap {
 	return template.FuncMap{
+		"CallId":                  callID,
 		"IsInterface":             isInterface,
 		"Primitive":               primitive,
 		"IsPrimitive":             extension.ValidPrimitiveType,
@@ -402,6 +409,26 @@ func templateFunctions() template.FuncMap {
 		"Params":                  utils.Params,
 		"Constructor":             constructor,
 	}
+}
+
+func GetCallID(schemaHash string, ifc string, fn string) uint64 {
+	i := callID(schemaHash, ifc, fn)
+	id, err := strconv.ParseUint(i[2:], 16, 64)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
+func callID(schemaHash string, ifc string, fn string) string {
+	callName := fmt.Sprintf("%s %s %s", schemaHash, ifc, fn)
+	// Calc hash...
+	h := sha256.New()
+	if _, err := h.Write([]byte(callName)); err != nil {
+		panic(err)
+	}
+	hexstring := hex.EncodeToString(h.Sum(nil))
+	return "0x" + hexstring[0:8]
 }
 
 func isInterface(schema *extension.Schema, s string) bool {

@@ -16,6 +16,7 @@
 package typescript
 
 import (
+	"encoding/hex"
 	"os"
 	"testing"
 
@@ -29,9 +30,12 @@ func TestGenerator(t *testing.T) {
 	err := s.Decode([]byte(extension.MasterTestingSchema))
 	require.NoError(t, err)
 
-	packageName := "fetch"
+	h, err := s.Hash()
+	require.NoError(t, err)
 
-	interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
+	sHash := hex.EncodeToString(h)
+
+	interfaces, err := GenerateInterfaces(s, sHash, "v0.1.0")
 	require.NoError(t, err)
 	// os.WriteFile("./interfaces.txt", interfaces, 0644)
 
@@ -47,21 +51,21 @@ func TestGenerator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, string(expTypes), string(formatted))
 
-	host, err := GenerateHost(s, packageName, "v0.1.0")
+	host, err := GenerateHost(s, sHash, "v0.1.0")
 	require.NoError(t, err)
 	// os.WriteFile("./host.txt", host, 0644)
 	expHost, err := os.ReadFile("./host.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(expHost), string(host))
 
-	guest, err := GenerateGuest(s, packageName, "v0.1.0")
+	guest, err := GenerateGuest(s, sHash, "v0.1.0")
 	require.NoError(t, err)
 	// os.WriteFile("./guest.txt", guest, 0644)
 	expGuest, err := os.ReadFile("./guest.txt")
 	require.NoError(t, err)
 	require.Equal(t, string(expGuest), string(guest))
 
-	mod, err := GeneratePackageJSON(packageName, "v0.1.0")
+	mod, err := GeneratePackageJSON(sHash, "v0.1.0")
 	require.NoError(t, err)
 	// os.WriteFile("./packagejson.txt", mod, 0644)
 	expMod, err := os.ReadFile("./packagejson.txt")

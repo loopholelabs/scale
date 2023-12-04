@@ -32,6 +32,8 @@ github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b3
 github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b301bf4/go.mod h1:/qjvg9RglZaRhw3cE+dj6AaZRYHCOR+ohuZX8MSxD8E=
 github.com/loopholelabs/scale-signature-interfaces v0.1.7 h1:aOJJZpCKn/Q5Q0Gj+/Q6c7/iABEbojjbCzIqw7Mxyi0=
 github.com/loopholelabs/scale-signature-interfaces v0.1.7/go.mod h1:3XLMjJjBf5lYxMtNKk+2XAWye4UyrkvUBJ9L6x2QCAk=
+github.com/loopholelabs/wasm-toolkit v0.0.5 h1:T5RD+CSLzk8tWBIsKMfmtNyfNyknjHg5IcsR6dKlM8w=
+github.com/loopholelabs/wasm-toolkit v0.0.5/go.mod h1:2LLKa69wWTje15E+uq5ZteH2kkHhGEMMkNPI4zANALg=
 github.com/mitchellh/go-wordwrap v1.0.1 h1:TLuKupo69TCn6TQSyGxwI1EblZZEsQ0vMlAFQflz0v0=
 github.com/mitchellh/go-wordwrap v1.0.1/go.mod h1:R62XHJLzvMFRBbcrT7m7WgmE1eOyTSsCt+hzestvNj0=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=

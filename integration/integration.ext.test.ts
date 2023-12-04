@@ -81,3 +81,21 @@ test("test-ext-typescript-host-golang-guest", async () => {
 
     expect(sig.context.stringField).toBe("This is a Golang Function. Extension New().Hello()=Return Hello World()=Return World");
 });
+
+test("test-ext-typescript-host-typescript-guest", async () => {
+    
+  const impl = new ExtImpl();
+  const ex = NewExtension(impl);
+
+  const file = fs.readFileSync(process.cwd() + "/integration/typescript.scale")
+  const sf = V1BetaSchema.Decode(file);
+  const config = new Config<Signature>(NewSignature).WithFunction(sf).WithStdout(console.log).WithStderr(console.error).WithExtension(ex)
+  const s = await NewScale(config);
+
+  const i = await s.Instance();
+  const sig = NewSignature();
+
+  await i.Run(sig);
+
+  expect(sig.context.stringField).toBe("This is a Typescript Function. Extension New().Hello()=Return Hello World()=Return World");
+});

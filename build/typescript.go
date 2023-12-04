@@ -17,6 +17,7 @@
 package build
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -25,15 +26,18 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
-
-	"github.com/loopholelabs/scale/extension"
 
 	"github.com/evanw/esbuild/pkg/api"
 
+	"github.com/loopholelabs/wasm-toolkit/pkg/customs"
+	"github.com/loopholelabs/wasm-toolkit/pkg/wasm/wasmfile"
+
 	"github.com/loopholelabs/scale/compile/typescript"
 	"github.com/loopholelabs/scale/compile/typescript/builder"
-
+	"github.com/loopholelabs/scale/extension"
+	extGen "github.com/loopholelabs/scale/extension/generator/typescript"
 	"github.com/loopholelabs/scale/scalefile"
 	"github.com/loopholelabs/scale/scalefunc"
 	"github.com/loopholelabs/scale/signature"
@@ -304,9 +308,75 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.V1BetaSchema, 
 		return nil, fmt.Errorf("unable to compile scale function using js_builder: %w", err)
 	}
 
-	data, err := os.ReadFile(path.Join(build.Path, "scale.wasm"))
+	// Do the extension transform here...
+	wfile, err := wasmfile.New(path.Join(build.Path, "scale.wasm"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to read compiled wasm file: %w", err)
+	}
+
+	confImp := customs.RemapMuxImport{
+		Source: customs.Import{
+			Module: "env",
+			Name:   "ext_mux",
+		},
+		Mapper: map[uint64]customs.Import{},
+	}
+
+	confExp := customs.RemapMuxExport{
+		Source: "ext_resize",
+		Mapper: map[uint64]string{},
+	}
+
+	// Go through extensions and add the required mappings for wasm adjustment.
+	for _, extSchema := range options.ExtensionSchemas {
+
+		h, err := extSchema.Hash()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get extension hash")
+		}
+		hash := hex.EncodeToString(h)
+		id, err := strconv.ParseUint(hash[0:8], 16, 64)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get extension hash")
+		}
+		confExp.Mapper[id] = fmt.Sprintf("ext_%s_Resize", hash)
+
+		// Now go through all functions in the extension...
+		for _, f := range extSchema.Functions {
+			fname := fmt.Sprintf("ext_%s_%s", hash, f.Name)
+			fid := extGen.GetCallID(hash, "", f.Name)
+			confImp.Mapper[fid] = customs.Import{
+				Module: "env",
+				Name:   fname,
+			}
+		}
+
+		for _, ifc := range extSchema.Interfaces {
+			for _, f := range ifc.Functions {
+				fname := fmt.Sprintf("ext_%s_%s_%s", hash, ifc.Name, f.Name)
+				fid := extGen.GetCallID(hash, ifc.Name, f.Name)
+				confImp.Mapper[fid] = customs.Import{
+					Module: "env",
+					Name:   fname,
+				}
+			}
+		}
+	}
+
+	err = customs.MuxImport(wfile, confImp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse extension import remap")
+	}
+
+	err = customs.MuxExport(wfile, confExp)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse extension export remap")
+	}
+
+	var wasmBin bytes.Buffer
+	err = wfile.EncodeBinary(&wasmBin)
+	if err != nil {
+		return nil, fmt.Errorf("unable to encode wasm binary")
 	}
 
 	signatureHash, err := options.SignatureSchema.Hash()
@@ -346,7 +416,7 @@ func LocalTypescript(options *LocalTypescriptOptions) (*scalefunc.V1BetaSchema, 
 		Language:   scalefunc.TypeScript,
 		Manifest:   packageJSONData,
 		Stateless:  options.Scalefile.Stateless,
-		Function:   data,
+		Function:   wasmBin.Bytes(),
 	}, nil
 
 }

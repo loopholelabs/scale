@@ -1,0 +1,9 @@
+{
+  "name": "example",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "dependencies": {
+    "signature": "file:../signature",
+    "extension": "file:../extension"
+  }
+}
