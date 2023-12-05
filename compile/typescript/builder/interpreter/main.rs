@@ -22,7 +22,7 @@ use quickjs_wasm_sys::{
     JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
     JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
     JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED,
+    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_GetOpaque, JS_TAG_OBJECT,
 };
 
 use std::ffi::CString;
@@ -34,6 +34,7 @@ use std::str;
 use flate2::read::GzDecoder;
 
 static mut JS_INITIALIZED: bool = false;
+static mut JS_RUNTIME: OnceCell<*mut JSRuntime> = OnceCell::new();
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
 
 static mut ENTRY_EXPORTS: OnceCell<JSValue> = OnceCell::new();
@@ -216,6 +217,7 @@ fn initialize_runtime() {
         ENTRY_RESIZE.set(resize_fn).unwrap();
 
         ENTRY_EXPORTS.set(exports).unwrap();
+        JS_RUNTIME.set(runtime).unwrap();
         JS_CONTEXT.set(context).unwrap();
         JS_INITIALIZED = true;
     }
@@ -320,12 +322,13 @@ pub extern "C" fn initialize() -> u64 {
 #[no_mangle]
 pub extern "C" fn run() -> u64 {
     unsafe {
+        let runtime = JS_RUNTIME.get().unwrap();
         let context = JS_CONTEXT.get().unwrap();
         let exports = ENTRY_EXPORTS.get().unwrap();
         let runfn = ENTRY_RUN.get().unwrap();
 
         let args: Vec<JSValue> = Vec::new();
-        let ret = JS_Call(
+        let mut ret = JS_Call(
             *context,
             *runfn,
             *exports,
@@ -333,6 +336,37 @@ pub extern "C" fn run() -> u64 {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
+        // If it returned a promise, wait for it...
+        if (ret >> 32) as i32 == JS_TAG_OBJECT {
+          let mut ctx = *context;
+          loop {
+            let pdata = JS_GetOpaque(ret, 49);    // 49 = Class ID for JSPromise
+            if pdata.is_null() {
+              break;  // Quit, because it didn't return a promise, but some other object. Handle it later on.
+            }
+            let view = pdata as *const u8;
+            let resolved = *view.offset(0);
+            if resolved==1 {
+              break;
+            }
+
+            match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                0 => (),  // break,
+                1 => (),
+                _ => {
+                    let err = helpers::error(ctx, "main");
+                    panic!("{}", err);
+                }
+            }
+          }
+
+          // Get the value returned by the promise.
+          let pdata = JS_GetOpaque(ret, 49);  // 49 = Class ID for JSPromise
+          let view = pdata as *const u64;
+          ret = *view.offset(3);              // 3 = correct offset to get the JSPromise value
+        }
+
+        // Process the return value...
         if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
             let e = JS_GetException(*context);
             let exception =

@@ -258,7 +258,7 @@ func TestGolangHostRustGuest(t *testing.T) {
 func TestGolangHostTypescriptGuest(t *testing.T) {
 	t.Log("Starting TestGolangHostTypescriptGuest")
 	schema := compileTypescriptGuest(t)
-	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr).WithRawOutput(true)
 	runtime, err := scale.New(cfg)
 	require.NoError(t, err)
 

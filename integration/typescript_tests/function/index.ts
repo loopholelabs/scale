@@ -16,10 +16,24 @@
 
 import * as signature from "signature";
 
-export function example(ctx?: signature.ModelWithAllFieldTypes): signature.ModelWithAllFieldTypes | undefined {
-    console.log("This is a Typescript Function");
+function delay(ms: number): Promise<string> {
+  return new Promise( resolve => {
+    console.log("Resolved")
+    resolve("Something");
+  })
+//  return new Promise( resolve => setTimeout(resolve, ms) );     // FIXME setTimeout doesn't exist yet
+}
+
+export async function example(ctx?: signature.ModelWithAllFieldTypes): Promise<signature.ModelWithAllFieldTypes | undefined> {
+    console.log("This is a Typescript Function " + (new Date()).getTime());
+
+    const p = await delay(100)
+
+    console.log("After small delay " + (new Date()).getTime() + " " + p);
+
     if (typeof ctx !== "undefined") {
         ctx.stringField = "This is a Typescript Function"
     }
     return signature.Next(ctx);
 }
+
