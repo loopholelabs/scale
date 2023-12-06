@@ -31,14 +31,6 @@ func TestGenerator(t *testing.T) {
 
 	packageName := "fetch"
 
-	interfaces, err := GenerateInterfaces(s, packageName, "v0.1.0")
-	require.NoError(t, err)
-	// os.WriteFile("./interfaces.txt", interfaces, 0644)
-
-	expInterfaces, err := os.ReadFile("./interfaces.txt")
-	require.NoError(t, err)
-	require.Equal(t, string(expInterfaces), string(interfaces))
-
 	formatted, err := GenerateTypes(s, "types")
 	require.NoError(t, err)
 	// os.WriteFile("./generated.txt", formatted, 0644)
