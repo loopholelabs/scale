@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/hex"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -251,7 +252,7 @@ func TestExtGolangHostRustGuest(t *testing.T) {
 
 	e := hostExtension.New(ext_impl)
 
-	t.Log("Starting TestGolangHostRustGuest")
+	t.Log("Starting TestExtGolangHostRustGuest")
 	schema := compileExtRustGuest(t)
 	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr).WithExtension(e)
 	runtime, err := scale.New(cfg)
@@ -267,4 +268,44 @@ func TestExtGolangHostRustGuest(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, "This is a Rust Function. Extension New().Hello()=Return Hello World()=Return World", sig.Context.StringField)
+}
+
+func TestExtTypescriptHostGolangGuest(t *testing.T) {
+	t.Log("Starting TestExtTypescriptHostGolangGuest")
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	schema := compileExtGolangGuest(t)
+	err = os.WriteFile(wd+"/golang.scale", schema.Encode(), 0644)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Remove(wd + "/golang.scale")
+		require.NoError(t, err)
+	})
+
+	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-ext-typescript-host-golang-guest")
+	cmd.Dir = wd
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestExtTypescriptHostRustGuest(t *testing.T) {
+	t.Log("Starting TestExtTypescriptHostRustGuest")
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	schema := compileExtRustGuest(t)
+	err = os.WriteFile(wd+"/rust.scale", schema.Encode(), 0644)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Remove(wd + "/rust.scale")
+		require.NoError(t, err)
+	})
+
+	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-ext-typescript-host-rust-guest")
+	cmd.Dir = wd
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
 }
