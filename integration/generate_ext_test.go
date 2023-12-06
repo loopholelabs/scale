@@ -24,7 +24,7 @@ import (
 )
 
 const extensionSchema = `	version = "v1alpha"
-	
+
 function New {
 	params = "stringval"
 	return = "Example"	
@@ -87,9 +87,9 @@ func TestGenerateExtensionTestingSchema(t *testing.T) {
 		Extension: s,
 
 		GolangPackageImportPath: "extension",
-		GolangPackageName:       "local_inttest_latest_guest",
+		GolangPackageName:       "local_inttest_latest_host",
 
-		TypescriptPackageName:    "local-example-latest-host",
+		TypescriptPackageName:    "local-inttest-latest-host",
 		TypescriptPackageVersion: "v0.1.0",
 	})
 	require.NoError(t, err)
@@ -98,6 +98,14 @@ func TestGenerateExtensionTestingSchema(t *testing.T) {
 	for _, file := range host.GolangFiles {
 		if file.Name() != "go.mod" {
 			err = os.WriteFile(golangExtensionDir+"/"+file.Name(), file.Data(), 0644)
+			require.NoError(t, err)
+		}
+	}
+
+	typescriptExtensionDir := wd + "/typescript_ext_tests/host_extension"
+	for _, file := range host.TypescriptFiles {
+		if file.Name() != "go.mod" {
+			err = os.WriteFile(typescriptExtensionDir+"/"+file.Name(), file.Data(), 0644)
 			require.NoError(t, err)
 		}
 	}

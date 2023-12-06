@@ -67,12 +67,58 @@ export class Module<T extends Signature> {
         this.wasi = new DisabledWASI(this.template.env, stdout, stderr);
         this.tracing = new Tracing(this, this.template.runtime.TraceDataCallback);
 
-        const moduleConfig = {
-            wasi_snapshot_preview1: this.wasi.GetImports(),
-            scale: this.tracing.GetImports(),
-            env: {
-                next: this.template.runtime.Next(this),
+        const envValue:WebAssembly.ModuleImports = {};
+
+        envValue["next"] = this.template.runtime.Next(this);
+
+        const mem = function(m: Module<T>) {
+          return {
+            Write: (offset:number, v:Uint8Array): void => {
+              if (m.memory==undefined) {
+                throw new Error("no memory found in module");
+              }
+              const writeData = new Uint8Array(m.memory.buffer);
+              writeData.set(v, offset);
             },
+            Read: (offset:number, byteCount:number): Uint8Array => {
+              if (m.memory==undefined) {
+                throw new Error("no memory found in module");
+              }
+              const readData = new Uint8Array(m.memory.buffer);
+              return readData.slice(offset, offset + byteCount);
+            },
+          }
+        }(this)
+
+        const resize = function(m: Module<T>) {
+            return (name:string, size:number): number => {
+              if (m.instantiatedModule==undefined) {
+                throw new Error("no resize function found in module " + name);
+              }
+              const resize_function = m.instantiatedModule.exports[name] as ((len: number) => number) | undefined;
+              if (resize_function==undefined) {
+                throw new Error("no resize function found in module " + name);
+              }
+              return resize_function(size);
+          }
+        }(this);
+
+        // Add any extensions...
+        for (const ext of this.template.runtime.config.extensions) {
+          const fns = ext.Init();
+          for (const [n, fn] of fns) {
+            envValue[n] = (instance: number, ptr: number, len: number): bigint => {
+              const params: number[] = [instance, ptr, len];
+              fn(mem, resize, params);
+              return BigInt(params[0]);
+            };
+          }
+        }
+
+        const moduleConfig = {
+          wasi_snapshot_preview1: this.wasi.GetImports(),
+          scale: this.tracing.GetImports(),
+          env: envValue,
         }
 
         this.ready = new Promise(async (resolve) => { // eslint-disable-line no-async-promise-executor
