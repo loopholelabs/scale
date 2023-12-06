@@ -16,20 +16,21 @@
 
 import * as signature from "signature";
 
-function delay(ms: number): Promise<string> {
-  return new Promise( resolve => {
-    console.log("Resolved")
-    resolve("Something");
-  })
-//  return new Promise( resolve => setTimeout(resolve, ms) );     // FIXME setTimeout doesn't exist yet
+function delay(ms: number) {
+  return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
 export async function example(ctx?: signature.ModelWithAllFieldTypes): Promise<signature.ModelWithAllFieldTypes | undefined> {
     console.log("This is a Typescript Function " + (new Date()).getTime());
 
-    const p = await delay(100)
+    setTimeout(()=>{
+      console.log("HELLO");
+    }, 10)
 
-    console.log("After small delay " + (new Date()).getTime() + " " + p);
+    //await
+    //await delay(100)
+
+    console.log("After small delay " + (new Date()).getTime());
 
     if (typeof ctx !== "undefined") {
         ctx.stringField = "This is a Typescript Function"
