@@ -72,10 +72,6 @@ func GenerateTypes(extensionSchema *extension.Schema, packageName string) ([]byt
 	return generator.GenerateTypes(extensionSchema, packageName)
 }
 
-func GenerateInterfaces(schema *extension.Schema, packageName string, version string) ([]byte, error) {
-	return generator.GenerateInterfaces(schema, packageName, version)
-}
-
 // GenerateTypesTranspiled generates the types for the extension and transpiles it to javascript
 func GenerateTypesTranspiled(extensionSchema *extension.Schema, packageName string, sourceName string) (*Transpiled, error) {
 	typescriptSource, err := generator.GenerateTypes(extensionSchema, packageName)
@@ -173,29 +169,6 @@ func (g *Generator) GenerateTypes(extensionSchema *extension.Schema, packageName
 	s, err := g.signature.GenerateTypes(signatureSchema, packageName)
 
 	return s, err
-}
-
-func (g *Generator) GenerateInterfaces(extensionSchema *extension.Schema, packageName string, version string) ([]byte, error) {
-	schema, err := extensionSchema.CloneWithDisabledAccessorsValidatorsAndModifiers()
-	if err != nil {
-		return nil, err
-	}
-
-	if packageName == "" {
-		packageName = defaultPackageName
-	}
-
-	buf := new(bytes.Buffer)
-	err = g.templ.ExecuteTemplate(buf, "interfaces.ts.templ", map[string]any{
-		"extension_schema":  schema,
-		"generator_version": version,
-		"package_name":      packageName,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return []byte(formatTS(buf.String())), nil
 }
 
 // GenerateTypesTranspiled takes the typescript source for the generated types and transpiles it to javascript
