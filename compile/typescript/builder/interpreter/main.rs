@@ -15,8 +15,7 @@
 */
 
 pub mod helpers;
-
-use std::time::SystemTime;
+pub mod time;
 
 use once_cell::sync::OnceCell;
 use quickjs_wasm_sys::{
@@ -72,46 +71,6 @@ extern "C" {
     fn get_js_source(ptr: *mut u8) -> u32;
 }
 
-static mut TIMEOUT_FUNC: OnceCell<JSValue> = OnceCell::new();
-
-fn set_timeout_wrap(
-  context: *mut JSContext,
-  _: JSValue,
-  argc: c_int,
-  argv: *mut JSValue,
-  _: c_int,
-) -> JSValue {
-  unsafe {
-      let now = SystemTime::now();
-
-//      println!("Now is {now}");
-
-      print!("SetTimeout argc={argc} ");
-
-      let func = *argv.offset(0);
-
-      let mut delay:i64 = 0;
-      JS_ToInt64(context, &mut delay as *mut i64, *argv.offset(1));
-
-      // TODO: Save these values for later checking / executing...
-
-      print!("RUST setTimeout {} -> {}\n", delay, func);
-
-      let isf = JS_IsFunction(context, func);
-      print!("IsFunction? {isf}\n");
-
-      TIMEOUT_FUNC.set(func).unwrap();
-
-    // Try Call it here...
-    let r = JS_Call(context, func, func, argc, argv);
-    print!("R = {r}\n");
-
-      // FIXME: Return an object so they can cancel it...
-      ext_js_undefined
-  }
-}
-
-
 // initialize_runtime creates the JS runtime and context
 // and prepares the script for execution
 fn initialize_runtime() {
@@ -143,12 +102,7 @@ fn initialize_runtime() {
             JS_PROP_C_W_E as i32,
         );
 
-        helpers::set_callback(
-          context,
-          global,
-          "setTimeout".to_string(),
-          &set_timeout_wrap,
-      );
+        time::install(context);
 
         helpers::set_callback(
             context,
@@ -397,14 +351,8 @@ pub extern "C" fn run() -> u64 {
             let view = pdata as *const u8;
             let resolved = *view.offset(0);
 
-            let timeout_func = TIMEOUT_FUNC.get().unwrap();
+            time::run_pending_jobs(*runtime, *context);
 
-            print!("Calling timeout {timeout_func}\n");
-
-            // Call it...
-            let r = JS_Call(*context, *timeout_func, *exports, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
-
-            print!("Waiting for run promise... {r}\n");
             if resolved==1 {
               break;
             }

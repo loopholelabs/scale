@@ -1,0 +1,6 @@
+{
+  "git": {
+    "sha1": "d9bbb95afa7bea8908cb54bfc235cd8ddceaac48"
+  },
+  "path_in_vcs": "crates/quickjs-wasm-sys"
+}
