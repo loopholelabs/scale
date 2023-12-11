@@ -29,21 +29,34 @@ export async function example(ctx?: signature.ModelWithAllFieldTypes): Promise<s
 
     let ctime = (new Date()).getTime();
 
-    setTimeout(()=>{
+    let v150 = setTimeout(()=>{
+      console.log("TIMEOUT 150");
+    }, 150)
+
+    let v10 = setTimeout(()=>{
       console.log("TIMEOUT 10");
     }, 10)
 
-    setTimeout(blah, 20)
+    let v20 = setTimeout(blah, 20)
 
-    setInterval(()=>{
+    let vi10 = setInterval(()=>{
       console.log("INTERVAL 10");
     }, 10)
 
-    setInterval(()=>{
+    let vi20 = setInterval(()=>{
       console.log("INTERVAL 20");
     }, 20)
 
-    await delay(100)
+    await delay(100);
+
+    let dtime1 = (new Date()).getTime() - ctime;
+    console.log("After small delay of " + dtime1 + "ms...");
+
+    clearInterval(vi10);
+    clearInterval(vi20);
+    clearTimeout(v150);
+
+    await delay(100);
 
     let dtime = (new Date()).getTime() - ctime;
     console.log("After small delay of " + dtime + "ms...");

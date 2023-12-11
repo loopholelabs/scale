@@ -15,15 +15,11 @@
 */
 
 use crate::helpers;
-use crate::helpers::set_callback;
 
 use quickjs_wasm_sys::{
-    ext_js_undefined, JSContext, JSRuntime, JSValue, JS_BigIntToUint64, JS_Call,
-    JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
-    JS_GetPropertyStr, JS_GetPropertyUint32, JS_SetPropertyInt64, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
-    JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_GetOpaque, JS_TAG_OBJECT, JS_ToInt64,
-    JS_IsFunction, JS_SetPropertyUint32, JS_IsLiveObject, JS_HackDupValue,
+    ext_js_undefined, JSContext, JSRuntime, JSValue, JS_Call,
+    JS_GetGlobalObject, JS_NewInt64_Ext, JS_TAG_EXCEPTION, JS_ToInt64,
+    JS_IsFunction, JS_IsLiveObject, JS_HackDupValue,
 };
 
 use std::time::{SystemTime, Duration};
@@ -31,7 +27,7 @@ use std::time::{SystemTime, Duration};
 use std::os::raw::c_int;
 
 // Something to store our timer info in
-pub struct timer_info {
+pub struct TimerInfo {
   pub id: u64,
   pub callback: JSValue,
   pub repeating: bool,
@@ -42,7 +38,7 @@ pub struct timer_info {
 static mut TIMER_ID:u64 = 0;
 
 // Active timers
-pub static mut ACTIVE_TIMERS:Vec<timer_info> = Vec::new();
+pub static mut ACTIVE_TIMERS:Vec<TimerInfo> = Vec::new();
 
 /**
  * Install time functions (setTimeout, clearTimeout, setInterval, clearInterval) into js runtime.
@@ -91,8 +87,6 @@ pub fn run_pending_jobs(runtime: *mut JSRuntime, context: *mut JSContext) {
     let global = JS_GetGlobalObject(context);
     let now = SystemTime::now();
 
-//    print!("time:run_pending_jobs {}\n", ACTIVE_TIMERS.len());
-
     for tim in ACTIVE_TIMERS.iter_mut() {
       let elapsed = now.duration_since(tim.ctime).unwrap();
 
@@ -105,12 +99,13 @@ pub fn run_pending_jobs(runtime: *mut JSRuntime, context: *mut JSContext) {
           let r = JS_Call(context, tim.callback, global, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
           if (r >> 32) as i32 == JS_TAG_EXCEPTION {
             // Show the issue...
+            // FIXME: Might be better to just throw an exception...
             let err = helpers::error(context, "time");
             print!("Error {err}\n");
             //
           }
         } else {
-          // GC or something...
+          // GC stole it or something...
           print!(" FUNC {:x} func?={} live?={}\n", tim.callback, JS_IsFunction(context, tim.callback), JS_IsLiveObject(runtime, tim.callback));
         }
 
@@ -146,8 +141,13 @@ pub fn set_timeout_wrap(
   _: c_int,
 ) -> JSValue {
   unsafe {
-    let global = JS_GetGlobalObject(context);
+    if argc!=2 {
+      // TODO Throw exception
+      return ext_js_undefined;
+    }
     let now = SystemTime::now();
+
+    let mut ret = ext_js_undefined;
 
     let func = *argv.offset(0);
     if JS_IsFunction(context, func)==1 {
@@ -156,19 +156,22 @@ pub fn set_timeout_wrap(
 
       let func2 = JS_HackDupValue(context, func);
 
-      let t = timer_info{
+      let t = TimerInfo{
         id: TIMER_ID,
         delay: Duration::from_millis(delay as u64),
         callback: func2,
         ctime: now,
         repeating: false,
       };
+
+      ret = JS_NewInt64_Ext(context, TIMER_ID as i64);
+
       TIMER_ID+=1;
       ACTIVE_TIMERS.push(t);
     }
 
-    // FIXME: Return an object so they can cancel it...
-    ext_js_undefined
+    // Return an object so they can cancel it...
+    ret
   }
 }
 
@@ -184,8 +187,18 @@ pub fn set_timeout_wrap(
   _: c_int,
 ) -> JSValue {
   unsafe {
-      print!("ClearTimeout argc={argc}\n");
-      ext_js_undefined
+    if argc!=1 {
+      // TODO: Could throw an exception...
+      return ext_js_undefined
+    }
+    let mut id:i64 = 0;
+    JS_ToInt64(context, &mut id as *mut i64, *argv.offset(0));
+
+    ACTIVE_TIMERS.retain(|tim| {
+      tim.id!=id as u64
+    });
+
+    ext_js_undefined
   }
 }
 
@@ -201,7 +214,13 @@ pub fn set_timeout_wrap(
   _: c_int,
 ) -> JSValue {
   unsafe {
+    if argc!=2 {
+      // TODO Throw exception
+      return ext_js_undefined;
+    }
     let now = SystemTime::now();
+
+    let mut ret = ext_js_undefined;
 
     let func = *argv.offset(0);
     if JS_IsFunction(context, func)==1 {
@@ -210,19 +229,22 @@ pub fn set_timeout_wrap(
 
       let func2 = JS_HackDupValue(context, func);
 
-      let t = timer_info{
+      let t = TimerInfo{
         id: TIMER_ID,
         delay: Duration::from_millis(delay as u64),
         callback: func2,
         ctime: now,
         repeating: true,
       };
+
+      ret = JS_NewInt64_Ext(context, TIMER_ID as i64);
+
       TIMER_ID+=1;
       ACTIVE_TIMERS.push(t);
     }
 
-    // FIXME: Return an object so they can cancel it...
-    ext_js_undefined
+    // Return an object so they can cancel it...
+    ret
   }
 }
 
@@ -238,7 +260,17 @@ pub fn set_timeout_wrap(
   _: c_int,
 ) -> JSValue {
   unsafe {
-      print!("ClearInterval argc={argc}\n");
-      ext_js_undefined
+    if argc!=1 {
+      // TODO: Could throw an exception...
+      return ext_js_undefined
+    }
+    let mut id:i64 = 0;
+    JS_ToInt64(context, &mut id as *mut i64, *argv.offset(0));
+
+    ACTIVE_TIMERS.retain(|tim| {
+      tim.id!=id as u64
+    });
+
+    ext_js_undefined
   }
 }

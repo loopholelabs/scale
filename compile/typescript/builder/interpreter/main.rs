@@ -23,8 +23,7 @@ use quickjs_wasm_sys::{
     JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
     JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
     JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_GetOpaque, JS_TAG_OBJECT, JS_ToInt64,
-    JS_IsFunction,
+    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_GetOpaque, JS_TAG_OBJECT
 };
 
 use std::ffi::CString;
