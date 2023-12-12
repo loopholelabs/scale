@@ -23,16 +23,18 @@ use quickjs_wasm_sys::{
 };
 
 use std::time::{SystemTime, Duration};
+use std::ops::Add;
 
 use std::os::raw::c_int;
 
 // Something to store our timer info in
 pub struct TimerInfo {
   pub id: u64,
+  pub active: bool,
   pub callback: JSValue,
   pub repeating: bool,
   pub delay: Duration,
-  pub ctime: SystemTime,
+  pub trigger_time: SystemTime,
 }
 
 static mut TIMER_ID:u64 = 0;
@@ -88,42 +90,41 @@ pub fn run_pending_jobs(runtime: *mut JSRuntime, context: *mut JSContext) {
     let now = SystemTime::now();
 
     for tim in ACTIVE_TIMERS.iter_mut() {
-      let elapsed = now.duration_since(tim.ctime).unwrap();
-
-      if elapsed.as_secs_f64() > tim.delay.as_secs_f64() {
-        // Time to trigger it then...
-
-        if JS_IsFunction(context, tim.callback)==1 && JS_IsLiveObject(runtime, tim.callback)==1 {
-          // Try calling it...
-          let args: Vec<JSValue> = Vec::new();
-          let r = JS_Call(context, tim.callback, global, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
-          if (r >> 32) as i32 == JS_TAG_EXCEPTION {
-            // Show the issue...
-            // FIXME: Might be better to just throw an exception...
-            let err = helpers::error(context, "time");
-            print!("Error {err}\n");
-            //
+      match tim.trigger_time.elapsed() {
+        Ok(..) => {
+          if JS_IsFunction(context, tim.callback)==1 && JS_IsLiveObject(runtime, tim.callback)==1 {
+            // Try calling it...
+            let args: Vec<JSValue> = Vec::new();
+            let r = JS_Call(context, tim.callback, global, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
+            if (r >> 32) as i32 == JS_TAG_EXCEPTION {
+              // Show the issue...
+              // FIXME: Might be better to just throw an exception...
+              let err = helpers::error(context, "time");
+              print!("Error {err}\n");
+              //
+            }
+          } else {
+            // GC stole it or something...
+            print!(" FUNC {:x} func?={} live?={}\n", tim.callback, JS_IsFunction(context, tim.callback), JS_IsLiveObject(runtime, tim.callback));
           }
-        } else {
-          // GC stole it or something...
-          print!(" FUNC {:x} func?={} live?={}\n", tim.callback, JS_IsFunction(context, tim.callback), JS_IsLiveObject(runtime, tim.callback));
-        }
-
-        // If it's an interval, update the ctime value.
-        if tim.repeating {
-          tim.ctime = now
+  
+          // If it's an interval, update the next trigger time value.
+          // If not, it can be removed.
+          if tim.repeating {
+            tim.trigger_time = now.add(tim.delay);
+          } else {
+            tim.active = false
+          }
+        },
+        Err(..) => {
+          // This one isn't ready to trigger yet.
         }
       }
     }
 
     // Remove any timers we don't need anymore
     ACTIVE_TIMERS.retain(|tim| {
-      let elapsed = now.duration_since(tim.ctime).unwrap();
-
-      if elapsed.as_secs_f64() > tim.delay.as_secs_f64() {
-        return false
-      }
-      return true
+      tim.active
     })
 
   }
@@ -156,12 +157,14 @@ pub fn set_timeout_wrap(
 
       let func2 = JS_HackDupValue(context, func);
 
+      let delay_duration = Duration::from_millis(delay as u64);
       let t = TimerInfo{
         id: TIMER_ID,
-        delay: Duration::from_millis(delay as u64),
+        active: true,
         callback: func2,
-        ctime: now,
+        trigger_time: now.add(delay_duration),
         repeating: false,
+        delay: delay_duration,
       };
 
       ret = JS_NewInt64_Ext(context, TIMER_ID as i64);
@@ -229,11 +232,13 @@ pub fn set_timeout_wrap(
 
       let func2 = JS_HackDupValue(context, func);
 
+      let delay_duration = Duration::from_millis(delay as u64);
       let t = TimerInfo{
         id: TIMER_ID,
-        delay: Duration::from_millis(delay as u64),
+        active: true,
+        delay: delay_duration,
         callback: func2,
-        ctime: now,
+        trigger_time: now.add(delay_duration),
         repeating: true,
       };
 
