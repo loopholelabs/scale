@@ -157,6 +157,14 @@ func compileRustGuest(t *testing.T) *scalefunc.V1BetaSchema {
 }
 
 func compileTypescriptGuest(t *testing.T) *scalefunc.V1BetaSchema {
+	return compileTypescriptGuestFunction(t, "function")
+}
+
+func compileTypescriptGuestTimers(t *testing.T) *scalefunc.V1BetaSchema {
+	return compileTypescriptGuestFunction(t, "function_timers")
+}
+
+func compileTypescriptGuestFunction(t *testing.T, f string) *scalefunc.V1BetaSchema {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -176,7 +184,7 @@ func compileTypescriptGuest(t *testing.T) *scalefunc.V1BetaSchema {
 		require.NoError(t, err)
 	})
 
-	typescriptFunctionDir := wd + "/typescript_tests/function"
+	typescriptFunctionDir := wd + "/typescript_tests/" + f
 	scf := &scalefile.Schema{
 		Version:  scalefile.V1AlphaVersion,
 		Name:     "example",
@@ -274,6 +282,27 @@ func TestGolangHostTypescriptGuest(t *testing.T) {
 	require.NotNil(t, sig.Context)
 
 	require.Equal(t, "This is a Typescript Function", sig.Context.StringField)
+}
+
+func TestGolangHostTypescriptGuestTimers(t *testing.T) {
+	t.Log("Starting TestGolangHostTypescriptGuestTimers")
+	schema := compileTypescriptGuestTimers(t)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr).WithRawOutput(true)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+	require.NotNil(t, sig)
+	require.NotNil(t, sig.Context)
+
+	require.Equal(t, "This is a Typescript Function.  INTERVAL 18 INTERVAL 19 BLAH INTERVAL 18 INTERVAL 19 TIMEOUT 50 INTERVAL 18 INTERVAL 19 INTERVAL 18 INTERVAL 19 INTERVAL 18 INTERVAL 19 DELAY 100 TIMEOUT 151 DELAY 200", sig.Context.StringField)
 }
 
 func TestTypescriptHostTypescriptGuest(t *testing.T) {
