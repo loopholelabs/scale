@@ -23,7 +23,9 @@ use quickjs_wasm_sys::{
     JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
     JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
     JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_GetOpaque, JS_TAG_OBJECT
+    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_TAG_OBJECT,
+    JS_GetPromiseResult,
+    JS_GetPromiseState, JSPromiseStateEnum_JS_PROMISE_FULFILLED, JSPromiseStateEnum_JS_PROMISE_REJECTED
 };
 
 use std::ffi::CString;
@@ -343,19 +345,19 @@ pub extern "C" fn run() -> u64 {
         if (ret >> 32) as i32 == JS_TAG_OBJECT {
           let mut ctx = *context;
           loop {
-            let pdata = JS_GetOpaque(ret, 49);    // 49 = Class ID for JSPromise
-            if pdata.is_null() {
-              break;  // Quit, because it didn't return a promise, but some other object. Handle it later on.
-            }
-            let view = pdata as *const u8;
-            let resolved = *view.offset(0);
+            let pstate = JS_GetPromiseState(*context, ret);
 
-            time::run_pending_jobs(*runtime, *context);
-
-            if resolved==1 {
+            if pstate==JSPromiseStateEnum_JS_PROMISE_FULFILLED {
+              break;
+            } else if pstate==JSPromiseStateEnum_JS_PROMISE_REJECTED {
+              // We shouldn't need anything else here. The promise value should be an exception.
               break;
             }
 
+            // Run any timers
+            time::run_pending_jobs(*runtime, *context);
+
+            // Run any pending quickjs jobs
             match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
                 0 => (),  // break,
                 1 => (),
@@ -367,9 +369,7 @@ pub extern "C" fn run() -> u64 {
           }
 
           // Get the value returned by the promise.
-          let pdata = JS_GetOpaque(ret, 49);  // 49 = Class ID for JSPromise
-          let view = pdata as *const u64;
-          ret = *view.offset(3);              // 3 = correct offset to get the JSPromise value
+          ret = JS_GetPromiseResult(*context, ret);
         }
 
         // Process the return value...

@@ -46244,12 +46244,6 @@ static const JSCFunctionListEntry js_generator_proto_funcs[] = {
 
 /* Promise */
 
-typedef enum JSPromiseStateEnum {
-    JS_PROMISE_PENDING,
-    JS_PROMISE_FULFILLED,
-    JS_PROMISE_REJECTED,
-} JSPromiseStateEnum;
-
 typedef struct JSPromiseData {
     JSPromiseStateEnum promise_state;
     /* 0=fulfill, 1=reject, list of JSPromiseReactionData.link */
@@ -46257,6 +46251,19 @@ typedef struct JSPromiseData {
     BOOL is_handled; /* Note: only useful to debug */
     JSValue promise_result;
 } JSPromiseData;
+
+JSPromiseStateEnum JS_GetPromiseState(JSContext *ctx, JSValueConst promise)
+{
+    JSPromiseData *s = JS_GetOpaque(promise, JS_CLASS_PROMISE);
+    return s->promise_state;
+}
+
+JSValue JS_GetPromiseResult(JSContext *ctx, JSValueConst promise)
+{
+    JSPromiseData *s = JS_GetOpaque(promise, JS_CLASS_PROMISE);
+    JS_DupValue(ctx, s->promise_result);
+    return s->promise_result;
+}
 
 typedef struct JSPromiseFunctionDataResolved {
     int ref_count;

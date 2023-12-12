@@ -79,6 +79,7 @@ const JSValue ext_js_false = JS_FALSE;
 const JSValue ext_js_true = JS_TRUE;
 const JSValue ext_js_uninitialized = JS_UNINITIALIZED;
 
+// Expose JS_DupValue
 JSValue JS_HackDupValue(JSContext *ctx, JSValueConst v) {
   return JS_DupValue(ctx, v);
 }

@@ -831,7 +831,15 @@ typedef struct {
 void JS_SetSharedArrayBufferFunctions(JSRuntime *rt,
                                       const JSSharedArrayBufferFunctions *sf);
 
+typedef enum JSPromiseStateEnum {
+    JS_PROMISE_PENDING,
+    JS_PROMISE_FULFILLED,
+    JS_PROMISE_REJECTED,
+} JSPromiseStateEnum;
+
 JSValue JS_NewPromiseCapability(JSContext *ctx, JSValue *resolving_funcs);
+JSPromiseStateEnum JS_GetPromiseState(JSContext *ctx, JSValueConst promise);
+JSValue JS_GetPromiseResult(JSContext *ctx, JSValueConst promise);
 
 /* is_handled = TRUE means that the rejection is handled */
 typedef void JSHostPromiseRejectionTracker(JSContext *ctx, JSValueConst promise,
