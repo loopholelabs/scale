@@ -46252,12 +46252,14 @@ typedef struct JSPromiseData {
     JSValue promise_result;
 } JSPromiseData;
 
+// Added by loopholelabs
 JSPromiseStateEnum JS_GetPromiseState(JSContext *ctx, JSValueConst promise)
 {
     JSPromiseData *s = JS_GetOpaque(promise, JS_CLASS_PROMISE);
     return s->promise_state;
 }
 
+// Added by loopholelabs
 JSValue JS_GetPromiseResult(JSContext *ctx, JSValueConst promise)
 {
     JSPromiseData *s = JS_GetOpaque(promise, JS_CLASS_PROMISE);

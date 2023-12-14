@@ -831,6 +831,7 @@ typedef struct {
 void JS_SetSharedArrayBufferFunctions(JSRuntime *rt,
                                       const JSSharedArrayBufferFunctions *sf);
 
+// Added by loopholelabs
 typedef enum JSPromiseStateEnum {
     JS_PROMISE_PENDING,
     JS_PROMISE_FULFILLED,

@@ -341,7 +341,7 @@ pub extern "C" fn run() -> u64 {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
-        // If it returned a promise, wait for it...
+        // If it returned a promise, wait for it... If not, we just process the ret value as is.
         if (ret >> 32) as i32 == JS_TAG_OBJECT {
           let mut ctx = *context;
           loop {
@@ -350,16 +350,16 @@ pub extern "C" fn run() -> u64 {
             if pstate==JSPromiseStateEnum_JS_PROMISE_FULFILLED {
               break;
             } else if pstate==JSPromiseStateEnum_JS_PROMISE_REJECTED {
-              // We shouldn't need anything else here. The promise value should be an exception.
+              // We don't need anything else here. The promise value should be an exception.
               break;
             }
 
-            // Run any timers
+            // Run any timers while we wait for the promise to complete
             time::run_pending_jobs(*runtime, *context);
 
             // Run any pending quickjs jobs
             match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
-                0 => (),  // break,
+                0 => (),
                 1 => (),
                 _ => {
                     let err = helpers::error(ctx, "main");
@@ -368,7 +368,7 @@ pub extern "C" fn run() -> u64 {
             }
           }
 
-          // Get the value returned by the promise.
+          // The promise has resolved/rejected. Now get the value returned by the promise.
           ret = JS_GetPromiseResult(*context, ret);
         }
 

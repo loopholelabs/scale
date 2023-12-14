@@ -29,12 +29,12 @@ use std::os::raw::c_int;
 
 // Something to store our timer info in
 pub struct TimerInfo {
-  pub id: u64,
-  pub active: bool,
-  pub callback: JSValue,
-  pub repeating: bool,
-  pub delay: Duration,
-  pub trigger_time: SystemTime,
+  pub id: u64,                  // Unique ID that represents this timer.
+  pub active: bool,             // Is the timer still active, or pending deletion?
+  pub callback: JSValue,        // Function to callback
+  pub repeating: bool,          // Is the timer repeating? (setInterval)
+  pub delay: Duration,          // Delay between ticks for a repeating timer
+  pub trigger_time: SystemTime, // Next time the timer will trigger
 }
 
 static mut TIMER_ID:u64 = 0;
@@ -93,23 +93,21 @@ pub fn run_pending_jobs(runtime: *mut JSRuntime, context: *mut JSContext) {
       match tim.trigger_time.elapsed() {
         Ok(..) => {
           if JS_IsFunction(context, tim.callback)==1 && JS_IsLiveObject(runtime, tim.callback)==1 {
-            // Try calling it...
             let args: Vec<JSValue> = Vec::new();
             let r = JS_Call(context, tim.callback, global, args.len() as i32, args.as_slice().as_ptr() as *mut JSValue);
             if (r >> 32) as i32 == JS_TAG_EXCEPTION {
-              // Show the issue...
-              // FIXME: Might be better to just throw an exception...
+              // A trigger function from a timer threw an exception.
+              // For now, we will just show it in output.
               let err = helpers::error(context, "time");
-              print!("Error {err}\n");
-              //
+              print!("Error from timer function {err}\n");
             }
           } else {
-            // GC stole it or something...
-            print!(" FUNC {:x} func?={} live?={}\n", tim.callback, JS_IsFunction(context, tim.callback), JS_IsLiveObject(runtime, tim.callback));
+            // Either a timer was called with a non-function argument, or quickjs GC stole it?
+            print!("Error from timer function {:x} func?={} live?={}\n", tim.callback, JS_IsFunction(context, tim.callback), JS_IsLiveObject(runtime, tim.callback));
           }
   
           // If it's an interval, update the next trigger time value.
-          // If not, it can be removed.
+          // If not, it can be marked for removal.
           if tim.repeating {
             tim.trigger_time = now.add(tim.delay);
           } else {
@@ -117,7 +115,7 @@ pub fn run_pending_jobs(runtime: *mut JSRuntime, context: *mut JSContext) {
           }
         },
         Err(..) => {
-          // This one isn't ready to trigger yet.
+          // This timer isn't ready to trigger yet.
         }
       }
     }
@@ -126,12 +124,11 @@ pub fn run_pending_jobs(runtime: *mut JSRuntime, context: *mut JSContext) {
     ACTIVE_TIMERS.retain(|tim| {
       tim.active
     })
-
   }
 }
 
 /**
- * Wrapper for setTimeout
+ * Wrapper for setTimeout(func delay)=>ID
  *
  */
 pub fn set_timeout_wrap(
@@ -143,7 +140,6 @@ pub fn set_timeout_wrap(
 ) -> JSValue {
   unsafe {
     if argc!=2 {
-      // TODO Throw exception
       return ext_js_undefined;
     }
     let now = SystemTime::now();
@@ -155,7 +151,7 @@ pub fn set_timeout_wrap(
       let mut delay:i64 = 0;
       JS_ToInt64(context, &mut delay as *mut i64, *argv.offset(1));
 
-      let func2 = JS_HackDupValue(context, func);
+      let func2 = JS_DuplicateValue(context, func);
 
       let delay_duration = Duration::from_millis(delay as u64);
       let t = TimerInfo{
@@ -179,7 +175,7 @@ pub fn set_timeout_wrap(
 }
 
 /**
- * Wrapper for clearTimeout
+ * Wrapper for clearTimeout(ID)
  *
  */
  pub fn clear_timeout_wrap(
@@ -191,7 +187,6 @@ pub fn set_timeout_wrap(
 ) -> JSValue {
   unsafe {
     if argc!=1 {
-      // TODO: Could throw an exception...
       return ext_js_undefined
     }
     let mut id:i64 = 0;
@@ -206,7 +201,7 @@ pub fn set_timeout_wrap(
 }
 
 /**
- * Wrapper for setInterval
+ * Wrapper for setInterval(func, delay)->ID
  *
  */
  pub fn set_interval_wrap(
@@ -218,7 +213,6 @@ pub fn set_timeout_wrap(
 ) -> JSValue {
   unsafe {
     if argc!=2 {
-      // TODO Throw exception
       return ext_js_undefined;
     }
     let now = SystemTime::now();
@@ -230,7 +224,7 @@ pub fn set_timeout_wrap(
       let mut delay:i64 = 0;
       JS_ToInt64(context, &mut delay as *mut i64, *argv.offset(1));
 
-      let func2 = JS_HackDupValue(context, func);
+      let func2 = JS_DuplicateValue(context, func);
 
       let delay_duration = Duration::from_millis(delay as u64);
       let t = TimerInfo{
@@ -254,7 +248,7 @@ pub fn set_timeout_wrap(
 }
 
 /**
- * Wrapper for clearInterval
+ * Wrapper for clearInterval(ID)
  *
  */
  pub fn clear_interval_wrap(
@@ -266,7 +260,6 @@ pub fn set_timeout_wrap(
 ) -> JSValue {
   unsafe {
     if argc!=1 {
-      // TODO: Could throw an exception...
       return ext_js_undefined
     }
     let mut id:i64 = 0;

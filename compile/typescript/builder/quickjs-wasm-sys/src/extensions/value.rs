@@ -15,5 +15,6 @@ extern "C" {
     pub static ext_js_true: JSValue;
     pub static ext_js_uninitialized: JSValue;
 
-    pub fn JS_HackDupValue(ctx: *mut JSContext, val: JSValue) -> JSValue;
+    // Added by loopholelabs
+    pub fn JS_DuplicateValue(ctx: *mut JSContext, val: JSValue) -> JSValue;
 }
