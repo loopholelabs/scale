@@ -19,7 +19,7 @@ use crate::helpers;
 use quickjs_wasm_sys::{
     ext_js_undefined, JSContext, JSRuntime, JSValue, JS_Call,
     JS_GetGlobalObject, JS_NewInt64_Ext, JS_TAG_EXCEPTION, JS_ToInt64,
-    JS_IsFunction, JS_IsLiveObject, JS_HackDupValue,
+    JS_IsFunction, JS_IsLiveObject, JS_DuplicateValue,
 };
 
 use std::time::{SystemTime, Duration};
