@@ -3,7 +3,7 @@ title: Overview
 description: Learn how Scale Signatures work and how they're used in Scale Functions.
 ---
 
-Signatures are one of the core concepts behind Scale Functions.
+Signatures are one of the core concepts behind Scale Functions. They allow developers to define the inputs and outputs of their plugins in a type-safe way. This feature is especially useful when working with Golang, as it enables developers to leverage the language's strong typing system.
 
 They are used to define the inputs and outputs of a function using a declarative syntax we call the **Scale Signature DSL**,
 and once they are parsed by our compiler we are able to generated cross-language type safety.
@@ -20,10 +20,51 @@ We also publish and support a number of **Official** Scale Signatures for common
 Official are maintained by the Scale Functions team and come with [Adapters](/languages/golang/adapters/net-http) which
 allow them to be used seamlessly from popular Frameworks and Libraries.
 
-<Note>
-    We are working on a way to allow users to publish their own Signatures! If you are interested in this feature,
-    please join the `#scale` channel in our [Discord](https://loopholelabs/discord) and let us know!\
-</Note>
+## Getting Started
+
+To start using Scale Signatures in Golang, you'll need to have the Scale framework installed and set up. If you haven't done this yet, please refer to the [Getting Started guide](https://scale.sh/docs/getting-started/overview).
+
+## Defining a Signature
+
+Defining a Scale Signature in Golang involves creating a struct that represents the input and output of your function. Here's the default output of the `scale signature new` command:
+
+```go
+version = "v1alpha"
+context = "context"
+model Context {
+  string MyString {
+    default = "DefaultValue"
+  }
+}
+```
+
+In this example, `Context` is a Scale Signature that defines a struct  with a string and a default string value.
+
+## Using a Signature
+
+To use a Scale Signature in Golang, you need to define a function that matches the signature. Here's an example:
+
+
+```go
+
+import (
+    signature "./path/to/your/scale.signature"
+)
+
+func scale(ctx *signature.Context) (*signature.Context, error) {
+    // Your function implementation goes here
+}
+```
+
+In fact, once you have a scalefile, this can be done for you, with the `scale signature use <name:tag>` command. Once this is done, you can use the types defined in your signature file for input and output of your scale function.
+
+All of the commands for working with signatures are in the [CLI API reference](/cli/reference/signatures).
+
+## Next Steps
+
+Now that you know the basics of Scale Signatures in Golang, you can start integrating them into your Scale plugins/functions. For more info, please refer to the [API Reference](/cli/reference/signatures).
+
+---
 
 ## Chaining Functions
 

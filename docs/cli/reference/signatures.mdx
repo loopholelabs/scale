@@ -1,0 +1,87 @@
+---
+title: Signatures
+sidebarTitle: Signature Command
+description: How to use the `signature` command in the Scale CLI.
+---
+
+The `signature` command is used to interact with Scale Signatures locally. `sig` is an alias for `signature`.
+
+## New
+
+To create a new Scale Signature, run the following command:
+
+```bash
+scale signature new <name>
+```
+
+This will create a new scale signature in the current directory in the [Go](https://golang.org/) programming language.
+
+You can also specify the language of the signature you want to create by using the `--language` flag:
+
+```bash
+scale signature new <name> --language <language>
+```
+
+The following languages are currently supported:
+
+  * `go` - [Go](/languages/golang/overview)
+  * `rust` - [Rust](/languages/rust/overview)
+  * `ts` - [TypeScript/JavaScript](/languages/javascript-typescript/overview)
+
+<Note>
+    We are actively working on adding support for more languages. If you would like to see a specific language supported, please let
+    us know by joining the `#scale` channel in [our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Generate
+
+Generate a scale signature from a signature file
+
+```bash
+scale signature generate <name:tag>
+```
+
+<Note>
+    To learn about how to install the toolchain for a specific language, see the documentation for that language:
+
+    * [Go](/languages/golang/overview)
+    * [Rust](/languages/rust/overview)
+</Note>
+
+## Use
+
+Create a new scale signature with the given name and tag.
+
+```bash
+scale signature use <name:tag>
+```
+
+## List
+
+The `list` subcommand is used to list all the compiled Scale Signatures available in the local Scale Signatures cache.
+
+```bash
+scale signature list
+```
+
+If you'd like to specify the directory of the Scale Signature cache, you can use the `--cache-directory` flag:
+
+```bash
+scale signature list --cache-directory <cache-directory>
+```
+
+## Export
+
+Export a generated scale signature to the given output path
+
+```bash
+scale signature export [<name>:<tag> | [<org>/<name>:<tag>] <path>
+```
+
+## Delete
+
+To delete a Scale Signature from the local Scale Signature cache, run the following command:
+
+```bash
+scale signature delete [<name>:<tag> | [<org>/<name>:<tag>]
+```

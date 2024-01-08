@@ -1,0 +1,6 @@
+---
+title: Pull a Signature
+openapi: "GET /registry/signature/{org}/{name}/{tag}"
+---
+The actual content of the signature will not be returned via this response, and instead the `presigned_url` field
+of the response will contain a URL that can be used to retrieve the signature's content via a `GET` request.

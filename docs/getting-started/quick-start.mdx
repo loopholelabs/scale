@@ -1,16 +1,11 @@
 ---
 title: Quick Start
-description: Create, run, and publish your first Scale Function in just 5 minutes
+description: Create, run, and publish your first Scale Function in minutes.
 ---
 
 In this section we’ll be going over how you can quickly get started with Scale to create, run and even publish your own function.
 
 We’ll be building a simple `Hello World` function using the [HTTP Signature](/signatures/http) that will return a simple greeting.
-
-<Tip>
-    Note that Scale currently supports using both [Golang](https://go.dev) and [Rust](https://www.rust-lang.org) as the Guest
-    Language, and the documentation will always have example implementations in both languages.
-</Tip>
 
 <Snippet file="install-scale-cli.mdx" />
 
@@ -20,12 +15,6 @@ For alternative installation methods or to build the CLI from source, please see
 
 Scale Functions currently support using both [Golang](https://go.dev) and [Rust](https://www.rust-lang.org) as the
 Guest Languages, but compiling them requires the appropriate toolchain to be installed on your machine.
-
-<Note>
-    To streamline compiling Scale Functions in the future, we're working on a cloud build service that will allow you to
-    compile your functions without having to install the toolchain on your machine. If you're interested in accessing this
-    service as soon as it's available, please join the `#scale` on our [discord](https://loopholelabs.io/discord).
-</Note>
 
 If you already have the toolchain for your Guest Language installed, you can skip this step. Otherwise, you can follow
 the guides for your Guest Language below to install the toolchain.
