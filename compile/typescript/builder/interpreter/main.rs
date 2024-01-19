@@ -15,6 +15,7 @@
 */
 
 pub mod helpers;
+pub mod time;
 
 use once_cell::sync::OnceCell;
 use quickjs_wasm_sys::{
@@ -22,7 +23,9 @@ use quickjs_wasm_sys::{
     JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
     JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
     JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
-    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED,
+    JS_TAG_EXCEPTION, JS_TAG_UNDEFINED, JS_ExecutePendingJob, JS_TAG_OBJECT,
+    JS_GetPromiseResult,
+    JS_GetPromiseState, JSPromiseStateEnum_JS_PROMISE_FULFILLED, JSPromiseStateEnum_JS_PROMISE_REJECTED
 };
 
 use std::ffi::CString;
@@ -34,6 +37,7 @@ use std::str;
 use flate2::read::GzDecoder;
 
 static mut JS_INITIALIZED: bool = false;
+static mut JS_RUNTIME: OnceCell<*mut JSRuntime> = OnceCell::new();
 static mut JS_CONTEXT: OnceCell<*mut JSContext> = OnceCell::new();
 
 static mut ENTRY_EXPORTS: OnceCell<JSValue> = OnceCell::new();
@@ -101,6 +105,8 @@ fn initialize_runtime() {
             console,
             JS_PROP_C_W_E as i32,
         );
+
+        time::install(context);
 
         helpers::set_callback(
             context,
@@ -231,6 +237,7 @@ fn initialize_runtime() {
         ENTRY_EXT_RESIZE.set(ext_resize_fn).unwrap();
 
         ENTRY_EXPORTS.set(exports).unwrap();
+        JS_RUNTIME.set(runtime).unwrap();
         JS_CONTEXT.set(context).unwrap();
         JS_INITIALIZED = true;
     }
@@ -335,12 +342,13 @@ pub extern "C" fn initialize() -> u64 {
 #[no_mangle]
 pub extern "C" fn run() -> u64 {
     unsafe {
+        let runtime = JS_RUNTIME.get().unwrap();
         let context = JS_CONTEXT.get().unwrap();
         let exports = ENTRY_EXPORTS.get().unwrap();
         let runfn = ENTRY_RUN.get().unwrap();
 
         let args: Vec<JSValue> = Vec::new();
-        let ret = JS_Call(
+        let mut ret = JS_Call(
             *context,
             *runfn,
             *exports,
@@ -348,6 +356,38 @@ pub extern "C" fn run() -> u64 {
             args.as_slice().as_ptr() as *mut JSValue,
         );
 
+        // If it returned a promise, wait for it... If not, we just process the ret value as is.
+        if (ret >> 32) as i32 == JS_TAG_OBJECT {
+          let mut ctx = *context;
+          loop {
+            let pstate = JS_GetPromiseState(*context, ret);
+
+            if pstate==JSPromiseStateEnum_JS_PROMISE_FULFILLED {
+              break;
+            } else if pstate==JSPromiseStateEnum_JS_PROMISE_REJECTED {
+              // We don't need anything else here. The promise value should be an exception.
+              break;
+            }
+
+            // Run any timers while we wait for the promise to complete
+            time::run_pending_jobs(*runtime, *context);
+
+            // Run any pending quickjs jobs
+            match { JS_ExecutePendingJob(*runtime, &mut ctx) } {
+                0 => (),
+                1 => (),
+                _ => {
+                    let err = helpers::error(ctx, "main");
+                    panic!("{}", err);
+                }
+            }
+          }
+
+          // The promise has resolved/rejected. Now get the value returned by the promise.
+          ret = JS_GetPromiseResult(*context, ret);
+        }
+
+        // Process the return value...
         if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
             let e = JS_GetException(*context);
             let exception =

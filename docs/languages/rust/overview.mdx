@@ -3,14 +3,9 @@ title: Overview
 description: An overview of Rust support in Scale Functions
 ---
 
-Scale Functions currently support using [Rust](https://www.rust-lang.org) as the [Guest](#guest-support) language.
+Scale Functions currently support using [Rust](https://www.rust-lang.org) as a [Guest](#guest-support) language.
 
 This means that you can write your Functions in Rust ([Guest Support](#guest-support)).
-
-<Info>
-    We are working on adding Host language support in the near future. If you would like to be part of this process,
-    please join the `#scale` channel on our [Discord](https://loopholelabs.io/discord).
-</Info>
 
 ## Guest Support
 
@@ -27,12 +22,10 @@ pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Erro
 
 The above example is a simple HTTP Function that responds with "Hello, World!" to any request.
 
-Compiling these Functions requires the appropriate toolchain to be installed on your machine.
+By default, the generated function will be configured to use the `HTTP Signature`,
+which provides an interface for handling HTTP requests and responses. To learn more about the `HTTP Signature` and the
+interfaces it provides, you can check out the [HTTP Signature Reference](/signatures/http). Learn more about Signatures in the [Signatures Overview](/signatures/overview).
 
-<Note>
-    To streamline compiling Scale Functions in the future, we're working on a cloud build service that will allow you to
-    compile your functions without having to install the toolchain on your machine. If you're interested in accessing this
-    service as soon as it's available, please join the `#scale` on our [discord](https://loopholelabs.io/discord).
-</Note>
+Compiling these Functions requires the appropriate toolchain to be installed on your machine.
 
 <Snippet file="install-rust-toolchain.mdx" />

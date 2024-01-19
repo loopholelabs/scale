@@ -4,9 +4,28 @@ description: An overview of Javascript and Typescript support in Scale Functions
 ---
 
 Scale Functions currently support using [TypeScript](https://www.typescriptlang.org/) and
-[JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) as the [Host](#host-support) language.
+[JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript) as the [Host](#host-support) language and as the [Guest](#guest-support).
 
-This means that you can run Functions written in any supported language inside a TypeScript or JavaScript application ([Host Support](#host-support)).
+This means that you can run Functions written in any supported language inside a TypeScript or JavaScript application ([Host Support](#host-support)) _as well as_ **write** functions in JS/TS and run them in other host languages, like [Golang](/languages/golang/overview).
+
+## Guest Support
+
+A Scale Function written in [TypeScript](https://www.typescriptlang.org) often looks something like this:
+
+```TypeScript
+import { Context } from 'scale-signature-http';
+
+function scale(ctx: Context): Promise<Context> {
+    ctx.response.setBody("Hello, World!");
+    return ctx.next();
+}
+```
+
+The above example is a simple HTTP Function that responds with "Hello, World!" to any request.
+
+By default, the generated function will be configured to use the `HTTP Signature`,
+which provides an interface for handling HTTP requests and responses. To learn more about the `HTTP Signature` and the
+interfaces it provides, you can check out the [HTTP Signature Reference](/signatures/http). Learn more about Signatures in the [Signatures Overview](/signatures/overview).
 
 ## Host Support
 
