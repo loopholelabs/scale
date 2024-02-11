@@ -42,7 +42,14 @@ In this example, `Context` is a Scale Signature that defines a struct  with a st
 
 ## Using a Signature
 
-To use a Scale Signature in Golang, you need to define a function that matches the signature. Here's an example:
+Generate the signature, defined in the example above, by again using [the CLI](/cli/reference/signatures):
+
+```
+scale signature generate <name:tag>
+```
+
+
+Now, to use a Scale Signature in Golang, using the generated signature above, you can define a function accordingly. Here's an example:
 
 
 ```go
