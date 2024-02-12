@@ -11,7 +11,7 @@ The `function` command is used to interact with Scale Functions locally. `fn` is
 To create a new Scale Function, run the following command:
 
 ```bash
-scale function new <name>
+scale function new <name>:<tag>
 ```
 
 This will create a new scale function in the current directory in the [Go](https://golang.org/) programming language.
@@ -23,7 +23,7 @@ This will create a new scale function in the current directory in the [Go](https
 You can also specify the language of the function you want to create by using the `--language` flag:
 
 ```bash
-scale function new <name> --language <language>
+scale function new <name>:<tag> --language <language>
 ```
 
 The following languages are currently supported:
