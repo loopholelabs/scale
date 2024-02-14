@@ -176,14 +176,14 @@ interfaces it provides, you can check out the [HTTP Signature Reference](/signat
 Once you've created a new function, you can build it by running the following command:
 
 ```bash
-scale build
+scale function build
 ```
 
 This will build the function and save it to the `Cache Directory` (which defaults to `~/.config/scale/functions` on Linux and macOS).
 You can also specify a different directory by passing the `--cache-directory` flag:
 
 ```bash
-scale build --cache-directory /path/to/directory
+scale function build --cache-directory /path/to/directory
 ```
 
 <Info>
@@ -200,7 +200,7 @@ scale function list
 ```
   NAME (1)            TAG      ORG           LANGUAGE   SIGNATURE     HASH                                                               VERSION
  ------------------- -------- ------------- ---------- ------------- ------------------------------------------------------------------ ---------
-  hello-world         1.0                 rust       http@v0.3.4   8dad03b701cd124b55ff5caf7a36a9af5d19759fc73a9e8299bea4816f929777   v1alpha
+  hello-world         1.0     local         rust       http@v0.3.4   8dad03b701cd124b55ff5caf7a36a9af5d19759fc73a9e8299bea4816f929777   v1alpha
 ```
 
 ## Run the Function
@@ -208,14 +208,14 @@ scale function list
 Once you've built the function, you can run it by running the following command:
 
 ```bash
-scale run hello-world:1.0
+scale run local/hello-world:1.0
 ```
 
 This will start a local HTTP server on port `8080` and will run the function whenever you make a request to it. You can
 also specify a different port by passing the `--listen` or `-l` flag:
 
 ```bash
-scale run hello-world:1.0 -l :3000
+scale run local/hello-world:1.0 -l :3000
 ```
 
 <Note>
@@ -270,14 +270,14 @@ scale auth status
 Once you've authenticated with the Scale API, you can push your function to the Scale Registry by running the following command:
 
 ```bash
-scale push hello-world:1.0
+scale function push hello-world:1.0
 ```
 
 This will push the function to the Scale Registry and make it available for use in your existing services. By default
 the function will be private, but you can make it public by passing the `--public` flag:
 
 ```bash
-scale push hello-world:1.0 --public
+scale function push hello-world:1.0 --public
 ```
 
 <Note>
@@ -292,7 +292,7 @@ Once you've pushed a function to the Scale Registry, you can pull it and use it 
 you can run the following command:
 
 ```bash
-scale pull <your organization>/hello-world:1.0
+scale function pull <your organization>/hello-world:1.0
 ```
 
 <Note>
@@ -306,7 +306,7 @@ This will pull the function from the Scale Registry and save it to the `Cache Di
 You can also specify a different directory by passing the `--cache-directory` flag:
 
 ```bash
-scale pull <your organization>/hello-world:1.0 --cache-directory /path/to/directory
+scale function pull <your organization>/hello-world:1.0 --cache-directory /path/to/directory
 ```
 
 <Note>
