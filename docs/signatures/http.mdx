@@ -123,32 +123,34 @@ the headers returned by the `Header(): header` method can be done using the `Get
 The HTTP Signature is defined as follows using the **Scale Signature** syntax:
 
 ```hcl http.signature
-name = "http"
-tag = "v0.3.6"
+version = "v1alpha"
+context = "request"
 
-model "headers" {
-    string_array "values" {}
+model Headers {
+    string "values" {
+        default = ""
+        accessor = true
+    }
 }
 
-model "request" {
+model Request {
     string "uri" {
         default = ""
         accessor = true
     }
 
-    enum "method" {
-        default = "GET"
-        values = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+    string "method" {
+      default     = "GET"
     }
 
-    uint64 "content_length" {
+
+    uint64 ContentLength {
         default = 0
         accessor = true
     }
 
-    enum "protocol" {
+    string "protocol" {
         default = "HTTP/1.1"
-        values = ["HTTP/1.1", "HTTP/2", "HTTP/3"]
     }
 
     string "ip" {
@@ -158,18 +160,16 @@ model "request" {
 
     bytes "body" {
         accessor = true
+        initial_size = 0
     }
 
-	string_map "headers" {
-		value = "headers"
-		case_modifier {
-			kind = "lower"
-		}
-	}
+    string_map HttpHeaders {
+      value = "headers"
+    }
 }
 
-model "response" {
-    uint32 "status_code" {
+model Response {
+    uint32 StatusCode {
         default = 200
         accessor = true
         limit_validator {
@@ -179,14 +179,12 @@ model "response" {
     }
 
     bytes "body" {
+        initial_size = 0
         accessor = true
     }
 
-    string_map "headers" {
-        value = "headers"
-        case_modifier {
-            kind = "lower"
-        }
+    string_map HttpHeaders {
+      value = "headers"
     }
 }
 ```
