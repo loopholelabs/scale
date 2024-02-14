@@ -179,7 +179,7 @@ it.
         ```javascript
         import { New } from "@loopholelabs/scale";
         // @ts-ignore
-        import sf from "./hello-world.scale";
+        import sf from "./hello.scale";
 
         (async () => {
             const r = await New([sf]);
@@ -195,7 +195,7 @@ it.
         import { New } from "@loopholelabs/scale";
         import { Read } from "@loopholelabs/scalefile/scalefunc/helpers";
 
-        const sf = Read("./hello-world.scale");
+        const sf = Read("./hello.scale");
 
         (async () => {
             const r = await New([sf]);
@@ -211,7 +211,7 @@ it.
         import { Download } from '@loopholelabs/scale/registry'
         import { New } from "@loopholelabs/scale";
 
-        const sf = Download("hello-world", "latest");
+        const sf = Download("hello", "latest");
         (async () => {
             const r = await New([sf]);
             const i = await r.Instance(null);

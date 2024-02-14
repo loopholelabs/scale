@@ -34,14 +34,14 @@ Once you have the Scale CLI and the toolchain for your Guest Language installed,
 running the following command, passing a `<name>:<tag>` pair to the `new` command:
 
 ```bash
-scale new hello-world:1.0
+scale new hello:1.0
 ```
 
 This will create a new scale function in the current directory. You can also specify a different directory by passing the
 `--directory` or `-d` flag:
 
 ```bash
-scale new hello-world -d /path/to/directory
+scale new hello:1.0 -d /path/to/directory
 ```
 
 <Note>
@@ -49,7 +49,7 @@ scale new hello-world -d /path/to/directory
     you can pass the `--language` or `-l` flag:
 
     ```bash
-    scale new hello-world -l rust
+    scale new hello:1.0 -l rust
     ```
 </Note>
 
@@ -60,7 +60,7 @@ The following files will be created in the directory depending on the language y
         <CodeGroup>
             ```yaml scalefile
             version: v1alpha
-            name: hello-world
+            name: hello
             tag: 1.0
             signature: http@v0.3.4
             language: go
@@ -104,7 +104,7 @@ The following files will be created in the directory depending on the language y
         <CodeGroup>
             ```yaml scalefile
             version: v1alpha
-            name: hello-world
+            name: hello
             tag: 1.0
             signature: http@v0.3.4
             language: rust
@@ -200,7 +200,7 @@ scale function list
 ```
   NAME (1)            TAG      ORG           LANGUAGE   SIGNATURE     HASH                                                               VERSION
  ------------------- -------- ------------- ---------- ------------- ------------------------------------------------------------------ ---------
-  hello-world         1.0     local         rust       http@v0.3.4   8dad03b701cd124b55ff5caf7a36a9af5d19759fc73a9e8299bea4816f929777   v1alpha
+  hello              1.0     local         rust       http@v0.3.4   8dad03b701cd124b55ff5caf7a36a9af5d19759fc73a9e8299bea4816f929777   v1alpha
 ```
 
 ## Run the Function
@@ -208,14 +208,14 @@ scale function list
 Once you've built the function, you can run it by running the following command:
 
 ```bash
-scale run local/hello-world:1.0
+scale run local/hello:1.0
 ```
 
 This will start a local HTTP server on port `8080` and will run the function whenever you make a request to it. You can
 also specify a different port by passing the `--listen` or `-l` flag:
 
 ```bash
-scale run local/hello-world:1.0 -l :3000
+scale run local/hello:1.0 -l :3000
 ```
 
 <Note>
@@ -270,14 +270,14 @@ scale auth status
 Once you've authenticated with the Scale API, you can push your function to the Scale Registry by running the following command:
 
 ```bash
-scale function push hello-world:1.0
+scale function push hello:1.0
 ```
 
 This will push the function to the Scale Registry and make it available for use in your existing services. By default
 the function will be private, but you can make it public by passing the `--public` flag:
 
 ```bash
-scale function push hello-world:1.0 --public
+scale function push hello:1.0 --public
 ```
 
 <Note>
@@ -292,7 +292,7 @@ Once you've pushed a function to the Scale Registry, you can pull it and use it 
 you can run the following command:
 
 ```bash
-scale function pull <your organization>/hello-world:1.0
+scale function pull <your organization>/hello:1.0
 ```
 
 <Note>
@@ -306,7 +306,7 @@ This will pull the function from the Scale Registry and save it to the `Cache Di
 You can also specify a different directory by passing the `--cache-directory` flag:
 
 ```bash
-scale function pull <your organization>/hello-world:1.0 --cache-directory /path/to/directory
+scale function pull <your organization>/hello:1.0 --cache-directory /path/to/directory
 ```
 
 <Note>

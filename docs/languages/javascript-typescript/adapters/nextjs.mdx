@@ -45,7 +45,7 @@ Now you're ready to start using Scale Functions in your Next.js App!
 To get started, let's create a Scale Function that returns a simple 'Hello World' message. This is as simple as
 running the following command:
 ```bash
-scale new hello-world
+scale fn new hello:1.0
 ```
 
 <Note>
@@ -71,17 +71,17 @@ func Scale(ctx *signature.Context) (*signature.Context, error) {
 
 Now lets build the Scale Function and export it locally:
 ```bash
-scale build && scale function export hello-world:latest .
+scale build && scale function export hello:1.0.
 ```
 
-This will create a `hello-world-latest.scale` file in the current directory. Because of the way [Next.js](https://nextjs.org/)
+This will create a `hello-latest.scale` file in the current directory. Because of the way [Next.js](https://nextjs.org/)
 deploys Edge Functions, we also need to export a raw version of the Scale Function. To do this, we can use the
 `--raw` flag with the previous export command:
 ```bash
-scale function export hello-world:latest . --raw
+scale function export hello:latest . --raw
 ```
 
-This will create a `hello-world-latest.wasm` file in the current directory. Now we have everything we need to import
+This will create a `hello-latest.wasm` file in the current directory. Now we have everything we need to import
 the Scale Function into our Next.js App.
 
 <Tip>
@@ -95,9 +95,9 @@ import { NextRequest } from 'next/server';
 import { NextJS } from '@loopholelabs/scale-http-adapters';
 import { New, Func } from "@loopholelabs/scale";
 // @ts-ignore
-import example from "./hello-world-latest.scale"
+import example from "./hello-latest.scale"
 // @ts-ignore
-import exampleModule from "./hello-world-latest.wasm?module"
+import exampleModule from "./hello-latest.wasm?module"
 
 export const config = {
   runtime: 'edge',
