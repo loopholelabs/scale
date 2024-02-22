@@ -22,13 +22,11 @@ The following global flags are available throughout the Scale CLI:
 | `--debug` | Enable debug logging | `false` |
 | `--no-color` | Disable color output | `false` |
 | `--version` | Show the version of the Scale CLI | `false` |
-| `--api-endpoint` | The URL of the Scale API endpoint | `api.scale.sh` |
-| `--auth-endpoint` | The URL of the Scale Authentication API endpoint | `auth.scale.sh` |
 | `--cache-directory` | The path to the Scale CLI cache directory (will be created if it does not exist) | `~/.config/scale/functions` |
 
 ## Environment Variables
 
-The CLI will look for environment variables prefixed with `SCALE_` and convert them to the corresponding flag. For example, the environment variable `SCALE_API_ENDPOINT` will be converted to the `--api-endpoint` flag.
+The CLI will look for environment variables prefixed with `SCALE_` and convert them to the corresponding flag. For example, the environment variable `SCALE_CACHE_DIRECTORY` will be converted to the `--cache-directory` flag.
 
 ## Configuration File
 
@@ -39,8 +37,7 @@ The configuration file itself can also be specified using the `--config` flag or
 ### Example Configuration File
 
 ```yaml ~/.config/scale/config.yml
-api_endpoint: api.scale.sh
-auth_endpoint: auth.scale.sh
 cache_directory: /tmp/scale/functions
+log: ~/scale.log
 debug: true
 ```
