@@ -5,7 +5,7 @@ description: Learn how Scale Extensions work and how they're used in Scale Funct
 
 Extensions are function-scoped, strongly-typed interfaces, coupled with performant tranlation-layer code, allowing for safe, structured access to underlying host resources.
 
-A bit more explanation: Wasm modules are secure sandboxes, with no access or knowledge of anything outside said box by default -- but what if you want to turn a Scale Function into, say, a webhook? With an extension, you're able to create a strongly-typed, usable HTTP call interface for just your function.
+Wasm modules are secure sandboxes, with no access or knowledge of anything outside said box by default -- but what if you want to turn a Scale Function into, say, a webhook? With an extension, you're able to create a strongly-typed, usable HTTP call interface for just your function.
 
 We use the [Polyglot](https://github.com/loopholelabs/polyglot-go) library under the hood to facilitate efficient
 serialization and deserialization of structured data between host and guest languages and to cross the Wasm boundary.
