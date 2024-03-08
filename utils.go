@@ -44,4 +44,3 @@ func Parse(name string) *Parsed {
 func unpackUint32(packed uint64) (uint32, uint32) {
 	return uint32(packed >> 32), uint32(packed)
 }
-

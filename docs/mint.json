@@ -143,6 +143,7 @@
               "cli/reference/auth",
               "cli/reference/apikey",
               "cli/reference/signatures",
+              "cli/reference/extensions",
               "cli/reference/function",
               "cli/reference/registry"
             ]
@@ -154,6 +155,12 @@
       "pages": [
         "signatures/overview",
         "signatures/http"
+      ]
+    },
+    {
+      "group": "Extensions",
+      "pages": [
+        "extensions/overview"
       ]
     }
   ],

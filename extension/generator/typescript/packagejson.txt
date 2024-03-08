@@ -1,5 +1,5 @@
 {
-    "name": "fetch",
+    "name": "0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe",
     "version": "0.1.0",
     "source": "index.ts",
     "types": "index.d.ts",

@@ -3,3 +3,106 @@
 
 /* eslint no-bitwise: off */
 
+{{ $hash := .extension_hash }}
+
+import { Decoder, Encoder } from "@loopholelabs/polyglot";
+
+import * as types from "./types";
+
+let writeBuffer = new Uint8Array().buffer;
+let readBuffer = new Uint8Array().buffer;
+
+function ext_{{ $hash }}_Resize(len: number): number {
+  readBuffer = new Uint8Array(len).buffer;
+  const ptr = (global as any).scale_address_of(readBuffer);
+  return ptr;
+}
+
+// Register it...
+function ext_init() {
+  let id = BigInt({{ .extension_id }});
+  // TODO: This ID needs to come from config etc
+  (global as any).registerResize(id, ext_{{ $hash }}_Resize);
+}
+
+{{ $schema := .extension_schema }}
+
+// Define any interfaces we need here...
+// Also define structs we can use to hold instanceId
+
+{{ range $ifc := .extension_schema.Interfaces }}
+
+// Define concrete types with a hidden instanceId
+
+class _{{ $ifc.Name }} {
+  instanceId: number;
+
+  constructor(id: number) {
+    this.instanceId = id;
+  }
+
+{{ range $fn := $ifc.Functions }}
+  {{ $fn.Name }}(params: types.{{ $fn.Params }}): types.{{ $fn.Return }} {
+    let e = new Encoder();
+    params.encode(e);
+    writeBuffer = e.bytes.buffer;
+
+    let callID = BigInt({{ CallId $hash $ifc.Name $fn.Name }});
+    let ev = (global as any).scale_ext_mux([callID, this.instanceId, (global as any).scale_address_of(writeBuffer), writeBuffer.byteLength]);
+
+    {{- if (IsInterface $schema $fn.Return) }}
+      // Handle error from host... (stuff in readBuffer)
+      if (readBuffer.byteLength>0) {
+        let dec = new Decoder(new Uint8Array(readBuffer));
+        throw dec.error();
+      }
+
+      return new _{{ $fn.Return }}(ev);
+    {{ else }}
+      // Decode it and return...
+      let dec = new Decoder(new Uint8Array(readBuffer));
+      return new types.{{ $fn.Return }}(dec);
+    {{ end }}
+  }
+
+{{ end }}
+
+}
+
+{{ end }}
+
+// Define any global functions here...
+
+{{ range $fn := .extension_schema.Functions }}
+
+export function {{ $fn.Name }}(params: types.{{ $fn.Params }}): types.{{ $fn.Return }} {
+  // First encode the params...
+
+  // Make sure this is registered for incoming resize calls.
+  ext_init();
+
+  readBuffer = new Uint8Array(0).buffer;
+
+  let e = new Encoder();
+  params.encode(e);
+  writeBuffer = e.bytes.buffer;
+
+  let callID = BigInt({{ CallId $hash "" $fn.Name }});
+  let ev = (global as any).scale_ext_mux([callID, 0, (global as any).scale_address_of(writeBuffer), writeBuffer.byteLength]);
+
+  {{- if (IsInterface $schema $fn.Return) }}
+    // Handle error from host... (stuff in readBuffer)
+    if (readBuffer.byteLength>0) {
+      let dec = new Decoder(new Uint8Array(readBuffer));
+      throw dec.error();
+    }
+
+    return new _{{ $fn.Return }}(ev);
+  {{ else }}
+    // Decode it and return...
+    let dec = new Decoder(new Uint8Array(readBuffer));
+    return new types.{{ $fn.Return }}(dec);
+  {{ end }}
+}
+
+{{ end }}

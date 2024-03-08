@@ -1,7 +1,6 @@
 linters:
   enable:
     - gocritic
-    - goimports
     - gosimple
     - govet
     - ineffassign
@@ -17,6 +16,7 @@ linters:
     - gocognit
     - gocyclo
     - goconst
+    - goimports
 
 linters-settings:
   gocognit:

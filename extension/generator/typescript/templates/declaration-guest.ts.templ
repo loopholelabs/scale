@@ -2,3 +2,11 @@
 // output: {{ .package_name }}
 
 export * from "./types";
+
+// Define any global functions here...
+
+{{ range $fn := .extension_schema.Functions }}
+
+export declare function {{ $fn.Name }}(params: types.{{ $fn.Params }}): types.{{ $fn.Return }};
+
+{{ end }}

@@ -19,7 +19,7 @@ pub mod time;
 
 use once_cell::sync::OnceCell;
 use quickjs_wasm_sys::{
-    ext_js_undefined, JSContext, JSRuntime, JSValue, JS_BigIntToUint64, JS_Call,
+    ext_js_undefined, JSContext, JSRuntime, JSValue, JS_BigIntToUint64, JS_NewBigUint64, JS_Call,
     JS_DefinePropertyValueStr, JS_Eval, JS_GetArrayBuffer, JS_GetException, JS_GetGlobalObject,
     JS_GetPropertyStr, JS_GetPropertyUint32, JS_IsError, JS_NewContext, JS_NewInt32_Ext,
     JS_NewObject, JS_NewRuntime, JS_NewUint32_Ext, JS_EVAL_TYPE_GLOBAL, JS_PROP_C_W_E,
@@ -46,8 +46,11 @@ static mut ENTRY_MAIN: OnceCell<JSValue> = OnceCell::new();
 static mut ENTRY_INITIALIZE: OnceCell<JSValue> = OnceCell::new();
 static mut ENTRY_RUN: OnceCell<JSValue> = OnceCell::new();
 static mut ENTRY_RESIZE: OnceCell<JSValue> = OnceCell::new();
+static mut ENTRY_EXT_RESIZE: OnceCell<JSValue> = OnceCell::new();
 
 static SCRIPT_NAME: &str = "index.js";
+
+pub const TYPESCRIPT_EXT_MUX: &str = "scale_ext_mux";
 
 // If the wizer_opt feature is enabled, we will export a function called wizer.initialize
 // so wizer knows what entrypoint to use.
@@ -111,6 +114,14 @@ fn initialize_runtime() {
             scale_signature_interfaces::TYPESCRIPT_NEXT,
             &next_wrap,
         );
+
+        helpers::set_callback(
+          context,
+          global,
+          TYPESCRIPT_EXT_MUX,
+          &ext_mux_wrap,
+        );
+
         helpers::set_callback(
             context,
             global,
@@ -220,6 +231,10 @@ fn initialize_runtime() {
         let resize_key = CString::new("resize").unwrap();
         let resize_fn = JS_GetPropertyStr(context, exports, resize_key.as_ptr());
         ENTRY_RESIZE.set(resize_fn).unwrap();
+
+        let ext_resize_key = CString::new("ext_resize").unwrap();
+        let ext_resize_fn = JS_GetPropertyStr(context, exports, ext_resize_key.as_ptr());
+        ENTRY_EXT_RESIZE.set(ext_resize_fn).unwrap();
 
         ENTRY_EXPORTS.set(exports).unwrap();
         JS_RUNTIME.set(runtime).unwrap();
@@ -473,6 +488,88 @@ fn next_wrap(
         let len = JS_GetPropertyUint32(context, *js_value, 1) as u32;
         _next(ptr, len);
         ext_js_undefined
+    }
+}
+
+#[link(wasm_import_module = "env")]
+extern "C" {
+    #[link_name = "ext_mux"]
+    fn _ext_mux(id: u64, instance: u64, ptr: u32, size: u32) -> u64;
+}
+
+// Wrap the exported ext_mux function so it can be called from the js runtime
+// from JS, it should be called as scale_ext_mux(id: bigint, instance: bigint, ptr: number, len: number) -> bigint
+fn ext_mux_wrap(
+    context: *mut JSContext,
+    _: JSValue,
+    _: c_int,
+    js_value: *mut JSValue,
+    _: c_int,
+) -> JSValue {
+    unsafe {
+        let js_id = JS_GetPropertyUint32(context, *js_value, 0);
+        let mut id: u64 = 0; 
+        JS_BigIntToUint64(context, &mut id, js_id);
+
+        let js_instance = JS_GetPropertyUint32(context, *js_value, 1);
+        let mut instance: u64 = 0; 
+        JS_BigIntToUint64(context, &mut instance, js_instance);
+
+        let ptr = JS_GetPropertyUint32(context, *js_value, 2) as u32;
+        let len = JS_GetPropertyUint32(context, *js_value, 3) as u32;
+        let v = _ext_mux(id, instance, ptr, len);
+        return JS_NewBigUint64(context, v);
+    }
+}
+
+// from ext_resize(id: bigint, size: number) -> number
+#[export_name = "ext_resize"]
+#[no_mangle]
+pub extern "C" fn ext_resize(id: u64, size: u32) -> *mut u8 {
+    unsafe {
+        let context = JS_CONTEXT.get().unwrap();
+        let exports = ENTRY_EXPORTS.get().unwrap();
+        let extresizefn = ENTRY_EXT_RESIZE.get().unwrap();
+
+        let mut args: Vec<JSValue> = Vec::new();
+        let jval_id = JS_NewBigUint64(*context, id);
+        args.push(jval_id);
+        let jval = JS_NewInt32_Ext(*context, size as i32);
+        args.push(jval);
+
+        let ret = JS_Call(
+            *context,
+            *extresizefn,
+            *exports,
+            args.len() as i32,
+            args.as_slice().as_ptr() as *mut JSValue,
+        );
+
+        if (ret >> 32) as i32 == JS_TAG_EXCEPTION {
+            let e = JS_GetException(*context);
+            let exception =
+                helpers::to_exception(*context, e).expect("getting exception during resize failed");
+
+            let mut stack = None;
+            let is_error = JS_IsError(*context, e) != 0;
+            if is_error {
+                let cstring_key = CString::new("stack")
+                    .expect("getting new CString for JS stack during resize failed");
+                let raw = JS_GetPropertyStr(*context, e, cstring_key.as_ptr());
+                if (raw >> 32) as i32 != JS_TAG_UNDEFINED {
+                    stack.replace(helpers::to_exception(*context, raw));
+                }
+            }
+            let mut err = format!("exception from js runtime during resize: {}", exception);
+            if let Some(Ok(stack)) = stack {
+                if stack.len() > 0 {
+                    err.push_str(&format!("\nstack:\n{stack}"));
+                }
+            }
+            panic!("{}", err);
+        }
+
+        ret as *mut u8
     }
 }
 

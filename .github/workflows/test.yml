@@ -41,8 +41,8 @@ jobs:
 
       - name: Set up Rust
         run: |
-          rustup toolchain install stable --profile minimal --no-self-update
-          rustup default stable
+          rustup toolchain install 1.74.1 --profile minimal --no-self-update
+          rustup default 1.74.1
           rustup target add wasm32-wasi
         shell: bash
 
