@@ -155,6 +155,7 @@ func (m *module[T]) register(function *function[T]) {
 func (m *module[T]) cleanup() {
 	m.function = nil
 	m.template.runtime.activeModulesMu.Lock()
+	// m.instantiatedModule.CloseWithExitCode(m.template.runtime.config.context, 0)
 	delete(m.template.runtime.activeModules, m.instantiatedModule.Name())
 	m.template.runtime.activeModulesMu.Unlock()
 }
