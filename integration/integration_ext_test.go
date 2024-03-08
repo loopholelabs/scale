@@ -203,6 +203,82 @@ func compileExtRustGuest(t *testing.T) *scalefunc.V1BetaSchema {
 	return schema
 }
 
+func compileExtTypescriptGuest(t *testing.T) *scalefunc.V1BetaSchema {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	s := new(signature.Schema)
+	err = s.Decode([]byte(signature.MasterTestingSchema))
+	require.NoError(t, err)
+
+	hash, err := s.Hash()
+	require.NoError(t, err)
+
+	typescriptCompileDir := wd + "/typescript_ext_tests/compile"
+	err = os.MkdirAll(typescriptCompileDir, 0755)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.RemoveAll(typescriptCompileDir)
+		require.NoError(t, err)
+	})
+
+	ex := new(extension.Schema)
+	err = ex.Decode([]byte(extensionSchema))
+
+	typescriptFunctionDir := wd + "/typescript_ext_tests/function"
+	scf := &scalefile.Schema{
+		Version:  scalefile.V1AlphaVersion,
+		Name:     "example",
+		Tag:      "latest",
+		Language: string(scalefunc.TypeScript),
+		Signature: scalefile.SignatureSchema{
+			Organization: "local",
+			Name:         "example",
+			Tag:          "latest",
+		},
+		Function: "example",
+		Extensions: []scalefile.ExtensionSchema{
+			{
+				Organization: "local",
+				Name:         "example",
+				Tag:          "latest",
+			},
+		},
+	}
+
+	stb, err := storage.NewBuild(typescriptCompileDir)
+	require.NoError(t, err)
+
+	extensionSchemas := []*extension.Schema{
+		ex,
+	}
+
+	schema, err := build.LocalTypescript(&build.LocalTypescriptOptions{
+		Stdout:           os.Stdout,
+		Scalefile:        scf,
+		SourceDirectory:  typescriptFunctionDir,
+		SignatureSchema:  s,
+		Storage:          stb,
+		Release:          false,
+		Target:           build.WASITarget,
+		ExtensionSchemas: extensionSchemas,
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, scf.Name, schema.Name)
+	assert.Equal(t, scf.Tag, schema.Tag)
+	assert.Equal(t, scf.Signature.Name, schema.Signature.Name)
+	assert.Equal(t, scf.Signature.Organization, schema.Signature.Organization)
+	assert.Equal(t, scf.Signature.Tag, schema.Signature.Tag)
+	assert.Equal(t, s, schema.Signature.Schema)
+	assert.Equal(t, hex.EncodeToString(hash), schema.Signature.Hash)
+	assert.Equal(t, scalefunc.TypeScript, schema.Language)
+	assert.Equal(t, 1, len(schema.Extensions))
+
+	return schema
+}
+
 /**
  * Implementation of the simple extension
  *
@@ -270,6 +346,29 @@ func TestExtGolangHostRustGuest(t *testing.T) {
 	require.Equal(t, "This is a Rust Function. Extension New().Hello()=Return Hello World()=Return World", sig.Context.StringField)
 }
 
+func TestExtGolangHostTypescriptGuest(t *testing.T) {
+	ext_impl := &ExtensionImpl{}
+
+	e := hostExtension.New(ext_impl)
+
+	t.Log("Starting TestExtGolangHostTypescriptGuest")
+	schema := compileExtTypescriptGuest(t)
+	cfg := scale.NewConfig(hostSignature.New).WithFunction(schema).WithStdout(os.Stdout).WithStderr(os.Stderr).WithExtension(e)
+	runtime, err := scale.New(cfg)
+	require.NoError(t, err)
+
+	instance, err := runtime.Instance()
+	require.NoError(t, err)
+
+	sig := hostSignature.New()
+
+	ctx := context.Background()
+	err = instance.Run(ctx, sig)
+	require.NoError(t, err)
+
+	require.Equal(t, "This is a Typescript Function. Extension New().Hello()=Return Hello World()=Return World", sig.Context.StringField)
+}
+
 func TestExtTypescriptHostGolangGuest(t *testing.T) {
 	t.Log("Starting TestExtTypescriptHostGolangGuest")
 	wd, err := os.Getwd()
@@ -304,6 +403,26 @@ func TestExtTypescriptHostRustGuest(t *testing.T) {
 	})
 
 	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-ext-typescript-host-rust-guest")
+	cmd.Dir = wd
+	out, err := cmd.CombinedOutput()
+	assert.NoError(t, err)
+	t.Log(string(out))
+}
+
+func TestExtTypescriptHostTypescriptGuest(t *testing.T) {
+	t.Log("Starting TestExtTypescriptHostTypescriptGuest")
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+
+	schema := compileExtTypescriptGuest(t)
+	err = os.WriteFile(wd+"/typescript.scale", schema.Encode(), 0644)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Remove(wd + "/typescript.scale")
+		require.NoError(t, err)
+	})
+
+	cmd := exec.Command("npm", "run", "test", "--", "-t", "test-ext-typescript-host-typescript-guest")
 	cmd.Dir = wd
 	out, err := cmd.CombinedOutput()
 	assert.NoError(t, err)

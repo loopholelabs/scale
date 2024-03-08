@@ -97,8 +97,8 @@ func (r *Scale[T]) init() error {
 	for _, ext := range r.config.extensions {
 		fns := ext.Init()
 		for name, fn := range fns {
-			wfn := func(n string, f extension.InstallableFunc) func(context.Context, api.Module, []uint64) {
-				return func(ctx context.Context, mod api.Module, params []uint64) {
+			wfn := func(_ string, f extension.InstallableFunc) func(context.Context, api.Module, []uint64) {
+				return func(_ context.Context, mod api.Module, params []uint64) {
 					mem := mod.Memory()
 					resize := func(name string, size uint64) (uint64, error) {
 						w, err := mod.ExportedFunction(name).Call(context.Background(), size)

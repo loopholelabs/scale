@@ -9,13 +9,13 @@ import * as types from "./types";
 
 export * from "./types";
 
-const hash = "fetch";
+const hash = "0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe";
 
 // Write an error to the scale function guest buffer.
 function hostError(mem: ModuleMemory, resize: Resizer, err: Error) {
   const enc = new Encoder();
   enc.error(err);
-  const ptr = resize("ext_fetch_Resize", enc.bytes.length);
+  const ptr = resize("ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_Resize", enc.bytes.length);
 
   mem.Write(ptr, enc.bytes);
 }
@@ -46,11 +46,11 @@ export function New(impl: Interface): ExtensionInterface {
 
   // Add global functions to the runtime
 
-  fns.set("ext_fetch_New", hostWrapper.host_ext_fetch_New.bind(hostWrapper));
+  fns.set("ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_New", hostWrapper.host_ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_New.bind(hostWrapper));
 
   hostWrapper.instances_HttpConnector = new Map<number, HttpConnector>();
 
-  fns.set("ext_fetch_HttpConnector_Fetch", hostWrapper.host_ext_fetch_HttpConnector_Fetch.bind(hostWrapper));
+  fns.set("ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_HttpConnector_Fetch", hostWrapper.host_ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_HttpConnector_Fetch.bind(hostWrapper));
 
   return new hostExt(fns, hostWrapper);
 }
@@ -67,7 +67,7 @@ class Host {
 
   // Global functions...
 
-  host_ext_fetch_New(mem: ModuleMemory, resize: Resizer, params: number[]) {
+  host_ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_New(mem: ModuleMemory, resize: Resizer, params: number[]) {
     const d = mem.Read(params[1], params[2]);
     const c = types.HttpConfig.decode(new Decoder(d));
     const r = this.impl.New(c);
@@ -79,7 +79,7 @@ class Host {
 
   // Instance functions...
 
-  host_ext_fetch_HttpConnector_Fetch(mem: ModuleMemory, resize: Resizer, params: number[]): bigint {
+  host_ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_HttpConnector_Fetch(mem: ModuleMemory, resize: Resizer, params: number[]): bigint {
     const d = mem.Read(params[1], params[2]);
     const c = types.ConnectionDetails.decode(new Decoder(d));
     // Do lookup...
@@ -87,7 +87,7 @@ class Host {
     const r = inst.Fetch(c);
     const enc = new Encoder();
     r.encode(enc);
-    const ptr = resize("ext_fetch_Resize", enc.bytes.length);
+    const ptr = resize("ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_Resize", enc.bytes.length);
     mem.Write(ptr, enc.bytes);
     return;
   }

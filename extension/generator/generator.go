@@ -37,9 +37,10 @@ type GuestRegistryPackage struct {
 }
 
 type GuestLocalPackage struct {
-	GolangFiles     []File
-	RustFiles       []File
-	TypescriptFiles []File
+	GolangFiles       []File
+	RustFiles         []File
+	TypescriptFiles   []File
+	TypescriptPackage *bytes.Buffer
 }
 
 type HostRegistryPackage struct {
@@ -123,9 +124,77 @@ func GenerateGuestLocal(options *Options) (*GuestLocalPackage, error) {
 		NewFile("Cargo.toml", "Cargo.toml", cargofile),
 	}
 
+	typescriptTypes, err := typescript.GenerateTypesTranspiled(options.Extension, options.TypescriptPackageName, "types.js")
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptGuest, err := typescript.GenerateGuestTranspiled(options.Extension, hashString, options.TypescriptPackageName, "index.js")
+	if err != nil {
+		return nil, err
+	}
+
+	packageJSON, err := typescript.GeneratePackageJSON(options.TypescriptPackageName, options.TypescriptPackageVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	typescriptFiles := []File{
+		NewFile("types.ts", "types.ts", typescriptTypes.Typescript),
+		NewFile("types.js", "types.js", typescriptTypes.Javascript),
+		NewFile("types.js.map", "types.js.map", typescriptTypes.SourceMap),
+		NewFile("types.d.ts", "types.d.ts", typescriptTypes.Declaration),
+		NewFile("index.ts", "index.ts", typescriptGuest.Typescript),
+		NewFile("index.js", "index.js", typescriptGuest.Javascript),
+		NewFile("index.js.map", "index.js.map", typescriptGuest.SourceMap),
+		NewFile("index.d.ts", "index.d.ts", typescriptGuest.Declaration),
+		NewFile("package.json", "package.json", packageJSON),
+	}
+
+	typescriptBuffer := new(bytes.Buffer)
+	gzipTypescriptWriter := gzip.NewWriter(typescriptBuffer)
+	tarTypescriptWriter := tar.NewWriter(gzipTypescriptWriter)
+
+	var header *tar.Header
+	for _, file := range typescriptFiles {
+		header, err = tar.FileInfoHeader(file, file.Name())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to create tar header for %s: %w", file.Name(), err)
+		}
+
+		header.Name = path.Join("package", header.Name)
+
+		err = tarTypescriptWriter.WriteHeader(header)
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar header for %s: %w", file.Name(), err)
+		}
+		_, err = tarTypescriptWriter.Write(file.Data())
+		if err != nil {
+			_ = tarTypescriptWriter.Close()
+			_ = gzipTypescriptWriter.Close()
+			return nil, fmt.Errorf("failed to write tar data for %s: %w", file.Name(), err)
+		}
+	}
+
+	err = tarTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close tar writer: %w", err)
+	}
+
+	err = gzipTypescriptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close gzip writer: %w", err)
+	}
+
 	return &GuestLocalPackage{
-		GolangFiles: golangFiles,
-		RustFiles:   rustFiles,
+		GolangFiles:       golangFiles,
+		RustFiles:         rustFiles,
+		TypescriptFiles:   typescriptFiles,
+		TypescriptPackage: typescriptBuffer,
 	}, nil
 }
 

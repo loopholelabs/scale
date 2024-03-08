@@ -83,6 +83,12 @@ func TestGenerateExtensionTestingSchema(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	typescriptExtensionDir := wd + "/typescript_ext_tests/extension"
+	for _, file := range guest.TypescriptFiles {
+		err = os.WriteFile(typescriptExtensionDir+"/"+file.Name(), file.Data(), 0644)
+		require.NoError(t, err)
+	}
+
 	host, err := generator.GenerateHostLocal(&generator.Options{
 		Extension: s,
 
@@ -102,7 +108,7 @@ func TestGenerateExtensionTestingSchema(t *testing.T) {
 		}
 	}
 
-	typescriptExtensionDir := wd + "/typescript_ext_tests/host_extension"
+	typescriptExtensionDir = wd + "/typescript_ext_tests/host_extension"
 	for _, file := range host.TypescriptFiles {
 		if file.Name() != "go.mod" {
 			err = os.WriteFile(typescriptExtensionDir+"/"+file.Name(), file.Data(), 0644)

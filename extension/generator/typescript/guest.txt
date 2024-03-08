@@ -3,3 +3,74 @@
 
 /* eslint no-bitwise: off */
 
+import { Decoder, Encoder } from "@loopholelabs/polyglot";
+
+import * as types from "./types";
+
+let writeBuffer = new Uint8Array().buffer;
+let readBuffer = new Uint8Array().buffer;
+
+function ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_Resize(len: number): number {
+  readBuffer = new Uint8Array(len).buffer;
+  const ptr = (global as any).scale_address_of(readBuffer);
+  return ptr;
+}
+
+// Register it...
+function ext_init() {
+  let id = BigInt(0x0673aeae);
+  // TODO: This ID needs to come from config etc
+  (global as any).registerResize(id, ext_0673aeaed6f027b5bc7b4a79de1b4be4bc096366c1e406bf44face690c217cbe_Resize);
+}
+
+// Define any interfaces we need here...
+// Also define structs we can use to hold instanceId
+
+// Define concrete types with a hidden instanceId
+
+class _HttpConnector {
+  instanceId: number;
+
+  constructor(id: number) {
+    this.instanceId = id;
+  }
+
+  Fetch(params: types.ConnectionDetails): types.HttpResponse {
+    let e = new Encoder();
+    params.encode(e);
+    writeBuffer = e.bytes.buffer;
+    let callID = BigInt(0xb5e76d8d);
+    let ev = (global as any).scale_ext_mux([callID, this.instanceId, (global as any).scale_address_of(writeBuffer), writeBuffer.byteLength]);
+    // Decode it and return...
+    let dec = new Decoder(new Uint8Array(readBuffer));
+    return new types.HttpResponse(dec);
+  }
+
+}
+
+// Define any global functions here...
+
+export function New(params: types.HttpConfig): types.HttpConnector {
+  // First encode the params...
+
+  // Make sure this is registered for incoming resize calls.
+  ext_init();
+
+  readBuffer = new Uint8Array(0).buffer;
+
+  let e = new Encoder();
+  params.encode(e);
+  writeBuffer = e.bytes.buffer;
+
+  let callID = BigInt(0xce2d1516);
+  let ev = (global as any).scale_ext_mux([callID, 0, (global as any).scale_address_of(writeBuffer), writeBuffer.byteLength]);
+  // Handle error from host... (stuff in readBuffer)
+  if (readBuffer.byteLength>0) {
+    let dec = new Decoder(new Uint8Array(readBuffer));
+    throw dec.error();
+  }
+
+  return new _HttpConnector(ev);
+
+}
+
