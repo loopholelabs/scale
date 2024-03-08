@@ -15,7 +15,7 @@ We also publish and support a number of **Official** Scale Signatures for common
 
 | Signature                  | Description                                                        | Supported Languages              | Available Adapters                                                                                                                                           | Latest Version |
 |----------------------------|--------------------------------------------------------------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
-| [HTTP](/signatures/http)   | HTTP Signature meant to be used for HTTP handlers and middleware.  | Go, Rust, TypeScript, JavaScript | [net/http](/languages/golang/adapters/net-http), [FastHTTP](/languages/golang/adapters/fasthttp), [NextJS](/languages/javascript-typescript/adapters/nextjs) | 0.3.6          |
+| [HTTP](/signatures/http)   | HTTP Signature meant to be used for HTTP handlers and middleware.  | Go, Rust, TypeScript, JavaScript | [net/http](/languages/golang/adapters/net-http), [FastHTTP](/languages/golang/adapters/fasthttp), [NextJS](/languages/javascript-typescript/adapters/nextjs) | 0.3.8          |
 
 Official are maintained by the Scale Functions team and come with [Adapters](/languages/golang/adapters/net-http) which
 allow them to be used seamlessly from popular Frameworks and Libraries.
@@ -42,7 +42,14 @@ In this example, `Context` is a Scale Signature that defines a struct  with a st
 
 ## Using a Signature
 
-To use a Scale Signature in Golang, you need to define a function that matches the signature. Here's an example:
+Generate the signature, defined in the example above, by again using [the CLI](/cli/reference/signatures):
+
+```
+scale signature generate <name:tag>
+```
+
+
+Now, to use a Scale Signature in Golang, using the generated signature above, you can define a function accordingly. Here's an example:
 
 
 ```go

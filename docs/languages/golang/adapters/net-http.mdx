@@ -42,7 +42,7 @@ Now you're ready to start using Scale Functions in your Golang application!
 To get started, let's create a Scale Function that returns a simple 'Hello World' message. This is as simple as
 running the following command:
 ```bash
-scale new hello-world
+scale fn new hello
 ```
 
 <Note>
@@ -77,10 +77,10 @@ you can learn how to import the Scale Function from the Scale Registry using our
 
 Run the following command to export the Scale Function locally:
 ```bash
-scale function export hello-world:latest .
+scale function export hello:latest .
 ```
 
-This will create a `hello-world-latest.scale` file in the current directory. Now we have everything we need to import
+This will create a `hello-latest.scale` file in the current directory. Now we have everything we need to import
 the Scale Function into our Golang application.
 
 <Tip>
@@ -103,7 +103,7 @@ import (
     "github.com/loopholelabs/scalefile/scalefunc"
 )
 
-//go:embed hello-world-latest.scale
+//go:embed hello-latest.scale
 var embeddedFunction []byte
 
 func main() {

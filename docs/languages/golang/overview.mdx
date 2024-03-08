@@ -178,7 +178,7 @@ it.
             scale "github.com/loopholelabs/scale/go"
         )
 
-        //go:embed hello-world-latest.scale
+        //go:embed hello-latest.scale
         var embeddedFunction []byte
 
         func main() {
@@ -209,7 +209,7 @@ it.
         )
 
         func main() {
-            sf, _ := registry.Download("hello-world", "latest")
+            sf, _ := registry.Download("hello", "latest")
 
             ctx := context.Background()
             r := scale.New(ctx, sf)

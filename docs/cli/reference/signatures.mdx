@@ -11,7 +11,7 @@ The `signature` command is used to interact with Scale Signatures locally. `sig`
 To create a new Scale Signature, run the following command:
 
 ```bash
-scale signature new <name>
+scale signature new
 ```
 
 This will create a new scale signature in the current directory in the [Go](https://golang.org/) programming language.
@@ -19,7 +19,7 @@ This will create a new scale signature in the current directory in the [Go](http
 You can also specify the language of the signature you want to create by using the `--language` flag:
 
 ```bash
-scale signature new <name> --language <language>
+scale signature new --language <language>
 ```
 
 The following languages are currently supported:
@@ -41,6 +41,9 @@ Generate a scale signature from a signature file
 scale signature generate <name:tag>
 ```
 
+This will generate the signature defined in the local directory, in your `local/` organization.
+
+
 <Note>
     To learn about how to install the toolchain for a specific language, see the documentation for that language:
 
@@ -53,7 +56,7 @@ scale signature generate <name:tag>
 Create a new scale signature with the given name and tag.
 
 ```bash
-scale signature use <name:tag>
+scale signature use <org>/<name:tag>
 ```
 
 ## List
