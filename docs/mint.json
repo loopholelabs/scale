@@ -155,6 +155,12 @@
         "signatures/overview",
         "signatures/http"
       ]
+    },
+    {
+      "group": "Extensions",
+      "pages": [
+        "extensions/overview"
+      ]
     }
   ],
   "footerSocials": {

@@ -1,0 +1,66 @@
+---
+title: Extensions
+sidebarTitle: Extension Command
+description: How to use the `extension` command in the Scale CLI.
+---
+
+The `extension` command is used to interact with Scale Extensions locally. `ext` is an alias for `extension`.
+
+## New
+
+To create a new Scale Extension, run the following command:
+
+```bash
+scale extension new
+```
+
+This will create a new scale extension in the current directory in the [Go](https://golang.org/) programming language.
+
+You can also specify the language of the extension you want to create by using the `--language` flag:
+
+```bash
+scale extension new --language <language>
+```
+
+The following languages are currently supported:
+
+  * `go` - [Go](/languages/golang/overview)
+  * `rust` - [Rust](/languages/rust/overview)
+  * `ts` - [TypeScript/JavaScript](/languages/javascript-typescript/overview)
+
+<Note>
+    We are actively working on adding support for more languages. If you would like to see a specific language supported, please let
+    us know by joining the `#scale` channel in [our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Generate
+
+Generate a scale extension from a extension file
+
+```bash
+scale extension generate <name:tag>
+```
+
+This will generate the extension defined in the local directory, in your `local/` organization.
+
+
+<Note>
+    To learn about how to install the toolchain for a specific language, see the documentation for that language:
+
+    * [Go](/languages/golang/overview)
+    * [Rust](/languages/rust/overview)
+</Note>
+
+## List
+
+The `list` subcommand is used to list all the compiled Scale Extension available in the local Scale Extension cache.
+
+```bash
+scale extension list
+```
+
+If you'd like to specify the directory of the Scale Signature cache, you can use the `--cache-directory` flag:
+
+```bash
+scale extension list --cache-directory <cache-directory>
+```
