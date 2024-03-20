@@ -131,25 +131,10 @@ Here's a complete example of a TS/JS application that imports a Scale Function, 
 it.
 
 <Tabs>
-    <Tab title="Embedding the Function With Webpack">
+    <Tab title="Embedding the Function">
         ```javascript
         import { New } from "@loopholelabs/scale";
-        // @ts-ignore
-        import sf from "./hello.scale";
-
-        (async () => {
-            const r = await New([sf]);
-            const i = await r.Instance(null);
-            i.Context().Request.Body = "Hello, World!";
-            i.Run()
-            console.log(i.Context().Response.Body);
-        })();
-        ```
-    </Tab>
-    <Tab title="Embedding the Function Without Webpack">
-        ```javascript
-        import { New } from "@loopholelabs/scale";
-        import { Read } from "@loopholelabs/scalefile/scalefunc/helpers";
+        import { Read } from "@loopholelabs/scale/scalefunc";
 
         const sf = Read("./hello.scale");
 
