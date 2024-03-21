@@ -1,0 +1,40 @@
+
+### Installing JavaScript/TypeScript Tooling
+
+To develop with JavaScript (JS) or TypeScript (TS) for the Scale Functions, ensure you have the following installed:
+- [Node.js](https://nodejs.org/en/) and npm (Node Package Manager), which typically come together.
+- The TypeScript compiler for TS development.
+
+The recommended approach to install Node.js and npm is to download the LTS (Long-Term Support) version from the official Node.js website at [https://nodejs.org/en/](https://nodejs.org/en/). This version provides both stability and extended support.
+
+After installing, you can verify the installation of Node.js and npm by running the following commands in your terminal:
+
+```bash
+node --version
+npm --version
+```
+
+For TypeScript development, once Node.js and npm are installed, you can install the TypeScript compiler locally in your project or globally on your machine. Local installation is preferred for most projects to ensure consistency across environments and developers. To install TypeScript locally in your project, follow these steps:
+
+Navigate to your project directory. If you don't have one, create it with:
+
+  ```bash
+  mkdir my-project
+  cd my-project
+  ```
+Initialize a new npm project if you haven't already:
+
+```bash
+npm init -y
+```
+
+Install TypeScript as a development dependency:
+
+```bash
+npm install typescript --save-dev
+```
+You can verify that TypeScript was installed correctly by running:
+
+```bash
+npx tsc --version
+```
