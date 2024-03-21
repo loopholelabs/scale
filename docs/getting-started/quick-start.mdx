@@ -103,6 +103,51 @@ The following files will be created in the directory depending on the language y
         the `go.mod` file is primarily used to provide [Intellisense](https://code.visualstudio.com/docs/editor/intellisense)
         and Auto-Completion support in your IDE.
     </Tab>
+    <Tab title="TypeScript/JavaScript">
+        <CodeGroup>
+            ```yaml scalefile
+              version  = "v1alpha"
+              name     = "hello"
+              tag      = "1.0"
+              language = "ts"
+
+              signature {
+                organization = "local"
+                name         = "hello-signature"
+                tag          = "1.0"
+              }
+
+              stateless   = false
+              function    = "scale"
+              initialize  = ""
+              description = ""
+
+            ```
+
+            ```js index.ts
+
+              import * as signature from "signature";
+
+              export function scale(ctx?: signature.Context): signature.Context | undefined {
+                  return signature.Next(ctx);
+              }
+
+            ```
+
+            ```json package.json
+
+              {
+                "name": "hello",
+                "version": "0.1.0",
+                "main": "index.ts",
+                "dependencies": {
+                  "signature": "/path/to/generated/signature"
+                  }
+              }
+
+            ```
+        </CodeGroup>
+    </Tab>
     <Tab title="Rust">
         <CodeGroup>
             ```yaml scalefile
