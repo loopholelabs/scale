@@ -37,14 +37,14 @@ Once you have the Scale CLI and the toolchain for your Guest Language installed,
 running the following command, passing a `<name>:<tag>` pair to the `new` command:
 
 ```bash
-scale new hello:1.0
+scale fn new hello:1.0
 ```
 
 This will create a new scale function in the current directory. You can also specify a different directory by passing the
 `--directory` or `-d` flag:
 
 ```bash
-scale new hello:1.0 -d /path/to/directory
+scale fn new hello:1.0 -d /path/to/directory
 ```
 
 <Note>
@@ -52,7 +52,7 @@ scale new hello:1.0 -d /path/to/directory
     you can pass the `--language` or `-l` flag:
 
     ```bash
-    scale new hello:1.0 -l rust
+    scale fn new hello:1.0 -l rust
     ```
 </Note>
 
