@@ -13,11 +13,10 @@ This means that you can run Functions written in any supported language inside a
 A Scale Function written in [TypeScript](https://www.typescriptlang.org) often looks something like this:
 
 ```TypeScript
-import { Context } from 'scale-signature-http';
+import * as signature from "signature";
 
-function scale(ctx: Context): Promise<Context> {
-    ctx.response.setBody("Hello, World!");
-    return ctx.next();
+export function scale(ctx?: signature.Context): signature.Context | undefined {
+    return signature.Next(ctx);
 }
 ```
 
