@@ -57,7 +57,7 @@ exported using the `scale fn export` command (see [Exporting Scale Functions](/c
 ```go
 import (
 	"embed"
-	"github.com/loopholelabs/scalefile/scalefunc"
+	"github.com/loopholelabs/scale/scalefunc"
 )
 
 //go:embed <path to exported function>
@@ -106,7 +106,7 @@ and pass in the Scale Function(s).
 ```go
 import (
 	"context"
-	scale "github.com/loopholelabs/scale/go"
+	scale "github.com/loopholelabs/scale"
 )
 
 func main() {
@@ -175,7 +175,7 @@ it.
             "context"
             "embed"
             "fmt"
-            scale "github.com/loopholelabs/scale/go"
+            scale "github.com/loopholelabs/scale"
         )
 
         //go:embed hello-latest.scale
@@ -204,7 +204,7 @@ it.
         import (
             "context"
             "fmt"
-            scale "github.com/loopholelabs/scale/go"
+            scale "github.com/loopholelabs/scale"
             "github.com/loopholelabs/scale/go/registry"
         )
 
