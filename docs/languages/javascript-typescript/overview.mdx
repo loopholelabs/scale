@@ -35,9 +35,8 @@ To use a compiled Scale Function (written in any supported language) inside a Ty
 
 ### Importing Scale Functions
 
-Scale Functions can be imported into a TS/JS application in two ways:
+Scale Functions can be imported into a TS/JS application:
 - [Embedding](#embedding-scale-functions)
-- [Using the Registry](#using-the-registry)
 
 #### Embedding Scale Functions
 
@@ -48,42 +47,6 @@ import { Read } from "@loopholelabs/scale/scalefunc";
 
 const sf = Read("<path to exported function>");
 ```
-
-#### Using the Registry
-
-Scale Functions can also be imported into a TS/JS application by using the Registry.
-
-This has the advantage of allowing you import the function at runtime, rather than at compile time - however it does require your function
-to be available in the [Scale Registry](/registry/overview). Functions will also automatically be cached locally based on their
-tags and hashes, so subsequent calls to `Download` will be much faster.
-
-<Info>
-    If you'd like use the registry from a browser environment, you can use the `@loopholelabs/scale/registry/browser` package
-    instead of `@loopholelabs/scale/registry`.
-</Info>
-
-```javascript
-import {
-    Download,
-    WithOrganization,
-    WithAPIKey
-} from '@loopholelabs/scale/registry'
-
-const sf = Download(
-            "<function name>",
-            "<function tag>",
-            WithOrganization("<organization name>"),
-            WithAPIKey("<api key>")
-        );
-```
-
-<Note>
-    If your function is an official Scale Function you can omit the `WithOrganization` option, and if your function
-    is marked as public you can safely omit the `WithAPIKey` option.
-
-    All officially published scale functions are public. If you're interested in publishing your own functions, please join
-    the `#scale` channel on our [discord](https://loopholelabs.io/discord).
-</Note>
 
 ### Creating a Scale Runtime
 
