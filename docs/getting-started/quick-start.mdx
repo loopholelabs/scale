@@ -236,7 +236,7 @@ scale function build --cache-directory /path/to/directory
 
 <Info>
     The `Cache Directory` is where the Scale CLI stores all of the built functions. This is where the CLI will look for
-    functions when you run commands like `scale run` or `scale push`.
+    functions when you run commands like `scale fn run` or `scale fn push`.
 </Info>
 
 To list all of the functions that are currently in the `Cache Directory`, you can run the following command:
@@ -256,18 +256,18 @@ scale function list
 Once you've built the function, you can run it by running the following command:
 
 ```bash
-scale run local/hello:1.0
+scale fn run local/hello:1.0
 ```
 
 This will start a local HTTP server on port `8080` and will run the function whenever you make a request to it. You can
 also specify a different port by passing the `--listen` or `-l` flag:
 
 ```bash
-scale run local/hello:1.0 -l :3000
+scale fn run local/hello:1.0 -l :3000
 ```
 
 <Note>
-    The `scale run` command is designed for use with the [HTTP Signature](/signatures/http). It can be used for both
+    The `scale fn run` command is designed for use with the [HTTP Signature](/signatures/http). It can be used for both
     local development and production deployments and makes it easy to test your function without having to deploy it.
 </Note>
 
