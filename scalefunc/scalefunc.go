@@ -69,6 +69,22 @@ const (
 	TypeScript Language = "ts"
 )
 
+var LanguageAliases = map[string]Language{
+	"go":         Go,
+	"golang":     Go,
+	"rust":       Rust,
+	"typescript": TypeScript,
+	"ts":         TypeScript,
+	"javascript": TypeScript,
+}
+
+func ResolveLanguage(langStr string) (Language, error) {
+	if lang, ok := LanguageAliases[strings.ToLower(langStr)]; ok {
+		return lang, nil
+	}
+	return "", ErrLanguage
+}
+
 var (
 	// AcceptedLanguages is an array of acceptable Languages
 	AcceptedLanguages = []Language{Go, Rust, TypeScript}
