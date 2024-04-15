@@ -210,11 +210,15 @@ func (s *V1AlphaSchema) Decode(data []byte) error {
 		return err
 	}
 
-	language, err := d.String()
+	languageStr, err := d.String()
 	if err != nil {
 		return err
 	}
-	s.Language = Language(language)
+
+	s.Language, err = ResolveLanguage(languageStr)
+	if err != nil {
+		return err
+	}
 
 	invalid := true
 	for _, l := range AcceptedLanguages {
