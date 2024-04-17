@@ -112,20 +112,20 @@ It's helpful in situations where you want to distribute a Scale Function without
 if you want to embed it inside your Runtime or Application.
 
 ```bash
-scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path>
+scale function export [<org>/<name>:<tag>] <path>
 ```
 
 The function will be exported to the specified `<path>` directory as a `.scale` file. The `--output` flag can be used to override
 the name of the exported `.scale` file:
 
 ```bash
-scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path> --output <output>
+scale function export [<org>/<name>:<tag>] <path> --output <output>
 ```
 
 The `--raw` flag can be used to export the raw [WebAssembly](https://webassembly.org) `.wasm` binary instead of the `.scale` file:
 
 ```bash
-scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path> --raw
+scale function export [<org>/<name>:<tag>] <path> --raw
 ```
 
 ## Delete
@@ -133,5 +133,5 @@ scale function export [<name>:<tag> | [<org>/<name>:<tag>] <path> --raw
 To delete a Scale Function from the local Scale Function cache, run the following command:
 
 ```bash
-scale function delete [<name>:<tag> | [<org>/<name>:<tag>]
+scale function delete [<org>/<name>:<tag>]
 ```
