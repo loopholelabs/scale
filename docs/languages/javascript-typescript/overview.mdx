@@ -48,17 +48,6 @@ import { Read } from "@loopholelabs/scale/scalefunc/scalefunc.js";
 const sf = Read("<path to exported function>");
 ```
 
-### Creating a Scale Runtime
-
-Once you've imported your Scale Function(s) into your TS/JS application, you can create a new instance of the Scale Runtime
-and pass in the Scale Function(s).
-
-```javascript
-import { New } from "@loopholelabs/scale";
-
-const r = New([sf]);
-```
-
 ### Running a Scale Function
 
 Once you've created the Scale Runtime, you can call the `Instance` method on it to get a new runtime instance.
