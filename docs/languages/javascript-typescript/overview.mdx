@@ -84,17 +84,22 @@ it.
 <Tabs>
     <Tab title="Embedding the Function">
         ```javascript
-        import { New } from "@loopholelabs/scale";
-        import { Read } from "@loopholelabs/scale/scalefunc/scalefunc.js";
-
-        const sf = Read("./hello.scale");
+        import { New, Config } from "@loopholelabs/scale";
+        import { Read } from "@loopholelabs/scale/scalefunc/index.js";
+        import sig from 'signature';
+        const { New: NewSignature, Signature } = sig;
 
         (async () => {
-            const r = await New([sf]);
+            const sf = Read("local-test-1.scale");
+            const config = new Config;
+            config.WithFunction(sf)
+            config.WithSignature(NewSignature)
+
+            const r = await New(config);
             const i = await r.Instance(null);
-            i.Context().Request.Body = "Hello, World!";
-            i.Run()
-            console.log(i.Context().Response.Body);
+            const sign = NewSignature();
+
+            await i.Run(sign);
         })();
         ```
     </Tab>
