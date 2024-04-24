@@ -43,9 +43,21 @@ Scale Functions can be imported into a TS/JS application:
 Use the `@loopholelabs/scale` package directly to embed functions.
 
 ```javascript
-import { Read } from "@loopholelabs/scale/scalefunc/scalefunc.js";
+import { New, Config } from "@loopholelabs/scale";
+import { Read } from "@loopholelabs/scale/scalefunc/index.js";
 
 const sf = Read("<path to exported function>");
+```
+
+### Creating a Scale Runtime
+
+Once you've imported your Scale Function(s) into your TS/JS application, you can create a new instance of the Scale Runtime, passing the function, as well as a new `Config`, with a `NewSiginature`. :w
+
+
+```javascript
+const config = new Config(NewSignature);
+config.WithFunction(sf)
+const r = New(config);
 ```
 
 ### Running a Scale Function
