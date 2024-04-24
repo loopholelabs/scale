@@ -91,9 +91,8 @@ it.
 
         (async () => {
             const sf = Read("local-test-1.scale");
-            const config = new Config;
+            const config = new Config(NewSignature);
             config.WithFunction(sf)
-            config.WithSignature(NewSignature)
 
             const r = await New(config);
             const i = await r.Instance(null);
