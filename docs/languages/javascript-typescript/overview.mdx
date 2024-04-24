@@ -114,21 +114,6 @@ it.
         })();
         ```
     </Tab>
-    <Tab title="Using the Scale Registry">
-        ```javascript
-        import { Download } from '@loopholelabs/scale/registry'
-        import { New } from "@loopholelabs/scale";
-
-        const sf = Download("hello", "latest");
-        (async () => {
-            const r = await New([sf]);
-            const i = await r.Instance(null);
-            i.Context().Request.Body = "Hello, World!";
-            i.Run()
-            console.log(i.Context().Response.Body);
-        })();
-        ```
-    </Tab>
 </Tabs>
 
 ## What's Next?
