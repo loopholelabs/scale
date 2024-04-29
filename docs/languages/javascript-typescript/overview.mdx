@@ -29,7 +29,7 @@ interfaces it provides, you can check out the [HTTP Signature Reference](/signat
 ## Host Support
 
 To use a compiled Scale Function (written in any supported language) inside a TypeScript or JavaScript application, there are 3 steps:
-1. Import the Scale Function(s) into the TS/JS application by embedding them or by using the Registry
+1. Import the Scale Function(s) into the TS/JS application by embedding them
 2. Create a new Scale Runtime and pass in the Scale Function(s)
 3. Call the `Run` method on the Scale Runtime with your request
 
@@ -51,12 +51,13 @@ const sf = Read("<path to exported function>");
 
 ### Creating a Scale Runtime
 
-Once you've imported your Scale Function(s) into your TS/JS application, you can create a new instance of the Scale Runtime, passing the function, as well as a new `Config`, with a `NewSiginature`. :w
+Once you've imported your Scale Function(s) into your TS/JS application, you can create a new instance of the Scale Runtime, passing the function, as well as a new `Config`, with a `NewSiginature`.
 
 
 ```javascript
 const config = new Config(NewSignature);
 config.WithFunction(sf)
+
 const r = New(config);
 ```
 
