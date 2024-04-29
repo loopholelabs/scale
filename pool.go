@@ -23,7 +23,15 @@ import (
 )
 
 var (
-	ModulePoolSize = 128
+	// CacheAllocatedModules is the number of allocated modules that we will
+	// maintain in a cache for reuse. If we need more modules than we have
+	// cached, they will be allocated and provided to Scale. All modules are
+	// returned first to the cache, or if the cache is full, to the sync.Pool
+	// which may choose to de-allocate unused modules at any time. In summary,
+	// this knob tunes the maximum number of modules that we will keep around
+	// for reuse indefinitely, or in other words is the maximum number of
+	// modules available for use immediately without allocation.
+	CacheAllocatedModules = 1
 )
 
 type modulePool[T interfaces.Signature] struct {
@@ -44,7 +52,7 @@ type modulePool[T interfaces.Signature] struct {
 
 func newModulePool[T interfaces.Signature](ctx context.Context, template *template[T]) *modulePool[T] {
 	return &modulePool[T]{
-		primary: make(chan *module[T], ModulePoolSize),
+		primary: make(chan *module[T], CacheAllocatedModules),
 		new: func() (*module[T], error) {
 			return newModule[T](ctx, template)
 		},
