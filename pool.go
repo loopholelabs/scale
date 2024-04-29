@@ -18,18 +18,33 @@ package scale
 
 import (
 	"context"
-	"sync"
-
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
+	"sync"
+)
+
+var (
+	ModulePoolSize = 128
 )
 
 type modulePool[T interfaces.Signature] struct {
-	pool sync.Pool
-	new  func() (*module[T], error)
+	// primary is the default pool of modules. A module is always pulled from
+	// or put back into the primary pool first if possible. This is a buffered
+	// channel. If we're trying to put and the buffer is full, then we put into
+	// the fallback which is a sync.Pool. If we're trying to get and the channel
+	// is empty, then we try to get from the fallback.
+	//
+	// The intent is to reduce the required module allocation since sync.Pool
+	// may empty unused references on each GC cycle.
+	//
+	// See https://github.com/golang/go/issues/22950.
+	primary  chan *module[T]
+	fallback sync.Pool
+	new      func() (*module[T], error)
 }
 
 func newModulePool[T interfaces.Signature](ctx context.Context, template *template[T]) *modulePool[T] {
 	return &modulePool[T]{
+		primary: make(chan *module[T], ModulePoolSize),
 		new: func() (*module[T], error) {
 			return newModule[T](ctx, template)
 		},
@@ -38,14 +53,23 @@ func newModulePool[T interfaces.Signature](ctx context.Context, template *templa
 
 func (p *modulePool[T]) Put(m *module[T]) {
 	if m != nil {
-		p.pool.Put(m)
+		select {
+		case p.primary <- m:
+		default:
+			p.fallback.Put(m)
+		}
 	}
 }
 
 func (p *modulePool[T]) Get() (*module[T], error) {
-	m, ok := p.pool.Get().(*module[T])
-	if ok && m != nil {
+	select {
+	case m := <-p.primary:
 		return m, nil
+	default:
+		m, ok := p.fallback.Get().(*module[T])
+		if m != nil && ok {
+			return m, nil
+		}
+		return p.new()
 	}
-	return p.new()
 }
