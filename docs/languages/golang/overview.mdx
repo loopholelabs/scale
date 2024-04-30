@@ -39,15 +39,13 @@ Compiling these Functions requires the appropriate toolchain to be installed on 
 ## Host Support
 
 To use a compiled Scale Function (written in any supported language) inside a Golang application, there are 3 steps:
-1. Import the Scale Function(s) into the Golang application by embedding them or by using the Registry
+1. Import the Scale Function(s) into the Golang application by embedding them
 2. Create a new Scale Runtime and pass in the Scale Function(s)
 3. Call the `Run` method on the Scale Runtime with your request
 
 ### Importing Scale Functions
 
-Scale Functions can be imported into a Golang application in two ways:
-- [Embedding them Directly](#embedding-scale-functions)
-- [Using the Registry](#using-the-registry)
+Scale Functions can be imported into a Golang application by [embedding them Directly.](#embedding-scale-functions)
 
 #### Embedding Scale Functions
 
@@ -70,34 +68,6 @@ func main() {
     // ...
 }
 ```
-
-#### Using the Registry
-
-Scale Functions can also be imported into a Golang application by using the Registry.
-
-This has the advantage of allowing you import the function at runtime, rather than at compile time - however it does require your function
-to be available in the [Scale Registry](/registry/overview). Functions will also automatically cached locally based on their
-tags and hashes, so subsequent calls to `Download` will be much faster.
-
-```go
-import "github.com/loopholelabs/scale/go/registry"
-
-func main() {
-	// ...
-    sf, _ := registry.Download("<function name>", "<function tag>", registry.WithOrganization("<organization name>"), registry.WithAPIKey("<api key>"))
-    // ...
-}
-```
-
-<Note>
-    If your function is an official Scale Function you can omit the `registry.WithOrganization` option, and if your function
-    is marked as public you can safely omit the `registry.WithAPIKey` option.
-
-    All officially published scale functions are public. If you're interested in publishing your own functions, please join
-    the `#scale` channel on our [discord](https://loopholelabs.io/discord).
-</Note>
-
-
 ### Creating a Scale Runtime
 
 Once you've imported your Scale Function(s) into your Golang application, you can create a new instance of the Scale Runtime
@@ -184,32 +154,6 @@ it.
         func main() {
             sf := new(scale.ScaleFunc)
             _ = sf.Decode(embeddedFunction)
-
-            ctx := context.Background()
-            r := scale.New(ctx, sf)
-
-            i, _ := r.Instance()
-            i.Context().Request.Body = []byte("Hello, World!")
-
-            _ = i.Run(ctx)
-
-            fmt.Println(string(i.Context().Response.Body))
-        }
-        ```
-    </Tab>
-    <Tab title="Using the Scale Registry">
-        ```go scale.go
-        package main
-
-        import (
-            "context"
-            "fmt"
-            scale "github.com/loopholelabs/scale"
-            "github.com/loopholelabs/scale/go/registry"
-        )
-
-        func main() {
-            sf, _ := registry.Download("hello", "latest")
 
             ctx := context.Background()
             r := scale.New(ctx, sf)
