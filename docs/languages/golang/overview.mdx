@@ -103,7 +103,7 @@ func main() {
     i, _ := r.Instance()
     i.Context().Request.Body = []byte("Hello, World!")
 
-	ctx := context.Background()
+    ctx := context.Background()
     _ = i.Run(ctx)
     // ...
 }
@@ -129,6 +129,27 @@ creating instances are very cheap and you can create as many as you need as ofte
 
 <Info>
     The `Instance` method itself **is** thread-safe and can be called concurrently.
+</Info>
+
+<Info>
+    To remove existing instances from a runtime, simply call `Clear()` on the runtime itself:
+
+    ```go scale.go
+    import (
+        "context"
+        scale "github.com/loopholelabs/scale"
+    )
+
+    func main() {
+        // ...
+        r := scale.New(ctx, sf)
+        // ...
+        ctx := context.Background()
+        _ = i.Run(ctx)
+        // ...
+        r.Clear
+    }
+    ````
 </Info>
 
 ### Putting it all Together
