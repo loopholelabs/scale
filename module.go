@@ -19,8 +19,8 @@ package scale
 import (
 	"context"
 	"fmt"
-
 	"github.com/loopholelabs/scale/log"
+	"runtime"
 
 	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 
@@ -100,12 +100,14 @@ func newModule[T interfaces.Signature](ctx context.Context, template *template[T
 		return nil, fmt.Errorf("failed to initialize function '%s': %s", template.identifier, valErr)
 	}
 
-	return &module[T]{
+	m := module[T]{
 		template:           template,
 		instantiatedModule: instantiatedModule,
 		runFunction:        run,
 		resizeFunction:     resize,
-	}, nil
+	}
+	runtime.SetFinalizer(&m, m.close)
+	return &m, nil
 }
 
 // run runs the module
@@ -163,4 +165,9 @@ func (m *module[T]) cleanup() {
 // setSignature sets the module's signature
 func (m *module[T]) setSignature(signature T) {
 	m.signature = signature
+}
+
+// close is a runtime finalizer function for closing the underlying wasm module
+func (m *module[T]) close(_ *module[T]) {
+	_ = m.instantiatedModule.Close(context.Background())
 }
