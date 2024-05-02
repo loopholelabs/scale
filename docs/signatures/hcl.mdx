@@ -5,40 +5,50 @@ description: Information on using the HCL format to define Signatures
 
 The [Hashicorp Configuration Language](https://developer.hashicorp.com/packer/docs/templates/hcl_templates) (HCL) is used to define signatures in human readable way.
 
-## Basics
+## HCL Basics
 
 In the context of Scale Signatures, the Signature File is concerned with HCL's `attributes` and `blocks`.
 
-### attributes
+### Attributes
 
 In HCL, an `attribute` is a fundamental element that assigns a value to a name. Attributes are key-value pairs, and their values can be simple literals (like strings or numbers), or they can be more complex expressions.
 
+For example:
+
 
 ```hcl
-  field1 = "a field"
-  field2 = 2
+field1 = "a field"
+field2 = 2
 ```
 
 
-### blocks
+### Blocks
 
-`blocks` In HCL are structures representing a higher-order configuration container that can hold attributes and, in some cases, nested blocks. Blocks form the core structure of HCL-based configurations, especially in tools like Terraform.
+`blocks`, in HCL, are structures representing a higher-order configuration container that can hold attributes and, in some cases, nested blocks. Blocks form the core structure of HCL-based configurations, especially in tools like Terraform, and in Scale Signatures and Extensions.
 
-A block in HCL has a type, zero or more labels, and a body. The type defines the kind of configuration the block will hold (like a resource or a provider in Terraform). Labels are additional identifiers to distinguish or parameterize the block further. The body of the block contains attributes and possibly nested blocks.
+A block in HCL has a type, zero or more labels, and a body. The type defines the kind of configuration the block will hold (like a resource, or in the case below, a model). Labels are additional identifiers to distinguish or parameterize the block further. The body of the block contains attributes and possibly nested blocks.
 
 ```hcl
 model Thing {
-    string "name" {
-        default = ""
-        accessor = true
-    }
-
-    string "email" {
-      default     = "me@me.com"
-    }
+  string "name" {
+    default  = ""
+    accessor = true
+  }
 }
 ```
 
 ## Example Signatures
+
+When you run `scale fn new helloworld:latest`, this is the default signature that is created for, _and_ [_generated_](/signatures/overview#using-a-signature) for you:
+
+```hcl
+version = "v1alpha"
+context = "context"
+model Context {
+  string MyString {
+    default = "DefaultValue"
+  }
+}
+```
 
 
