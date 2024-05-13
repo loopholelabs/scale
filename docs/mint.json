@@ -154,13 +154,15 @@
       "group": "Signatures",
       "pages": [
         "signatures/overview",
+        "signatures/hcl",
         "signatures/http"
       ]
     },
     {
       "group": "Extensions",
       "pages": [
-        "extensions/overview"
+        "extensions/overview",
+        "extensions/hcl"
       ]
     }
   ],
