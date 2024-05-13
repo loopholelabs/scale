@@ -1,51 +1,379 @@
 ---
-title: Overview
-description: "What is Scale?"
-size: "wide"
+title: Quick Start
+description: Create, run, and publish your first Scale Function in minutes.
 ---
-[Scale](https://github.com/loopholelabs/scale) is a high-performance, language-agnostic function runtime powered by [WebAssembly](https://webassembly.org) that enables developers to
-easily compose and chain together functions in different languages, resulting in middleware-like functionality.
 
-With support for guest languages such as **Golang, TypeScript, and Rust**, and host languages like **Golang and Typescript**, Scale Functions offer a
-flexible solution for composable software development.
+In this section we’ll be going over how you can quickly get started with Scale to create, run and even publish your own function.
 
-<img className="w-full" src="/images/header.png" alt="Scale Functions" />
+We’ll be building a simple `Hello World` function using the [HTTP Signature](/signatures/http) that will return a simple greeting.
 
-<CardGroup cols={2}>
-    <Card
-        title="Getting Started"
-        icon={"timer"}
-        href="/getting-started/quick-start"
-    >
-        Quickly get up and running with Scale Functions by following our getting started guide.
-    </Card>
-    <Card
-        title="CLI"
-        icon={"square-terminal"}
-        href="/cli/installation"
-    >
-        Install the Scale CLI to create, build, and run your Scale Functions.
-    </Card>
-    <Card
-        title="Registry"
-        icon={"cloud"}
-        href="/registry/overview">
-        Learn how to publish and distribute Scale Functions using the Scale Registry.
-    </Card>
-    <Card
-        title="Integrations"
-        icon={"plug"}
-        href="/languages/javascript-typescript/adapters/nextjs"
-    >
-        Explore the various integrations available such as Next.js, Express, and more.
-    </Card>
-</CardGroup>
+<Snippet file="install-scale-cli.mdx" />
 
-<Card
-    title="Join Our Discord"
-    icon={"discord"}
-    href="https://loopholelabs.io/discord"
->
-    The `#scale` Channel in our Discord server is a great place to get help
-    with all things Scale.
-</Card>
+For alternative installation methods or to build the CLI from source, please see the [CLI Installation Guide](/cli/installation).
+
+## Install the Toolchain for your Guest Language
+
+Scale Functions currently support using [Golang](https://go.dev), [TypeScript/JavaScript](https://www.typescriptlang.org/), and [Rust](https://www.rust-lang.org) as the
+Guest Languages, but compiling them requires the appropriate toolchain to be installed on your machine.
+
+If you already have the toolchain for your Guest Language installed, you can skip this step. Otherwise, you can follow
+the guides for your Guest Language below to install the toolchain.
+
+<Tabs>
+    <Tab title="Golang">
+        <Snippet file="install-golang-toolchain.mdx" />
+    </Tab>
+    <Tab title="TypeScript/JavaScript">
+        <Snippet file="install-ts-toolchain.mdx" />
+    </Tab>
+    <Tab title="Rust">
+        <Snippet file="install-rust-toolchain.mdx" />
+    </Tab>
+</Tabs>
+
+## Create a New Function
+
+Once you have the Scale CLI and the toolchain for your Guest Language installed, you can create a new function by
+running the following command, passing a `<name>:<tag>` pair to the `new` command:
+
+```bash
+scale fn new hello:1.0
+```
+
+This will create a new scale function in the current directory. You can also specify a different directory by passing the
+`--directory` or `-d` flag:
+
+```bash
+scale fn new hello:1.0 -d /path/to/directory
+```
+
+<Note>
+    By default, the CLI will create a new function using Golang as the Guest Language. If you want to use Rust instead,
+    you can pass the `--language` or `-l` flag:
+
+    ```bash
+    scale fn new hello:1.0 -l rust
+    ```
+</Note>
+
+The following files will be created in the directory depending on the language you chose:
+
+<Tabs>
+    <Tab title="Golang">
+        <CodeGroup>
+            ```yaml scalefile
+              version  = "v1alpha"
+              name     = "hello"
+              tag      = "1.0"
+              language = "go"
+
+              signature {
+                organization = "local"
+                name         = "hello-signature"
+                tag          = "1.0"
+              }
+
+              stateless   = false
+              function    = "scale"
+              initialize  = ""
+              description = ""
+            ```
+
+            ```go scale.go
+            //go:build tinygo || js || wasm
+            package scale
+
+            import (
+                signature "github.com/loopholelabs/scale-signature-http"
+            )
+
+            func Scale(ctx *signature.Context) (*signature.Context, error) {
+                ctx.Response().SetBody("Hello, World!")
+                return ctx.Next()
+            }
+            ```
+
+            ```go-module go.mod
+            module scale
+
+            go 1.18
+
+            require github.com/loopholelabs/scale-signature v0.2.9
+            require github.com/loopholelabs/scale-signature-http v0.3.4
+            ```
+        </CodeGroup>
+        The `scalefile` is the main configuration file for the function. It contains all of the metadata and configuration required
+        to build and run the function. The `scale.go` file contains the actual implementation of the function, and
+        the `go.mod` file is primarily used to provide [Intellisense](https://code.visualstudio.com/docs/editor/intellisense)
+        and Auto-Completion support in your IDE.
+    </Tab>
+    <Tab title="TypeScript/JavaScript">
+        <CodeGroup>
+            ```yaml scalefile
+              version  = "v1alpha"
+              name     = "hello"
+              tag      = "1.0"
+              language = "ts"
+
+              signature {
+                organization = "local"
+                name         = "hello-signature"
+                tag          = "1.0"
+              }
+
+              stateless   = false
+              function    = "scale"
+              initialize  = ""
+              description = ""
+
+            ```
+
+            ```js index.ts
+
+              import * as signature from "signature";
+
+              export function scale(ctx?: signature.Context): signature.Context | undefined {
+                  return signature.Next(ctx);
+              }
+
+            ```
+
+            ```json package.json
+
+              {
+                "name": "hello",
+                "version": "0.1.0",
+                "main": "index.ts",
+                "dependencies": {
+                  "signature": "/path/to/generated/signature"
+                  }
+              }
+
+            ```
+        </CodeGroup>
+    </Tab>
+    <Tab title="Rust">
+        <CodeGroup>
+            ```yaml scalefile
+              version  = "v1alpha"
+              name     = "hello"
+              tag      = "1.1"
+              language = "rust"
+
+              signature {
+                organization = "local"
+                name         = "hello-signature"
+                tag          = "1.1"
+              }
+
+              stateless   = false
+              function    = "scale"
+              initialize  = ""
+              description = ""
+            ```
+
+            ```rust scale.rs
+            use scale_signature_http::context::Context;
+
+            pub fn scale(ctx: &mut Context) -> Result<&mut Context, Box<dyn std::error::Error>> {
+                ctx.response().set_body("Hello, World!".to_string());
+                ctx.next()
+            }
+            ```
+
+            ```toml Cargo.toml
+            [package]
+            name = "scale"
+            version = "0.1.0"
+            edition = "2021"
+
+            [dependencies]
+            scale_signature_http = "0.3.4"
+            scale_signature = "0.2.9"
+
+            [lib]
+            crate-type = ["cdylib"]
+            path = "scale.rs"
+            ```
+
+        </CodeGroup>
+        The `scalefile` is the main configuration file for the function. It contains all of the metadata and configuration required
+        to build and run the function. The `scale.rs` file contains the actual implementation of the function, and
+        the `Cargo.toml` file is primarily used to provide [Intellisense](https://code.visualstudio.com/docs/editor/intellisense)
+        and Auto-Completion support in your IDE.
+    </Tab>
+</Tabs>
+
+You'll notice that at the end of the Scale Function we call the `Next()` function. This is because Scale Functions can be
+chained together to form a pipeline. The `Next()` function is used to pass the context to the next function in the chain
+and can be conditionally called based on the logic in your function.
+
+This allows for powerful composability that's completely language agnostic. For example, you can use a rust function to validate the request, a golang function to process the
+request, and a third rust function to generate the response!
+
+If you call the `Next()` field and there is no next function in the chain, the function is a no-op and the context is returned.
+
+<Info>
+    When adding new dependencies to your function, you'll need to add references to them in the `scalefile` to make sure
+    your function can be built properly.
+</Info>
+
+By default, the generated function will be configured to use the `HTTP Signature`,
+which provides an interface for handling HTTP requests and responses. To learn more about the `HTTP Signature` and the
+interfaces it provides, you can check out the [HTTP Signature Reference](/signatures/http).
+
+<Note>
+    The concept of a `Signature` is central to how Scale Functions provide cross-language type safety and it's documented
+    in more detail in the [Signatures](/signatures/overview) section of the documentation.
+</Note>
+
+## Build the Function
+
+Once you've created a new function, you can build it by running the following command:
+
+```bash
+scale function build
+```
+
+This will build the function and save it to the `Cache Directory` (which defaults to `~/.config/scale/functions` on Linux and macOS).
+You can also specify a different directory by passing the `--cache-directory` flag:
+
+```bash
+scale function build --cache-directory /path/to/directory
+```
+
+<Info>
+    The `Cache Directory` is where the Scale CLI stores all of the built functions. This is where the CLI will look for
+    functions when you run commands like `scale fn run` or `scale fn push`.
+</Info>
+
+To list all of the functions that are currently in the `Cache Directory`, you can run the following command:
+
+```bash
+scale function list
+```
+
+```
+  NAME (1)            TAG      ORG           LANGUAGE   SIGNATURE     HASH                                                               VERSION
+ ------------------- -------- ------------- ---------- ------------- ------------------------------------------------------------------ ---------
+  hello              1.0     local         rust       http@v0.3.4   8dad03b701cd124b55ff5caf7a36a9af5d19759fc73a9e8299bea4816f929777   v1alpha
+```
+
+## Run the Function
+
+Once you've built the function, you can run it by running the following command:
+
+```bash
+scale fn run local/hello:1.0
+```
+
+This will start a local HTTP server on port `8080` and will run the function whenever you make a request to it. You can
+also specify a different port by passing the `--listen` or `-l` flag:
+
+```bash
+scale fn run local/hello:1.0 -l :3000
+```
+
+<Note>
+    The `scale fn run` command is designed for use with the [HTTP Signature](/signatures/http). It can be used for both
+    local development and production deployments and makes it easy to test your function without having to deploy it.
+</Note>
+
+## Push the Function
+
+Now that you've built and tested your function, you can push it to the Scale Registry. Once pushed, the function can be
+pulled and used in your existing Typescript or Golang services, or even by other users for their own applications.
+
+<Note>
+    Using the Scale Registry is completely free during our beta period. To learn more about our future plans for the Scale Registry,
+    please join the `#scale` channel on our [Discord](https://loopholelabs.io/discord).
+</Note>
+
+To use the Scale Registry, you'll first have to authenticate with the Scale API. This process is the same for both new
+and existing users.
+
+<Tip>
+    If you are a new user you can still follow along with this guide. Your account will be created automatically when
+    you first sign in.
+</Tip>
+
+To authenticate with the Scale API, you can run the following command:
+
+```bash
+scale auth login
+```
+
+This will open a browser window and prompt you to log in to your Scale account. Once you've logged in, you can
+close the browser window and return to the terminal. You should now be able to push your function to the Scale Registry.
+
+To check that you're authenticated, you can run the following command:
+
+```bash
+scale auth status
+```
+
+```
+  MEMBER ORGS   OWNED ORGS      EMAIL                         ORG
+ ------------- --------------- ----------------------------- -------------
+  []            [shivanshvij]   shivanshvij@loopholelabs.io   shivanshvij
+```
+
+<Note>
+    It's also possible to authenticate with the Scale API using an API Key. To learn more about API Keys, you can check
+    out the [API Keys](/cli/reference/apikey) section of the documentation.
+</Note>
+
+Once you've authenticated with the Scale API, you can push your function to the Scale Registry by running the following command:
+
+```bash
+scale function push hello:1.0
+```
+
+This will push the function to the Scale Registry and make it available for use in your existing services.
+
+<Note>
+    The Scale Registry is currently in beta and may be subject to changes in the future. To learn more about the
+    Scale Registry, you can check out the [Registry](/registry/overview) section of the documentation or join the `#scale`
+    channel in [our Discord](https://loopholelabs.com/discord).
+</Note>
+
+## Pulling a Function
+
+Once you've pushed a function to the Scale Registry, you can pull it and use it in your existing services. To pull a function,
+you can run the following command:
+
+```bash
+scale function pull <your organization>/hello:1.0
+```
+
+<Note>
+    When you [pushed the function](#push-the-function) to the Scale Registry, it was pushed to a specific organization.
+    You can find the name of the organization by running the `scale auth status` command.
+
+    If you pushed the function using the `--public` flag, you can pull it without being authenticated with the Scale API.
+</Note>
+
+This will pull the function from the Scale Registry and save it to the `Cache Directory` (which defaults to `~/.config/scale/functions` on Linux and macOS).
+You can also specify a different directory by passing the `--cache-directory` flag:
+
+```bash
+scale function pull <your organization>/hello:1.0 --cache-directory /path/to/directory
+```
+
+<Note>
+    The `scale pull` command only pulls the contents of the scale function from the registry if it's not already present.
+    If the function is already present, it will not be overwritten unless the `--force` flag is passed.
+</Note>
+
+## Next Steps
+
+Now that you've created and pushed your first function, you can check out the
+[Importing Scale Functions](/languages/golang/overview#importing-scale-functions) guide for [Golang](/languages/golang/overview#importing-scale-functions) and
+[Typescript/Javascript](/languages/javascript-typescript/overview#importing-scale-functions) to learn how to use your function inside your existing services (and
+to chain them alongside native functions).
+
+You can also check out our [Adapter Guides](/languages/golang/adapters/net-http) to learn how to integrate your functions
+with popular frameworks such as [Next.js](/languages/javascript-typescript/adapters/nextjs).
+
+To learn more about how the Scale Registry works, you can check out the [Registry](/registry/overview) section, or you
+can check out the [Signatures](/signatures/overview) section to learn more about how Scale Signatures work.

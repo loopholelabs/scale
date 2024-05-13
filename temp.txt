@@ -1,0 +1,8 @@
+git rev-list --all | while read commit; do
+    if git ls-tree -r $commit --name-only | grep -q "registry"; then
+        echo "$commit: EXISTS"
+    else
+        echo "$commit: REMOVED"
+    fi
+done
+
