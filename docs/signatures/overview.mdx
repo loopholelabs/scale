@@ -50,6 +50,8 @@ Generate the signature, defined in the example above, by again using [the CLI](/
 scale signature generate <name:tag>
 ```
 
+This will generate both the `guest` and `host` signatures, each of which are set of functions/interfaces that handle getting the data in, and out, of the associated scale function(s), in a type-safe, and performant manner.
+For more information on why we need bindings for the guest and the host, see the [overview](/getting-started/overview).
 
 Now, to use a Scale Signature in Golang, using the generated signature above, you can define a function accordingly. Here's an example:
 
