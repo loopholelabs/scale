@@ -9,7 +9,9 @@ import { ModelWithAllFieldTypes } from "./types";
 // New returns a new signature and tells the Scale Runtime how to use it
 //
 // This function should be passed into the scale runtime config as an argument
-export declare function New();
+export function New(): Signature {
+  return new Signature();
+}
 
 // Signature is the host representation of the signature
 //
@@ -40,3 +42,4 @@ export declare class Signature implements SignatureInterface {
   // This method is meant to be used by the Scale Runtime to validate Signature and Function compatibility
   Hash(): string;
 }
+

@@ -20,7 +20,7 @@ function ext_b30af2dd8561988edd7b281ad5c1b84487072727a8ad0e490a87be0a66b037d7_Re
 function ext_init() {
   let id = BigInt(0xb30af2dd);
   // TODO: This ID needs to come from config etc
-  (global as anhy).registerResize(id, ext_b30af2dd8561988edd7b281ad5c1b84487072727a8ad0e490a87be0a66b037d7_Resize);
+  (global as any).registerResize(id, ext_b30af2dd8561988edd7b281ad5c1b84487072727a8ad0e490a87be0a66b037d7_Resize);
 }
 
 // Define any interfaces we need here...

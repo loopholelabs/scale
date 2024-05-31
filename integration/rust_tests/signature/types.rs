@@ -5,12 +5,12 @@
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 #![allow(unused_mut)]
-use num_enum::TryFromPrimitive;
-use polyglot_rs::{Decoder, DecodingError, Encoder, Kind};
-use regex::Regex;
-use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::io::Cursor;
+use polyglot_rs::{DecodingError, Encoder, Decoder, Kind};
+use num_enum::TryFromPrimitive;
+use std::convert::TryFrom;
+use std::collections::HashMap;
+use regex::Regex;
 pub trait Encode {
     fn encode<'a>(
         a: Option<&Self>,
@@ -26,7 +26,9 @@ trait EncodeSelf {
     ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>>;
 }
 pub trait Decode {
-    fn decode(b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<Self>, Box<dyn std::error::Error>>
+    fn decode(
+        b: &mut Cursor<&mut Vec<u8>>,
+    ) -> Result<Option<Self>, Box<dyn std::error::Error>>
     where
         Self: Sized;
 }
@@ -289,7 +291,10 @@ impl EncodeSelf for Option<ModelWithSingleStringFieldAndDescription> {
 impl Decode for ModelWithSingleStringFieldAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithSingleStringFieldAndDescription>, Box<dyn std::error::Error>> {
+    ) -> Result<
+        Option<ModelWithSingleStringFieldAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -423,7 +428,10 @@ impl EncodeSelf for Option<ModelWithSingleInt32FieldAndDescription> {
 impl Decode for ModelWithSingleInt32FieldAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithSingleInt32FieldAndDescription>, Box<dyn std::error::Error>> {
+    ) -> Result<
+        Option<ModelWithSingleInt32FieldAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -568,7 +576,10 @@ impl EncodeSelf for Option<ModelWithMultipleFieldsAndDescription> {
 impl Decode for ModelWithMultipleFieldsAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithMultipleFieldsAndDescription>, Box<dyn std::error::Error>> {
+    ) -> Result<
+        Option<ModelWithMultipleFieldsAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -646,7 +657,8 @@ impl Decode for ModelWithEnum {
             return Err(error);
         }
         let mut x = ModelWithEnum::new();
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?)
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
             .ok()
             .ok_or(DecodingError::InvalidEnum)?;
         Ok(Some(x))
@@ -717,7 +729,8 @@ impl Decode for ModelWithEnumAndDescription {
             return Err(error);
         }
         let mut x = ModelWithEnumAndDescription::new();
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?)
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
             .ok()
             .ok_or(DecodingError::InvalidEnum)?;
         Ok(Some(x))
@@ -788,7 +801,8 @@ impl Decode for ModelWithEnumAccessor {
             return Err(error);
         }
         let mut x = ModelWithEnumAccessor::new();
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?)
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
             .ok()
             .ok_or(DecodingError::InvalidEnum)?;
         Ok(Some(x))
@@ -859,7 +873,10 @@ impl EncodeSelf for Option<ModelWithEnumAccessorAndDescription> {
 impl Decode for ModelWithEnumAccessorAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithEnumAccessorAndDescription>, Box<dyn std::error::Error>> {
+    ) -> Result<
+        Option<ModelWithEnumAccessorAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -867,7 +884,8 @@ impl Decode for ModelWithEnumAccessorAndDescription {
             return Err(error);
         }
         let mut x = ModelWithEnumAccessorAndDescription::new();
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?)
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
             .ok()
             .ok_or(DecodingError::InvalidEnum)?;
         Ok(Some(x))
@@ -896,16 +914,21 @@ impl ModelWithMultipleFieldsAccessor {
     pub fn get_string_field(&self) -> String {
         self.string_field.clone()
     }
-    pub fn set_string_field(&mut self, mut v: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn set_string_field(
+        &mut self,
+        mut v: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if !Regex::new("^[a-zA-Z0-9]*$")?.is_match(v.as_str()) {
-            return Err(Box::<dyn std::error::Error>::from(
-                "value must match ^[a-zA-Z0-9]*$",
-            ));
+            return Err(
+                Box::<dyn std::error::Error>::from("value must match ^[a-zA-Z0-9]*$"),
+            );
         }
         if v.len() > 20 || v.len() < 1 {
-            return Err(Box::<dyn std::error::Error>::from(
-                "value must be between { .Minimum }} and 20",
-            ));
+            return Err(
+                Box::<
+                    dyn std::error::Error,
+                >::from("value must be between { .Minimum }} and 20"),
+            );
         }
         v = v.to_uppercase();
         self.string_field = v;
@@ -916,9 +939,11 @@ impl ModelWithMultipleFieldsAccessor {
     }
     pub fn set_int32_field(&mut self, v: i32) -> Result<(), Box<dyn std::error::Error>> {
         if v > 100 || v < 0 {
-            return Err(Box::<dyn std::error::Error>::from(
-                "value must be between { .Minimum }} and 100",
-            ));
+            return Err(
+                Box::<
+                    dyn std::error::Error,
+                >::from("value must be between { .Minimum }} and 100"),
+            );
         }
         self.int32_field = v;
         Ok(())
@@ -999,7 +1024,10 @@ impl ModelWithMultipleFieldsAccessorAndDescription {
     pub fn get_string_field(&self) -> String {
         self.string_field.clone()
     }
-    pub fn set_string_field(&mut self, mut v: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn set_string_field(
+        &mut self,
+        mut v: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.string_field = v;
         Ok(())
     }
@@ -1058,8 +1086,10 @@ impl EncodeSelf for Option<ModelWithMultipleFieldsAccessorAndDescription> {
 impl Decode for ModelWithMultipleFieldsAccessorAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithMultipleFieldsAccessorAndDescription>, Box<dyn std::error::Error>>
-    {
+    ) -> Result<
+        Option<ModelWithMultipleFieldsAccessorAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -1075,7 +1105,9 @@ impl Decode for ModelWithMultipleFieldsAccessorAndDescription {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ModelWithEmbeddedModels {
     pub embedded_empty_model: Option<EmptyModel>,
-    pub embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
+    pub embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
 }
 impl ModelWithEmbeddedModels {
     pub fn new() -> Self {
@@ -1100,8 +1132,7 @@ impl EncodeSelf for ModelWithEmbeddedModels {
     ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.embedded_empty_model.encode_self(e)?;
         e.encode_array(
-            self.embedded_model_array_with_multiple_fields_accessor
-                .len(),
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
             Kind::Any,
         )?;
         for a in &self.embedded_model_array_with_multiple_fields_accessor {
@@ -1148,11 +1179,14 @@ impl Decode for ModelWithEmbeddedModels {
         }
         let mut x = ModelWithEmbeddedModels::new();
         x.embedded_empty_model = EmptyModel::decode(d)?;
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
         for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(
-                ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?,
-            );
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
         }
         Ok(Some(x))
     }
@@ -1160,7 +1194,9 @@ impl Decode for ModelWithEmbeddedModels {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ModelWithEmbeddedModelsAndDescription {
     pub embedded_empty_model: Option<EmptyModel>,
-    pub embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
+    pub embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
 }
 impl ModelWithEmbeddedModelsAndDescription {
     pub fn new() -> Self {
@@ -1185,8 +1221,7 @@ impl EncodeSelf for ModelWithEmbeddedModelsAndDescription {
     ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.embedded_empty_model.encode_self(e)?;
         e.encode_array(
-            self.embedded_model_array_with_multiple_fields_accessor
-                .len(),
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
             Kind::Any,
         )?;
         for a in &self.embedded_model_array_with_multiple_fields_accessor {
@@ -1224,7 +1259,10 @@ impl EncodeSelf for Option<ModelWithEmbeddedModelsAndDescription> {
 impl Decode for ModelWithEmbeddedModelsAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithEmbeddedModelsAndDescription>, Box<dyn std::error::Error>> {
+    ) -> Result<
+        Option<ModelWithEmbeddedModelsAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -1233,11 +1271,14 @@ impl Decode for ModelWithEmbeddedModelsAndDescription {
         }
         let mut x = ModelWithEmbeddedModelsAndDescription::new();
         x.embedded_empty_model = EmptyModel::decode(d)?;
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
         for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(
-                ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?,
-            );
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
         }
         Ok(Some(x))
     }
@@ -1245,7 +1286,9 @@ impl Decode for ModelWithEmbeddedModelsAndDescription {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ModelWithEmbeddedModelsAccessor {
     embedded_empty_model: Option<EmptyModel>,
-    embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
+    embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
 }
 impl ModelWithEmbeddedModelsAccessor {
     pub fn new() -> Self {
@@ -1270,8 +1313,7 @@ impl EncodeSelf for ModelWithEmbeddedModelsAccessor {
     ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.embedded_empty_model.encode_self(e)?;
         e.encode_array(
-            self.embedded_model_array_with_multiple_fields_accessor
-                .len(),
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
             Kind::Any,
         )?;
         for a in &self.embedded_model_array_with_multiple_fields_accessor {
@@ -1318,11 +1360,14 @@ impl Decode for ModelWithEmbeddedModelsAccessor {
         }
         let mut x = ModelWithEmbeddedModelsAccessor::new();
         x.embedded_empty_model = EmptyModel::decode(d)?;
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
         for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(
-                ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?,
-            );
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
         }
         Ok(Some(x))
     }
@@ -1351,7 +1396,9 @@ impl ModelWithEmbeddedModelsAccessor {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ModelWithEmbeddedModelsAccessorAndDescription {
     embedded_empty_model: Option<EmptyModel>,
-    embedded_model_array_with_multiple_fields_accessor: Vec<ModelWithMultipleFieldsAccessor>,
+    embedded_model_array_with_multiple_fields_accessor: Vec<
+        ModelWithMultipleFieldsAccessor,
+    >,
 }
 impl ModelWithEmbeddedModelsAccessorAndDescription {
     pub fn new() -> Self {
@@ -1376,8 +1423,7 @@ impl EncodeSelf for ModelWithEmbeddedModelsAccessorAndDescription {
     ) -> Result<&'a mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
         self.embedded_empty_model.encode_self(e)?;
         e.encode_array(
-            self.embedded_model_array_with_multiple_fields_accessor
-                .len(),
+            self.embedded_model_array_with_multiple_fields_accessor.len(),
             Kind::Any,
         )?;
         for a in &self.embedded_model_array_with_multiple_fields_accessor {
@@ -1415,8 +1461,10 @@ impl EncodeSelf for Option<ModelWithEmbeddedModelsAccessorAndDescription> {
 impl Decode for ModelWithEmbeddedModelsAccessorAndDescription {
     fn decode(
         d: &mut Cursor<&mut Vec<u8>>,
-    ) -> Result<Option<ModelWithEmbeddedModelsAccessorAndDescription>, Box<dyn std::error::Error>>
-    {
+    ) -> Result<
+        Option<ModelWithEmbeddedModelsAccessorAndDescription>,
+        Box<dyn std::error::Error>,
+    > {
         if d.decode_none() {
             return Ok(None);
         }
@@ -1425,11 +1473,14 @@ impl Decode for ModelWithEmbeddedModelsAccessorAndDescription {
         }
         let mut x = ModelWithEmbeddedModelsAccessorAndDescription::new();
         x.embedded_empty_model = EmptyModel::decode(d)?;
-        let size_embedded_model_array_with_multiple_fields_accessor = d.decode_array(Kind::Any)?;
+        let size_embedded_model_array_with_multiple_fields_accessor = d
+            .decode_array(Kind::Any)?;
         for _ in 0..size_embedded_model_array_with_multiple_fields_accessor {
-            x.embedded_model_array_with_multiple_fields_accessor.push(
-                ModelWithMultipleFieldsAccessor::decode(d)?.ok_or(DecodingError::InvalidArray)?,
-            );
+            x.embedded_model_array_with_multiple_fields_accessor
+                .push(
+                    ModelWithMultipleFieldsAccessor::decode(d)?
+                        .ok_or(DecodingError::InvalidArray)?,
+                );
         }
         Ok(Some(x))
     }
@@ -1560,11 +1611,7 @@ impl EncodeSelf for ModelWithAllFieldTypes {
             e.encode_string(&k)?;
             e.encode_string(&v)?;
         }
-        e.encode_map(
-            self.string_map_field_embedded.len(),
-            Kind::String,
-            Kind::Any,
-        )?;
+        e.encode_map(self.string_map_field_embedded.len(), Kind::String, Kind::Any)?;
         for (k, v) in &self.string_map_field_embedded {
             e.encode_string(&k)?;
             v.encode_self(e)?;
@@ -1805,13 +1852,13 @@ impl Decode for ModelWithAllFieldTypes {
         for _ in 0..size_float64_array_field {
             x.float64_array_field.push(d.decode_f64()?);
         }
-        x.enum_field = GenericEnum::try_from(d.decode_u32()?)
+        x
+            .enum_field = GenericEnum::try_from(d.decode_u32()?)
             .ok()
             .ok_or(DecodingError::InvalidEnum)?;
         let size_enum_array_field = d.decode_array(Kind::U32)?;
         for _ in 0..size_enum_array_field {
-            x.enum_array_field
-                .push(GenericEnum::try_from(d.decode_u32()?)?);
+            x.enum_array_field.push(GenericEnum::try_from(d.decode_u32()?)?);
         }
         let size_enum_map_field = d.decode_map(Kind::U32, Kind::String)?;
         for _ in 0..size_enum_map_field {

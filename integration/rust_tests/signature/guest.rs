@@ -2,9 +2,9 @@
 // output: local_example_latest_guest
 
 pub mod types;
-use crate::types::{Decode, Encode};
-use polyglot_rs::Encoder;
+use crate::types::{Encode, Decode};
 use std::io::Cursor;
+use polyglot_rs::Encoder;
 static HASH: &'static str = "3a592aa345d412faa2e6285ee048ca2ab5aa64b0caa2f9ca67b2c1e0792101e5";
 static mut READ_BUFFER: Vec<u8> = Vec::new();
 static mut WRITE_BUFFER: Vec<u8> = Vec::new();
@@ -12,7 +12,10 @@ pub unsafe fn write(ctx: Option<&mut types::ModelWithAllFieldTypes>) -> (u32, u3
     let mut cursor = Cursor::new(Vec::new());
     match ctx {
         Some(ctx) => {
-            cursor = match types::ModelWithAllFieldTypes::encode(Some(ctx), &mut cursor) {
+            cursor = match types::ModelWithAllFieldTypes::encode(
+                Some(ctx),
+                &mut cursor,
+            ) {
                 Ok(_) => cursor,
                 Err(err) => return error(err),
             };
@@ -29,7 +32,10 @@ pub unsafe fn write(ctx: Option<&mut types::ModelWithAllFieldTypes>) -> (u32, u3
     WRITE_BUFFER.copy_from_slice(&vec);
     return (WRITE_BUFFER.as_ptr() as u32, WRITE_BUFFER.len() as u32);
 }
-pub unsafe fn read() -> Result<Option<types::ModelWithAllFieldTypes>, Box<dyn std::error::Error>> {
+pub unsafe fn read() -> Result<
+    Option<types::ModelWithAllFieldTypes>,
+    Box<dyn std::error::Error>,
+> {
     let mut cursor = Cursor::new(&mut READ_BUFFER);
     types::ModelWithAllFieldTypes::decode(&mut cursor)
 }
