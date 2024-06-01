@@ -1,6 +1,6 @@
 {
   "name": "@loopholelabs/scale",
-  "version": "0.4.5",
+  "version": "0.4.7",
   "description": "Scale is a framework for building high-performance plugin systems into any application, all powered by WebAssembly.",
   "source": "index.ts",
   "types": "types.d.ts",
