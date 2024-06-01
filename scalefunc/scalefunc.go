@@ -69,6 +69,22 @@ const (
 	TypeScript Language = "ts"
 )
 
+var LanguageAliases = map[string]Language{
+	"go":         Go,
+	"golang":     Go,
+	"rust":       Rust,
+	"typescript": TypeScript,
+	"ts":         TypeScript,
+	"javascript": TypeScript,
+}
+
+func ResolveLanguage(langStr string) (Language, error) {
+	if lang, ok := LanguageAliases[strings.ToLower(langStr)]; ok {
+		return lang, nil
+	}
+	return "", ErrLanguage
+}
+
 var (
 	// AcceptedLanguages is an array of acceptable Languages
 	AcceptedLanguages = []Language{Go, Rust, TypeScript}
@@ -194,11 +210,15 @@ func (s *V1AlphaSchema) Decode(data []byte) error {
 		return err
 	}
 
-	language, err := d.String()
+	languageStr, err := d.String()
 	if err != nil {
 		return err
 	}
-	s.Language = Language(language)
+
+	s.Language, err = ResolveLanguage(languageStr)
+	if err != nil {
+		return err
+	}
 
 	invalid := true
 	for _, l := range AcceptedLanguages {
