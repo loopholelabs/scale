@@ -82,3 +82,7 @@ func (f *function[T]) putModule(m *module[T]) {
 		f.template.modulePool.Put(m)
 	}
 }
+
+func (m *module[T]) Close() {
+	// Implement the close logic here
+}

@@ -61,8 +61,10 @@ func newTemplate[T interfaces.Signature](ctx context.Context, runtime *Scale[T],
 		env:        env,
 	}
 
+  var maxSize uint32 = 0;
+
 	if scaleFunc.Stateless {
-		templ.modulePool = newModulePool[T](ctx, templ)
+		templ.modulePool = newModulePool[T](ctx, templ, maxSize)
 	}
 
 	return templ, nil
