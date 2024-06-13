@@ -24,11 +24,11 @@ import (
 )
 
 type modulePool[T interfaces.Signature] struct {
-	pool   sync.Pool
+	pool    sync.Pool
 	maxSize uint32
-	new    func() (*module[T], error)
-	close  func(*module[T])
-	ch     chan *module[T] // for buffered channel impl
+	new     func() (*module[T], error)
+	close   func(*module[T])
+	ch      chan *module[T] // for buffered channel impl
 }
 
 func newModulePool[T interfaces.Signature](ctx context.Context, template *template[T], maxSize uint32) *modulePool[T] {
@@ -82,7 +82,6 @@ func (p *modulePool[T]) Put(m *module[T]) {
 
 func (p *modulePool[T]) Get() (*module[T], error) {
 	if p.maxSize == 0 {
-		// Use sync.Pool
 		m, ok := p.pool.Get().(*module[T])
 		if ok && m != nil {
 			return m, nil
