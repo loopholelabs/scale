@@ -166,10 +166,10 @@ func (m *module[T]) setSignature(signature T) {
 	m.signature = signature
 }
 
-func (m *module[T]) Close() {
-	runtime.SetFinalizer(&m, m.close)
+func (m *module[T]) SetFinalizer() {
+	runtime.SetFinalizer(&m, m.Close)
 }
 
-func (m *module[T]) close(_ *module[T]) {
+func (m *module[T]) Close() {
 	_ = m.instantiatedModule.Close(context.Background())
 }
