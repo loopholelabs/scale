@@ -42,7 +42,7 @@ func newModulePool[T interfaces.Signature](ctx context.Context, template *templa
 				return newModule[T](ctx, template)
 			},
 			close: func(m *module[T]) {
-        m.Close()
+				m.Close()
 			},
 		}
 	}
@@ -103,6 +103,6 @@ func (p *modulePool[T]) Get() (*module[T], error) {
 	default:
 		// Channel is empty, create a new module?
 		m, _ := p.pool.Get().(*module[T])
-    return m, nil
+		return m, nil
 	}
 }
