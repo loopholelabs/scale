@@ -38,7 +38,11 @@ func newModulePool[T interfaces.Signature](ctx context.Context, template *templa
 		return &modulePool[T]{
 			maxSize: maxSize,
 			new: func() (*module[T], error) {
-				return newModule[T](ctx, template)
+				m, err := newModule[T](ctx, template)
+				if m != nil {
+					m.EnsureSetFinalizer()
+				}
+				return m, err
 			},
 			close: func(m *module[T]) {
 				m.Close(m)
@@ -84,7 +88,6 @@ func (p *modulePool[T]) Get() (*module[T], error) {
 	if p.maxSize == 0 {
 		m, ok := p.pool.Get().(*module[T])
 		if ok && m != nil {
-			m.EnsureSetFinalizer()
 			return m, nil
 		}
 		return p.new()

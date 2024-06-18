@@ -167,7 +167,9 @@ func (m *module[T]) setSignature(signature T) {
 }
 
 func (m *module[T]) EnsureSetFinalizer() {
-	runtime.SetFinalizer(&m, m.close)
+	runtime.SetFinalizer(m, func(m *module[T]) {
+		m.close(m)
+	})
 }
 
 func (m *module[T]) Close(_ *module[T]) {
