@@ -26,9 +26,9 @@ import (
 type modulePool[T interfaces.Signature] struct {
 	pool    sync.Pool
 	maxSize uint32
-	new     func(*module[T]) (*module[T], error)
+	new     func() (*module[T], error)
 	close   func(*module[T])
-	ch      chan *module[T] // for buffered channel impl
+	ch      chan *module[T]
 }
 
 func newModulePool[T interfaces.Signature](ctx context.Context, template *template[T], maxSize uint32) *modulePool[T] {
@@ -37,8 +37,7 @@ func newModulePool[T interfaces.Signature](ctx context.Context, template *templa
 		// to make sure the close function gets called eventually.
 		return &modulePool[T]{
 			maxSize: maxSize,
-			new: func(m *module[T]) (*module[T], error) {
-				m.SetFinalizer()
+			new: func() (*module[T], error) {
 				return newModule[T](ctx, template)
 			},
 			close: func(m *module[T]) {
@@ -48,10 +47,10 @@ func newModulePool[T interfaces.Signature](ctx context.Context, template *templa
 	}
 
 	if maxSize > 0 {
-		// if size > 0 then we use buffered channel implementation.
+		// if size > 0 then we use buffered channel implementation
 		return &modulePool[T]{
 			maxSize: maxSize,
-			new: func(m *module[T]) (*module[T], error) {
+			new: func() (*module[T], error) {
 				return newModule[T](ctx, template)
 			},
 			close: func(m *module[T]) {
@@ -88,7 +87,7 @@ func (p *modulePool[T]) Get() (*module[T], error) {
 			m.EnsureSetFinalizer()
 			return m, nil
 		}
-		return p.new(m)
+		return p.new()
 	}
 
 	// Use buffered channel
@@ -96,7 +95,6 @@ func (p *modulePool[T]) Get() (*module[T], error) {
 	case m := <-p.ch:
 		return m, nil
 	default:
-		// Channel is empty, create a new module?
 		m, _ := p.pool.Get().(*module[T])
 		return m, nil
 	}
