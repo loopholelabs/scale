@@ -85,7 +85,7 @@ func (p *modulePool[T]) Get() (*module[T], error) {
 	if p.maxSize == 0 {
 		m, ok := p.pool.Get().(*module[T])
 		if ok && m != nil {
-      m.EnsureSetFinalizer()
+			m.EnsureSetFinalizer()
 			return m, nil
 		}
 		return p.new(m)
