@@ -81,12 +81,6 @@ func (p *modulePool[T]) Put(m *module[T]) {
 	}
 }
 
-// if you call pool.Get and its a success
-
-//otherwise return m = p.New
-//OR
-//on line 40, in the New function run Close (change to SetFinalizers),
-
 func (p *modulePool[T]) Get() (*module[T], error) {
 	if p.maxSize == 0 {
 		m, ok := p.pool.Get().(*module[T])
