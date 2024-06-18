@@ -71,12 +71,12 @@ func (r *Scale[T]) Instance(next ...Next[T]) (*Instance[T], error) {
 }
 
 func (r *Scale[T]) Clear() {
-  for key := range r.activeModules {
-      r.activeModules[key].instantiatedModule.CloseWithExitCode(r.config.context, 0)
-      delete(r.activeModules, key)
-  }
+	for key := range r.activeModules {
+		r.activeModules[key].instantiatedModule.CloseWithExitCode(r.config.context, 0)
+		delete(r.activeModules, key)
+	}
 
-  r.activeModules = make(map[string]*module[T])
+	r.activeModules = make(map[string]*module[T])
 }
 
 // Reset any extensions between executions.

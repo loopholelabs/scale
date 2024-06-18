@@ -48,10 +48,17 @@ type template[T interfaces.Signature] struct {
 }
 
 // newTemplate creates a new template from a scale function schema
-func newTemplate[T interfaces.Signature](ctx context.Context, runtime *Scale[T], scaleFunc *scalefunc.V1BetaSchema, env map[string]string) (*template[T], error) {
+func newTemplate[T interfaces.Signature](ctx context.Context, runtime *Scale[T], scaleFunc *scalefunc.V1BetaSchema, env map[string]string, opts ...uint32) (*template[T], error) {
 	compiled, err := runtime.runtime.CompileModule(ctx, scaleFunc.Function)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile wasm module '%s': %w", scaleFunc.Name, err)
+	}
+
+	var maxSize uint32
+	if len(opts) > 0 {
+		maxSize = opts[0]
+	} else {
+		maxSize = 0 // default value
 	}
 
 	templ := &template[T]{
@@ -62,7 +69,7 @@ func newTemplate[T interfaces.Signature](ctx context.Context, runtime *Scale[T],
 	}
 
 	if scaleFunc.Stateless {
-		templ.modulePool = newModulePool[T](ctx, templ)
+		templ.modulePool = newModulePool[T](ctx, templ, maxSize)
 	}
 
 	return templ, nil
