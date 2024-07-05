@@ -12,7 +12,7 @@ require (
 	github.com/loopholelabs/scale-signature-interfaces v0.1.7
 	github.com/loopholelabs/wasm-toolkit v0.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/tetratelabs/wazero v1.5.0
+	github.com/tetratelabs/wazero v1.7.3
 	golang.org/x/mod v0.19.0
 	golang.org/x/text v0.13.0
 )
