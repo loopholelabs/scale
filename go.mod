@@ -8,10 +8,12 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/hcl/v2 v2.18.1
 	github.com/loopholelabs/polyglot v1.1.3
+	github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b301bf4
 	github.com/loopholelabs/scale-signature-interfaces v0.1.7
+	github.com/loopholelabs/wasm-toolkit v0.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/tetratelabs/wazero v1.5.0
-	golang.org/x/mod v0.13.0
+	golang.org/x/mod v0.19.0
 	golang.org/x/text v0.13.0
 )
 
@@ -21,8 +23,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b301bf4 // indirect
-	github.com/loopholelabs/wasm-toolkit v0.0.5 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect
