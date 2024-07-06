@@ -55,7 +55,7 @@ features = [
 default-features = false
 
 [build-dependencies.mio]
-version = "=0.8.6"
+version = "=1.0.0"
 
 [build-dependencies.native-tls]
 version = "0.2.11"
