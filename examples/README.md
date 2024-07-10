@@ -10,6 +10,11 @@ The `/examples` directory is your go-to place for hands-on demonstrations of Sca
 
 ## Getting Started
 
+This examples directory is divided into 3 categories: `signatures`, `extensions`, and `advanced`.
+
+If you are new to Scale, **it is highly recommended that you start with the `signatures` examples**, since [Scale Signatures](https://scale.sh/docs/signatures/overview) are
+a fundamental part of using Scale in all settings. See [the documentation](https://scale.sh/docs/signatures/overview) for more detail.
+
 To get started with any of these examples, navigate to the respective directory and follow the instructions in the `README.md` file located within each example. Each README provides step-by-step guidance on setting up and running the example.
 
 ### Prerequisites
@@ -24,6 +29,10 @@ To get started with any of these examples, navigate to the respective directory 
    cd scale/examples/<example-directory>
    Follow the instructions in the example's README.md file to set up and run the example.
    ```
+
+### Documentation
+
+Full Documentation is available at [scale.sh](https://scale.sh/docs/getting-started/overview)
 
 ## Contributing
 
