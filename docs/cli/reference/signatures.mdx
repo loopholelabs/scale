@@ -53,7 +53,11 @@ This will generate the signature defined in the local directory, in your `local/
 
 ## Use
 
-Create a new scale signature with the given name and tag.
+Use a given Scale Signature in your function (Local to the repo where you function, and scalefile is).
+
+for a `local/` Signature, this will change the imports in the `go.mod` as well as metadata denoting the signature in the `scalefile`
+
+for a `<your_org>/` Signature, stored remotely, this will pull the remote signature, and then  will change the imports in the `go.mod` as well as metadata denoting the signature in the `scalefile`.
 
 ```bash
 scale signature use <org>/<name:tag>
