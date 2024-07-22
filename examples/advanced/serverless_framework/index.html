@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor</title>
+    <!-- Include the Ace Editor library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #0f172a;
+            color: white;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        #editor {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+            background: #1e293b;
+            margin-bottom: 20px;
+        }
+        #deployButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #deployButton:hover {
+            background-color: #2563eb;
+        }
+        select {
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: none;
+            background-color: #1e293b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Language</h2>
+    <select id="languageSelect">
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="typescript">TypeScript</option>
+    </select>
+    <div id="editor">package example
+
+import (
+    "signature"
+)
+
+func Scale(ctx *signature.Context) (*signature.Context, error) {
+    return signature.Next(ctx)
+}</div>
+    <button id="deployButton">Deploy</button>
+</div>
+
+<script>
+    // Initialize the Ace Editor
+    var editor = ace.edit("editor");
+    editor.session.setMode("ace/mode/golang");
+    editor.setTheme("ace/theme/monokai");
+    editor.setOptions({
+        fontSize: "14px",
+        showPrintMargin: false
+    });
+
+    // Code snippets for each language
+    const codeSnippets = {
+        go: `package example
+
+import (
+    "signature"
+)
+
+func Scale(ctx *signature.Context) (*signature.Context, error) {
+    return signature.Next(ctx)
+}`,
+        rust: `mod example {
+    use signature::Context;
+
+    pub fn scale(ctx: &Context) -> Result<&Context, Box<dyn std::error::Error>> {
+        Ok(ctx)
+    }
+}`,
+        typescript: `module example {
+    import { Context } from "signature";
+
+    export function scale(ctx: Context): Context {
+        return ctx;
+    }
+}`
+    };
+
+    // Add event listener to the language select
+    document.getElementById("languageSelect").addEventListener("change", function() {
+        const language = this.value;
+        editor.session.setMode("ace/mode/" + language);
+        editor.setValue(codeSnippets[language], -1);
+    });
+
+    // Add event listener to the deploy button
+    document.getElementById("deployButton").addEventListener("click", function() {
+        var code = editor.getValue();
+        console.log("Deploying code: ", code);
+        // Add your deploy functionality here
+        alert("Code deployed!");
+    });
+</script>
+
+</body>
+</html>
+
