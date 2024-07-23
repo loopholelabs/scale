@@ -119,14 +119,27 @@ func Scale(ctx *signature.Context) (*signature.Context, error) {
     });
 
     // Add event listener to the deploy button
-    document.getElementById("deployButton").addEventListener("click", function() {
+    document.getElementById("deployButton").addEventListener("click", async function() {
         var code = editor.getValue();
         console.log("Deploying code: ", code);
-        // Add your deploy functionality here
-        alert("Code deployed!");
+        try {
+            let response = await fetch('http://localhost:3000', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            });
+            if (response.ok) {
+                alert("Code deployed successfully!");
+            } else {
+                alert("Failed to deploy code.");
+            }
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
     });
 </script>
 
 </body>
 </html>
-
