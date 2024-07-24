@@ -1,0 +1,8 @@
+
+version = "v1alpha"
+context = "context"
+model Context {
+  string MyString {
+    default = "DefaultValue"
+  }
+}

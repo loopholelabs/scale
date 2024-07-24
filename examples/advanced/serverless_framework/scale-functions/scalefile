@@ -1,0 +1,15 @@
+version  = "v1alpha"
+name     = "serverless"
+tag      = "latest"
+language = "go"
+
+signature {
+  organization = "local"
+  name         = "serverless-signature"
+  tag          = "latest"
+}
+
+stateless   = false
+function    = "Scale"
+initialize  = ""
+description = ""
