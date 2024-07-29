@@ -10,7 +10,7 @@ require (
 	github.com/loopholelabs/polyglot v1.1.3
 	github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b301bf4
 	github.com/loopholelabs/scale-signature-interfaces v0.1.7
-	github.com/loopholelabs/wasm-toolkit v0.0.5
+	github.com/loopholelabs/wasm-toolkit v0.0.6
 	github.com/stretchr/testify v1.9.0
 	github.com/tetratelabs/wazero v1.7.3
 	golang.org/x/mod v0.19.0
