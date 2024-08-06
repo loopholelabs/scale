@@ -1,0 +1,3 @@
+[submodule "examples/advanced/atmosfeed_bluesky"]
+	path = examples/advanced/atmosfeed_bluesky
+	url = git@github.com:dphilla/atmosfeed.git
