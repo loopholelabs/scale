@@ -1,27 +1,31 @@
 package main
 
 import (
-  "fmt"
-  "log"
-	"embed"
-	"io"
   "net/http"
-	scale "github.com/loopholelabs/scale/go"
-	adapter "github.com/loopholelabs/scale-http-adapters/http"
-  "github.com/loopholelabs/scalefile/scalefunc"
+  "context"
+  "fmt"
+  "signature"
+  scale "github.com/loopholelabs/scale"
+  scalefunc "github.com/loopholelabs/scale/scalefunc"
 )
 
-//go:embed local-serverless-latest.scale
-var embeddedFunction []byte
+func handler(w http.ResponseWriter, r *http.Request) {
+    sf, err := scalefunc.Read("local-serverless-latest.scale")
+    if err != nil {
+        return
+    }
+
+    config := scale.NewConfig().WithSignature(*signature.Signature).WithFunction(sf)
+
+	  r, _ := scale.New(config)
+    i, _ := r.Instance()
+
+    i.Run(context.Context)
+    fmt.Fprintf(w, "Ran the function!")
+}
 
 func main() {
-	sf := new(ScaleFunc)
-	_ = sf.Decode(embeddedFunction)
-
-	r, _ := scale.New(context.Background(), []*scalefunc.ScaleFunc{sf})
-    handler := adapter.New(nil, r)
-
-    http.Handle("/", handler)
+    http.Handle("/", http.HandlerFunc(handler))
     log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
