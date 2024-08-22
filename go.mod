@@ -3,14 +3,14 @@ module github.com/loopholelabs/scale
 go 1.20
 
 require (
-	github.com/BurntSushi/toml v1.3.2
+	github.com/BurntSushi/toml v1.4.0
 	github.com/evanw/esbuild v0.23.0
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/loopholelabs/polyglot v1.1.3
 	github.com/loopholelabs/scale-extension-interfaces v0.0.0-20230920094333-3a483b301bf4
 	github.com/loopholelabs/scale-signature-interfaces v0.1.7
-	github.com/loopholelabs/wasm-toolkit v0.0.5
+	github.com/loopholelabs/wasm-toolkit v0.0.6
 	github.com/stretchr/testify v1.9.0
 	github.com/tetratelabs/wazero v1.7.3
 	golang.org/x/mod v0.19.0
