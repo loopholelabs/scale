@@ -161,8 +161,9 @@
     {
       "group": "Extensions",
       "pages": [
+        "extensions/hcl",
         "extensions/overview",
-        "extensions/hcl"
+        "extensions/fetch"
       ]
     }
   ],

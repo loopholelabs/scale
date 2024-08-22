@@ -1,0 +1,61 @@
+---
+title: Fetch Example
+description: The HTTP Fetch extension example for Scale Functions
+---
+
+Scale WebAssembly functions, by default, don't have any access to resources provided by the underlying host's operating system.
+Scale Extensions give you a way to access these resources, in a type-safe manner.
+
+The default extensionn when you call `scale extention new`
+
+
+```hcl
+	version = "v1alpha"
+
+	function New {
+		params = "HttpConfig"
+		return = "HttpConnector"
+	}
+
+	model HttpConfig {
+		int32 Timeout {
+			default = 60
+		}
+	}
+
+	model HttpResponse {
+		string_map Headers {
+			value = "StringList"
+		}
+		int32 StatusCode {
+			default = 0
+		}
+		bytes Body {
+			initial_size = 0
+		}
+	}
+
+	model StringList {
+		string_array Values {
+			initial_size = 0
+		}
+	}
+
+	model ConnectionDetails {
+		string Url {
+			default = "https://google.com"
+		}
+	}
+
+	interface HttpConnector {
+		function Fetch {
+			params = "ConnectionDetails"
+			return = "HttpResponse"
+		}
+	}
+```
+
+which, then when generated, calling `scale ext generate fetch:latest`, gives you bindings for defining and using an HTTP call from your scale function, in rust, golang, and Typescript. (Golang example below)
+
+For the full walkthrough, see our [examples repo](https://github.com/loopholelabs/scale/tree/main/examples).
+
