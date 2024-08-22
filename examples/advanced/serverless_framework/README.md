@@ -1,5 +1,7 @@
 # Serverless Framework
 
+This repo provides the basic building blocks for creating your own serverless function runtime with Scale.
+
 ## Why Scale?
 
 Importance for User-defined logic
@@ -9,8 +11,8 @@ Importance for User-defined logic
 
 ## Local install
 
-go mod tidy, go run
+1) go mod tidy, go run
 
-npm dev run
+2) npm dev run
 
-
+3) [Build your scale function](https://scale.sh/docs/getting-started/quick-start#build-the-function)

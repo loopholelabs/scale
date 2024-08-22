@@ -4,9 +4,11 @@ import (
   "net/http"
   "context"
   "fmt"
-  "signature"
+  "log"
+  signature "signature/signature"
   scale "github.com/loopholelabs/scale"
   scalefunc "github.com/loopholelabs/scale/scalefunc"
+	interfaces "github.com/loopholelabs/scale-signature-interfaces"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -15,12 +17,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    config := scale.NewConfig().WithSignature(*signature.Signature).WithFunction(sf)
+    var newSig interfaces.New[*signature.Signature] = signature.New
 
-	  r, _ := scale.New(config)
-    i, _ := r.Instance()
+    config := scale.NewConfig(newSig).WithFunction(sf)
 
-    i.Run(context.Context)
+	  runtime, _ := scale.New(config)
+    i, _ := runtime.Instance()
+
+    ctx := context.Background()
+
+    i.Run(ctx, signature.New())
     fmt.Fprintf(w, "Ran the function!")
 }
 

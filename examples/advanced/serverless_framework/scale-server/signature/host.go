@@ -13,7 +13,7 @@ const hash = "e6ddebc792ee929e2654b4281baca1376e05bf5a96d4bdf63a05a2aab5f9e749"
 var _ interfaces.Signature = (*Signature)(nil)
 
 // Signature is the host representation of the signature
-//
+
 // Users should not use this type directly, but instead pass the New() function
 // to the Scale Runtime
 type Signature struct {
