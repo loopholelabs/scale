@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/evanw/esbuild v0.23.0
+	github.com/evanw/esbuild v0.23.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/loopholelabs/polyglot v1.1.3
